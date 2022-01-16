@@ -1,0 +1,927 @@
+\newpage
+
+# Inspecting a 'single group' of observations using a Bayesian multilevel model
+
+In the last chapter we built a Bayesian regression model suitable for inspecting the average of a single group of observations. However, as we noted multiple times this model was 'wrong' for the structure of our data. The reason for this is that this model did not properly account for the *repeated measures* structure in our data. To properly handle repeated measures data, we need a *multilevel model*. In this chapter we will explain what we mean by 'repeated measures' and 'multilevel', in addition to fitting our first proper multilevel Bayesian model using `brms`.
+
+## Multilevel models and repeated measures data {#c4}
+
+Experiments often result in what is called **repeated measures data**, data where multiple observations can come from the same person/source. As a practical matter, setting up experiments is often time consuming such that it makes more sense to collect, for example, 100 observations from 50 different people, rather than 1 observation from 5000 people. In addition, collecting more than one measurement from each source can go a long way towards reducing uncertainty in a model. However, the statistical analysis of repeated measures data requires models that take the repeated nature of the measurements into account. Treating repeated measures data as if it were *not* repeated measures data can cause problems for the inferences we make using statistical models. This is because it can give us a warped perspective of how much variability there really is in a group of observations. 
+
+For example, if we have 50,000 samples of speech from adult males from Los Angeles you may be confident that we can reliably estimate the speech characteristics of males speakers from Los Angeles. But what if all these samples were from only three different speakers? It's obvious that this makes data less reliable for making inferences about Los Angeles in general, although it may provide excellent information about the three people we measured. The reason repeated-measures data can cause problems is because measurements are not independent: Multiple measurements from the same person are probably going to be similar to each other. As a result, the repeated observation of a limited number of subjects may give you good information about the subjects, but may be less useful to make inferences about the population more generally. 
+
+We're going to consider the same data we discussed in Chapter 2, the apparent height judgments made for the adult male speakers in our experiment in the actual, unmodified resonance condition (see section \@ref(c1-design)). Below we load and subset our full data to include only these trials:
+
+```{r}
+library (bmmb)
+data (height_exp)
+men = height_exp[height_exp$C_v=='m',]
+men = men[men$R=='a',]
+
+# create vector of height judgments
+mens_height = men$height
+```
+
+Figure \@ref(fig:F41) presents the height judgments collected for adult male speakers in our experiment, organized in three different ways. In the right panel we see the marginal distribution of the data with no differentiation made between listeners. This boxplot shows the individual observations of our vector $height_{[i]}$ around the overall mean $\mu$ with a standard distribution equal to $\sigma_{[total]}$. In the middle panel we see each listener's height judgments in a different boxplot. Each listener has a different mean value which we will refer to as $L_{[L]}$, with the $[L]$ subscript indicating listener number. Each listener also has a distribution of height judgments around their average value. For the sake of simplicity, we will assume that this is equal to $\sigma_{[within]}$ for all listeners. Finally, in the left panel we see the distribution of speaker averages ($L_{[L]}$). This distribution is similar to considering the distribution of thick bars inside each individual boxplot (although these bars represent the medians and not the means). We can call the standard deviation of this distribution $\sigma_{[between]}$, since it represents between-listener variation in average height judgments.
+
+```{r F41, fig.height=3, fig.width=8, fig.cap = "(left) Boxplot of distribution of average height judgments made by each listener in the experiment, for adult male speakers. (middle) Individual boxplots of height judgments for adult male speakers. (right) The marginal distribution of the height judgments shown in the middle plot.", echo = FALSE}
+
+################################################################################
+### Figure 4.1
+################################################################################
+
+par (mar = c(4,.1,.5,.1), mfrow = c(1,1), oma = c(0,4.2,0,0))
+layout (m=matrix(1:3,1,3), widths = c(.15,.7,.15))
+boxplot (tapply(men$height,men$L,mean), xlab = "", ylab="Height (cm)",
+         col = cols, ylim = c(140,195), width = 2,cex.axis=1.3)
+abline (h=)
+boxplot (height ~ L, data = men, xlab = "Listener", ylab="",yaxt='n',
+         col = cols[-1], ylim = c(140,195), cex.lab=1.3,cex.axis=1.3)
+grid()
+abline (h = mean(mens_height), lwd=2, lty=3)
+boxplot (height ~ L, data = men, col = cols[-c(1,8)],add=TRUE,yaxt='n',xaxt='n')
+boxplot (men$height, ylab="",yaxt='n', col = cols[8], ylim = c(140,195), width = 2)
+mtext (side=2,outer=TRUE, text="Height (cm)", cex=1, line=2.9,adj=.55)
+```
+
+A single normal distribution has a single fixed standard deviation. A visual inspection of the boxplots in figure \@ref(fig:F41) suggests that $\sigma_{[total]}$, $\sigma_{[within]}$, and $\sigma_{[between]}$ may not all be equal. Conceptually, they are not the same thing: $\sigma_{[total]}$ measures variation between random listeners *and* observations, $\sigma_{[within]}$ measures variation conditional on a fixed listener, $\sigma_{[between]}$ measures variation between listener averages while ignoring random variation in observations within-listener. So, we potentially have three different standard deviations in our data based on how we conceptualize the variation. The final model we used to analyze our data in the last chapter looked like this:
+
+$$
+\begin{equation}
+\begin{split}
+\\
+height_{[i]} \sim N(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} \\
+\\
+\textrm{Priors:} \\
+\mathrm{Intercept} \sim N(176, 15) \\
+\sigma \sim N(0, 15) \\ 
+\end{split}
+(\#eq:41)
+\end{equation}
+$$
+
+This model estimates $\sigma_{[total]}$ ($\sigma$ in the model above) but not $\sigma_{[within]}$ or $\sigma_{[between]}$. As a result, this model treats all deviations from the mean as random and therefore acts as if systematic between-speaker variation did not exist. However, it is clear that listeners show tendencies in the heights they tend to report, so that between-speaker variation ($\sigma_{[between]}$) should not necessarily be treated as random, unpredictable error. For example, a height response of 181 cm may be 7 cm above the overall mean, but is perfectly average for listener 10. From the perspective of the model above, an observation of 181 cm is +7 above the mean regardless of who produced it. All variation is noise. However, if you know listener 10 provided a response, a response of 181 cm should not surprise you and would be perfectly 'on target' for this listener. So, an observation of 181 would be an error of 0 cm when provided by listener 10. 
+
+If we consider our data *conditional* on the listener who provided it, it is variation from that listener's average ($L_{[L]}$) value that should be considered *noise*, and not all deviations from the mean ($\mu$). So, from the perspective of a model that includes information about listeners, the *real* random error is not $\sigma_{[total]}$ but $\sigma_{[within]}$. This is because our model would 'know' why the boxplots in the middle panel of figure \@ref(fig:F41) have different means (because different listeners provided the judgments), but not why the boxplots have an internal width (i.e. why listeners provided a range of height judgments).  
+
+### 'Levels' of variation {#c4-levels}
+
+We can think of repeated measures data as having multiple 'levels' of variation, as shown in figure \@ref(fig:F42). For our experimental height data, our 'levels' are: 
+
+* The 'lower' level: Is the distribution of the *data* itself, our individual observations and data points. We expect that each listener will produce judgments around their specific average ($L_{[L]}$), with a standard deviation equal to $\sigma$ for all speakers (referred to as $\sigma_{[within]}$ above). Clearly, there may be many good reasons for listeners' height judgments to vary from their average. However, our model cannot explain this and so this is treated as 'error' by our model. 
+
+* The 'upper' level: The distribution of *parameters* between your sources of data. In this case this is the average height reported by a given listener $L_{[L]}$. The speaker averages can be thought of as random variables since listeners are chosen randomly from a larger population of listeners and so any given speaker's $L_{[L]}$ is unpredictable a priori. We can assume that this upper-level distribution is also normal with a mean of $\mu_L$ and a standard deviation equal to $\sigma_L$ (referred to as $\sigma_{[between]}$ above).  
+
+A **multilevel model** is a special kind of regression model that is able to simultaneously estimate random variation at multiple levels. A multilevel model fit to our height judgments would be able to estimate the values of $L_{[L]}$, the variation in listener means ($\sigma_L$), and the random within-listener variation ($\sigma$), all at the same time. The structure of this multilevel model can be compared to the structure of the 'unilevel' model we fit to our height judgments in Chapter 3 (and seen in \@ref(eq:41)). In our 'unilevel model' there is only one level, one distribution: The data distribution. In a multilevel model there are two levels: The distribution of *parameters* above, and the distributions of data below. 
+
+```{r F42, echo = FALSE, out.width = "50%", fig.cap = "--."}
+
+################################################################################
+### Figure 4.2
+################################################################################
+
+knitr::include_graphics("../images/unilevelvsmultilevel.png")
+```
+
+We want to say something about the distribution of parameters, which may sound vague or overly 'technical'. Your model parameters describe some tendency in the data. For now we are just talking about average values. Since our model describes listeners in terms of their average response, when we talk about the distribution of listener mean parameters what we are really talking about is a distribution of listener characteristics. So, the 'upper' level of the multilevel model can be thought of as the level hat describes variability in the characteristics captured by your model, across the different sources of data (e.g., listeners, speakers) in your model. 
+
+
+## Strategies for estimating factors with many levels {#c4-strategies}
+
+In addition to the intercept we now have another term $L_{[i]}$ that allows us to model variation in apparent height judgments between different listeners. The notation is a bit awkward, but it is the easiest way to deal with a *set* of coefficients whose exact value in the prediction equation varies from trial to trial. The $L_{[i]}$ coefficient is actually a set of coefficients since it has a different value for each speaker (it's a vector). R treats nominal, categorical predictors as *factors* and assumes that each different label is a different group. Each value of a factor is called a *level*. Although we can indicate listeners using numbers, we are not treating this predictor as numerical (quantitative). Instead, we will treat listener (`L`) as a factor, and the individual listeners in the experiments are its levels. As far as our models are concerned, participant/speaker/subject/listener has no special status as a predictor and it is just a factor with many levels.
+
+In order to estimate a separate effect for each listener we need to add 15 parameters to our model, $L_{[1]},...,L_{[15]}$, one for each listener. Our data could then include a predictor for each listener coefficient that would equal one or zero based on whether the row was contributed by that listener or not. For example, in \@ref(eq:42) we show two examples of a row that was contributed by the second listener. That row would consist of a set of 15 predictors associated with the $L$ coefficients, all multiplied by zero save for the second one. The effect of this, seen in the second line in \@ref(eq:42), is to only have the second listener coefficient contribute to the value of that row. 
+
+$$
+\begin{equation}
+\begin{split}
+\mu_{[i]} = Intercept + L_{1}*0 + L_{2}*1 + L_{3}*0 +\ldots + L_{15}*0 \\
+\mu_{[i]} = Intercept + L_{2}*1  \\
+\end{split}
+(\#eq:42)
+\end{equation}
+$$
+
+A careful consideration of \@ref(eq:42) suggests that the $L_{[i]}$ coefficients can't equal the average height reported by each speaker. For example, if the overall mean (the intercept) is 170 cm and listener three reports heights of 175 cm on average, the equation above would predict a height response of 345 ($Intercept + L_{[3]}=354$) for this listener. Clearly that is not how the model should be working. Recall that regression models encode *differences*, rather than absolute values. Our model already represents the overall data average using the intercept parameter.  Thus, the listener predictors only need to contain information about *differences* between the listener average and the intercept, i.e. the *effect* for that listener. So, if the overall average is 170 cm and listener three reports an average height of 175 cm, then $L_{[3]}=5$ and $Intercept + L_{[3]}=175$. 
+
+If every single group were to get an independent parameter represented in our regression equation, these would become very long and difficult to interpret. For example, we may want to include a factor with dozens or even hundreds of levels. Instead, we can treat the effects associated with listeners as a vector. So, rather than use two separate predictors, $L_1$ and $L_2$, to represent the first and second listener effects, we will use $L_{[1]}$ and $L_{[1]}$, the first two elements of a vector of length 15. In order to know which listener contributed to each trial, we need an index variable, a variable that equals a number from one to 15 that indicate which listener parameter to use on that trial. This is the `L` column in our `height_exp` data, seen in our model formula above. When you give `brms` a factor as a predictor, it uses the property of factors as numbers (discussed in section 1.X) to index the predictor vector, and names the predictor vector using the same name. So, the term $L_{[L_{[i]}]}$ means: "Coefficient $L$, and the level is the one indicated by the `L` predictor for trial $i$. 
+
+$$
+\begin{equation}
+\begin{split}
+\mu_{[i]} = Intercept + L_{[L_{[i]}]} \\
+\end{split}
+(\#eq:43)
+\end{equation}
+$$
+
+When you have groups in your model that are 'thematically' related, you can 'batch' them together in a factor. You know that the 15 values of $L$ are related by being different listeners in the experiment. However, model 'knows' only what you tell it. So, the way you tell your model that these groups are related is precisely by treating them as levels of the same factor rather than as unrelated groups. Once you encode the fact that there are 'batches' of parameters in your model, you have several options with respect to how these batches are treated. Specifically with respect to our height data, we have several options regarding how we estimate the value of our speaker-men parameters $L_{[L_{[i]}]}$. Gelman and colleagues (CITE) discuss three ways that data can be pooled across statistical units: 1) Complete pooling, 2) No pooling, and 3) Partial pooling. These approaches will be outlined below. 
+
+### Complete pooling {#c4-complete-pooling}
+
+Last chapter we carried out a **complete pooling** analysis of our data. That is, we threw everything into one big pile and analyzed it as if it came from one undifferentiated group as in figure \@ref(fig:F42). There are several problems with this approach. First, the complete pooling approach does not allow us to make any statements about variation between listeners since it does not estimate values of $L_{[L_{[i]}]}$ nor the between-speaker variation $\sigma_{[within]}$. If listeners do not differ from each other in any way, then $sigma_L$ is equal to zero and the two models in figure \@ref(fig:F42) will converge on each other. However, if $sigma_L$ is not zero, then this approach will miss out on important information. 
+
+There is perhaps a more serious problem with the no-pooling approach. The complete pooling model assumes that all deviations from the mean are due to random error. Recall that regression models assume that all random variation around predicted values (i.e. the residuals), be independent. This is because since our models assume that our residuals are independent, they calculate likelihoods the 'easy' way by multiplying their individual probabilities (see sections \@ref(c2-joint) and \@ref(c2-chars-of-likelihoods). However, as we can see in figure \@ref(fig:F41), each listener had a slightly different average judged height. This means that the residuals associated with listener 14 are not independent, we actually expect almost all of them to be positive (i.e. larger than average). The violation of this assumptions means that if we are using a no-pooling approach for our repeated-measures data we are calculating likelihoods the 'wrong' way. Basically, our data has 675 rows but not 675 totally-independent observations and our model doens't know this.
+
+We've mentioned several times that our models are not exactly right or true, so why does it matter all of the sudden that this is wrong? Well, recall that in section \@ref(c2-chars-of-likelihoods) we mentioned that the likelihood function gets narrower as a function of the sample size $N$? Well, this applies only to $N$ *independent* assumptions. When we treat dependent observations as independent, our likelihood may end up being narrower than is warranted. This gives us a false sense of security about how precise our parameter estimates are. So, it matters that this is wrong because as a practical matter, the predictions this model tends to make are wrong and can easily be improved. Basically, spherical models of billiards balls are wrong but useful, cubic models of the balls are wrong and much less useful. 
+
+### No pooling {#c4-no-pooling}
+
+We can include listener predictors ($L_{[L_{[i]}]}$) in our model, as in as in \@ref(eq:44), to account for systematic variation between listeners in the data. When we estimate the levels of this factor with **no pooling**, we estimate every level of the factor totally independently. One way to model this mathematically is to think of the coefficients as coming from a uniform distribution that extends from negative to positive infinity. The uniform distribution is just a flat line, meaning any value in the interval is equally likely. So, a uniform distribution extending from positive to negative value places absolutely no restrictions on the possible values of a parameter, and says absolutely any value is equally likely. Accordingly, we see that our expected value ($\mu$) for each trial is now the sum of our intercept and the listener predictor, and that each of the $L$ terms is drawn from the same uniform distribution. 
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + L_{[L_{[i]}]}  \\
+\\
+\textrm{Priors:} \\
+L_{[L]} \sim \mathrm{uniform}(-\infty, \infty) \\\\
+\mathrm{Intercept} \sim \mathrm{N}(176, 15) \\
+\sigma \sim t(3, 0, 15) \\ 
+\end{split}
+(\#eq:44)
+\end{equation}
+$$
+
+There is one main weaknesses to this approach. Although the data provided by each of our listeners is independent in principle, it is also not totally unrelated. The listeners in this experiment each carried it out independently and did not know each other. Despite this, we see that half of listeners' average height judgments are between 171 and 176 cm, and that all listener averages fell between 168 and 181 cm. The consistency of these judgments suggest a common 'system', and an underlying similarity in listener averages. Given this, it might be surprising if a new listener carried out the experiment and provided a mean height judgment of 130 cm for adult males. Even if we decide to be very tolerant of extreme judgments, it is simply not the case that any reported height from negative to positive infinity is equally likely a priori.
+
+```{r}
+listener_means = tapply (men$height, men$L, mean)
+quantile(listener_means)
+```
+
+### (Adaptive) Partial pooling {#c4-partial-pooling}
+
+- go into adaptive partial pooling, people are usually talking about this. 
+- say we will take it for granted that your partial pooling is adaptive
+
+Partial pooling offers a sort of middle ground between complete pooling and no pooling, a potential 'just right' compromise solution. **Partial pooling** refers to the semi-independent estimation of parameters for the levels of a factor. Using partial pooling means the subject estimates are neither completely independent nor totally merged: They influence each other in a systematic way. The partial pooling version of our model is presented in \@ref(eq:45). There are two important differences with respect to the model in \@ref(eq:44). First, the $L_{[L]}$ terms are drawn from a normal distribution with a mean of zero and a standard deviation equal to $\sigma_L$. The reason the mean of the distribution is equal to zero is that our listener coefficients only encode differences to intercept, the overall mean. So, a listener that is perfectly average will have a coefficient equal to 0. Second, since the $\sigma_L$ terms is estimated from the data, a prior distribution for $\sigma_L$ is specified. 
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + L_{[L_{[i]}]} \\ 
+\\ 
+\mathrm{Priors:} \\ 
+L_{[L]} \sim N(0,\sigma_L) \\ 
+\\
+\mathrm{Intercept} \sim N(176,15) \\
+\sigma \sim t(3,0,15) \\
+\sigma_L \sim t(3,0,15)
+\end{split}
+(\#eq:45)
+\end{equation}
+$$
+
+This approach is called partial pooling because the estimate of each level of $L_{[L]}$ is potentially influenced by every other level of $L_{[L]}$  by virtue of being drawn from the same distribution $\mathrm{N}(\mu_{[i]},\sigma)$. So, unlike the complete pooling case we do not ignore variation between listeners, and unlike in the no pooling case we do not ignore the similarities between them. So, using partial pooling results in estimates of factor levels that are neither fully dependent not fully independent.  
+
+We know that our prior probability can help to pull outliers towards the prior (as discussed in section \@ref(c3-posterior)), resulting in *shrinkage*. In order for this to work effectively, the variance of the prior needs to be set at a reasonable value given the amount of variation in the data. Below, we see that the standard deviation of listener means is 3.6 cm. It would be nice to be able to use a value close to this, since we know this to be a good fit to our data. Unfortunately, if we did this it would not really be a *prior* probability anymore, since we would be analyzing the data, finding the most likely parameter values, and then using that to set what is supposed to be the *prior* probability. Instead, estimating $\sigma_L$ using our data allows us to have it both ways: You can have a prior distribution for your parameters that you yourself did not actually specify a priori. 
+
+```{r}
+sd(listener_means)
+```
+
+You may have noticed that we assign a prior distribution to $\sigma_L$ in the model above. However, $\sigma_L$ is a parameter in the prior distribution of our listener parameters $L_{[L]}$. So, actually, the prior for $\sigma_L$ is the prior of a prior. We might call this a 'grand prior' (like grandparent) but the actual term for it is **hyperprior**. One way to think of it is that in a multilevel model, each level effectively acts as the prior for the level below it, leading to a nested or hierarchical model structure (sometimes multilevel models are called **heirarchical models** for this reason). 
+
+We're going to update the equation defining our posterior distributions to take into account the structure of our partial pooling models, and to reflect not only our prior beliefs but also the information encoded in our hyperpriors. We can begin with the posterior probability of observing a given value of $L_{[L]}$ for a single listener in isolation. The equation below says that the posterior probability of $L_{[L]}$ given the data $y$ is equal to the product of the likelihood of $L_{[L]}$ given the data ($P(y|L_{[L]})$) and the prior of $L$, divided by the marginal probability ($P(y)$). Notice that \@ref(eq:45) does not in any way involve information about the expected distribution of listener averages, $\sigma_L$. So, the model below does not in any way use the fact that most of our values of $L_{[L]}$ were between 170 and 176 cm when estimating values of $L_{[L]}$.
+
+$$
+\begin{equation}
+\begin{split}
+P(L_{[L]}|y) = \frac{P(y|L_{[L]})*P(L_{[L]})}{P(y)}
+(\#eq:46)
+\end{split}
+\end{equation}
+$$
+If we want to consider the posterior probability of $\sigma_L$ given the data, we can add $\sigma_L$ to every term that previously included $L_{[L]}$ in \@ref(eq:47). Basically, we are saying $\sigma_L$ *and* $L_{[L]}$, instead of just $L_{[L]}$. Equation \@ref(eq:45) can be read aloud as "the posterior probability of observing a certain listener average and a certain amount of between-listener variation given some data is equal to the likelihood of the data given the listener average and the amount of variation between listeners, times the joint probability of the listener averages and the amount of variation between listeners, divided by the marginal probability of the data". 
+
+$$
+\begin{equation}
+\begin{split}
+P(L_{[L]},\sigma_L|y) = \frac{P(y|L_{[L]},\sigma_L)*P(L_{[L]},\sigma_L)}{P(y)}
+(\#eq:47)
+\end{split}
+\end{equation}
+$$
+
+We know that we can represent the joint probability of the listener effect and the listener standard deviation, $P(L_{[L]},\sigma_L)$, using normalized conditional probabilities as in $P(L_{[L]}|\sigma_L)*P(\sigma_L)$. We can also remove the listener standard deviation $\sigma_L$ from the likelihood of the data ($P(y|L_{[L]})$) because we know that the probability of any given data point in a normal distribution depends only on the listener average and not the standard deviation of listener averages. These two changes are reflected in \@ref(eq:48). The first term in the numerator on the right hand side is the likelihood, this was in our original equation in \@ref(eq:46). The second term is the prior distribution of listener effects. This also appeared in \@ref(eq:46), however, this distribution now allows for variation in the value of $\sigma_L$. Finally, the third term represents the hyperprior, the prior distribution of one of the parameters of another prior distribution. 
+
+$$
+\begin{equation}
+\begin{split}
+P(L_{[L]},\sigma_L|y) = \frac{P(y|L_{[L]})*P(L_{[L]}|\sigma_L)*P(\sigma_L)}{P(y)}
+(\#eq:48)
+\end{split}
+\end{equation}
+$$
+
+The 'pulling' of posterior estimates towards priors in multilevel models is sometimes referred to as *shrinkage*. For example, our posterior estimates of $L_{[i]}$ may differ from our maximum likelihood estimates of the listener averages obtained using the formula for the sample mean (ref eq 2?). When this happens, they will become more similar to the population average, and to each other. This process is called *reguralization* and it is a beneficial aspect of using partial pooling in multilevel models.
+    /
+
+
+This means that the prior probability will affect our results, and the hyper prior. Shrinkage may arise in different from joint estimation, and thats a good thing!! In partial pooling, the 'priors' are estimated from the data. As we saw in the figure in the other chapter this depends on reliability of individual priors and likelihoods. So in these models priors are as tight or loose as is warranted given the data. Further, the posterior is 'pulled' towards the prior based on the relative widths of both of these. 
+
+
+## Estimating a multilevel model with `brms` {#c4-estimating1}
+
+We're going to fit a model to the same data we investigated in Chapter 3, however, we're going to use a multilevel model that reflects the repeated-measures nature of the data. 
+
+### Data and Research questions
+
+Below we load and subset our full data to only include those trials where listeners indicated hearing adult male speakers, and only when the actual resonance size was presented. 
+
+```{r}
+data (bmmb::height_exp)
+men = height_exp[height_exp$C_v=='m',]
+men = men[men$R=='a',]
+```
+
+Once again, we're going to try to address the following basic research questions: 
+
+Q1) How tall does the average adult male sound?
+
+Q2) Can we set bounds on the likely average apparent height based on the data we collected?
+
+To analyze our data using `brms` in R we need it to be in a data frame with each row containing a different observation. We need one column containing our dependent variable (the variable we want to analyze) and one column that indicates the 'source' of the data. We can see that our data satisfies these conditions below, where the relevant columns (for this model) are `L` for listeners and `height` for our dependent variable. 
+
+```{r}
+head (men)
+```
+
+Often, experiments (or data more generally) will feature a single source of information. However, in this experiment we have both speakers producing our data and listeners providing judgments about our data. This leads to non-independent observations based on both speaker and listener. For example, a speaker who sounded tall to one person may have sounded tall to other listeners, and listeners who identified all speakers as generally tall/short would have done so in a similar way across all speakers. We will begin by building a model that incorporates information about listeners before discussing a model that also includes information regarding both speakers and listeners.
+
+### Description of the model
+
+We're going to keep working on developing an intuitive understanding for model notation, and using it to describe models. Just keep in mind that this is nothing more than an efficient way to denote the concepts being discussed in the text. To specify a multilevel model, you need to write a slightly more complicated model formula. This explanation assumes that you have a data frame where one column contains the variable you are interested in predicting (in this case `height`), and another column contains a vector containing unique labels for each speaker/listener/participant (in this case a unique listener label `L`). To indicate that your model contains an 'upper' level where you have clusters of data coming from different sources, you have to put another model formula *inside* your main model formula. Before, the model formula looked like this:
+
+`height ~ 1`
+
+Which meant 'predict height using only an overall intercept'. The model formula corresponding to the model shown in \@ref(eq:45)
+
+Now the model formula will look like this:
+
+`height ~ 1 + ( 1 | L)`
+
+Which means 'predict height using only an overall intercept, but also estimate a different intercept for each level of L (listener)'. When you place a predictor in parenthesis on the right-hand-side of a pipe, like this `( | predictor )`, you tell `brm` that you expect data to be clustered according to the factor represented on the right of the pipe `|`. In this case, we are telling `brm` that each level of `L` (listener) is a factor whose levels you wish to treat as a 'batch'. Whatever you put in the left-hand-side of the parentheses `( in here | predictor )` is the model for each level of the factor. So the model formula `height ~ 1 + ( 1 | L)` effectively tells `brm` to build an intercept only model for each listener. This also tells `brms` that the model for each level of the factor should be estimated with partial pooling. Specifically in this case, it is telling `brms` to estimate the listener-specific intercepts using partial pooling. By convention, effects estimated using partial pooling are modeled as coming from a normal distribution with a mean of zero, so that aspect of the model does not need to be directly specified. In plain English, the model in \@ref(eq:45) says:
+
+> We expect height judgments to be normally distributed around the expected value for any given trial, $\mu_{[i]}$, with some unknown standard deviation $\sigma$. The expected value for a trial is equal to a fixed overall average (Intercept) and some value associated with the individual listener ($L_{[L_{[i]}]}$) who uttered the trial. The listener coefficients ($L_{[L_{[i]}]}$) were modeled as coming from a normal distribution with a mean of zero and a standard deviation ($\sigma_L$) that was estimated from the data. 
+
+There is a very important difference in how the 'unilevel' model from Chapter 3, and this model partition the variance in apparent talker heights. The initial 'unilevel' model broke down the total variation in the data ($\sigma_{total}$) like this:
+
+$$
+\begin{equation}
+\sigma^2_{total} = \sigma^2
+(\#eq:49)
+\end{equation}
+$$
+
+In other words, all variation was error. We don't know why values vary from the mean, so all variation is just random noise. Our multilevel model views the variation in our data like this:
+
+$$
+\begin{equation}
+\sigma^2_{total} = \sigma^2_{L} + \sigma^2
+(\#eq:410)
+\end{equation}
+$$
+
+
+
+The total variance is equal to the within listener variance ($\sigma^2$) and the between-listener variance ($\sigma_L^2$). From the perspective of this model, only the variation *within* a speaker's individual boxplot is error. The differences from listener to listener represent random (but systematic) between-listener variation in apparent height judgments. To some extent, investigating the *effects* for the different listeners in our sample involves asking how much the listener averages differed from the overall response. If listeners do not differ from each other in any way, then $sigma_L$ is equal to zero and the two models in figure \@ref(fig:F42) will converge on each other. So, a crucial part of investigating the overall effect of different listeners on our results is understanding the magnitude of $\sigma_L$. 
+
+### Fitting the model
+
+We can use `brms` to fit a model with a formula that more appropriately specifies the clustering we expect in our data. If we look at our model specification in \@ref(eq:45), we need to specify four priors: $Intercept$, $L_{[i]}$, $\sigma_L$, and $sigma$. However, the prior standard deviation for $L_{[i]}$ does not need to be specified since it is estimated from the data (and the mean is assumed to be zero). We can confirm our expectations using the `get_prior` function as seen below. 
+
+```{r}
+brms::get_prior (height ~ 1 + (1|L), data = men)
+```
+
+We see a new `class` of prior, `sd`. Our classes of priors are now: 
+
+-   `Intercept`: this is a unique class, only for intercepts.
+-   `sd`: this is for our standard deviation parameters that relate to 'batches' of parameters. In our example this is `sd(Intercept)` for `listener` ($\sigma_{L}$).
+-   `sigma`: the error term.
+
+The information presented by `get_prior` does not list a set of priors that must be specified, but rather different ways that priors can be set. This is not so useful for our very simple models now but it will be come very useful later so it is worth getting into it now while it is still relatively simple. Top to bottom, here is the information presented in the output above. First, you can specify a prior for the `Intercept`, which is its own unique class. Second, you can specify a prior for all `sd` parameters in your model. Third, you can specify a prior for all the `sd` parameters related to your `L` group. The fourth line allows you to specify a prior *only* to the `Intercept` for your `L` group (i.e. $L_{[L]}$) and not to any other listener-related predictors in your model (there are none for now). The fifth line lets you specify the prior for the error in the model (i.e. $\varepsilon$). We can see all this in action in the code below. We fit a model and specify prior distributions for our intercept, for *all* variables in the `sd` class, and for the error term (basically the first, second, and fifth lines above). 
+
+```{r,eval = FALSE}
+# Fit the model yourself
+set.seed (1)
+multilevel_model =  
+  brms::brm (height ~ 1 + (1|L), data = men, chains = 4, cores = 4,
+             warmup = 1000, iter = 3500, thin = 2,
+             prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
+                       brms::set_prior("normal(0, 15)", class = "sd"),
+                       brms::set_prior("normal(0, 15)", class = "sigma")))
+
+
+saveRDS (multilevel_model, '../../models/4_multilevel_model.RDS')
+
+```
+
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+multilevel_model = bmmb::get_model ('4_multilevel_model.RDS')
+```
+```{r, include = FALSE}
+multilevel_model = readRDS ('../../models/4_multilevel_model.RDS')
+```
+
+### Interpreting the model
+
+We can inspect the 'short' version of our model print statement:
+
+```{r, collapse = TRUE}
+# inspect model
+bmmb::short_summary (multilevel_model)
+```
+
+This model contains one new chunk its print statement, which tells us about the standard deviation for the Intercept (`sd(Intercept)`) for the `~L` factor. The term `sd(Intercept)` in this section corresponds to $\sigma_L$, the standard deviation of listener effects ($L_{[i]}$) in the sample. 
+
+```{r}
+## Group-Level Effects:
+## ~L (Number of levels: 15)
+##               Estimate Est.Error l-95% CI u-95% CI
+## sd(Intercept)     3.77      0.84     2.48     5.81
+```
+
+Below, we calculate the listener mean heights values, the standard deviation of these, and the amount of within-speaker variation in apparent height judgments. We can see that these resemble the value of the analogous values in our model.
+
+```{r, collapse = TRUE}
+# find mean f0 for each speaker
+listener_means = aggregate (height ~ L, data = men, FUN = mean) 
+# find the within speaker standard deviation This is the within-talker 'error'.
+listener_sigmas = aggregate (height ~ L, data = men, FUN = sd) 
+
+# the mean of the speaker means corresponds to our Intercept
+mean (listener_means$height)
+
+# the standard deviation of the speaker means corresponds to 'sd(Intercept)', 
+# the estimate of the standard deviation of speaker intercepts
+sd (listener_means$height)
+
+# the average within-speaker standard deviation corresponds to 'sigma', 
+# the estimated error
+mean (listener_sigmas$height)
+```
+
+We're going to discuss the calculations we made above in terms of what they represent in the boxplots below, our model coefficients in the print statement above, and in our model definition in \@ref(eq:44). The overall mean height in our data (173.8) corresponds quite well to our model estimate of 173.8, seen in the horizontal line in the figure below. The standard deviation of the listener means is 3.6 cm. This is very similar to our model estimate of 3.8 cm. The standard deviation of the listener effects reflects the average distance from each speaker's average to the overall average. Finally, the average of the within speaker standard deviation in our data (6.8 cm) corresponds closely to our model's error estimate (sigma = 7.0). This reflects the average spread of each speaker's data relative to their own mean, within their own little boxplot. We can see that the information provided by `brms` is quite similar to what we can estimate directly using our data. However, *brms* does this all for us, in addition to giving us information regarding credible bounds for different parameters.
+
+```{r F43, fig.height = 3.5, fig.width = 8, fig.cap = "Listener-specific boxplots for apparent height judgments made for adult male speakers. The horizontal line indicates the model intercept.", echo = FALSE}
+
+################################################################################
+### Figure 4.3
+################################################################################
+
+par (mfrow = c(1,1), mar = c(4,4,2,1))
+
+boxplot (height ~ L, data = men, main = "Speaker Boxplots",col=cols) 
+abline (h = mean(men$height), lwd=3,lty=3)
+boxplot (height ~ L, data = men, main = "",col=cols,add=TRUE) 
+```
+
+
+## 'Random' Effects {#c4-random-effects}
+
+If you have some familiarity with statistical modeling or the analysis of experimental or repeated-measures data, you may have heard of **random-effects models** or **mixed-effects models**. People often distinguish the predictors in their models between those that are 'fixed' and those that are 'random'. So, a research might describe their model as including 'random effects' for so and so and 'fixed effects' for some other predictor. In fact, a very common way of describing our model above would be that we used a 'mixed-effect model with random intercepts by listener'. What makes a predictor fixed or random and what is the practical effect of this in our models? It turns out that although they are commonly used, the terms 'fixed' and 'random' effects do not have a single agreed-upon definition. Gelman (2005) mentions at least five different definitions of the distinction:
+
+(1) Fixed effects are constant across individuals, and random effects vary. 
+
+(2) Effects are fixed if they are interesting in themselves or random if there is interest in the underlying population. 
+
+(3) “When a sample exhausts the population, the corresponding variable is fixed; when the sample is a small (i.e., negligible) part of the population the corresponding variable is random.” 
+
+(4) “If an effect is assumed to be a realized value of a random variable, it is called a random effect.”
+
+(5) Fixed effects are estimated using least squares (or, more generally, maximum likelihood) and random effects are estimated with shrinkage. 
+
+You will note that some of these definitions (2 and 5 in particular) would have an effect change from random to fixed based on the researcher's conception of it. This is the 'mind projection fallacy', the mistaken assumption that the way we choose to represent the world in our model reflects the true nature of the thing itself (McIllwreath, p81). Rather than focus on our conception of effects as fixed or random in theory, we may ask: What is the difference between these sorts of effects in practice? The answer to this is that when researchers discuss the inclusion of **random effects** in their models, what they are really saying is that some of their terms were fit with adaptive partial-pooling. When researchers indicate that their effects were **fixed**, they are saying that they were fit without adaptive partial pooling. This applies to both Bayesian approaches and to models fit with more traditional methods such as the popular `lmer` function in the `lme4` package in R.  
+
+In light of this, Gelman (cite) recommends being direct about the relevant distinction in our predictors and avoiding the use of the terms 'fixed' and 'random' effects and focusing on whether pooling was used or not. So, in the context of a multilevel model 'random effects' are those you estimate with adaptive partial pooling, meaning the prior is estimated from the data (e.g., $\sigma_{speaker}$), and can affect individual parameter estimates. In contrast, 'fixed effects' are those predictors for which you set arbitrary priors before fitting the model. This means that 'fixed' effects are all estimated independently and will not affect each other (at least through their priors).
+
+By definition, the speaker effects are centered around 0 (the average). The only question is, how widely are they distributed? Well, what better way to answer this question than using the distribution present in the data itself? This means that the amount of variation you expect between speakers is based on the amount of between-speaker variation you observe. The idea is basically: is it believable that this one person be this far away from the 'average'? Well, it depends on what everyone else looks like! By estimating the prior for some parameters from the data itself, multilevel models can help [protect against problems that naturally arise when researchers compare many things](http://www.stat.columbia.edu/~gelman/research/published/multiple2f.pdf). This is because in a Bayesian analysis, the prior influences the estimates of your individual parameters. As a result, the variation in the *other* parameters in your sample can influence any given parameter.
+
+Although the terms terms 'fixed' and 'random' effects are useful (and we have used these terms in our work), it is important to keep in mind that the philosophical distinctions between 'fixed' and 'random' predictors outlined above is not relevant for the models we are discussing here. The real distinction is: do you want to fit every level totally independently as if they were all unrelated? Or do you want to use partial pooling in your estimates, thereby using all of the information present in my sample to protect against spurious findings?
+
+In general, when you have many levels of a factor, it may be a good idea to include these as 'random' effects, regardless of how 'random' it might actually be. There is not much downside to it: you get more information from the model (e.g., information about $\sigma_{predictor}$), and you can always fit multiple models to see what, if any differences, result form the different approaches. Some useful things to consider are also: Do you believe that treating a predictor as a 'random' effect offers a modeling advantage? Does it better reflect the process/relationships you are trying to understand? Does it provide you with information you find useful? Is it realistic to fit this kind of model given the amount of data you have, and the nature of the relationships in the data? Right now the last point is not something we have talked about very much, but it is something we will need to worry about more as our models become more complicated.
+
+### Inspecting the random effects {#c4-inspecting-random-effects}
+
+You may have noted that the estimates of our coefficients fit with partial pooling, the $L_{[i]}$ coefficients, do not appear in the model print statement. Instead, only the standard deviation of the effects is presented. The reason for this is that there may be a large number of random effects coefficients, which would result in models that are difficult to read. A second reason for this is that researchers are often not directly interested in the individual values of their random effects, but rather they are usually focused on the overall effects common to all listeners. For example, to this point we have been talking about "what is the average apparent height of male speakers" and never "what did listener 04 think the average height of men is?". However, there are situations in which we may be interested in investigating the random effects, and the `brms` package has several functions to facilitate this process.
+
+We will present two ways to consider the random listener effects using the `ranef` function. In the first of these you set `summary=FALSE` in the call to `ranef` as shown below. This function returns a list of three-dimensional matrices, where each list element is named after the grouping factor it represents. Below, we collect the random effects and take the element named `L`, corresponding to a matrix representing our listener factor. The matrix representing each factor has three dimensions, with individual posterior samples varying across the first dimension (rows), factor levels varying along the second dimension (columns), and parameters varying across the third dimension. Effectively, `listener_intercepts` is a set of two-dimensional matrices stuck together, one for each random parameter. You can select the matrix corresponding to the intercept by putting the name of the parameter in the third dimension of the matrix, as in  `listener_intercepts[,,"Intercept"]`,reducing our three-dimensional matrix to a two-dimensional one representing the random listener intercepts in our model. 
+
+```{r}
+random_effects = brms::ranef (multilevel_model, summary = FALSE)
+listener_effects = random_effects$L
+listener_intercepts = listener_effects[,,"Intercept"]
+```
+
+The above process results in a two-dimensional matrix representing the individual samples of our listener effects. We can see below that this matrix has 5000 rows, corresponding to the individual samples, and 15 columns, representing the individual listeners. We use the `head` function to see the first six samples of the listener effects.
+
+```{r}
+dim (listener_intercepts)
+head ( round (listener_intercepts, 2))
+```
+
+We can repeat the process above but without specifying `summary=FALSE` like we did above. When this is done, rather than the individual samples, you get summaries of the posterior distribution. When this is done, the `ranef` function still returns a list of three-dimensional matrices. This time, factor levels vary across the first dimension (rows), columns providing different information about factor levels, and parameters varying across the third dimension. We again take the list element corresponding to our list element `L` and take only the third dimension corresponding to our Intercept. 
+
+```{r, collapse = TRUE}
+# I am telling it to give me the 'speaker' Intercepts, but only the first 
+# 10 rows. This is just so it doesn't take up the whole page.
+random_effects = brms::ranef (multilevel_model)
+listener_effects = random_effects$L
+listener_intercepts = listener_effects[,,"Intercept"]
+```
+
+This time, the process results in a two-dimensional matrix representing a summary of the posterior, as seen below. The leftmost column of the output below represents the posterior mean effect estimated for each listener, the second column represents the standard deviation of posterior samples, and the third and fourth columns provide he 2.5% and 97.5% credible intervals for each parameter, respectively. 
+
+```{r}
+listener_intercepts
+```
+
+Notice that the listener averages vary around 0, and some are even negative. That is because the listener effects (and all random effects) are represented as deviations from the intercept, as noted above. We can use a simple plotting function included in the `bmmb` package (`brmplot`) to look at the distribution of speaker effects terms. The function takes in the summaries made by `brms` and plots a point for each parameter mean/median, and lines indicating the credible intervals calculated by `brm` (usually 95% credible intervals). 
+
+
+```{r}
+listener_means = tapply (men$height, men$L, mean)
+listener_means_centered = listener_means - mean(listener_means)
+
+round (rbind (listener_means_centered, listener_intercepts[,1]), 1)
+```
+
+
+```{r eval=FALSE}
+brmplot(listener_intercepts)
+```
+
+We can compare the estimates of by-speaker intercepts to the distribution of centered height responses arranged by subject. We can see that the arrangement of the means and raw data shows a close correspondence. 
+
+```{r F44, fig.height = 3.5, fig.width = 8, fig.cap="Comarisons of random speaker effects to the distribution of productions for the same speakers, for girls (cyan) and women (red).", echo=FALSE}
+
+################################################################################
+### Figure 4.4
+################################################################################
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+brmplot(listener_intercepts, col = cols, ylim = c(-30,20))
+
+height_centered = (men$height-mean(men$height))
+boxplot (height_centered ~ L, data=men, col = cols, ylim = c(-30,20))
+abline (h=0)
+```
+
+
+## Simulating data using our model parameters {#c4-simulating}
+
+One way to think about what all these numbers mean is to simulate data that has the same characteristics, and build fake data from the individual component parts. The code chunk below does exactly this for the data we have been discussing thus far.
+
+First, there is an intercept equal to 220.4 Hz. Then, I create effects representing 48 simulated 'female talkers' from a population just like our observed population. These effects are stored in a vector called `alpha_speaker`, and they represent the values of $\alpha_{[speaker]}$ for our different speakers. These speaker effects come from a population with a mean of 0 and a standard deviation ($\sigma_{speaker}$) equal to 20.4 (like our data). Each of these simulated speakers produces 12 productions, and so we need a `speakers` vector with values that repeat 12 times each to index the `alpha_speaker` vector containing the effects.
+
+I also draw our error, $\varepsilon$. This error comes from a distribution with a mean of 0 and a standard deviation equal to $\sigma_{error}$. It's important to note that the error is just 48x12 random draws from this population. There is no distinction between one person's productions and another when it comes to the error. If there were, this would indicate differences in sigma between speakers! Our model assumes a single error population for all speakers (but it doesn't *have* to be this way).
+
+```{r, collapse = TRUE}
+## don't run this line if you want a new simulated dataset. 
+set.seed(1)
+## this is the value of our intercept
+Intercept = 173.8
+## this is a vector of 48 speaker effects
+L_L = rnorm (15, 0, 3.77 )
+## this is a vector indicating which speaker produced which utterance
+L = rep (1:15, each = 45)
+## this vector contains the error
+epsilon = rnorm (45 * 15, 0, 7.03)
+```
+
+After creating our components, we add the Intercept, speaker deflections and random error to make our fake 'replicated' data. Since this data has the same statistical properties as our real data, it should look a lot like it.
+
+```{r, collapse = TRUE}
+# the sum of an intercept, speaker deflections and random error makes our fake data
+height_rep = Intercept + L_L[L] + epsilon
+```
+
+Below I compare the results of our simulation to our real data. If you didn't have a clear impression of what the data looked like, I doubt you could tell which is the real data. This tells us our model is a good reflection of the data.
+
+```{r F45, echo = FALSE, fig.width = 8, fig.height = 3, fig.cap = "Comparison of real and simulated f0 production data."}
+
+################################################################################
+### Figure 4.5
+################################################################################
+
+par (mfrow = c(1,2), mar = c(1,2,1,1), oma = c(0,2,0,0))
+boxplot (height_rep ~ L, ylim = c(140,200), xaxt='n',xlab='',
+         col=c(yellow,coral,deepgreen,teal))
+abline (h = 173.8, lwd=3,lty=3)
+boxplot (height ~ L, data = men, ylim = c(140,200), xaxt='n',xlab='',
+         col=c(yellow,coral,deepgreen,teal))
+abline (h = 173.8, lwd=3,lty=3)
+mtext (text = "f0", side=2, outer=TRUE, line = 1)
+```
+
+Below we make two datasets that are 'incomplete' with respect to the variation in our data. The first contains the intercept and noise only, the second contains the intercept and speaker effects only.
+
+```{r, collapse = TRUE}
+# this fake data is missing between speaker variation
+height_rep_1 = Intercept + epsilon
+# this fake data is missing within speaker variation
+height_rep_2 = Intercept +  L_L[L]
+```
+
+In the figure below, I compare these 'incomplete' datasets to the full simulated data. The top row contains only error ($\varepsilon, \sigma_{error}$). As a result, f0 varies around the intercept, but there is no speaker to speaker variation. This is what that data would look like if there is no random variation in means across subjects.
+
+However, notice that each little box is not centered at 0. Although the error distribution is centered at 0, the small number of errors added to the speaker mean are **extremely** unlikely to add up to exactly 0. So, error contributes some unknown amount to each speaker's apparent average. This makes estimations of the *real* speaker effects impossible in practice.
+
+In the middle plot, the figure shows only between-speaker variation ($\alpha_{[speaker]}, \sigma_{speaker}$) but no within-speaker variation (i.e., no noise/error). Now we see that speakers vary from the intercept, but this representation does not show the fact that speakers also vary relative to their own average.
+
+The final plot is the combination of the variation in the top two figures. The final plot shows the simulated data: the sum of the intercept, the within speaker variation and the between-speaker variation reflected in the values of the speaker intercepts.
+
+```{r F46, fig.width = 8, fig.height = 6, fig.cap="(top) Simulated error variation around the intercept. (middle) Simulated between-speaker variation, but no production error. (bottom) Simulated data containing both within and between-speaker variation in f0.", echo = FALSE}
+
+################################################################################
+### Figure 4.6
+################################################################################
+
+par (mfrow = c(3,1), mar = c(1,3,1,1), oma = c(0,2,0,0))
+boxplot (height_rep_1 ~ L, ylim = c(150,205),xaxt='n',
+         col=cols)
+text (1, 200, label = expression(paste(sigma^2)), cex = 1.5)
+abline (h=174.8,lty=2)
+
+boxplot (height_rep_2 ~ L, ylim = c(150,205),xaxt='n',
+         col=cols)
+abline (h=174.8,lty=2)
+text (1, 200, label = expression(paste(sigma["L"]^2)), cex = 1.5)
+
+boxplot (height_rep ~ L, ylim = c(150,205),xaxt='n',
+         col=cols)
+abline (h=174.8,lty=2)
+text (1, 200, label = expression(paste(sigma^2+sigma["L"]^2)), cex = 1.5)
+
+mtext (side=2,text="Height (cm)", outer = TRUE, line=0)
+```
+
+
+```{r}
+## don't run this line if you want a new simulated dataset. 
+set.seed(1)
+## this is the value of our intercept
+Intercept = 173.8
+## this is a vector of 48 speaker effects
+L_L = rnorm (15, 0, 0 )
+## this is a vector indicating which speaker produced which utterance
+L = rep (1:15, each = 45)
+## this vector contains the error
+epsilon = rnorm (45 * 15, 0, 7.78)
+
+# the sum of an intercept, speaker deflections and random error makes our fake data
+height_rep = Intercept + L_L[L] + epsilon
+
+################################################################################
+### Figure 4.5
+################################################################################
+
+par (mfrow = c(1,2), mar = c(1,2,1,1), oma = c(0,2,0,0))
+boxplot (height_rep ~ L, ylim = c(140,200), xaxt='n',xlab='',
+         col=c(yellow,coral,deepgreen,teal))
+abline (h = 173.8, lwd=3,lty=3)
+boxplot (height ~ L, data = men, ylim = c(140,200), xaxt='n',xlab='',
+         col=c(yellow,coral,deepgreen,teal))
+abline (h = 173.8, lwd=3,lty=3)
+mtext (text = "f0", side=2, outer=TRUE, line = 1)
+```
+
+
+```{r}
+set.seed(1)
+
+sds = rep(0,1000)
+for ( i in 1:5000){
+  Intercept = 173.8
+  L_L = rnorm (15, 0, 0 )
+  L = rep (1:15, each = 45)
+  epsilon = rnorm (45 * 15, 0, 7.78)
+  height_rep = Intercept + L_L[L] + epsilon
+  sds[i] = sd (tapply(height_rep, L, mean))
+}
+
+hist(sds)
+max(sds)
+```
+
+## Adding a second random effect {#c4-second-random-effect}
+
+Our model is looking better, but is still not 'right'. This is because in addition to repeatedly sampling from only 15 listeners, our model also features repeated sampling from 45 different speakers. So, we are interested in the average male from Michigan, but the fact of the matter is that we have only sampled 45 of them. In order to have a model that we could actually use to analyze this data for published research, we need to build this information into our model as well.
+
+
+```{r F47, fig.height=3, fig.width=8, fig.cap = "", echo = FALSE}
+
+################################################################################
+### Figure 4.7
+################################################################################
+
+par (mar = c(4,.1,.5,.1), mfrow = c(1,1), oma = c(0,4.2,0,0))
+layout (m=matrix(1:3,1,3), widths = c(.15,.7,.15))
+boxplot (tapply(men$height,men$S,mean), xlab = "", ylab="Height (cm)",
+         col = cols, ylim = c(140,195), width = 2,cex.axis=1.3)
+abline (h=)
+boxplot (height ~ S, data = men, xlab = "Listener", ylab="",yaxt='n',
+         col = cols[-1], ylim = c(140,195), cex.lab=1.3,cex.axis=1.3)
+grid()
+abline (h = mean(mens_height), lwd=2, lty=3)
+boxplot (height ~ S, data = men, col = cols[-c(1,8)],add=TRUE,yaxt='n',xaxt='n')
+boxplot (men$height, ylab="",yaxt='n', col = cols[8], ylim = c(140,195), width = 2)
+mtext (side=2,outer=TRUE, text="Height (cm)", cex=1, line=2.9,adj=.55)
+```
+
+
+### Updating the model
+
+In order to model the effects of the different speakers in our data, our model formula now looks like this:
+
+`height ~ 1 + ( 1 | L) + ( 1 | S)`
+
+All we have done is added a new term in parenthesis, indicating a second predictor whose levels we want to estimate using adaptive partial pooling. Again, we include only a one on the left hand side of the pipe, indicating that we are only estimating speaker-specific intercepts. So, this formula says 'predict height using only an overall intercept, but also estimate a different intercept for each level of listener and speaker'. This regression model corresponding to the formula above now looks like this:
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mathrm{Priors:} \\ 
+L \sim N(0,\sigma_L) \\
+S \sim N(0,\sigma_S) \\
+\\
+\mathrm{Intercept} \sim N(176,15) \\
+\sigma \sim t(3,0,15) \\
+\sigma_L \sim t(3,0,15) \\
+\sigma_S \sim t(3,0,15)
+\end{split}
+(\#eq:26)
+\end{equation}
+$$
+
+Just as with the listener coefficients, the speaker coefficients represents deviations in speaker averages from the intercept. As a result, the speaker average is set to zero and the mean of the speaker effects (i.e. a value like $\mu_S$) is not estimated by the model. In plain English, the model description above says:
+
+> We expect height judgments to be normally distributed around the expected value for any given trial, $\mu$, with some unknown standard deviation $\sigma$. The expected value for a trial is equal to the sum of a fixed overall average (Intercept), some value associated with the individual listener ($L_{[L_{[i]}]}$) who judged the trial, and some value associated with the individual speaker ($S_{[S_{[i]}]}$) who produced the trial. The listener and speaker coefficients ($L$ and $S$) were both modelled as coming from normal distributions whose standard deviations, $\sigma_L$ and $\sigma_S$, were estimated from the data. Prior distributions for $\sigma$, $\sigma_L$, $\sigma_S$, and the intercept were all directly specified. 
+
+The model we fit last chapter only included variation due to error. The first model we fit in this chapter divided variation into systematic between-listener variation and random within-listener error. Now, our model now attempts to break up the total variance in our data into three components, those corresponding to between-listener variation, to between-speaker variation, and to random error, as seen below. If the error was the within-listener variation before, what does it represent now? Our error is now the difference between the value we expect, given the speaker *and* listener, and the value we observe. So, it is the variation controlling for, the listener and listener. In other words, if you know who the speaker is and who the listener is, and you control for this, how much random variability do you still have left over in your model? The answer is $\sigma^2$.   
+
+$$
+\sigma^2_{total} = \sigma^2_{L} + \sigma^2_{S} + \sigma^2
+(\#eq:210)
+$$
+
+### Fitting and interpreting the model
+
+Below, we fit the new model using exactly the same code as for `multilevel_model`, save for the modification to the model formula. We do not need to specify a hyperprior for $\sigma_S$ because this falls under the `sd` category. As long as we can use the same hyperprior for each factor specific standard deviation, i.e. $\sigma_{F}$ for factor $F$, we do not need to specify a prior for each parameter. 
+
+```{r,eval = FALSE}
+# Fit the model yourself
+set.seed (1)
+multilevel_L_S =  
+  brms::brm (height ~ 1 + (1|L) + (1|S), data = men, chains = 4, cores = 4,
+             warmup = 1000, iter = 3500, thin = 2,family="student",
+             prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
+                       brms::set_prior("student_t(3, 0, 15)", class = "sd"),
+                       brms::set_prior("gamma(2, 0.3)", class = "nu"),
+                       brms::set_prior("normal(0, 15)", class = "sigma")))
+```
+
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+multilevel_L_S = bmmb::get_model ('4_multilevel_L_S.RDS')
+```
+```{r, include = FALSE}
+multilevel_L_S = readRDS ('../../models/4_multilevel_L_S.RDS')
+```
+
+After fitting the model we inspect the output:
+
+```{r, eval=FALSE}
+bmmb::short_summary (multilevel_L_S)
+```
+
+The model print statement should look familiar except it contains one new chunk representing information about the speaker predictor in our model. This chunk reminds us that our `S` predictor had 45 levels, and provides us information about the estimate of the $\sigma_S$ parameter (`sd(Intercept)`)
+
+## Investigating 'shrinkage' {#c4-investigating-shrinkage}
+
+We've mentioned that multilevel models can result in *shrinkage*, that is, in coefficient estimates that are smaller in magnitude than their maximum likelihood counterparts. The reason for this was discussed in section X,  
+
+
+```{r}
+L_hat = brms::ranef(multilevel_L_S)$L[,1,'Intercept']
+S_hat = brms::ranef(multilevel_L_S)$S[,1,'Intercept']
+
+L_ml = tapply (men$height, men$L, mean)
+S_ml = tapply (men$height, men$S, mean)
+
+L_ml = L_ml - mean (L_ml)
+S_ml = S_ml - mean (S_ml)
+```
+
+
+```{r F48, fig.height = 3, fig.width = 8, fig.cap="--", echo=FALSE}
+
+################################################################################
+### Figure 4.8
+################################################################################
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+plot (L_ml, L_hat, xlim = c(-10,10), ylim = c(-10,10),
+      pch=4, lwd=3, col=cols,cex=2.25)
+grid()
+abline (0,1,col=2,lwd=2)
+abline(h=0,v=0)
+points (L_ml, L_hat, pch=4,lwd=3, col=cols,cex=2.25)
+
+plot (S_ml, S_hat, xlim = c(-12,12), ylim = c(-12,12),
+      pch=4, col=4,cex=2.25)
+grid()
+abline (0,1,col=2, lwd=2)
+abline(h=0,v=0)
+points (S_ml, S_hat, pch=4,lwd=3, col=cols,cex=2.25)
+
+```
+
+
+
+```{r F49, fig.height = 3, fig.width = 8, fig.cap="--", echo=FALSE}
+
+################################################################################
+### Figure 4.9
+################################################################################
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+plot (L_ml, L_hat-L_ml, xlim = c(-7,9), ylim = c(-5,5),
+      pch=3, lwd=3, col=cols,cex=2.25)
+grid()
+abline(h=0)
+points (L_ml, L_hat-L_ml, pch=3,lwd=3, col=cols,cex=2.25)
+
+plot (S_ml, S_hat-S_ml, xlim = c(-7,9), ylim = c(-5,5),
+      pch=3, col=4,cex=2.25)
+grid()
+abline(h=0)
+points (S_ml, S_hat-S_ml, pch=3,lwd=3, col=cols,cex=2.25)
+
+```
+
+
+```{r F410, fig.height = 3, fig.width = 8, fig.cap="--", echo=FALSE}
+
+################################################################################
+### Figure 4.10
+################################################################################
+
+par (mfrow = c(1,2), mar = c(4,1,1,1))
+plot (L_ml,rep(0,15), ylim = c(0,5), cex=1.5,pch=1,col=cols, xlim = c(-13,13), 
+      yaxt = 'n', ylab = '')
+points (L_hat,rep(1,15), cex=1.5,pch=16,col=cols,lwd=2)
+arrows (L_ml,0.1,L_hat,0.9, length=0.1)
+abline (v=0, lty=3,col='grey')
+x = seq(-12,12,0.01)
+den = dnorm (x, 0, 3.79)
+den = den / max (den)
+den2 = dnorm (x, 0, sd(S_ml))
+den2 = den2 / max (den2)
+text (0,2.5,label = expression(paste(sigma["L"]," = 3.79")), cex = 1.25)
+lines (x, (den*2)+2, lwd = 3, col = 4)
+lines (x, (den2*2)+2, lwd = 2, col = 4,lty=3)
+
+plot (S_ml,rep(0,45), ylim = c(0,5), cex=1.5,pch=1,col=cols, xlim = c(-13,13), 
+      yaxt = 'n', ylab = '')
+points (S_hat,rep(1,45), cex=1.5,pch=16,col=cols,lwd=2)
+arrows (S_ml,0.1,S_hat,0.9, length=0.1)
+abline (v=0, lty=3,col='grey')
+x = seq(-12,12,0.01)
+den = dnorm (x, 0, 2.84)
+den = den / max (den)
+den2 = dnorm (x, 0, sd(L_ml))
+den2 = den2 / max (den2)
+text (0,2.5,label = expression(paste(sigma["S"]," = 2.84")), cex = 1.25)
+lines (x, (den*2)+2, lwd = 3, col = 4)
+lines (x, (den2*2)+2, lwd = 2, col = 4,lty=3)
+```
+
+
+## Answering our research questions {#c4-answering-question}
+
+Let's return to the research questions we posed at the beginning of this chapter:
+
+1) What is the average f0 of the whole *population* likely to be?
+
+2) Can we set bounds on likely mean f0 values based on the data we collected?
+
+And we can compare the answers provided to this question by our initial model (which contained no priors or information about repeated measured):
+
+```{r, collapse = TRUE}
+bmmb::short_summary (model)
+```
+
+And final models (which contained information about speakers and appropriate priors):
+
+```{r, collapse = TRUE}
+bmmb::short_summary (multilevel_L_S)
+```
+
+Our model from the previous chapter, `model`, and our final model `multilevel_L_S`) agree on the average height. However, they disagree on a credible interval for that parameter with the initial model having a much narrower credible interval. This is because our initial model did not specify information about repeated measures, which caused our model to think that it had more independent observations than it did. This led the initial model to return an overly-precise estimate. 
+
+Another difference is that the final model has a smaller `sigma` parameter (7.8 vs 6.5), which indicates that the error is much smaller in the final model than in the initial model. Keep in mind that 'error' is just what your model can't explain. Our final model explains more and so there is less error. The reduced error is a direct consequence of the fact that the final model splits the variation in the data into between-speaker and within-speaker components (i.e., $\sigma^2_{total}=\sigma^2_{speaker}+\sigma^2_{error}$), estimating the between-speaker variation ($\sigma_{speaker}$) to be about 20 Hz. Since $\sigma_{total}$ is a fixed value (given the data), obviously the larger your between-speaker variation is ($\sigma_{speaker}$), the smaller your random error ($\sigma_{error}$) *must* be.
+
+Usually, parameters should be reported with *at least* the mean/median and standard deviations of the posterior distribution, in addition to some useful credible interval (i.e., 50%, 95%) around that parameter. Based on the result of our final model, I think a thorough description of the general properties of our data might go something like: 
+
+> "Based on our model the average apparent height of adult males is likely to be 174.8 cm (s.d. = x, 95% CI = x, x). The estimated magnitude of the random error was 6.5 cm (s.d. = x, 95% CI = x, x). Consistent between-listeners variation averages about x Hz (s.d. = x, 95% CI = x, x), while consistent between-listeners variation averages about x Hz (s.d. = x, 95% CI = x, x).
+
+Finally, the standard deviation of production error was about 12.5 Hz (s.d. = 0.39, 95% CI = 11.81, 13.34) indicating that the amount of random within-speaker variation in production is about half the magnitude of the systematic between-speaker differences in f0.   
+
+We again including the speaker boxplots below because I think this image basically presents the same information as the paragraph above, but in visual form. In general, any data relationship or result can be presented in a figure, and the relationships presented in a figure can also be expressed as a mathematical model. When you're thinking about the relationships in your data, or that you expect in your data, it's a good idea to think: what kind of picture could illustrate this relationship? Conversely, if you see a figure of your results that you feel really expresses something interesting about your data you should think, how can these relationships be represented in a model?
+
+```{r F411, fig.height = 3.5, fig.width = 8, fig.cap = "Speaker-specific boxplots for the f0 data.", echo = FALSE}
+
+################################################################################
+### Figure 4.11
+################################################################################
+
+par (mfrow = c(1,1), mar = c(4,4,2,1))
+
+boxplot (height ~ L, data = men, main = "Speaker Boxplots",col=cols) 
+abline (h = 220.4, lwd=3,lty=3)
+```
+
+## Frequentist corner
+
+In frequentist corner, we're going to compare the output of `brms` to some more 'traditional' approaches. We're not going to talk about the traditional models in any detail, the focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, feel free to skip these sections of the book, although they may still be helpful.  
+
+### Bayesian multilevel modesl vs. lmer
+
+Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the lme4 R package. As before, I am not going to talk about the traditional models in any detail. The focus of this section is simply to highlight the potential similarities between different approaches, and to point out where to find this information. 
+
+Below I fit a model that is analogous to our `model_sum_coding` model.
+
+```{r, warning=FALSE, message = FALSE, collapse = TRUE, cache = TRUE, eval = FALSE}
+set.seed (1)
+lmer_model = lme4::lmer (height ~ 1 + (1|L) + (1|S), data = men)
+summary (lmer_model)
+```
+
+We can see that this contains estimates that are very similar to those of our model. The 'fixed' effects above correspond closely to their 'Population-Level' counterparts. 
+
+```{r}
+## Population-Level Effects: 
+##           Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+## Intercept   229.33      2.71   224.07   234.81 1.00     2169     2758
+## adult1       -8.89      2.65   -14.19    -3.55 1.00     2085     2825
+```
+
+Now that we've talked about random effects in `brms`, we can pull these out of our `brm` model and compare them to the random effects we get from `lmer`.
+
+As seen below, the random effects estimates we get from `brm` also include credible intervals. As a result, we have some idea regarding the uncertainty in these estimates. Also, since each parameter is estimated by a series of samples, we can compare any two parameters (or groups of parameters) to see how different they are. 
+
+```{r, collapse = TRUE, cache = TRUE, eval = FALSE}
+brms_ranefs = brms::ranef (multilevel_L_S)$L[,,"Intercept"]
+head (brms_ranefs)
+```
+
+In contrast, `lmer` gives you what are called *point estimates*. These are single estimates of parameter values with no intervals indicating uncertainty. Because of this, we can't really say to much about these values, nor is there any way to compare the estimates for different speakers/participants in the data. 
+
+```{r, collapse = TRUE, eval = FALSE}
+lmer_ranefs = lme4::ranef (lmer_model)[["L"]]
+head (lmer_ranefs)
+```
+
+Importantly however, the values we get from both approaches are nearly identical, as seen below. The average absolute difference between the two sets of parameters was only 0.08 Hz, and the *largest* difference between the two is 0.25 Hz. So, analyzing this data using a Bayesian multilevel model provides several advantages, while still providing effectively the same 'answers' as a 'frequentist' approach to the data. 
+
+```{r 412, fig.width=8, fig.height=3, fig.cap=" (left) In green, the random speaker intercept estimates provided by brm. The red arrows indicate the estimates of the same provided by lmer. .", echo = FALSE, eval = FALSE}
+
+################################################################################
+### Figure 4.12
+################################################################################
+
+par(mfrow = c(1,2), mar = c(4,4.5,1,1))
+brmplot (brms_ranefs, xlab="Speaker", ylab="Speaker Effect (Hz)", col=deepgreen, line = FALSE)
+abline (h = 0)
+
+points (lmer_ranefs[,1],pch=4,cex=1.5,lwd=2,col=coral, xaxt='n',xlab='',
+      ylab="Speaker Effect (Hz)")
+
+plot (brms_ranefs[,1], lmer_ranefs[,1], lwd=2, cex=1.5, col=deeppurple,
+      xlab = 'brms Random Effects', ylab = 'lmer Random Effects', pch=16)
+abline (0,1,col=2)
+abline (h = 0, v = 0, lty=3)
+
+
+```
+
+
+
+
+## delete?
+
+ In these models, to a large extent, whether something is a parameter or a data point depends somewhat on your perspective.  For example, consider Figure \@ref(fig:F28). In the leftmost panel we see the distribution of listener average judgments. It would be completely reasonable to simply find the listener average for some experiment, and to do statistical inference on the distribution of speaker averages. When this is done, the listener averages $\mu_L$ are treated as data in the model. In the middle panel we see boxplots showing variation in height judgments for individual listeners. When considered in this manner, each $\mu_L$ is a parameter, and the data are the individual height judgments. For example, it would be reasonable to use a model like that outlined in Chapter 3 to analyze the distribution of height judgments provided by each individual listener. This would result in a set of $\mu_L$ and $\sigma_L$, one for each listener. The distribution of $\mu_L$ would look like the leftmost boxplot in Figure \@ref(fig:F28). 
+
+
+We now have another term $L_{[L_{[i]}]}$, in addition to the intercept. The notation is a bit awkward, but it is the easiest way to deal with a *set* of coefficients whose exact value in the prediction equation varies from trial to trial. The $L_{[i]}$ coefficient is actually a set of coefficients since it has a different value for each speaker (it's a vector). R treats nominal, categorical predictors as *factors* and assumes that each different label is a different group. Each group of a factor is called a *level*. Although we indicate listener number using numbers, we are not treating this predictor as numerical (quantitative). Instead, we will treat listener (`L`) as a factor, and the individual listeners in the experiments are its levels. As far as our models are concerned, participant/speaker/subject/listener has no special status as a predictor and it is just a factor with many levels.
+

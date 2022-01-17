@@ -88,8 +88,6 @@ Your model parameters describe some tendency in the data. For now we are just ta
 
 ## Strategies for estimating factors with many levels {#c4-strategies}
 
-- these apply not to models but to individual factors. we can chose one or antoerh for each factor in a model.
-
 In addition to the intercept we now have another term, or set of terms ($L_{[i]}$), that allow us to model variation in apparent height judgments between different listeners. The $L_{[i]}$ term in our model is actually a set of coefficients since it has a different value for each speaker (it's a vector). R treats nominal, categorical predictors as *factors* and assumes that each different label is a different group. Each value of a factor is called a *level*. Although we can indicate listeners using numbers, we are not treating this predictor as numerical (quantitative). Instead, we will treat listener (`L`) as a factor, and the individual listeners in the experiments are its levels. As far as our models are concerned, participant/speaker/subject/listener has no special status as a predictor and it is just a factor with many levels.
 
 In order to estimate a separate effect for each listener we need to add 15 parameters to our model, $L_{[1]},...,L_{[15]}$, one for each listener. Our data could then include a predictor for each listener coefficient that would equal one or zero based on whether the row was contributed by that listener or not. For example, in \@ref(eq:42) we show two examples of a row that was contributed by the second listener. That row would consist of a set of 15 predictors associated with the $L$ coefficients, all multiplied by zero save for the second one. The effect of this, seen in the second line in \@ref(eq:42), is to only have the second listener coefficient contribute to the value of that row. 
@@ -108,7 +106,7 @@ A careful consideration of \@ref(eq:42) suggests that the $L_{[i]}$ coefficients
 
 If every single group were to get an independent parameter represented in our regression equation, these would become very long and difficult to interpret. For example, we may want to include a factor with dozens or even hundreds of levels. Instead, we can treat the effects associated with listeners as a vector. So, rather than use two separate predictors, $L_1$ and $L_2$, to represent the first and second listener effects, we will use $L_{[1]}$ and $L_{[1]}$, the first two elements of a vector of length 15. In order to know which listener contributed to each trial, we need an index variable, a variable that equals a number from one to 15 that indicate which listener parameter to use on that trial. This is the `L` column in our `height_exp` data. When you give `brms` a factor as a predictor, it uses the property of factors as numbers (discussed in section 1.X) to index the predictor vector. So, when you see the order of the levels provided by R, that is the order of the coefficients in the model that represent the levels of that factor. R also names the predictor vector using the same name. As a result, we have a predictor called `L` which represents listeners, *and*, we have a set of coefficients called $L$ in our model that represent the effects for each of our listeners.  
 
-As a result of the situation above, our model will contain the term $L_{[L_{[i]}]}$, which means: "Coefficient $L$, and the level is the one indicated by the `L` predictor for trial $i$". This term is now included in our prediction equation in \@ref(eq:43). This is nothing more than a more compact way of representing the same model structure shown in \@ref(eq:42).  
+As a result of the above situation, our model will contain the term $L_{[L_{[i]}]}$, which means: "Coefficient $L$, and the level is the one indicated by the `L` predictor for trial $i$". This term is now included in our prediction equation in \@ref(eq:43). This is nothing more than a more compact way of representing the same model structure shown in \@ref(eq:42).  
 
 
 $$
@@ -120,7 +118,7 @@ $$
 \end{equation}
 $$
 
-You know that the 15 values of $L$ are related by being different listeners in your experiment. The way you tell your model that these coefficients are related is by treating them as levels of the same factor rather than as unrelated coefficients. Once you encode the fact that there are 'batches' of parameters in your model, you have several options with respect to how these batches are estimated. Specifically with respect to our height data, we have several options regarding how we estimate the value of our listener parameters $L_{[L_{[i]}]}$. Gelman and colleagues (CITE) discuss three general ways that data can be pooled across statistical units: 1) Complete pooling, 2) No pooling, and 3) Partial pooling. These approaches will be outlined below. 
+You know that the 15 values of $L$ are related by being different listeners in your experiment. The way you tell your model that these coefficients are related is by treating them as levels of the same factor rather than as unrelated coefficients. Once you encode the fact that there are 'batches' of parameters in your model, you have several options with respect to how these batches are estimated. Specifically with respect to our height data, we have several options regarding how we estimate the value of our listener parameters $L_{[L_{[i]}]}$. Gelman and colleagues (CITE) discuss three general ways that data can be pooled across statistical units: 1) Complete pooling, 2) No pooling, and 3) Partial pooling. The distinction between complete, no, and partial pooling is made for each factor in a model. So, one factor may be estimated using partial pooling while another may be fit using no pooling. This makes understanding the distinction between these approaches very important.  
 
 ### Complete pooling {#c4-complete-pooling}
 
@@ -161,10 +159,20 @@ The listeners in this experiment each carried it out independently and did not k
 
 ### (Adaptive) Partial pooling {#c4-partial-pooling}
 
-- go into adaptive partial pooling, people are usually talking about this. 
-- say we will take it for granted that your partial pooling is adaptive
+By definition, the speaker effects are centered around 0 (the average). The only question is, how widely are they distributed? Well, what better way to answer this question than using the distribution present in the data itself? This means that the amount of variation you expect between speakers is based on the amount of between-speaker variation you observe. The idea is basically: is it believable that this one person be this far away from the 'average'? Well, it depends on what everyone else looks like! By estimating the prior for some parameters from the data itself, multilevel models can help protect against problems that naturally arise when researchers compare many things (cite). This is because in a Bayesian analysis, the prior influences the estimates of your individual parameters. As a result, the variation in the *other* parameters in your sample can influence any given parameter.
 
-Partial pooling offers a sort of middle ground between complete pooling and no pooling, a potential 'just right' compromise solution. **Partial pooling** refers to the semi-independent estimation of parameters for the levels of a factor. Using partial pooling means the subject estimates are neither completely independent nor totally merged: They influence each other in a systematic way. The partial pooling version of our model is presented in \@ref(eq:45). There are two important differences with respect to the model in \@ref(eq:44). First, the $L_{[L]}$ terms are drawn from a normal distribution with a mean of zero and a standard deviation equal to $\sigma_L$. The reason the mean of the distribution is equal to zero is that our listener coefficients only encode differences to intercept, the overall mean. So, a listener that is perfectly average will have a coefficient equal to 0. Second, since the $\sigma_L$ term is estimated from the data, a prior distribution for $\sigma_L$ is specified. 
+
+Complete pooling and no pooling offer extremes, we either assume $sigma_L$ is zero or we assume it is infinity. Partial pooling offers a sort of middle ground between complete pooling and no pooling, a potential 'just right' compromise solution. In other words, we either assume that listeners do not vary, or that they vary such that they are totally independent of each other. Using **partial pooling** means that parameters representing the levels of a factor neither completely independent nor totally merged: They influence each other in a systematic way. 
+
+We know that our prior probability can help to pull outliers towards the prior (as discussed in section \@ref(c3-posterior)), resulting in *shrinkage*. In order for this to work effectively, the variance of the prior needs to be set at a reasonable value given the amount of variation in the data. Below, we see that the standard deviation of listener means is 3.6 cm. It would be nice to be able to use a value close to this, since we know this to be a good fit to our data. Unfortunately, if we did this it would not really be a *prior* probability anymore, since we would be analyzing the data, finding the most likely parameter values, and then using that to set what is supposed to be the *prior* probability. 
+
+```{r}
+sd(listener_means)
+```
+
+Instead of doing this, we can estimate $\sigma_L$ using our data. This allows us to have a prior distribution for our parameters that is tailored to the data, without us having to actually specify a priori. When standard deviation parameters like $\sigma_L$ are determined by the data rather than a priori, this is called **adaptive partial pooling**. However, by convention the 'adaptive' part is usually dropped. So, when you read that a factor was estimated using partial pooling, most often that means that the standard deviation parameters of the model coefficients for that factor (e.g. $\sigma_L$ for $L_{[L]}$) are estimated from the data.
+
+The (adaptive) partial pooling version of our model is presented in \@ref(eq:45). There are two important differences with respect to the model in \@ref(eq:44). First, the $L_{[L]}$ terms are drawn from a normal distribution with a mean of zero and a standard deviation equal to $\sigma_L$. The reason the mean of the distribution is equal to zero is that our listener coefficients only encode differences to intercept (effects), and not the actual listener average. So, a listener that is perfectly average will have a coefficient equal to 0. Second, since the $\sigma_L$ term is estimated from the data and a prior distribution for $\sigma_L$ is specified. 
 
 $$
 \begin{equation}
@@ -176,22 +184,18 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 L_{[L]} \sim N(0,\sigma_L) \\ 
 \\
 \mathrm{Intercept} \sim N(176,15) \\
-\sigma \sim t(3,0,15) \\
-\sigma_L \sim t(3,0,15)
+\sigma \sim N(0,15) \\
+\sigma_L \sim N(0,15)
 \end{split}
 (\#eq:45)
 \end{equation}
 $$
 
-This approach is called partial pooling because the estimate of each level of $L_{[L]}$ is potentially influenced by every other level of $L_{[L]}$  by virtue of being drawn from the same distribution $\mathrm{N}(\mu_{[i]},\sigma)$. So, unlike the complete pooling case we do not ignore variation between listeners, and unlike in the no pooling case we do not ignore the similarities between them. So, using partial pooling results in estimates of factor levels that are neither fully dependent not fully independent.  
+This approach is called partial pooling because the estimate of each level of $L_{[L]}$ is potentially influenced by every other level of $L_{[L]}$  by virtue of being drawn from the same distribution $\mathrm{N}(\mu_{[i]},\sigma)$. For example, we saw that half of listener mean height judgments were between 170 and 176 cm, and our model will now take that into account when estimating the individual levels of $L_{[L]}$. So, unlike the complete pooling case we do not ignore variation between listeners, and unlike in the no pooling case we do not ignore the similarities between them. 
 
-We know that our prior probability can help to pull outliers towards the prior (as discussed in section \@ref(c3-posterior)), resulting in *shrinkage*. In order for this to work effectively, the variance of the prior needs to be set at a reasonable value given the amount of variation in the data. Below, we see that the standard deviation of listener means is 3.6 cm. It would be nice to be able to use a value close to this, since we know this to be a good fit to our data. Unfortunately, if we did this it would not really be a *prior* probability anymore, since we would be analyzing the data, finding the most likely parameter values, and then using that to set what is supposed to be the *prior* probability. Instead, estimating $\sigma_L$ using our data allows us to have it both ways: You can have a prior distribution for your parameters that you yourself did not actually specify a priori. 
+#### Hyperpriors
 
-```{r}
-sd(listener_means)
-```
-
-You may have noticed that we assign a prior distribution to $\sigma_L$ in the model above. However, $\sigma_L$ is a parameter in the prior distribution of our listener parameters $L_{[L]}$. So actually, the prior for $\sigma_L$ is the prior of a prior. We might call this a 'grand prior' (like grandparent) but the actual term for it is **hyperprior**. One way to think of it is that in a multilevel model, each level effectively acts as the prior for the level below it, leading to a nested or hierarchical model structure (sometimes multilevel models are called **heirarchical models** for this reason). 
+You may have noticed that we assign a prior distribution to $\sigma_L$ in the model above. However, $\sigma_L$ is a parameter in the prior distribution of our listener parameters $L_{[L]}$. So actually, the prior for $\sigma_L$ is the prior of a prior. We might call this a 'grand prior' (like grandparent) but the actual term for it is **hyperprior**. One way to think of it is that in a multilevel model, each level effectively acts as the prior for the level below it, leading to a nested or hierarchical model structure (sometimes multilevel models are called **hierarchical models** for this reason). 
 
 We're going to update the equation defining our posterior distributions to take into account the structure of our partial pooling models. Our model will now reflect not only our prior beliefs but also the information encoded in our hyperpriors, and it will estimate the characteristics of $\sigma_L$ from the data. We can begin with the posterior probability of observing a given value of $L_{[L]}$ for a single listener in isolation. The equation below says that the posterior probability of $L_{[L]}$ given the data $y$ is equal to the product of the likelihood of $L_{[L]}$ given the data ($P(y|L_{[L]})$) and the prior of $L$, divided by the marginal probability of the data ($P(y)$). 
 
@@ -203,6 +207,7 @@ P(L_{[L]}|y) = \frac{P(y|L_{[L]})*P(L_{[L]})}{P(y)}
 \end{split}
 \end{equation}
 $$
+
 If we want to consider the posterior probability of $\sigma_L$ given the data, we can add $\sigma_L$ to every term that previously included $L_{[L]}$ in \@ref(eq:46). Basically, we are saying $\sigma_L$ *and* $L_{[L]}$, instead of just $L_{[L]}$. Equation \@ref(eq:47) can be read aloud as "the posterior probability of observing a certain listener average and a certain amount of between-listener variation given some data is equal to the likelihood of the data given the listener average and the amount of variation between listeners, times the joint prior probability of the listener averages and the amount of variation between listeners, divided by the marginal probability of the data". 
 
 $$
@@ -225,12 +230,7 @@ P(L_{[L]},\sigma_L|y) = \frac{P(y|L_{[L]})*P(L_{[L]}|\sigma_L)*P(\sigma_L)}{P(y)
 \end{equation}
 $$
 
-Our posterior estimates of $L_{[i]}$ may differ from our maximum likelihood estimates of the listener averages obtained using the formula for the sample mean. This is because in addition to the likelihood, the posterior probability of $L_{[L]}$ in \@ref(eq:48) takes into account the distribution of values of $L_{[L]}$ with respect to estimates of $\sigma_L$. When are more similar to the population average than the maximum-likelihood estimate *reguralization* has occurred. Importantly, the amount of pooling that will occur will be determined by $\sigma_L$, which is estimated from the data itself. To be specific, this is called **adaptive partial pooling**, because the degree of pooling is determined by the data rather than a priori. However, by convention the 'adaptive' part is dropped and models in which 
-
-nd it is a beneficial aspect of using partial pooling in multilevel models.
-
-This means that the prior probability will affect our results, and the hyper prior. Shrinkage may arise in different from joint estimation, and thats a good thing!! In partial pooling, the 'priors' are estimated from the data. As we saw in the figure in the other chapter this depends on reliability of individual priors and likelihoods. So in these models priors are as tight or loose as is warranted given the data. Further, the posterior is 'pulled' towards the prior based on the relative widths of both of these. 
-
+Our posterior estimates of $L_{[i]}$ may differ from our maximum likelihood estimates of the listener averages obtained using the formula for the sample mean. This is because in addition to the likelihood, the posterior probability of $L_{[L]}$ in \@ref(eq:48) takes into account the distribution of values of $L_{[L]}$ with respect to estimates of $\sigma_L$. When are more similar to the population average than the maximum-likelihood estimate *reguralization* has occurred. Importantly, the amount of pooling that will occur will be determined by $\sigma_L$, which is estimated from the data itself. 
 
 ## Estimating a multilevel model with `brms` {#c4-estimating1}
 
@@ -397,15 +397,11 @@ If you have some familiarity with statistical modeling or the analysis of experi
 
 (5) Fixed effects are estimated using least squares (or, more generally, maximum likelihood) and random effects are estimated with shrinkage. 
 
-You will note that some of these definitions (2 and 5 in particular) would have an effect change from random to fixed based on the researcher's conception of it. This is the 'mind projection fallacy', the mistaken assumption that the way we choose to represent the world in our model reflects the true nature of the thing itself (McIllwreath, p81). Rather than focus on our conception of effects as fixed or random in theory, we may ask: What is the difference between these sorts of effects in practice? The answer to this is that when researchers discuss the inclusion of **random effects** in their models, what they are really saying is that some of their terms were fit with adaptive partial-pooling. When researchers indicate that their effects were **fixed**, they are saying that they were fit without adaptive partial pooling. This applies to both Bayesian approaches and to models fit with more traditional methods such as the popular `lmer` function in the `lme4` package in R.  
+You will note that some of these definitions (2 and 5 in particular) would have an effect change from random to fixed based on the researcher's conception of it. This is the **mind projection fallacy**, the mistaken assumption that the way we choose to represent the world in our model reflects the true nature of the thing itself (McIllwreath, p81). Rather than focus on our conception of effects as fixed or random in theory, we may ask: What is the difference between these sorts of effects in practice? What special treatment are we referring to when we say that a certain predictor in our model is a 'random effect'? The answer is that when researchers discuss the inclusion of **random effects** in their models, what they are usually referring to is that the effects were estimated using partial-pooling. When researchers indicate that their effects were **fixed effects**, they are usually saying that they were fit with no pooling. This applies to both Bayesian approaches and to models fit with more traditional approaches such as the popular `lmer` function in the `lme4` package in R (cite).  
 
-In light of this, Gelman (cite) recommends being direct about the relevant distinction in our predictors and avoiding the use of the terms 'fixed' and 'random' effects and focusing on whether pooling was used or not. So, in the context of a multilevel model 'random effects' are those you estimate with adaptive partial pooling, meaning the prior is estimated from the data (e.g., $\sigma_{speaker}$), and can affect individual parameter estimates. In contrast, 'fixed effects' are those predictors for which you set arbitrary priors before fitting the model. This means that 'fixed' effects are all estimated independently and will not affect each other (at least through their priors).
+In the context of a multilevel model 'random effects' are those you estimate with adaptive partial pooling, meaning the prior is estimated from the data (e.g., $\sigma_{speaker}$) and can affect individual parameter estimates. In contrast, 'fixed effects' are those predictors for which you set arbitrary priors before fitting the model, in particular when these priors are vague or uninformative. In light of this, Gelman (cite) recommends being direct about the relevant distinction in our predictors. Rather than calling predictors 'fixed' or 'random' effects, we can describe whether pooling was used or not. Although we agree with this position, the fact is that in many research areas, it is most common to refer to effects as being either fixed or random. For that reason we will follow this convention, although we will continuously highlight the relevant underlying distinction, that so-called 'random' effects are simply those that are estimated using adaptive partial pooling. 
 
-By definition, the speaker effects are centered around 0 (the average). The only question is, how widely are they distributed? Well, what better way to answer this question than using the distribution present in the data itself? This means that the amount of variation you expect between speakers is based on the amount of between-speaker variation you observe. The idea is basically: is it believable that this one person be this far away from the 'average'? Well, it depends on what everyone else looks like! By estimating the prior for some parameters from the data itself, multilevel models can help [protect against problems that naturally arise when researchers compare many things](http://www.stat.columbia.edu/~gelman/research/published/multiple2f.pdf). This is because in a Bayesian analysis, the prior influences the estimates of your individual parameters. As a result, the variation in the *other* parameters in your sample can influence any given parameter.
-
-Although the terms terms 'fixed' and 'random' effects are useful (and we have used these terms in our work), it is important to keep in mind that the philosophical distinctions between 'fixed' and 'random' predictors outlined above is not relevant for the models we are discussing here. The real distinction is: do you want to fit every level totally independently as if they were all unrelated? Or do you want to use partial pooling in your estimates, thereby using all of the information present in my sample to protect against spurious findings?
-
-In general, when you have many levels of a factor, it may be a good idea to include these as 'random' effects, regardless of how 'random' it might actually be. There is not much downside to it: you get more information from the model (e.g., information about $\sigma_{predictor}$), and you can always fit multiple models to see what, if any differences, result form the different approaches. Some useful things to consider are also: Do you believe that treating a predictor as a 'random' effect offers a modeling advantage? Does it better reflect the process/relationships you are trying to understand? Does it provide you with information you find useful? Is it realistic to fit this kind of model given the amount of data you have, and the nature of the relationships in the data? Right now the last point is not something we have talked about very much, but it is something we will need to worry about more as our models become more complicated.
+In general, when you have many levels of a factor, it may be a good idea to include these as 'random' effects, regardless of how 'random' it might actually be. There is not much downside to it: You get more information from the model (e.g., information about $\sigma_{predictor}$), and you can always fit multiple models to see what, if any differences, result form the different approaches. Rather than considering the more 'philosophical' position outlined in 1-5 above, some useful things to consider when deciding between fixed and random effects are: Do you believe that treating a predictor as a 'random' effect offers a modeling advantage? Does it better reflect the process/relationships you are trying to understand? Does it provide you with information you find useful? Is it realistic to fit this kind of model given the amount of data you have, and the nature of the relationships in the data? Right now the last point is not something we have talked about very much, but it is something we will need to worry about more as our models become more complicated.
 
 ### Inspecting the random effects {#c4-inspecting-random-effects}
 
@@ -443,7 +439,6 @@ listener_intercepts
 ```
 
 Notice that the listener averages vary around 0, and some are even negative. That is because the listener effects (and all random effects) are represented as deviations from the intercept, as noted above. We can use a simple plotting function included in the `bmmb` package (`brmplot`) to look at the distribution of speaker effects terms. The function takes in the summaries made by `brms` and plots a point for each parameter mean/median, and lines indicating the credible intervals calculated by `brm` (usually 95% credible intervals). 
-
 
 ```{r}
 listener_means = tapply (men$height, men$L, mean)
@@ -714,45 +709,64 @@ The model print statement should look familiar except it contains one new chunk 
 
 ## Investigating 'shrinkage' {#c4-investigating-shrinkage}
 
-We've mentioned that multilevel models can result in *shrinkage*, that is, in coefficient estimates that are smaller in magnitude than their maximum likelihood counterparts. 
-
+We've mentioned that multilevel models can result in *shrinkage*, that is, in coefficient estimates that are smaller in magnitude (i.e. closer to the mean) than their maximum likelihood counterparts. In the code below we extract the posterior mean estimates of our listener and speaker random effects (i.e., $L_{[L]}$ and $S_{[L]}$). We also calculate the maximum likelihood estimates for the listener and speaker averages, and center these so that they will resemble their corresponding effects.
 
 ```{r, cache = TRUE}
+# these are the Bayesian 'shrinkage' estimates
 L_hat = brms::ranef(multilevel_L_S)$L[,1,'Intercept']
 S_hat = brms::ranef(multilevel_L_S)$S[,1,'Intercept']
 
+# these are the maximum likelihood estimates
 L_ml = tapply (men$height, men$L, mean)
 S_ml = tapply (men$height, men$S, mean)
-
+# and now they are centered
 L_ml = L_ml - mean (L_ml)
 S_ml = S_ml - mean (S_ml)
 ```
 
+In the top row of figure \@ref(fig:F48) we see a comparison of the Bayesian estimates of the speaker and listener effects compared to their maximum likelihood estimates. We can see that the Bayesian listeners effects are nearly identical to their maximum likelihood counterparts. In the bottom row we see the difference between our two estimates plotted against the maximum likelihood estimates. In this row we see that the degree to which an estimate is shrunk towards the mean depends on how much it deviates from the mean.   
 
-```{r F48, fig.height = 3, fig.width = 8, fig.cap="--", echo=FALSE}
+```{r F48, fig.height = 5, fig.width = 8, fig.cap="--", echo=FALSE}
 
 ################################################################################
 ### Figure 4.8
 ################################################################################
 
-par (mfrow = c(1,2), mar = c(4,4,1,1))
+par (mfrow = c(2,2), mar = c(.25,4,.25,1), oma=c(4,.1,.1,.1))
 plot (L_ml, L_hat, xlim = c(-10,10), ylim = c(-10,10),
-      pch=4, lwd=3, col=cols,cex=2.25)
+      pch=4, lwd=3, col=cols,cex=2.25,xaxt="n",xlab="")
 grid()
 abline (0,1,col=2,lwd=2)
-abline(h=0,v=0)
+abline(h=0,v=0,lty=3,lwd=2)
 points (L_ml, L_hat, pch=4,lwd=3, col=cols,cex=2.25)
 
 plot (S_ml, S_hat, xlim = c(-12,12), ylim = c(-12,12),
-      pch=4, col=4,cex=2.25)
+      pch=4, col=4,cex=2.25,xaxt="n",xlab="")
 grid()
 abline (0,1,col=2, lwd=2)
-abline(h=0,v=0)
+abline(h=0,v=0,lty=3,lwd=2)
 points (S_ml, S_hat, pch=4,lwd=3, col=cols,cex=2.25)
+
+plot (L_ml, L_hat-L_ml, xlim = c(-10,10), ylim = c(-5,5),
+      pch=3, lwd=3, col=cols,cex=2.25)
+grid()
+abline(h=0,v=0,lty=3,lwd=2)
+points (L_ml, L_hat-L_ml, pch=3,lwd=3, col=cols,cex=2.25)
+
+mtext (side = 1, text = "L_ml", line=2.5)
+
+plot (S_ml, S_hat-S_ml, xlim = c(-12,12), ylim = c(-5,5),
+      pch=3, col=4,cex=2.25)
+grid()
+abline(h=0,v=0,lty=3,lwd=2)
+points (S_ml, S_hat-S_ml, pch=3,lwd=3, col=cols,cex=2.25)
+
+mtext (side = 1, text = "S_ml", line=2.5)
+
 
 ```
 
-
+Figure \@ref(fig:F49) shows the effect of shrinkage for the listener and speaker effects: Individual effects are 'pulled' towards the overall mean (represented by 0). The reason the listener effects are shrunk less than the speaker effects is because we have 45 observations for each listener but only 15 for each speaker. As a result the likelihood functions for our listener effects will be much narrower than those of our speaker effects. This has the effect of making our listener parameters more resistant to the effects of the prior, and therefore more resistant to shrinkage (see sections \@ref(c3-posterior) and \@ref(c2-chars-of-likelihoods) for more information). 
 
 ```{r F49, fig.height = 3, fig.width = 8, fig.cap="--", echo=FALSE}
 
@@ -760,31 +774,9 @@ points (S_ml, S_hat, pch=4,lwd=3, col=cols,cex=2.25)
 ### Figure 4.9
 ################################################################################
 
-par (mfrow = c(1,2), mar = c(4,4,1,1))
-plot (L_ml, L_hat-L_ml, xlim = c(-7,9), ylim = c(-5,5),
-      pch=3, lwd=3, col=cols,cex=2.25)
-grid()
-abline(h=0)
-points (L_ml, L_hat-L_ml, pch=3,lwd=3, col=cols,cex=2.25)
-
-plot (S_ml, S_hat-S_ml, xlim = c(-7,9), ylim = c(-5,5),
-      pch=3, col=4,cex=2.25)
-grid()
-abline(h=0)
-points (S_ml, S_hat-S_ml, pch=3,lwd=3, col=cols,cex=2.25)
-
-```
-
-
-```{r F410, fig.height = 3, fig.width = 8, fig.cap="--", echo=FALSE}
-
-################################################################################
-### Figure 4.10
-################################################################################
-
 par (mfrow = c(1,2), mar = c(4,1,1,1))
 plot (L_ml,rep(0,15), ylim = c(0,5), cex=1.5,pch=1,col=cols, xlim = c(-13,13), 
-      yaxt = 'n', ylab = '')
+      yaxt = 'n',xlab = 'Listener Effects')
 points (L_hat,rep(1,15), cex=1.5,pch=16,col=cols,lwd=2)
 arrows (L_ml,0.1,L_hat,0.9, length=0.1)
 abline (v=0, lty=3,col='grey')
@@ -798,7 +790,7 @@ lines (x, (den*2)+2, lwd = 3, col = 4)
 lines (x, (den2*2)+2, lwd = 2, col = 4,lty=3)
 
 plot (S_ml,rep(0,45), ylim = c(0,5), cex=1.5,pch=1,col=cols, xlim = c(-13,13), 
-      yaxt = 'n', ylab = '')
+      yaxt = 'n', ylab = '',xlab = 'Speaker Effects')
 points (S_hat,rep(1,45), cex=1.5,pch=16,col=cols,lwd=2)
 arrows (S_ml,0.1,S_hat,0.9, length=0.1)
 abline (v=0, lty=3,col='grey')
@@ -898,23 +890,23 @@ lmer_ranefs = lme4::ranef (lmer_model)[["L"]]
 head (lmer_ranefs)
 ```
 
-Importantly however, the values we get from both approaches are nearly identical, as seen below. The average absolute difference between the two sets of parameters was only 0.08 Hz, and the *largest* difference between the two is 0.25 Hz. So, analyzing this data using a Bayesian multilevel model provides several advantages, while still providing effectively the same 'answers' as a 'frequentist' approach to the data. 
+Importantly however, the values we get from both approaches are nearly identical, as seen in \@ref(fig:F410) The average absolute difference between the two sets of parameters was only 0.08 Hz, and the *largest* difference between the two is 0.25 Hz. So, analyzing this data using a Bayesian multilevel model provides several advantages, while still providing effectively the same 'answers' as a 'frequentist' approach to the data. 
 
-```{r 412, fig.width=8, fig.height=3, fig.cap=" (left) In green, the random speaker intercept estimates provided by brm. The red arrows indicate the estimates of the same provided by lmer. .", echo = FALSE, eval = FALSE}
+```{r F410, fig.width=8, fig.height=3, fig.cap=" (left) In green, the random speaker intercept estimates provided by brm. The red arrows indicate the estimates of the same provided by lmer. .", echo = FALSE, eval = FALSE}
 
 ################################################################################
-### Figure 4.12
+### Figure 4.10
 ################################################################################
 
 par(mfrow = c(1,2), mar = c(4,4.5,1,1))
-brmplot (brms_ranefs, xlab="Speaker", ylab="Speaker Effect (Hz)", col=deepgreen, line = FALSE)
+brmplot (brms_ranefs, xlab="Speaker", ylab="Speaker Effect (cm)", col=deepgreen, line = FALSE)
 abline (h = 0)
 
 points (lmer_ranefs[,1],pch=4,cex=1.5,lwd=2,col=coral, xaxt='n',xlab='',
-      ylab="Speaker Effect (Hz)")
+      ylab="Speaker Effect (cm)")
 
 plot (brms_ranefs[,1], lmer_ranefs[,1], lwd=2, cex=1.5, col=deeppurple,
-      xlab = 'brms Random Effects', ylab = 'lmer Random Effects', pch=16)
+      xlab = 'brms Random Effects (cm)', ylab = 'lmer Random Effects (cm)', pch=16)
 abline (0,1,col=2)
 abline (h = 0, v = 0, lty=3)
 
@@ -922,38 +914,4 @@ abline (h = 0, v = 0, lty=3)
 ```
 
 
-
-
-
-
-```{r}
-set.seed(1)
-Intercept = 173.8
-L_L = rnorm (15, 0, 0 )
-L = rep (1:15, each = 45)
-epsilon = rnorm (45 * 15, 0, 7.78)
-height_rep = Intercept + L_L[L] + epsilon
-fake_data = data.frame (height_rep, L)
-
-sd (tapply(height_rep, L, mean))
-```
-
-```{r,eval = FALSE}
-# Fit the model yourself
-set.seed (1)
-fake_multilevel_model =  
-  brms::brm (height_rep ~ 1 + (1|L), data = fake_data, chains = 4, cores = 4,
-             warmup = 1000, iter = 3500, thin = 2,
-             prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
-                       brms::set_prior("normal(0, 15)", class = "sd"),
-                       brms::set_prior("normal(0, 15)", class = "sigma")))
-```
-
-```{r, include = FALSE, eval = FALSE}
-# Or download it from the GitHub page:
-multilevel_model = bmmb::get_model ('4_multilevel_model.RDS')
-```
-```{r, include = FALSE}
-multilevel_model = readRDS ('../models/4_multilevel_model.RDS')
-```
 

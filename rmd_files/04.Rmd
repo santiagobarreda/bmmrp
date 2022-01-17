@@ -88,9 +88,9 @@ Your model parameters describe some tendency in the data. For now we are just ta
 
 ## Strategies for estimating factors with many levels {#c4-strategies}
 
-In addition to the intercept we now have another term, or set of terms ($L_{[i]}$), that allow us to model variation in apparent height judgments between different listeners. The $L_{[i]}$ term in our model is actually a set of coefficients since it has a different value for each speaker (it's a vector). R treats nominal, categorical predictors as *factors* and assumes that each different label is a different group. Each value of a factor is called a *level*. Although we can indicate listeners using numbers, we are not treating this predictor as numerical (quantitative). Instead, we will treat listener (`L`) as a factor, and the individual listeners in the experiments are its levels. As far as our models are concerned, participant/speaker/subject/listener has no special status as a predictor and it is just a factor with many levels.
+In addition to the intercept it seems that our model should include another coefficient, or set of coefficients ($L_{[L]}$), that would allow us to model variation in apparent height judgments between different listeners. R treats nominal, categorical predictors as *factors* and assumes that each different label is a different group. Each value of a factor is called a *level*. Although we can indicate listeners using numbers, we are not treating this predictor as numerical (quantitative). Instead, we will treat listener (`L`) as a factor, and the individual listeners in the experiments are its levels. As far as our models are concerned, participant/speaker/subject/listener has no special status as a predictor and it is just a factor with many levels. 
 
-In order to estimate a separate effect for each listener we need to add 15 parameters to our model, $L_{[1]},...,L_{[15]}$, one for each listener. Our data could then include a predictor for each listener coefficient that would equal one or zero based on whether the row was contributed by that listener or not. For example, in \@ref(eq:42) we show two examples of a row that was contributed by the second listener. That row would consist of a set of 15 predictors associated with the $L$ coefficients, all multiplied by zero save for the second one. The effect of this, seen in the second line in \@ref(eq:42), is to only have the second listener coefficient contribute to the value of that row. 
+In order to estimate a separate effect for each listener we need to add 15 parameters to our model, $L_{[1]},...,L_{[15]}$, one for each listener. Our data could then include a predictor for each listener coefficient that would equal one or zero based on whether the row was contributed by that listener or not. For example, in \@ref(eq:42) we see a line consisting of a set of 15 predictors associated with the $L$ coefficients, all multiplied by zero save for the second one. The effect of this, seen in the second line in \@ref(eq:42), is to only have the second listener coefficient contribute to the value of the predicted value for observation $i$.  
 
 $$
 \begin{equation}
@@ -102,9 +102,47 @@ $$
 \end{equation}
 $$
 
-A careful consideration of \@ref(eq:42) suggests that the $L_{[i]}$ coefficients can't equal the average height reported by each listener. For example, if the overall mean (the intercept) is 170 cm and listener three reports heights of 175 cm on average, the equation above would predict a height response of 345 cm ($Intercept + L_{[3]}=354$) for this listener. Clearly that is not how the model should be working. Recall that regression models encode *differences* rather than absolute values. Our model already represents the overall data average using the intercept parameter.  Thus, the listener predictors only need to contain information about *differences* between the listener average and the intercept, i.e. the *effect* for that listener. So, if the overall average is 170 cm and listener three reports an average height of 175 cm, then $L_{[3]}=5$ and $Intercept + L_{[3]}=175$. 
+A careful consideration of \@ref(eq:42) suggests that the $L_{[i]}$ coefficients can't equal the average height reported by each listener. For example, if the overall mean (the intercept) is 170 cm and listener three reports heights of 175 cm on average, the equation above would predict a height response of 345 cm ($Intercept + L_{[3]}=354$) for this listener. Clearly that is not how the model should be working. Recall that regression models encode *differences* rather than absolute values. Our model already represents the overall data average using the intercept parameter. Thus, the listener predictors only need to contain information about *differences* between the listener average and the intercept, i.e. the *effect* for that listener. So, if the overall average is 170 cm and listener three reports an average height of 175 cm, then $L_{[3]}=5$ and $Intercept + L_{[3]}=175$. 
 
-If every single group were to get an independent parameter represented in our regression equation, these would become very long and difficult to interpret. For example, we may want to include a factor with dozens or even hundreds of levels. Instead, we can treat the effects associated with listeners as a vector. So, rather than use two separate predictors, $L_1$ and $L_2$, to represent the first and second listener effects, we will use $L_{[1]}$ and $L_{[1]}$, the first two elements of a vector of length 15. In order to know which listener contributed to each trial, we need an index variable, a variable that equals a number from one to 15 that indicate which listener parameter to use on that trial. This is the `L` column in our `height_exp` data. When you give `brms` a factor as a predictor, it uses the property of factors as numbers (discussed in section 1.X) to index the predictor vector. So, when you see the order of the levels provided by R, that is the order of the coefficients in the model that represent the levels of that factor. R also names the predictor vector using the same name. As a result, we have a predictor called `L` which represents listeners, *and*, we have a set of coefficients called $L$ in our model that represent the effects for each of our listeners.  
+If every single factor level were to get an independent parameter represented in our regression equation, these would become very long and difficult to interpret. For example, we may want to include a factor with dozens or even hundreds of levels. Instead, we can treat the effects associated with each level of a factor as a vector. So, rather than use two separate predictors, $L_1$ and $L_2$, to represent the first and second listener effects, we will use $L_{[1]}$ and $L_{[1]}$, the first two elements of a vector of length 15. 
+
+In order to know which listener contributed to each trial, we need an index variable, a variable that equals a number from one to 15 that indicates which listener parameter to use on that trial. This is the `L` column in our `height_exp` data. When you give `brms` a factor as a predictor, it uses the property of factors as numbers (discussed in section 1.X) to index the predictor vector. So, when you see the order of the levels provided by R, that is the order of the coefficients in the model that represent the levels of that factor. 
+
+For example, below we convert our listener vector to a factor and check out the order of the levels. 
+
+```{r}
+L = as.factor (men$L)
+levels(L)
+```
+
+When we then use this listener vector to estimate the average height reported by each listener, the ordering of the levels is maintained. 
+
+```{r}
+# find average reported height for each listener
+listener_means = tapply (men$height, L, mean)
+listener_means
+```
+
+If we center the listener_means vector above, this is basically equivalent to our vector of listener effects $L_{[L]}$. 
+
+```{r}
+listener_effects = listener_means - mean (listener_means)
+```
+
+Unfortunately, R names the predictor vector using the same name. As a result, we have a predictor called `L` which represents listeners, *and*, we have a set of coefficients called $L$ in our model that represent the effects for each of our listeners. So, when you see    
+
+
+```{r, eval=FALSE}
+listener_effects[L]
+```
+
+
+```{r}
+i = 365
+L[365]
+listener_effects[L[i]]
+```
+
 
 As a result of the above situation, our model will contain the term $L_{[L_{[i]}]}$, which means: "Coefficient $L$, and the level is the one indicated by the `L` predictor for trial $i$". This term is now included in our prediction equation in \@ref(eq:43). This is nothing more than a more compact way of representing the same model structure shown in \@ref(eq:42).  
 
@@ -252,7 +290,7 @@ Once again, we're going to try to address the following basic research questions
 
   Q2) Can we set limits on credible average apparent heights based on the data we collected?
 
-To analyze our data using `brms` in R we need it to be in a data frame with each row containing a different observation. We need one column containing our dependent variable (the variable we want to analyze) and one column that indicates the 'source' of the data. We can see that our data satisfies these conditions below, where the relevant columns (for this model) are `L` for listeners and `height` for our dependent variable. 
+To analyze our data using `brms` in R we need it to be in a data frame with each row containing a different observation. We need one column containing our dependent variable (the variable we want to analyze) and one column that indicates the 'source' of the data. We can see that our data satisfies these conditions below, where the relevant columns (for this model) are `L` for listeners, and `height` for our dependent variable. 
 
 ```{r}
 head (men)
@@ -262,7 +300,7 @@ Often, experiments (or data more generally) will feature a single source of info
 
 ### Description of the model
 
-We're going to keep working on developing an intuitive understanding for model notation, and using it to describe models. Just keep in mind that this is nothing more than an efficient way to denote the concepts being discussed in the text. To specify a multilevel model, you need to write a slightly more complicated model formula. This explanation assumes that you have a data frame where one column contains the variable you are interested in predicting (in this case `height`), and another column contains a vector containing unique labels for each speaker/listener/participant (in this case a unique listener label `L`). To indicate that your model contains an 'upper' level where you have clusters of data coming from different sources, you have to put another model formula *inside* your main model formula. Before, the model formula looked like this:
+We're going to keep working on developing an intuitive understanding for model notation, and using it to describe models. Just keep in mind that this is nothing more than an efficient way to denote the concepts being discussed in the text. To specify a multilevel model, you need to write a slightly more complicated model formula. This explanation assumes that you have a data frame where one column contains the variable you are interested in predicting (in this case `height`), and another column contains a vector containing unique labels for each speaker/listener/participant (in this case a unique listener label `L`). To indicate that your model contains an 'upper' level where you have repeated-measures clusters of data coming from different sources, you have to put another model formula *inside* your main model formula. Before, the model formula looked like this:
 
 `height ~ 1`
 
@@ -270,11 +308,13 @@ Which meant 'predict height using only an overall intercept'. The model formula 
 
 `height ~ 1 + ( 1 | L)`
 
-Which means 'predict height using only an overall intercept, but also estimate a different intercept for each level of the L (listener) factor'. When you place a predictor in parenthesis on the right-hand-side of a pipe, like this `( | predictor )`, you tell `brm` that you would like to estimate separate parameters for each level of the factor on the right of the pipe `|`. Whatever you put in the left-hand-side of the parentheses `( in here | predictor )` specifies the parameters you wish to estimate for each level of the factor. In addition, any parameters specified on the left-hand side of the pipes in brackets (`( in here | predictor )`) will be estimated using partial pooling. By convention, effects estimated using partial pooling are modeled as coming from a normal distribution with a mean of zero, so that aspect of the model does not need to be directly specified. So the model formula `height ~ 1 + ( 1 | L)` tells `brm` to build an intercept only model with a separate intercept for each listener, and that the listener intercept terms should be estimated with partial pooling. In plain English, the model in \@ref(eq:45) says:
+Which means 'predict height using only an overall intercept, but also estimate a different intercept for each level of the L (listener) factor'. When you place a predictor in parenthesis on the right-hand-side of a pipe `|`, like this `( | predictor )`, you tell `brm` that you would like to estimate separate parameters for each level of the factor. Whatever you put in the left-hand-side of the parentheses `( in here | predictor )` specifies the parameters you wish to estimate for each level of the factor. In addition, any parameters specified on the left-hand side of the pipes in brackets (`( in here | predictor )`) will be estimated using partial pooling. By convention, effects estimated using partial pooling are modeled as coming from a normal distribution with a mean of zero, so that aspect of the model does not need to be directly specified. 
+
+So the model formula `height ~ 1 + ( 1 | L)` tells `brm` to build an intercept only model with a separate intercept for each listener, and that the listener intercept terms should be estimated with partial pooling. In plain English, the model in \@ref(eq:45) says:
 
 > We expect height judgments to be normally distributed around the expected value for any given trial, $\mu_{[i]}$, with some unknown standard deviation $\sigma$. The expected value for a trial is equal to a fixed overall average (Intercept) and some value associated with the individual listener ($L_{[L_{[i]}]}$) who uttered the trial. The listener coefficients ($L_{[L_{[i]}]}$) were modeled as coming from a normal distribution with a mean of zero and a standard deviation ($\sigma_L$) that was estimated from the data. 
 
-There is a very important difference in how the 'unilevel' model from Chapter 3, and this model partition the variance in apparent talker heights. The initial 'unilevel' (complete pooling) model broke down the total variation in the data ($\sigma_{total}$) like this:
+There is a very important difference in how the 'unilevel' (complete pooling) model from Chapter 3, and this model partition the variance in apparent talker heights. The initial complete pooling model broke down the total variation in the data ($\sigma_{total}$) like this:
 
 $$
 \begin{equation}
@@ -296,7 +336,7 @@ The total variance is equal to the within listener variance ($\sigma^2$) plus th
 
 ### Fitting the model
 
-We can use `brms` to fit a model that more closely resembles our model specification in \@ref(eq:45). To do this we need to use the formula given above, and we also need to specify priors for fours parameters: $Intercept$, $\sigma_L$, and $sigma$. The prior standard deviation for $L_{[i]}$ does not need to be specified since it is estimated from the data (and the mean is assumed to be zero). We can confirm our expectations using the `get_prior` function as seen below. 
+We can use `brms` to fit a model that more closely resembles our model specification in \@ref(eq:45). To do this we need to use the formula given above, and we also need to specify priors for four parameters: $Intercept$, $\sigma_L$, and $sigma$. We can confirm our expectations using the `get_prior` function as seen below. 
 
 ```{r}
 brms::get_prior (height ~ 1 + (1|L), data = men)
@@ -308,7 +348,7 @@ We see a new `class` of prior, `sd`. Our classes of priors are now:
 -   `sd`: this is for our standard deviation parameters that relate to 'batches' of parameters. In our example this is `sd(Intercept)` for `listener` ($\sigma_{L}$).
 -   `sigma`: the error term.
 
-The information presented by `get_prior` does not list a set of priors that must be specified, but rather different ways that priors can be set. This is not so useful for our very simple models now but it will be come very useful later so it is worth getting into it now while it is still relatively simple. Top to bottom, here is the information presented in the output above. First, you can specify a prior for the `Intercept`, which is its own unique class. Second, you can specify a prior for all `sd` parameters in your model. Third, you can specify a prior for all the `sd` parameters related to your `L` group. The fourth line allows you to specify a prior *only* to the `Intercept` for your `L` group (i.e. $L_{[L]}$) and not to any other listener-related predictors in your model (there are none for now). The fifth line lets you specify the prior for the error in the model (i.e. $\varepsilon$). We can see all this in action in the code below. We fit a model and specify prior distributions for our intercept, for *all* variables in the `sd` class, and for the error term (basically the first, second, and fifth lines above). 
+The information presented by `get_prior` does not just list the priors that must be specified, but also different ways that priors can be set. This is not so necessary for our very simple models now but it will become very useful later so it is worth getting into it now while it is still relatively simple. Top to bottom, here is the information presented in the output above. First, you can specify a prior for the `Intercept`, which is its own unique class. Second, you can specify a prior for all `sd` parameters in your model. Third, you can specify a prior for all the `sd` parameters related to your `L` group. The fourth line indicates that you can also specify a prior *only* for the `Intercept` for your `L` group (i.e. $L_{[L]}$) and not to any other listener-related predictors in your model (there are none for now). The fifth line lets you specify the prior for the error in the model (i.e. $\varepsilon$). We can see all this in action in the code below. We fit a model and specify prior distributions for our intercept, for *all* variables in the `sd` class, and for the error term (basically the first, second, and fifth lines above). 
 
 ```{r,eval = FALSE}
 # Fit the model yourself
@@ -331,14 +371,14 @@ multilevel_model = readRDS ('../models/4_multilevel_model.RDS')
 
 ### Interpreting the model
 
-We can inspect the 'short' version of our model print statement:
+We can inspect the model print statement:
 
-```{r, collapse = TRUE}
+```{r, collapse = TRUE, eval=TRUE}
 # inspect model
 bmmb::short_summary (multilevel_model)
 ```
 
-This model contains one new chunk its print statement, which tells us about the standard deviation for the Intercept (`sd(Intercept)`) for the `~L` factor. The term `sd(Intercept)` in this section corresponds to $\sigma_L$, the standard deviation of listener effects ($L_{[i]}$) in the sample. 
+This model contains one new chunk its print statement, which tells us about the standard deviation for the Intercept (`sd(Intercept)`) for the `~L` factor. The term `sd(Intercept)` in this section corresponds to $\sigma_L$, the standard deviation of listener effects ($L_{[L]}$) in the sample. 
 
 ```{r}
 ## Group-Level Effects:
@@ -350,7 +390,7 @@ This model contains one new chunk its print statement, which tells us about the 
 Below, we calculate the listener mean heights values, the standard deviation of these, and the amount of within-speaker variation in apparent height judgments. We can see that these resemble the value of the analogous values in our model.
 
 ```{r, collapse = TRUE}
-# find mean f0 for each speaker
+# find mean height for each speaker
 listener_means = aggregate (height ~ L, data = men, FUN = mean) 
 # find the within speaker standard deviation This is the within-talker 'error'.
 listener_sigmas = aggregate (height ~ L, data = men, FUN = sd) 

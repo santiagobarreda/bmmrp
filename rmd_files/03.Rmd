@@ -18,19 +18,23 @@ It's difficult to offer a precise definition for **regression** because the term
 
 We can write our model more formally as in Equation \@ref(eq:31). This says that we expect that the tokens of the variable we are interested in are distributed according to ($\sim$) a normal distribution with parameters equal to $\mu$ and $\sigma$. Notice hat $y$ gets a subscript while $\mu$ and $\sigma$ do not. That means that in this model those parameters are fixed for all observations, while the value of $y$ changes for each observation based on the $i$ subscript. 
 
+$$
 \begin{equation}
 y_{[i]} \sim N(\mu,\sigma)
 (\#eq:31)
 \end{equation}
+$$
 
 We're going to learn to read and write formal descriptions of our models. The relationship between statistical concepts and the formal notation used to represent them is very similar to the ability to play music and musical notation. Someone who can play a song undoubtedly *knows* that song. However, in the absence of formal musical training that same person might not recognize sheet music representing the song. This person would also lack the vocabulary to discuss components of the song, and may find it difficult to learn to play new pieces. In the same way, most people have an excellent intuitive understanding of many statistical concepts (to be discussed in upcoming chapters) such as slopes, interactions, error, and so on. However, they lack the notational knowledge to understand these concepts when expressed in the formalisms often used to express these ideas. As a result, learning to read/write this notation will help you describe your models efficiently, and understand the models used by other people more effectively.
 
 Equation \@ref(eq:31) formalizes the fact that we think the *shape* of our data distribution will be like that of a normal distribution with a mean equal to $\mu$ and a standard deviation equal to $\sigma$. When you see this, $\mathcal{N}(\mu,\sigma)$, picture in your mind the shape of a normal distribution just like if you see this $y=x^2$ you may imagine a parabola. $N(\mu,\sigma)$ Really just represents that shape of the normal distribution, and the associated expectations about more and less probable outcomes. The above relationship can also be presented as in Equation \@ref(eq:32).
 
+$$
 \begin{equation}
 y_{[i]} = \mu + \mathcal{N}(0,\sigma)
 (\#eq:32)
 \end{equation}
+$$
 
 Notice that we got rid of the $\sim$ symbol, moved $\mu$ out of the distribution function ($N()$), and that the mean of the distribution function is now 0. Under this interpretation, it is not the case that the entirety of the variable is random and unknowable. This representation breaks up our variable into two components:
 
@@ -42,43 +46,54 @@ Regression models separate variables into their **systematic** and **random** co
 
 In regression models, we can try to understand variation in $\mu$ using predictor variables $\mathrm{x}$. These predictor variables co-vary (vary with) our $y$ variable, and we think help explain the variation in $y$. For example, in \@ref(eq:33) we're saying we think $\mu$ is equal to some combination of the three predictor variables $\mathrm{x}_{1}$, $\mathrm{x}_{2}$, and $\mathrm{x}_{3}$. For example, we might expect that the apparent height of a speaker is affected by their f0 ($\mathrm{x}_{1}$), vocal-tract length ($\mathrm{x}_{2}$), and resonance ($\mathrm{x}_{1}$). So, when we combine these predictors we think we can come up with a pretty good estimate of how tall someone will sound.
 
+$$
 \begin{equation}
 \mu = \mathrm{x}_{1} + \mathrm{x}_{2} + \mathrm{x}_{3}
 (\#eq:33)
 \end{equation}
+$$
 
 The values of the predictor variables will vary from trial to trial, and are not fixed. In fact, often the whole point of running an experiment is to predict differences in observations based on differing predictor values. If we expect our predictors to vary from trial to trial, that means that the equation above should include $i$ subscripts indicating that the equation refers to the value of the predictors *for that trial* rather than overall. If we expect the predictors to change from trial to trial, naturally it is possible that $\mu$ may take on different values from trial to trial, and it therefore also needs an $i$ subscript. This update is reflected in equation \@ref(eq:34).  
 
+$$
 \begin{equation}
 \mu_{[i]} = \mathrm{x}_{1[i]} + \mathrm{x}_{2[i]} + \mathrm{x}_{3[i]}
 (\#eq:34)
 \end{equation}
+$$
 
 The predicted value ($\mu_{[i]}$) for a given trial is very unlikely to be an equal combination of the predictors (as in equation \@ref(eq:34)), so that a *weighting* of the predictors will be necessary. We can use the symbol $\alpha$ for these weights as in equation \@ref(eq:35). For example, maybe $\mathrm{x}_{1}$ is twice as important as the other two predictors and so $\alpha_1=2$, while $\alpha_2=1$ and $\alpha_3=1$. Actually, maybe one predictor has a *negative* effect so that $\alpha_3=-1$. The 'weights' associated with each predictor are the **coefficients** (or parameters) of our model. Note that the weight terms ($\alpha$) do not get an $i$ subscript. This is because they do not change from trial to trial. The *values* of the predictors change from trial to trial, but the way that these are combined does not, they are a stable property of the model. 
 
+$$
 \begin{equation}
 \mu_{[i]} = \alpha_1*\mathrm{x}_{1[i]} + \alpha_2*\mathrm{x}_{2[i]} + \alpha_3*\mathrm{x}_{3[i]}  
 (\#eq:35)
 \end{equation}
+$$
 
 We can insert equation \@ref(eq:35) into equation \@ref(eq:32) resulting in equation \@ref(eq:36). At this point our model consists of an average value that has been broken up into three component parts, and the random component represented by normally-distributed noise. 
 
+$$
 \begin{equation}
 y_{[i]} =  (\alpha_1*\mathrm{x}_{1[i]} + \alpha_2*\mathrm{x}_{2[i]} + \alpha_3*\mathrm{x}_{3[i]} ) + N(0,\sigma)  
 (\#eq:36)
 \end{equation}
+$$
 
 Often, $\varepsilon$ is used to represent the random component, the error term, as in equation \@ref(eq:37). Notice that the error term *does* get an, $i$ subscript, as in $\varepsilon_{[i]}$. That is because the exact value of the error *does* change from trial to trial, even though the general characteristics of the error (i.e., $N(0,\sigma)$) do not. When expressed in this way this is now a *regression equation* or a *regression model*. **Fitting** a regression model basically consists of trying to find the 'best' values of its coefficients, $\alpha_1$, $\alpha_2$, and $\alpha_3$ given our data and model structure. 
 
+$$
 \begin{equation}
 y_{[i]} = \alpha_1*\mathrm{x}_{1[i]} + \alpha_2*\mathrm{x}_{2[i]} + \alpha_3*\mathrm{x}_{3[i]}+ \varepsilon_{[i]}
 (\#eq:37)
 \end{equation}
+$$
 
 Notice that according to equation \@ref(eq:36), regression models do not require that our *data* be normally distributed, but only that the *random variation* in our data ($\varepsilon$) be normally distributed. In \@ref(eq:38), we see the sort of representation of our model that we will use in this book. This representation splits the systematic and random components of our regression model and clearly and succinctly informs us of the structure of out model. In plain English this is:
 
 >"We expect the average value of our variable to vary from trial to trial based on three predictors. The combination of these predictors is based on model specific coefficients that are static across trials. Our observations are expected to be randomly distributed around the mean value according to a normal distribution with a standard deviation equal to sigma".
 
+$$
 \begin{equation}
 \begin{split}
 \mu_{[i]} = \alpha_1*\mathrm{x}_{1[i]} + \alpha_2*\mathrm{x}_{2[i]} + \alpha_3*\mathrm{x}_{3[i]} \\
@@ -86,36 +101,45 @@ y_{[i]} \sim \mathcal{N}(\mu,\sigma)
 (\#eq:38)
 \end{split}
 \end{equation}
+$$
 
 ## What's 'Bayesian' about these models? {#c3-whats-bayes}
 
-Traditional approaches to statistics (sometimes generally referred to as 'frequentist') estimate parameters by trying to find the most likely values for parameters. They do this by referring to likelihood functions based on theoretical probability distributions (i.e., maximum-likelihood estimation) as discussed in Chapter 2. We're not going to discuss this approach to statistical inference in any detail as there are hundreds, if not thousands, of books available on the subject (for reading on the subject see section X). Rather than dwell on these 'traditional' approaches to statistical inference, we're going to focus on what makes Bayesian inference *Bayesian*. Rather than rely on the likelihoods of parameter values, Bayesian models rely on the **posterior probabilities** of parameters. To explain what posterior probabilities are we need to talk about joint probabilities again. We'll begin by stating something obvious: The probability of events $A$ and $B$ occurring is the same as the probability of $B$ and $A$ occurring.
+Traditional approaches to statistics (sometimes generally referred to as **frequentist**) estimate parameters by trying to find the most likely values for parameters. They do this by referring to likelihood functions based on theoretical probability distributions (i.e., maximum-likelihood estimation) as discussed in Chapter 2. We're not going to discuss this approach to statistical inference in any detail as there are hundreds, if not thousands, of books available on the subject (for reading on the subject see section X). Rather than dwell on these 'traditional' approaches to statistical inference, we're going to focus on what makes Bayesian inference *Bayesian*. Rather than rely on the likelihoods of parameter values, Bayesian models rely on the **posterior probabilities** of parameters. To explain what posterior probabilities are we need to talk about joint probabilities again. We'll begin by stating something obvious: The probability of events $A$ and $B$ occurring is the same as the probability of $B$ and $A$ occurring.
 
+$$
 \begin{equation}
 P(A \,\&\, B) = P(B \,\&\, A)
 (\#eq:39)
 \end{equation}
+$$
 
 Equation \@ref(eq:39) can be reformulated as in \@ref(eq:310) (see section \@ref(c2-joint)). 
 
+$$
 \begin{equation}
 P(A|B)*P(B) = P(B|A)*P(A) 
 (\#eq:310)
 \end{equation}
+$$
 
 Recall that $P(A)$ and $P(B)$ are simply placeholders for the probability of some hypothesis or assertion. We can replace these with $P(y)$ and $P(\mu)$, which represent "the probability of observing your data" and "the probability of observing a certain parameter value" respectively. This is seen in equation \@ref(eq:311), which states that "the probability of the parameter and the data is the same as the probability of the data and parameter".
 
+$$
 \begin{equation}
 P(\mu|y)*P(y) = P(y|\mu)*P(\mu)
 (\#eq:311)
 \end{equation}
+$$
 
 We can isolate $P(\mu|y)$ on the left hand side by dividing both sides by $P(y)$, resulting in equation \@ref(eq:312). When structured in this way, this is called **Bayes theorem**, and it underlies Bayesian statistical inference. Note however, that all we did was state a basic principle of probability theory (equation \@ref(eq:39)) and then re-arrange some terms. 
 
+$$
 \begin{equation}
 P(\mu|y) = \frac{P(y|\mu)*P(\mu)}{P(y)}
 (\#eq:312)
 \end{equation}
+$$
 
 Each of the components in \@ref(eq:312) have a name:
 
@@ -323,29 +347,36 @@ However, this time we are going to approach these questions using a Bayesian reg
 We're beginning with a model that treats all of our data as random deviations drawn from a single, undifferentiated normal distribution. Our model for a single group of normally distributed values can be thought of in several different ways. In \@ref(eq:313a) the value of your dependent variable for any given trial ($y_{[i]}$) is thought of as being a normally-distributed variable with a trial-specific mean of $\mu_i$, and a fixed standard deviation $\sigma$.
 
 
+$$
 \begin{equation}
 y_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma)
 (\#eq:313a)
 \end{equation}
+$$
 
 We can also think of this model as in \@ref(eq:313b), which says that your dependent variable is the sum of some of some average *expected value* for that trial, ($\mu_{[i]}$) and some specific random error for that trial ($\varepsilon_{[i]}$). The random error is expected to be normally distributed with a mean of 0 and some unknown standard deviation (as in: $\varepsilon_{[i]} \sim N(0,\sigma)$). 
 
 
+$$
 \begin{equation}
 y_{[i]} = \mu_{[i]} + \varepsilon_{[i]}
 (\#eq:313b)
 \end{equation}
+$$
 
 In general, we use regression models to understand orderly variation in $\mu_{[i]}$ from trial to trial by breaking it up into predictors ($\mathrm{x}_{1}, \mathrm{x}_{2},...$) that are combined using based on weights as determined by the model coefficients ($\alpha_1, \alpha_2,...$). However, in this case we expect the value of $\mu_{[i]}$ to actually be equal for all trials. When we are only trying to estimate a single average, we don't have any predictors to explain variation in $\mu_{[i]}$. In fact, our model structure suggests we expect no variation in $\mu_{[i]}$ from trial to trial. However, mathematically we can't just say 'we have no predictor' since everything needs to be represented by a number. As a result, we use a single 'predictor' $\mathrm{x}$ with a value of 1 so that our regression equation is as in \@ref(eq:314)). Now, our model is trying to guess the value of a single coefficient ($\alpha_1$), and we expect this coefficient to be equal to $\mu_{[i]}$ since it is being multiplied by a 'predictor' with a constant value of 1.
  
 
+$$
 \begin{equation}
 \mu_{[i]} = \alpha_1*1
 (\#eq:314)
 \end{equation}
+$$
 
 This kind of model is called an **Intercept only** model. Regression models are really about representing *differences*, differences between groups and across conditions. When you are encoding differences, you need an overall reference point. For example, saying that something is '5 miles north' is only interpretable given some reference point. The 'reference point' used by your model is called your 'Intercept', and it is the center of your model's universe. At this point our model consists *only* of a single reference point, and the $\alpha_1$ parameter reflects its value (as shown in Equation \@ref(eq:314)). As a result, the $\alpha_1$ coefficient is called the 'Intercept' in our model. When a coefficient is just being multiplied by a 'fake' predictor that just equals one, we can omit it from the regression model (but its still secretly there). So, our model investigating the apparent heights of adult males from Michigan can be formalized like this:
 
+$$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim N(\mu_{[i]},\sigma) \\ 
@@ -353,6 +384,7 @@ height_{[i]} \sim N(\mu_{[i]},\sigma) \\
 \end{split}
 (\#eq:315)
 \end{equation}
+$$
 
 Put in plain English, each line in the model says the following:
 
@@ -362,24 +394,30 @@ Put in plain English, each line in the model says the following:
 
 What the model also implicitly says that the error, the random variation around $\mu$, is drawn from a normal distribution with a mean of 0 and a standard deviation of $\sigma$. This distribution represents all deviations in apparent height around the mean apparent height for the sample ($\mu_{[i]}$). In other words, the error for this model is expected to look like:
 
+$$
 \begin{equation}
 \varepsilon_{[i]} \sim N(0,\sigma)
 (\#eq:316)
 \end{equation}
+$$
 
 We can rearrange the terms in (\#eq:313b) to isolate the random term on the left side. When we do this, we see that **error** is what we call the difference between the value of an observation and the expected value for that observation. 
 
+$$
 \begin{equation}
 \varepsilon_{[i]} = y_{[i]} - \mu_{[i]} 
 (\#eq:317)
 \end{equation}
+$$
 
 In practice, you never know the true expected value, the *real* exact parameter for whatever distribution you are working with. Instead, you work with an estimate of the predicted value $\hat{\mu}$. As a consequence, you do not have access to the exact errors but instead to estimated errors $\hat{\varepsilon}$. Estimated errors are called **residuals**. 
 
+$$
 \begin{equation}
 \hat{\varepsilon}_{[i]} = y_{[i]} - \hat{\mu}_{[i]}
 (\#eq:318)
 \end{equation}
+$$
 
 As noted in section \@ref(c3-what-is-reg), regression models assume that the random error, the unpredictable deviations about the expected value for a trial, are independent and identically distributed. We can now be more specific and say that we expect that our model *residuals* to be independent of each other. This assumption is obviously violated for this data since we have multiple observations from each listener, each of which had their own tendencies (as discussed in section \@ref(c2-conditional)). For this reason, we can say that this model is 'wrong'; it is built in such a way that we know it is not a good fit for our data. We will discuss this, and the problems it causes, in the following chapter.
 
@@ -682,6 +720,7 @@ curve (dnorm(x,0,15),lwd = 2, col = 4, add = TRUE)
 
 We can update the description of our model to include the specification of prior distributions for each estimated parameter, as in \@ref(eq:317). In the future, our model descriptions will always include these. Our model specification now makes it clear: We expect height judgments to be normally distributed, we expect the mean to always equal the intercept, and we have specific distributions in mind for all estimated model parameters (i.e., $\mu, \sigma$). 
 
+$$
 \begin{equation}
 \begin{split}
 \\
@@ -694,6 +733,7 @@ height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\
 \end{split}
 (\#eq:317)
 \end{equation}
+$$
 
 We can fit this new model below using the new lines which specify the prior distributions for our parameters. 
 

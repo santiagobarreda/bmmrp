@@ -1,0 +1,709 @@
+\newpage
+
+# Variation in parameters, robustness, and heteroskedasticity (and model comparison?)
+
+Before powerful computers were easily available, statisticians had to come up with clever solutions to answer difficult questions. The reason for this is that things needed to be solved with pen and paper, or eventually calculators, and this ruled out extremely time-consuming solutions such as sampling from the posterior distribution of models as complicated as the ones discussed here. Approaches to answer commonly-encountered experimental designs (and corresponding data structures) often involved making simplifying assumptions that make arriving at a solution simpler. For example, when comparing two groups statisticians might say "we can solve this problem if we assume that the errors are normally distributed and that the error variance is the same across all conditions". These assumptions are rarely true in practice (and never *exactly* true in reality), but are usually close enough to the truth to make our models be useful. There is nothing particularly 'wrong' with making these assumptions. However, when we build our own Bayesian models we don't need to make them, and so it is worth considering if we might benefit from making other sort of assumptions. 
+
+An analogy can be made to building your own furniture vs. shopping at a furniture store. The furniture at the store is perfectly fine and if you find something that suits you it will be fast and convenient. What happens if what you want is *not* at a store? Well if you don't know how to build your on furniture you are out of luck, you better just find the existing piece that is most similar to what you need, and try to make the most of it. Working with 'traditional' models based on maximum-likelihood estimation (discussed in X) is like going to the store. There are often a limited number of choices, and these choices make certain, often rigid, simplifying assumptions. Learning to use `brms` (or STAN directly) gives you the flexibility of trying many different assumptions, allowing you to build a model that might be very difficult to find 'at the store', but which is well-suited to your data.
+
+In the last chapter we focused on models comparing two groups. Our approach to this was a bit old-fashioned in that it adhered to the limitations of more 'traditional' models. Some characteristics of our model that made it more traditional are:
+
+  - We did not consider the possibility of random variation in the effect of apparent speaker age across listeners. 
+
+  - We assumed that the error variance was the same for all conditions, all speakers and all listeners. 
+  
+  - We assumed that the error distribution was normal. 
+  
+In this chapter we will revisit the models we discussed last chapter. However, this time we will revisit, and change, the assumptions we made above.
+
+
+## Data and research questions
+
+same as last chapter
+
+```{r}
+library (bmmb)
+data (height_exp)
+tmp = as.numeric(height_exp$L) * 0 
+count=1
+for (i in c(15,2,1,14,3,13,4,12,5,6,11,10,8,7,9)){
+  tmp[as.numeric(height_exp$L)==i] = count 
+  count = count + 1
+}
+height_exp$L = tmp
+
+notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
+notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
+```
+
+  (Q1) How tall do speakers perceived as adult females sound? 
+  
+  (Q2) How tall do speakers perceived as children sound?
+  
+  (Q3) What is the difference in apparent height associated with the perception of adultness? 
+  
+
+## Variation in parameters across sources of data
+
+The models we have considered so far include only listener and speaker-specific intercepts, but nothing else. For example, our models in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. An inspection of figure X last chapter clearly suggests that apparent age did not, in fact, have the same effect for the judgments of all listeners. 
+
+Another way to think about this is that our model modeled only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a main effect. Someone might ask "what is the average apparent height difference between children and adult females?" and you might say "about 16 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall effect*. In contrast, we may want to think about the effect of apparent age *conditional* on listener. Recall from chapter 2 that if the conditional distribution of a variable changes as a function of another variable then these are not independent. In the same way, if the conditional effects of a predictor change as a function of another predictor, then these effects are not independent. For example, if the effect of apparent age varies substantially across listeners then if someone asks "what is the average apparent height difference between children and adult females?" you may have to answer "well it depends on the listener".      
+
+```{r}
+listener_age_differences = tapply (notmen$height, notmen[c("A","L")], mean)
+listener_age_effects = (listener_age_differences[1,]-listener_age_differences[2,])/2
+```
+
+
+```{r F61, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
+
+################################################################################
+### Figure 6.1
+################################################################################
+par (mfrow = c(1,3), mar = c(4,4,1,1))
+
+plot(listener_age_differences[1,], 
+     type = 'b', col = lavender, pch=16, ylim = c(132,172),ylab = "Height (cm)",lwd=2)
+lines(listener_age_differences[2,], 
+      type = 'b', col = deepgreen, pch=16,lwd=2)
+abline (h = c(157, 165, 149), lty = c(1,3,3))
+
+plot(listener_age_effects, lwd=2,lty=1,
+     type = 'b', col = darkorange, pch=16, ylim = c(0,18),ylab = "Height difference (cm)")
+abline (h = mean (listener_age_effects))
+
+plot(listener_age_effects, lwd=1,lty=3,
+     type = 'n', col = darkorange, pch=16, ylim = c(0,18),ylab = "Height difference (cm)")
+arrows (1:15, rep(mean(listener_age_effects),15), 1:15, listener_age_effects,
+        length=.1, lwd=2, col=skyblue)
+abline (h = mean(listener_age_effects))
+
+```
+
+When two variables do not have independent effects on your outcome, they are said to **interact** and have an **interaction**. The parameters in your model that help you capture these conditional effects are referred to as interactions or **interaction effects**. So, the 'fixed' effect for `A1` really represents the marginal (overall) effect for the predictor. To investigate the values of this predictor *conditional* on listener, we need to include the listener by `A1` *interaction* in our model.
+
+### Description of our model
+
+Before including interactions in our model, let's take  step back and consider the model formula we used last chapter. Below, we explicitly include the leading one (indicating the intercept) to make the following discussion simpler. 
+
+`height ~ 1 + A + (1|L) + (1|S)`
+
+This formula told our model to draw the A parameter from a fixed prior distribution and to draw the `L` and `S` terms from distributions whose standard deviations were estimated from the data (i.e. using adaptive partial pooling). We can pretend that we want to estimate our `L` terms as 'fixed' effects (i.e. without partial pooling) by pulling it out of the parentheses, as seen below.    
+
+`height ~ 1 + A + L + (1|S)`
+
+We are doing this to highlight the two ways that we can include interactions in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and B, and the interaction between A and B".
+
+`y ~ 1 + A + B + A:B`
+
+As a shortcut, we can use the symbol `*` which means "include the main effects for these predictors and all interactions between them."
+
+`y ~ 1 + A * B`
+
+So, if we wanted to include the marginal effects of age and listener, and the interaction between them we could include them in either of the two ways below, provided we want to estimated these without partial pooling. 
+
+`height ~ 1 + A + L + A:L + (1|S)`
+
+`height ~ 1 + A * L + (1|S)`
+
+However, we know that is is advisable to estimate factors with large numbers of levels using partial pooling, regardless of how 'random' the effect may be (see section X). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. This leads to the second way of including interactions in our model. Whenever any fixed effects interacts with our random effects, it is most common to include these inside the parentheses belonging to the random effect they interact with, like so:
+
+`height ~ 1 + A + (1 + A|L) + (1|S)`
+
+When we do this, we tell our model to fit the age by listener interaction using partial pooling just like we did for the listener intercept effects. Actually, our 'listener intercept effects' are actually an intercept by listener interaction. In other words, out listener effects are simply listener-specific deviations from the intercept conditional on listener, i.e. the listener by intercept interaction. When our formula has a non intercept predictor, we can omit rthe `1` and make our formula as follows: 
+
+`height ~ A + (A|L) + (1|S)`
+
+The formula above tells `brms`: "height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept. It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Our model formula might specify a model that looks like below:
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mathrm{Priors:} \\ 
+L_{[\bullet]} \sim N(0,\sigma_L) \\
+A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L}) \\
+S_{[\bullet]} \sim N(0,\sigma_S) \\
+\\
+\mathrm{Intercept} \sim N(156,12) \\
+A1 \sim N(0,12) \\
+\sigma \sim N(0,12) \\
+\sigma_L \sim N(0,12) \\
+\sigma_{A1 \colon L} \sim N(0,12) \\
+\sigma_S \sim N(0,12)
+\end{split}
+(\#eq:61)
+\end{equation}
+$$
+
+Note that all we have done is added a new term to our prediction equation ($A1 \colon L_{[A_{[i]}]}$), and we have set up the prior for these terms ($A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L})$), and the prior for the term-specific standard deviation parameter ($\sigma_{A1 \colon L} \sim N(0,12)$). This model is perfectly fine, sort of. One potential problem is that we are now estimating two parameters for each listener, an intercept and an effect for `A`, and our model above draws each of these variables from independent distributions as if these were totally unrelated. The problem with treating multiple listener-specific effects as independent is that they are often not. As we have seen repeatedly to this point, treating dependent variables as if they were independent can cause problems for inference. For this reason, when there is more than one group=specific predictor in our model, these are usually treated as draws from a *multivariate normal* distributions, as will be discussed in the following section. 
+
+### Random effects and the multivariate normal distribution
+
+The **multivariate normal** distribution is a straightforward and very useful generalization of the normal distribution. A multivariate normal variable can be thought of as a set of variables whose marginal distributions are themselves normal. Each of these variables represents a **dimension** of the multivariate normal. The dimensions of the multivariate normal can have arbitrarily different means and standard deviations, but their marginal distributions will *always* be a (univariate) normal. Below we 'make' five samples of a three-dimensional normal distribution by independently sampling three univariate normals and sticking these together as columns. Below, each row represents a different sample of the variable and each column represents a different dimension of the variable for that observation. 
+
+```{r}
+multivariate_normal = cbind(rnorm (5,0,1),rnorm (5,5,37),rnorm (5,-100,0.001))
+multivariate_normal
+```
+
+If this were all there is to multivariate normal distributions, then they would not be worth the trouble in many situations. However, treating a set of variables as a multivariate normal distribution allows for the **linear correlation** (often referred to as just the **correlation**) between dimensions to be modeled. The linear correlation between two variables is a value between -1 and 1 which measures the extent two which the two variables tend to vary along straight lines. For example, below we calculate mean height judgments. 
+
+```{r}
+listener_means = tapply (notmen$height, notmen[,"L"], mean)
+```
+
+In the figure below we plot these, along with the listener age effects on apparent height, calculated (and presented) above. In the rightmost panel we see that these two variables seem to have a negative relationship such that smaller values of average heights tend to be associated with larger age effects. This suggests that these variables are negatively correlated. This is important because, if this is true, it suggests that we are unlikely to observe listener who reported tall speakers on average *and* had large age effects on height. 
+
+```{r F62, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
+
+#####################2
+################################################################################
+par (mfrow = c(1,3), mar = c(4,4,1,1))
+
+plot(listener_means[c(15,1,2,14,3,13,4,12,5,6,11,10,8,7,9)],ylim=c(147,167),cex=1.5, 
+     type = 'b', col = lavender, pch=16, ylab = "Height Intercept (cm)",lwd=2,
+     xlab = "Listener")
+abline (h = mean(listener_means), lty=3)
+
+plot(listener_age_effects[c(15,1,2,14,3,13,4,12,5,11,6,10,8,7,9)], lwd=2,lty=1,cex=1.5,
+     type = 'b', col = darkorange, pch=16, ylab = "Age Effect (cm)",ylim=c(1,18),
+     xlab = "Listener")
+abline (h = mean(listener_age_effects), lty=3)
+
+plot(listener_means,listener_age_effects, lwd=1,lty=3,xlim=c(147,167),ylim=c(1,18),
+     type = 'p', col = cols[4], pch=16, ylab = "Age Effect (cm)",cex=1.5,
+     xlab = "Height Intercept (cm)")
+abline (v = mean(listener_means), h = mean(listener_age_effects), lty=3)
+
+```
+
+We can calculate **Pearson's correlation coefficient** to measure the degree of correlation using the `cor` function in R, which tells us that the correlation between these variables is -0.69. The negative correlation means that a scatter plot of the two variables will have a negative slope left to right. A value of -1 would indicate a *perfect* negative correlation, a value of 0 indicates no correlation, and a value of one indicates a perfect positive correlation. So, the correlation of -0.69 represents a moderate to strong negative correlation between these two variables. 
+
+```{r}
+cor (listener_means, listener_age_effects)
+```
+
+Consider the two vectors below. The element of the second vector is exactly equal to twice every element of the first vector: They are perfectly predictable one from the other. As a result, these two vectors have a correlation of 1. 
+
+```{r}
+x1 = c(-1, -1, 1, 1)
+y1 = c(-2, -2, 2, 2)
+cor (x1, y1)
+```
+
+Below we see the opposite situation. The second vector is still twice the first vector, but now every sign differs across the two vectors. These are still perfectly predictable, just backwards. For example, if a gambler were wrong 100% of the time, anyone who did the opposite could perfectly predict the outcome of every game by doing the opposite. Below, we see that these vectors have a correlation of -1.
+
+```{r}
+x1 = c(-1, -1,  1,  1)
+y1 = c( 2,  2, -2, -2)
+cor (x1, y1)
+```
+
+In the next example we see that the signs of each element of the second vector are totally *unpredictable* from the corresponding element in the first vector. In half the cases the signs match and in half the cases they do not. This results in a correlation of 0 between the vectors. 
+
+```{r}
+x1 = c(-1, -1,  1, 1)
+y1 = c(-2,  2, -2, 2)
+cor (x1, y1)
+```
+
+Finally, we see a situation where the vectors *almost* match. In the example below three of the four elements match in sign, resulting in a positive correlation between 0 and 1. 
+
+```{r}
+x1 = c(-1, -1,  1, 1)
+y1 = c(-2, -2, -2, 2)
+cor (x1, y1)
+```
+
+The formula for Pearson's correlation coefficient is presented below. If you're not familiar it may seem a bit daunting but its actually relatively straightforward. 
+
+
+$$
+\begin{equation}
+r = \frac {\Sigma(x_i-\bar{x}) \; \Sigma(y_i-\bar{y})} 
+          {\sqrt{\Sigma(x_i-\bar{x})^2 \; \Sigma(y_i-\bar{y})^2}}
+(\#eq:62)
+\end{equation}
+$$
+
+
+$$
+\begin{equation}
+r = \frac {\Sigma(x_i) \; \Sigma(y_i)} 
+          {\sqrt{\Sigma(x_i)^2} \; \sqrt{\Sigma(y_i)^2}}
+(\#eq:63)
+\end{equation}
+$$
+
+
+So, when we estimate random effects for a group as multivariate normal distributions we also estimate the correlation between all pairs of dimensions. In many cases these correlation can influence the likelihood of different outcomes in our model. The easiest way to see the reason for this is by drawing a bivariate (2-dimensional) normal variables with different correlations and plotting the. Below we do this for distributions corresponding to the mean and standard deviations of listener means and age effects. The difference in each row is in the difference in correlation between the two dimensions/variables. 
+
+
+an
+In the left column below I compare three bivariate normal variables along the two dimensions. In the absence of any correlation between variables, a plot of this distribution will be *spherical* (or circular in 2 dimensions). When there is a correlation between the two dimensions, the distribution starts looking more and more like a straight line. When there is a negative correlation, the line just points down rather than up. 
+
+Note the the marginal (independent) distributions of the variables (the left and right histograms) don't change as the correlation changes. The correlation is a reflection of the *joint* variation in the two variables and will not necessarily be evident in the marginal distributions of each variable.  
+
+```{r F63, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and slope coefficients from distributions with a mean of 0 and a standard deviation of 1. The correlation of the variables is 0 (top), 0.5 (middle) and 0.9 (bottom). The left column presents both variables together, the middle column presents intercepts and the right column presents slopes. ", cache = TRUE, echo = FALSE}
+
+################################################################################
+### Figure 6.3
+################################################################################
+
+par (mfrow = c(3,3), mar = c(4,4,3,1))
+
+ranefs = phonTools::rmvtnorm (10000, means = c(159,8), sigma = matrix (c(4.7^2,0,0,3.7^2),2,2))
+hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(145,175))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+plot (ranefs, pch=16,col=4,xlim=c(140,180),ylim=c(-5,22),xlab='Intercept',
+      ylab='A1')
+phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3)
+grid()
+
+ranefs = phonTools::rmvtnorm (10000, means = c(159,8), sigma = matrix (c(4.7^2,-11.8,-11.8,3.7^2),2,2))
+hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(145,175))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+plot (ranefs, pch=16,col=4,xlim=c(140,180),ylim=c(-5,22),xlab='Intercept',
+      ylab='A1')
+phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3, xlim = c(145,175))
+grid()
+
+ranefs = phonTools::rmvtnorm (10000, means = c(159,8), sigma = matrix (c(4.7^2,17,17,3.7^2),2,2))
+hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(145,175))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+plot (ranefs, pch=16,col=4,xlim=c(140,180),ylim=c(-5,22),xlab='Intercept',
+      ylab='A1')
+phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3, xlim = c(145,175))
+grid()
+
+```
+
+When our dimensions are uncorrelated they are independent. The value of one does not help you understand the other. However, when the dimensions *are* correlated we can use this to make better predictions using our data. For example, an intercept of 2 in the bottom row in the figure above is very likely to be paired with a slope of 2, but *extremely* unlikely to be seen with a slope of -2. In contrast, in the top row a slope of 2 and -2 seem about equally likely given an intercept of 2. So, when we use multiple random predictors per grouping factor, we are really drawing from a multivariate normal distributions that acknowledges the relationships between random predictors in our data, within-cluster (e.g. subject/participant/speaker).  
+
+For example, consider the experiment regarding coffee and speaking rate. Perhaps people who speak fast normally get an even larger boost to their speaking rate from coffee. On the other hand, maybe since they already speak fast, the effect for coffee is diminished in these speakers. In other case, the relationship between the intercept for these speakers (baseline rate) and their coffee effect would not be independent. 
+
+The shape of the multivariate normal distribution (i.e. how much it looks liek a circle vs an ellipse) is determined by a covariance matrix called sigma ($\Sigma$). This matrix is a square $n$ x $n$ matrix for a variable with $n$ dimensions. When we dealt with unidimensional normal distributions for our previous random effects, we specified priors for the (unidimensional) standard deviations using t distributions. The specification of priors for our covariance matrix is only slightly more complicated. 
+
+In our models, we won't actually include priors for $\Sigma$ directly. This is because `brms` (and STAN) build up $\Sigma$ for us from the components we *do* specify. This is more information that you *really* need, but it helps to understand why the priors are specified the way they are for our random effects.
+
+Consider two random effects, a random by subject intercept $\alpha_{[subj]}$, and a random by-subject slope called \alpha_{[subj]}. The covariance matrix for our random effects is created by multiplying the standard deviations of our individual dimensions by a correlation matrix ($R$) specifying the correlations between each dimension. The operation is like this:
+
+$$
+\begin{equation}
+\begin{split}
+\Sigma = \begin{bmatrix} \sigma_{\alpha_{[subj]}} & 0 \\ 0 & \sigma_{\beta_{[subj]}} \\ \end{bmatrix} 
+\times R \times
+\begin{bmatrix} \sigma_{\alpha_{[subj]}} & 0 \\ 0 & \sigma_{\beta_{[subj]}} \\ \end{bmatrix} \\
+\end{split}
+(\#eq:64)
+\end{equation}
+$$
+
+The values in the outside matrices are the the standard deviations of the random intercepts ($\sigma_{\alpha_{[subj]}}$) and slopes ($\sigma_{\beta_{[subj]}}$) individually. The correlation matrix $R$ contains information about the correlation between the dimensions of the variable (e.g., $\rho_{\alpha_{[subj]} \beta _{[subj]}}$).
+  
+So, when we have multiple random effects we have a multidimensional variable, and we need to specify priors for each dimension and for the correlation between all dimensions (but not for $\Sigma$ directly). 
+
+We provide priors for the standard deviations of the individual dimensions in the same way as we do for 'unidimensional' random effects (like $\alpha_{[speaker]}$). 
+
+The correlation matrix $R$ will look something like below (for two dimensions). It will contain only values of 1 on the main diagonal and have mirrored values between -1 and 1 off of the diagonal (since the correlation of a and b equals the correlation of b and a).
+
+$$
+\begin{equation}
+\begin{split}
+R = \begin{bmatrix} x & y \\ y & z \\ \end{bmatrix} \\ \\
+\end{split}
+(\#eq:65)
+\end{equation}
+$$
+
+We specify priors for variables of this type using the $LKJCorr$ distribution in `brms`. This distribution has a single parameter that determines how peaked the distribution is around 0. Basically, higher numbers make it harder to find larger correlations (and therefore yield more conservative estimates). [See here for an example](https://eager-roentgen-523c83.netlify.app/2014/12/27/d-lkj-priors/).   
+
+$$
+\begin{equation}
+\begin{split}
+R \sim \mathrm{LKJCorr} (2)
+\end{split}
+(\#eq:66)
+\end{equation}
+$$
+
+The above was a full explanation of what information the model needs and why it needs it. You don't need to *understand* any of the above to use random effects correctly. The important take away is that whenever you are estimating any random effects above and beyond a random intercept, you need to: 
+
+  1) Specify priors for the standard deviation of each dimension.
+  
+  2) Specify a prior for the correlation matrix for the multivariate normal used for the random parameters.
+  
+and `brm` (and STAN) will do the rest.
+
+
+### Fitting the model
+
+
+```{r}
+# to change to sum coding
+options (contrasts = c('contr.sum','contr.sum'))
+
+# to change back to treatment coding
+# options (contrasts = c('contr.treatment','contr.treatment'))
+```
+
+We can fit the same model with sum coding using the exact same code since the options (and our coding) have changed, but nothing else has. 
+
+```{r, eval = FALSE}
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+model_re =  
+  brms::brm (height ~ A + (A|L) + (1|S), data = notmen, chains = 4, cores = 4,
+       warmup = 1000, iter = 3500, thin = 2,
+       prior = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
+                 brms::set_prior("student_t(3, 0, 12)", class = "b"),
+                 brms::set_prior("student_t(3, 0, 12)", class = "sd"),
+                 brms::set_prior("lkj_corr_cholesky (2)", class = "cor"),       
+                 brms::set_prior("student_t(3, 0, 12)", class = "sigma")))
+```
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+model_re = bmmb::get_model ('6_model_re.RDS')
+```
+```{r, include = FALSE}
+model_re = readRDS ('../models/6_model_re.RDS')
+```
+
+
+### Interpreting the model
+
+
+
+```{r}
+bmmb::short_summary (model_re)
+```
+
+
+- talk about model fit and new parts of print statements
+
+
+```{r}
+model_sum_coding = readRDS ('../models/5_model_sum_coding.RDS')
+```
+
+
+```{r}
+
+comparison = rbind (brms::fixef(model_sum_coding), brms::fixef(model_re))
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+bmmb::brmplot (comparison[c(1,3),], ylim = c(152,159))
+bmmb::brmplot(comparison[c(2,4),], ylim = c(6,11))
+```
+
+
+
+
+
+
+## Making our model more robust: The (non-standardized) t distribution {#c3-robust}
+
+Rather than focusing on the *mathematical* properties of priors, it's more useful to focus on whether or not their *shapes* reflect the distribution of credible parameter values a priori (before you conducted your experiment). This is because, ultimately, any distribution you chose is at best an approximation and will not be the *true* data-generating distribution. Even if it is, you most likely can't prove it. In contrast, the characteristics of the shape of the distribution have a *direct* and practical effect on your outcomes, and so should be of concern.  
+
+The shape of the **t distribution** is broadly similar to the standard normal distribution, it is symmetrical about its mean and has a similar 'bell' shape to it. However, the t distribution has a *degrees of freedom* parameter, called $\nu$, that affects the shape of the distribution. Lower values of $\nu$ result in 'pointier' distributions that also have more mass in the 'tails', far away from the mean of the distribution. We can see the effect of $\nu$ on the shape of the t distribution in figure \@ref(fig:F34). In the middle panel we see that, apart from when $\nu=1$, the shape of the distributions is pretty similar within about two standard deviations of the mean. Since we expect the large majority (about 95%) of our observations to fall inside this area, this means that $\nu$ is not expected to have a large effect on inference in many cases where data falls within 'typical' ranges. In contrast, in the right panel below see that the differences are quite large in the 'tails' of the distributions, the areas outside of three standard deviations or so.
+
+```{r F34, fig.height = 3, fig.width = 8, fig.cap='(left) A comparison of the density of a standard normal distribution (red curve) with the densities of t distributions with different degrees of freedom. (middle) The log-densities of the distributions in the left plot. (right) The same as the middle plot, except across a wider domain.', echo = FALSE}
+
+################################################################
+### Figure 3.4
+################################################################
+
+par (mfrow = c(1,3), mar = c(4,4,1,1))
+curve (dnorm (x, 0, 1), from = -7, to = 7, col = 2,lwd=3, 
+       yaxs='i',ylim = c(0,0.45), xlim = c(-6,6),ylab="Density")
+curve (dt (x, 1), from = -7, to = 7, add = TRUE, lwd=3, col=deeppurple)
+curve (dt (x, 5), from = -7, to = 7, add = TRUE, lwd=3, col=skyblue)
+curve (dt (x, 15), from = -7, to = 7, add = TRUE, lwd=3, col=deepgreen)
+curve (dt (x, 50), from = -7, to = 7, add = TRUE, lwd=3, col=darkorange)
+#abline (h = 1/10^seq(1,5,1),lty=3,col='grey')
+
+legend (2,.4,legend=c("1","5","15","50"),bty='n',title='d.f.',lwd=3,
+        col=c(deeppurple,skyblue,deepgreen,darkorange),cex=1.2)
+
+curve (dnorm (x, 0, 1), from = -7, to = 7, col = 2,lwd=3, 
+       yaxs='i',log='y', ylim = c(0.001,.6), xlim = c(-3,3),
+       yaxt='n',ylab="Density")
+curve (dt (x, 1), from = -7, to = 7, add = TRUE, lwd=3, col=deeppurple)
+curve (dt (x, 5), from = -7, to = 7, add = TRUE, lwd=3, col=skyblue)
+curve (dt (x, 15), from = -7, to = 7, add = TRUE, lwd=3,col=deepgreen)
+curve (dt (x, 50), from = -7, to = 7, add = TRUE, lwd=3, col=darkorange)
+abline (h = 1/10^seq(1,9,1),lty=3,col='grey')
+abline (v = seq(-7,7,1),lty=3,col='grey')
+
+lab = expression(10^-1)
+
+for (i in seq(-1,-8,-1)){
+  lab[[1]][[3]] = i
+  axis (side=2, at = 1/(10^-i), labels = lab, las=2)
+}
+
+curve (dnorm (x, 0, 1), from = -7, to = 7, col = 2,lwd=3, 
+       yaxs='i',log='y', ylim = c(0.000000001,.6), 
+       xlim = c(-6,6), yaxt='n',ylab="Density")
+curve (dt (x, 1), from = -7, to = 7, add = TRUE, lwd=3, col=deeppurple)
+curve (dt (x, 5), from = -7, to = 7, add = TRUE, lwd=3, col=skyblue)
+curve (dt (x, 15), from = -7, to = 7, add = TRUE, lwd=3,col=deepgreen)
+curve (dt (x, 50), from = -7, to = 7, add = TRUE, lwd=3, col=darkorange)
+abline (h = 1/10^seq(1,9,1),lty=3,col='grey')
+abline (v = seq(-7,7,1),lty=3,col='grey')
+
+lab = expression(10^-1)
+
+for (i in seq(-2,-8,-2)){
+  lab[[1]][[3]] = i
+  axis (side=2, at = 1/(10^-i), labels = lab, las=2)
+}
+```
+
+The most common implementation of the t distribution has only one parameter, $\nu$. This *standardized* t distribution always has a mean equal to zero and a fixed variance. In order to use the t distribution for variables with other means and variances, we need to refer to the **non-standardized t distribution**, a three-parameter distribution consisting of mean ($\mu$), scale ($s$), and degrees of freedom ($\nu$). The non-standardized t distributions consist of a t distributed variable ($t$) that has been scaled it up by some value $s$ and then has had some value $\mu$ added to it, as in \@ref(eq:318). The $\mu$ parameter allows for the probability distribution to be centered at different locations along the number line, and the $s$ parameter allows the distribution to have wider/narrower distributions than those seen in figure \@ref(fig:F34). 
+
+$$
+\begin{equation}
+\begin{split}
+x = \mu + s*t
+\end{split}
+(\#eq:318)
+\end{equation}
+$$
+
+Eagle-eyed readers may have noticed that the histograms we have been using have pretty wide tails. This suggests the presence of large outliers, which are not in line with a normal distribution. Below we scale our data, which means we subtract the mean and divide by the standard deviation. This has the effect of turning our data into data resembling a standard normal distribution and expresses all deviations from the mean in units of standard deviations. When we check the range of our scaled values we see that our smallest value is 4.4 standard deviations from the mean, while our largest value is 2.4 standard deviations from the mean. 
+
+```{r}
+range (scale (notmen$height))
+```
+
+We can use the `pnorm` function to consider how likely these observations are given our model. The `pnorm` function takes in an $x$ value, values of $\mu$ and $\sigma$, and tells you how much of the mass of the probability density is to the *left* of the value $x$. So, the code below tells us what the probability is of finding a value smaller than our furthest outlier. We can also use this probability to estimate the sample size we would expect before seeing an outlier this far out. We can see that the our furthest outlier is extremely improbable given a normal distribution and would be expected in a sample size of around 177,000, substantially larger than our sample of 675. This leads to three possible conclusions: Either our data is from a distribution with fatter tails, the real standard deviation of the data is much larger than we think it is, or something is wrong with our model or the observation.    
+
+```{r, collapse = TRUE}
+mu = mean(notmen$height)
+sigma = sd(notmen$height)
+
+# probability of value smaller than smallest outlier
+pnorm (min (notmen$height),mu,sigma)
+
+# sample size before outlier thie big expected
+1/pnorm (min (notmen$height),mu,sigma)
+```
+
+We can use the `fitdistr` function from the `MASS` package to get maximum likelihood estimates for $\nu$, $s$, and $\mu$ given our data, and assuming a non-standardized t distribution. We can see that the estimate for $\nu$ is a relatively small number, suggesting substantial deviations from a normal distribution in the tails of the data. 
+
+```{r, collapse = TRUE}
+# the 'lower' bounds are for the sd and df respectively
+tparams = MASS::fitdistr (notmen$height, 't', lower = c(0,1))
+tparams
+```
+
+We can use these estimated parameters to find the probability of observing an observation this for from the mean in a t distribution. We do this with the `ptns` function which works very much like the `pnorm` function, except for non-standardized t distributions. This function takes in an $x$ value, values of $m$, $s$, and $df$ (i.e., $\nu$) and tells you how much of the mass of the probability density is to the *left* of the value $x$. So, the function below tells us what the probability is of finding a value smaller than our furthest outlier from a t distribution. As we can see, the outliers in our height judgments are unlikely but not *too* unlikely given a t distribution with $\nu=9.4$. For example, our sample size is 675 and we would expect to see an observation as unusual as our furthest outlier about one in every 3060 samples.
+
+```{r, collapse = TRUE}
+m = tparams[[1]][1]
+s = tparams[[1]][2]
+df = tparams[[1]][3]
+
+# probability of value smaller than smallest outlier
+bmmb::ptns (min (notmen$height),m, s, df)
+
+# sample size before outlier thie big expected
+1/bmmb::ptns (min (notmen$height),m, s, df)
+```
+
+Below, we see that our largest outlier is about 58 times more likely in the t distribution than the normal distribution. The benefit of using t distributions is that they allow for 'outliers', that is observations that are very unlike the 'typical' observation, without such a strong effect on your analysis. Basically, the normal distribution doesn't like extreme events. When an extreme event *does* occur, this will necessarily result in an increase in your standard deviation estimate so that the extreme event seems less extreme.
+ 
+
+```{r}
+ptns (min (notmen$height),m, s, df) / 
+  pnorm (min (notmen$height),mu,sigma)
+```
+
+### Re-fitting with t-distributed errors {#re-fitting-with-t-distributed-errors.}
+
+We can update our model to include the new random component and the new prior structure. 
+
+$$
+\begin{equation}
+\begin{split}
+\\
+height_{[i]} \sim \mathcal{t}(\mu_{[i]},\sigma, \nu) \\ 
+\mu_{[i]} = Intercept \\
+\\
+\textrm{Priors:} \\
+Intercept \sim t(3, 176, 15) \\
+\sigma \sim t(3, 0, 15) \\ 
+\nu \sim gamma(2, 0.1) \\ 
+\end{split}
+(\#eq:31x)
+\end{equation}
+$$
+
+The prior we have set for the $\nu$ parameter is seen below. This is the default prior set by brms but we are explicitly stating it just to be clear. We can see what this prior looks like using the `dgamma` and `curve` functions to draw the density of a gamma distribution with those parameters, as seen below. Remember that it is not so important if the prior of $\nu$ *really* has the shape of a gamma distribution with those parameters. Instead we need to worry about whether the density distributed credibility in the right places, and this one basically does.  
+
+```{r F35, fig.height = 3, fig.width = 8, fig.cap='(left) The density of a gamma distribution with the parameters specified in our model. (right) The log-density of the distribution in the left panel.', echo = TRUE}
+par (mfrow = c(1,2), mar = c(2.5,4,1,1))
+curve (dgamma(x,2,0.1), xlim = c(1,150), xaxs='i', ylab="Density",xlab="",
+       lwd=4, col = maroon, yaxs='i', ylim = c(0,0.045))
+curve (dgamma(x,2,0.1), xlim = c(1,150), log='y', xaxs='i', ylab="Log Density",
+       xlab="", lwd=4, col = lavender, yaxs='i', ylim = c(10^-7,0.05))
+```
+
+Below we fit the new model:
+
+```{r, eval = FALSE}
+# Fit the model yourself
+
+priors = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
+          brms::set_prior("student_t(3, 0, 12)", class = "b"),
+          brms::set_prior("student_t(3, 0, 12)", class = "sd"),
+          brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+          brms::set_prior("gamma(2, 0.1)", class = "nu"),    
+          brms::set_prior("student_t(3, 0, 12)", class = "sigma"))
+
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+model_t =  
+  brms::brm (height ~ A + (A|L) + (1|S), data = notmen, chains = 4, cores = 4,
+       warmup = 1000, iter = 3500, thin = 2, family="student", prior = priors)
+#saveRDS (model_t, '../models/6_model_t.RDS')
+
+```
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+model_t = bmmb::get_model ('6_model_t.RDS')
+```
+```{r, include = FALSE}
+model_t = readRDS ('../models/6_model_t.RDS')
+```
+
+
+And inspect the short summary:
+
+```{r, collapse = TRUE}
+# inspect model
+#bmmb::short_summary (model_t)
+```
+
+We see that there is a new line in the family-specific parameters corresponding to our estimate of $\nu$. Again, we get a mean for this parameter and credible intervals. Although the `sigma` parameter above gets the same label as the $\sigma$ parameter in our normally-distributed models above, it is important to remember that this corresponds to the scale parameter of the non-standardized t distribution, and not the a standard deviation parameter. 
+
+
+- talk about how much better or different it is
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mathrm{Priors:} \\ 
+S_{[\bullet]} \sim N(0,\sigma_S) \\
+\\
+\mathrm{Intercept} \sim N(156,12) \\
+A1 \sim N(0,12) \\
+L_{[\bullet]} \sim N(0,12) \\
+A1 \colon L_{[\bullet]} \sim N(0,12) \\
+\sigma \sim N(0,12) \\
+\sigma_S \sim N(0,12)
+\end{split}
+(\#eq:61)
+\end{equation}
+$$
+
+
+## Varying variances: Heteroskedasticity and distributional (or mixture) models
+
+- we assume normality not because we should but because we must
+- same with heteroskedasticity
+- but now we dont have to
+
+
+```{r}
+
+qq = residuals (model_sum_coding)
+
+boxplot(abs(qq[,1]) ~ model_sum_coding$data$L)
+
+```
+
+- uncertainty in parameter estimates is related to error variance related to explained variance
+- when we artificially increase the error variance we wash out results needlessly
+- in addition different error variances provide different information. 
+- why not get all this? we have 100 observations, thats plenty to model a mean, A parameter and sd. 
+
+
+
+### Re-fitting the model with listener-dependenr error variances
+
+
+```{r, eval = FALSE}
+# Fit the model yourself
+
+model_formula = brms::bf(height ~ A + (A|L) + (1|S),
+                         sigma ~ 1 + (1|L))
+
+brms::get_prior (model_formula, data = notmen,family="student")
+             
+priors = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
+          brms::set_prior("student_t(3, 0, 12)", class = "b"),
+          brms::set_prior("student_t(3, 0, 12)", class = "sd"),
+          brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+          brms::set_prior("gamma(2, 0.1)", class = "nu"),
+          brms::set_prior("student_t(3, 0, 1.5)", class = "Intercept", dpar = "sigma"),
+          brms::set_prior("student_t(3, 0, 1.5)", class = "sd", dpar = "sigma"))
+
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+model_t_het = 
+  brms::brm (model_formula, data = notmen, chains = 4, cores = 4,
+             warmup = 1000, iter = 3500, thin = 2, family="student",
+             prior = priors)
+```
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+model_t_het = bmmb::get_model ('6_model_t_het.RDS')
+```
+```{r, include = FALSE}
+model_t_het = readRDS ('../models/6_model_t_het.RDS')
+```
+
+
+
+## But what does it all mean? 
+
+
+```{r}
+bmmb::short_summary (model_sum_coding)
+
+bmmb::short_summary (model_t_het)
+
+```
+
+
+
+- here at the end I need a part about how does this invalidate the last model, that reasoning is a problem, bla bla
+- model comparison?
+- compare previous chapter and this model.
+- 95% of published work fatures regular models which we see werent really apprpriate. does that make those fake and results invald. 
+ - theres problems with this reasoning
+ - also our model is also wrong

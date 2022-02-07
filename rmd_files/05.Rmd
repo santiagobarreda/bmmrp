@@ -28,13 +28,20 @@ In the last chapter we focused on the apparent height of adult male speakers. Th
 ```{r}
 library (bmmb)
 data (height_exp)
+tmp = as.numeric(height_exp$L) * 0 
+count=1
+for (i in c(15,2,1,14,3,13,4,12,5,6,11,10,8,7,9)){
+  tmp[as.numeric(height_exp$L)==i] = count 
+  count = count + 1
+}
+height_exp$L = tmp
 table (height_exp$C_v, height_exp$C)
 ```
 
 In this chapter we are going to focus on *confusable* voices, so we are going to excluse adult males from our data. Below we load our experimental data and create a new dataframe called `notmen` that includes all data associated with stimuli not produced by adult male speakers. 
 
 ```{r}
-notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R!='a',]
+notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
 ```
 
 We add a new variable to our data frame called `A_v` which includes the veridical age for our speakers. We create a new confusion matrix to see to what extent listeners confused the adult women in our sample with younger speakers. We can see that although a majority of stimuli were classified correctly, there are definitely large numbers of misidentifications in our data. 
@@ -110,7 +117,7 @@ model =
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
-multilevel_model = bmmb::get_model ('5_model.RDS')
+model = bmmb::get_model ('5_model.RDS')
 ```
 ```{r, include = FALSE}
 model = readRDS ('../models/5_model.RDS')
@@ -177,6 +184,8 @@ Notice that under treatment coding you estimate a group mean and the differences
 
 ### Sum coding
 
+- sum coding is that is used for random effects by the way
+
 There are multiple options for coding schemes, and the best one for you depends on what you want to get out of your model. Changing the coding scheme may substantially change the value of your coefficients and the way they should be interpreted. However, this will not change the fundamental relationships encoded in your model. As a result, the selection of a coding scheme best suited for a model depends on which one results in the simplest interpretation of the model given the purpose of the research. That being said, going forward we will focus exclusively on what is known as **sum coding**. The focus on a single coding scheme will save space and minimize confusion for the reader. The reason for selecting sum coding specifically is because it has some desirable mathematical properties and it allows models to be interpreted in a style reminiscent of a traditional analysis of variance (to be discussed in chapter X), which many researchers may find useful. 
 
 In sum coding, there is no reference level. Instead, the intercept represents the mean of all your groups, the overall grand mean. The effect for each individual group is then represented as a deviation from the intercept, and all of these effects are constrained to sum to zero. Just like for treatment coding, you can't estimate all of your group effects *and* the overall grand mean. Since we are estimating the grand mean, that means we will not be able to estimate *one* of our group effects. When using sum coding, R selects the *alphabetically last* level of your factor, and does not estimate it. The values of the missing effect is easy to recover algebraically since the sum of the coefficients must equal zero. As a result of the sum-to-zero constraint, the missing factor level will always be equal to the *negative sum* of the other factors. This means if you add up the values of the levels that *are* present and flip the sign, the outcome is the value of your missing level. If you think about it, it must be this way. This is because the final missing value must cancel out the sum of the others if the sum of all the values is to equal zero.
@@ -241,7 +250,6 @@ model_sum_coding =
                  brms::set_prior("student_t(3, 0, 12)", class = "b"),
                  brms::set_prior("student_t(3, 0, 12)", class = "sd"),
                  brms::set_prior("student_t(3, 0, 12)", class = "sigma")))
-
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
@@ -447,6 +455,90 @@ short_hypothesis(model,
                    "Intercept + Ac = 0"))## child mean
 ```
 
+### Manipulating the random effects
+
+Both ways of adding fixed effects presented above will also work for combining and manipulating our random effects. For example, we can get our listener random intercept using the `ranef` function (as discussed in section X) using the code below:
+
+```{r}
+listener_effects_hat = ranef(model_sum_coding, summary = FALSE)$L[,,"Intercept"]
+str (listener_effects_hat)
+```
+
+We can get the intercept from the model using the `fixef` function and asking for the column called "Intercept" from the output. 
+
+```{r}
+Intercept_hat = fixef(model_sum_coding, summary = FALSE)[,"Intercept"]
+str (Intercept_hat)
+```
+
+Then, we can combining the above samples and summarize these to get the conditional means and the listener effects, according to our model. The `_hat` suffix represents the $\hat{}$ operator, which goes above variables to indicate that they represent modeled quantities.  
+
+```{r}
+listener_means_hat = brms::posterior_summary (Intercept_hat + listener_effects_hat)
+listener_effects_hat = brms::posterior_summary (listener_effects_hat)
+```
+
+We can calculate equivalent values directly from the data as seen below. First we find the average for each listener across each adult and child groups, and then we find the average of that. The reason for this is to control for the fact that adult and child responses may not be balanced across listeners, and we want the listener average to be half-way between the *category means* rather than simply reflecting the distribution of responses across groups. For example if a listener identified 90% of speakers as children their overall mean would obviously be closer to their adult responses than their child responses. 
+
+```{r}
+listener_means = tapply (notmen$height, notmen[,c('A','L')], mean)
+listener_means = colMeans (listener_means)
+```
+
+After finding the listener means we calcuate the mean of the means (the Intercept), and subtract this from the listener means to get the listener effects (i.e., the listener dependent deviations from the intercept).
+
+```{r}
+Intercept = mean (listener_means)
+listener_effects = listener_means - Intercept
+```
+
+Below we plot the listener effects and means using `brmplot` and compare these to the equivalent values we calculated directly from the data. Clearly, these are a good match. A clear benefit of using the modeled parameters is that these come with credible intervals, so that we can make statements about likely bounds of values in addition to providing point estimates.
+
+```{r, fig.height = 3.5, fig.width=8, fig.cap = ".", echo = TRUE}
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+bmmb::brmplot (listener_effects_hat, col = cols)
+points (listener_effects, cex=2, col = cols, pch = 4,lwd=2)
+bmmb::brmplot (listener_means_hat, col = cols)
+points (listener_means, cex=2, col = cols, pch = 4,lwd=2)
+abline (h = Intercept)
+```
+
+Tthe above operations can be carried out using the `scope` and `group` parameters of the `hypothesis` (or `short_hypothesis`) function. For example, below we test the hypothesis that the intercept is equal to zero. We did something like this before in section X.
+
+```{r}
+short_hypothesis(model_sum_coding, 
+                 c("Intercept = 0"))
+```
+
+However, if we set `scope=ranef` we tell the function to check for intercepts in the random effects, rather than our `population level` intercept. In addition, by setting `group=L` we tell the function to check for the random intercepts of the `L` factor specifically. Below we compare the first five lines of the listener effects calculated above with those obtained using the hypothesis function, to show that these are identical. 
+
+```{r}
+
+short_hypothesis(model_sum_coding, 
+                 c("Intercept = 0"),
+                 scope = "ranef",group="L")[1:5,]
+
+listener_effects_hat[1:5,]
+```
+
+By changing the `scope` parameter to `coef` rather than `ranef`, we tell the `hypothesis` function to consider the value of intercept across random and fixed (i.e. population level) effects, for the factor `L` (since `group=L`). Below, we see that this approach also yields identical results to obtaining the individual samples, and adding and summarizing those.
+
+```{r}
+short_hypothesis(model_sum_coding, 
+                 c("Intercept = 0"),
+                 scope = "coef",group="L")[1:5,]
+
+listener_means_hat[1:5,]
+```
+
+Finally, in section X we mentioned that it is valid to check for combinations of parameters, adding and subtracting these to answer specific questions or hypotheses. The same approach is applicable to the random effects. For example, we see above that listeners 11 and 12 appear to have differing. Is this really supported by our model? To answer this question we can check how different they are by subtracting the samples corresponding to the two parameters, and then summarizing the distribution of the difference below. We see that the average difference is 2.4 cm and the 95% credible interval is [0.025, 4.90], meaning that is is likely that listener 11 really does rate speakers as higher overall relative to listener 12. 
+
+```{r}
+listener_effects_hat = ranef(model_sum_coding, summary = FALSE)$L[,,"Intercept"]
+
+difference_11_12 = listener_effects_hat[,11] - listener_effects_hat[,12]
+posterior_summary (difference_11_12)
+```
 
 ## Simulating the two-group model
 
@@ -549,6 +641,8 @@ text (25, 300, label = expression(paste(sigma["adult"]+sigma["speaker"]+sigma["e
 
 mtext (side=2,text="f0", outer = TRUE, line=0)
 ```
+
+
 ## But what does it all mean?
 
 We have fit and interpreted a model, discussed the details of the results and seen several representations of the data. At this point we need to think about what it all 'means' in terms of our research questions:
@@ -604,22 +698,27 @@ In frequentist corner, we're going to compare the output of `brms` to some more 
 
 ### Bayesian multilevel modesl vs. lmer
 
-Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the lme4 R package. Below we fit a model that is analogous to our `model_sum_coding` model.
+Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the lme4 R package. Below we fit a model that is analogous to our `model_sum_coding` model. Since we set contrasts to sum coding using the options above, this will still be in effect for this model. If you have not done so, run the line:
+
+```{r, eval = FALSE}
+options (contrasts = c("contr.sum","contr.sum"))
+```
+
+before fitting the model below so that its output looks as expected.
 
 ```{r, warning=FALSE, message = FALSE, collapse = TRUE, cache = TRUE}
 library (lme4)
-set.seed (1)
 lmer_model = lmer (height ~ A + (1|L) + (1|S), data = notmen)
 
 summary (lmer_model)
 ```
 
-We can see that this contains estimates that are very similar to those of our model. The 'fixed' effects above correspond closely to their 'Population-Level' counterparts. 
+We can see that this contains estimates that are very similar to those of our model. The 'fixed' effects above correspond closely to their 'Population-Level' counterparts, and the rest of the informations in the models also matches. 
 
 ```{r}
 ## Population-Level Effects: 
 ##           Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-## Intercept   229.33      2.71   224.07   234.81 1.00     2169     2758
-## adult1       -8.89      2.65   -14.19    -3.55 1.00     2085     2825
+## Intercept   156.74      1.23   154.32   159.18 1.00     1297     1713
+## A1            8.19      0.22     7.77     8.62 1.00     4250     4416
 ```
 

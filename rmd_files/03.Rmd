@@ -175,9 +175,8 @@ The different standard deviations used for the prior probabilities of $\mu$ enco
 ################################################################################
 
 library (bmmb)
-
 # load and subset experimental data
-data (height_exp)
+data (height_exp, package = "bmmb")
 men = height_exp[height_exp$C_v=='m',]
 men = men[men$R=='a',]
 mens_height = men$height
@@ -530,7 +529,7 @@ This last section is just boilerplate and contains some basic reminders which wi
 
 ### Seeing the samples
 
-In section \@ref(c3-sampling) we discussed that Bayesian modeling software (like STAN) takes *samples* of the posterior distributions of parameters given the data and model structure. It is helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summarizes of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a matrix. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the middle column is the error (`sigma`). The third column (`lp__`) is the **log posterior density**: the logarithm of the product of the prior and the likelihood, without dividing by the marginal probability (the importance of this value will be discussed in later chapters). 
+In section \@ref(c3-sampling) we discussed that Bayesian modeling software (like STAN) takes *samples* of the posterior distributions of parameters given the data and model structure. It is helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summarizes of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a matrix. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the middle column is the error (`sigma`). The third column (`lp__`) is the log posterior density, to be discussed in section X. 
 
 ```{r, collapse = TRUE}
 # get posterior samples from model
@@ -768,6 +767,72 @@ To that of the model where we specified wider priors (`model_priors`), we see th
 bmmb::short_summary (model_priors)
 ```
 
+## The log posterior density (`lp`)
+
+When we get our model samples with the `as_draws_matrix` function, in addition to our mean and standard deviation estimates, we get an estimate of something called `lp__`. This is a measure of the (unnormalized) **log posterior density**, basically, the the overall posterior probability of your model parameters given your data.
+
+```{r}
+samples = data.frame (brms::as_draws_matrix (model_priors))
+head (samples)
+```
+
+In \@ref(fig:312) we presented the posterior probability of a $\mu$ parameter given your data and priors. We can generalize this to encompass all of our model parameters, represented by $\theta$ in \@ref(fig:312). Now, \@ref(fig:318) represents the posterior probability of all our model parameters given our data.
+
+$$
+\begin{equation}
+P(\theta|y) = \frac{P(y|\theta)*P(\theta)}{P(y)}
+(\#eq:318)
+\end{equation}
+$$
+
+The *unnormalized* posterior density ignores the marginal distribution ($P(y)$) and so returns a density that is proportional to the posterior density up to some constant, as in \@ref(fig:319). By saying that it is defined up to a proportional constant, this is what we mean. We cannot, or do not bother, calculating the exact posterior density. However, we can calculate some value, let's say $x$, where the true posterior density is equal to $x \times C$ where $C$ is some unknown constant. When we model the unnormalized posterior density we take this approach, we try to estimate $x$ ($P(\theta|y)$) while ignoring $C$ ($1/P(y)$).
+
+$$
+\begin{equation}
+P(\theta|y) \propto P(y|\theta)*P(\theta)
+(\#eq:319)
+\end{equation}
+$$
+
+If we log-transform both sides of \@ref(fig:319), we get the log-posterior density, shown in \@ref(fig:320).
+
+$$
+\begin{equation}
+log (P(\theta|y)) = log (P(y|\theta)) + log(P(\theta))
+(\#eq:320)
+\end{equation}
+$$
+
+Let's pause to think about what \@ref(fig:319) means and why it is a useful measure. First, let's talk about $P(y|\theta)$ which is the model likelihood: The joint probability of the data given the values of the parameters. For example, we can think about the probability of observing each of the observations in our height data given the posterior means estimates of $\mu$ and $\sigma$ provided by `model_priors`. Below, we see the values of the probability density above the first six observations, and then the logarithm of these values below. 
+
+```{r, collapse = TRUE}
+head (dnorm (height, 173.8, 7.78))
+
+head (dnorm (height, 173.8, 7.78, log = TRUE))
+```
+
+To find the joint probability of the data given the model parameters, we can sum the log-densities as seen below. This provides us an estimate of the likelihood of the model given all parameter values ($log (P(y|\theta))$). 
+
+```{r, collapse = TRUE}
+sum (dnorm (height, 173.8, 7.78, log = TRUE))
+```
+
+When we add the logarithm of the priors for our parameters to this. By combining our priors and likelihoods in this way, we are calculating the *unnormalized* posterior density. 
+
+```{r}
+sum (dnorm (height, 173.8, 7.78, log = TRUE)) + 
+  dnorm (173.8,176,15,log=TRUE) + 
+  dnorm (7.78,0,15,log=TRUE)+log(2) 
+```
+
+We can see that our calculation is very close to the average value of the `lp__` estimates provided by our model. 
+
+```{r}
+mean (samples$lp__)
+```
+
+The log posterior density, or values related to it, will come up again in chapter X when we discuss model comparison. This is because the value captures the posterior probability of the parameters given the data. Broadly speaking, models with a higher posterior probability are more believable because they are more likely to generate the observed data, and/or they have parameter values that are more probable a priori. 
+
 ## Answering our research questions
 
 Finally, let's return again to the research questions we posed initially in chapter 2, and again at the beginning of this chapter:
@@ -786,18 +851,36 @@ Notice that our answers correspond closely to what we concluded at the end of la
 
 ## Frequentist corner
 
-In frequentist corner, we're going to compare the output of `brms` to some more 'traditional' approaches. We're not going to talk about the traditional models in any detail, the focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, feel free to skip these sections of the book, although they may still be helpful. If you want to know more about the statistical methods being discussed here, please see section X for a list of suggested background reading in statistics.  
+In frequentist corner, we're going to compare the output of `brms` to some more 'traditional' approaches. We're not going to talk about the traditional models in any detail, the focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, some of the information provided here may not make much sense, although it may still be helpful. If you want to know more about the statistical methods being discussed here, please see section X for a list of suggested background reading in statistics.  
 
-### Intercept-only Bayesian models vs. the one-sample t-test
+### One-sample t-test vs. intercept-only Bayesian models 
 
-We can fit a one-sample t-test to our vector of apparent-height judgments.
+A one sample t-test helps investigate whether the mean of a set of observations is likely to be zero. The t-test answers questions by investigating the likelihood of parameters given the data (priors and posteriors are not involved). In addition, t-tests are calculated using analytic (exact) methods, and do not involve sampling from distributions. The t-test assumes that all of your observations are independent, so it is not appropriate to use for this data. However, we just want to compare it to our initial Bayesian model (which made the same assumptions). We can apply a one-sample t-test to our vector of apparent-height judgments:
 
 ```{r}
 t.test (mens_height)
 ```
 
-This usage is incorrect however, since this test requires that all the observations be independent from each other. Since we have multiple observations from each speaker and listener, our observations are not independent of each other. Notice however, that the interval provided around the mean (`95 percent confidence interval: 173.2010 174.3744`) corresponds very well to the 95% credible interval around the intercept provided in `model_priors` (`173.21, 174.39`). The reason they align so well is because our Bayesian estimate is being dominated by the likelihood, and the more 'traditional' t-test *only* consideres the likelihood. In addition to this, both the t-test and our current Bayesian model (inappropriately) treat all our observations as independent when they are not. This issue will be discussed at length in the following chapter. 
+Notice that the interval provided around the mean (`95 percent confidence interval: 173.2010 174.3744`) corresponds very well to the 95% credible interval around the intercept provided in `model` (`173.20, 174.38`). The reason they align so well is because both models have the same general structure and make similar assumptions. In addition, our Bayesian estimate is being dominated by the likelihood, and the more 'traditional' t-test *only* considers the likelihood. As a result, although the Bayesian model reports posterior probabilities, these can provide very similar responses as likelihood-based approaches. 
 
+### Intercept-only ordinary-least-squares regression vs. intercept-only Bayesian models 
 
+Ordinary-least-squares (OLS) regression is an approach to fitting regression models using likelihoods (without priors or posteriors). OLS regression assumes that your residuals are independent and that your error variation is normally distributed. We can fit an OLS model using the `lm` (linear model) function in `R`, using the same model formula we used for our Bayesian models. 
 
+```{r}
+ols_model = lm (mens_height ~ 1)
+summary (ols_model)
+```
+
+Again, we see a close similarity to our initial `model`. The `Std.error` for the Intercept above (0.2998) corresponds closely to the `Est.error` of the intercept below (0.31), and the `Residual standard error` above (7.764) corresponds closely to the `sigma` estimate below (7.78). Just as with the t-test, these similarities are due to the models having the same general structure, making the same assumptions, and being dominated by the likelihood of the parameters.  
+
+```{r}
+## Population-Level Effects: 
+##           Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+## Intercept   173.80      0.31   173.20   174.38 1.00     1038      598
+## 
+## Family Specific Parameters: 
+##       Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+## sigma     7.78      0.22     7.38     8.21 1.00     1060      736
+```
 

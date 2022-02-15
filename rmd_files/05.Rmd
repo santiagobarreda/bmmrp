@@ -20,7 +20,7 @@ We should discuss the logic of making 'groups' to test for differences between t
 
 ## Data and research questions 
 
-In the last chapter we focused on the apparent height of adult male speakers. There reason for this is that, because of the very low voice pitch of many adult male speakers, adult males represent the least confusable class of speakers from among women, men, boys and girls. For example we can compare veridical to perceived speaker class in what is called a **confusion matrix** below. A confusion matrix organizes responses to a classification problem in a way that makes correct classifications, and confusions, comparable across categories. In the matrix below rows indicate actual speaker category and columns indicate apparent speaker category. We see that boys were identified as boys 458 times in total, and as girls and adult females 178 and 153 times respectively. Thus, we see that boys were nearly as likely to be misidentified as not. In contrast, we see that mena were correctly identified in 1275 cases and only misidentified in 75 cases. This means their class was correctly identified in 94% of cases ($1275/(1275+75)$). 
+In the last chapter we focused on the apparent height of adult male speakers. There reason for this is that, because of the very low voice pitch of many adult male speakers, adult males represent the least confusable category of speakers from among women, men, boys and girls. For example we can compare veridical to perceived speaker category in what is called a **confusion matrix** below. A confusion matrix organizes responses to a classification problem in a way that makes correct classifications, and confusions, comparable across categories. In the matrix below rows indicate actual speaker category and columns indicate apparent speaker category. We see that boys were identified as boys 458 times in total, and as girls and adult females 178 and 153 times respectively. So, boys were nearly as likely to be misidentified as not. In contrast, men were correctly identified in 1275 cases and only misidentified in 75 cases, meaning their category was correctly identified in 94% of cases ($1275/(1275+75)$). 
 
 ```{r}
 library (bmmb)
@@ -36,33 +36,36 @@ height_exp$L = tmp
 table (height_exp$C_v, height_exp$C)
 ```
 
-In this chapter we are going to focus on *confusable* voices, so we are going to excluse adult males from our data. Below we load our experimental data and create a new dataframe called `notmen` that includes all data associated with stimuli not produced by adult male speakers. 
+In this chapter we're going to focus on *confusable* voices, so we're going to exclude adult males from our data. Below we load our experimental data and create a new data frame called `notmen` that excludes all data associated with adult male speakers. This excludes both speech produced by adult males, and stimuli identified as being produced by adult males. We also exclude the 'big' resonance level, focusing only on the unmodified speech.  
 
 ```{r}
 notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
 ```
 
-We add a new variable to our data frame called `A_v` which includes the veridical age for our speakers. We create a new confusion matrix to see to what extent listeners confused the adult women in our sample with younger speakers. We can see that although a majority of stimuli were classified correctly, there are definitely large numbers of misidentifications in our data. 
+We add a new variable to our data frame called `A_v` which includes the veridical age group for our speakers, `c` for children and `a` for adults. We create a new confusion matrix to see to what extent listeners confused the adult women in our sample with younger speakers. We can see that although a majority of stimuli were classified correctly, there are plenty of misidentifications in the data. 
 
 ```{r}
 notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
 table(notmen$A_v, notmen$A)
 ```
 
-We can cross-tabulate age classifications for each listener as below. If either row below contained all zeros, this would mean that subjects were included only for `adult` or `child` levels of our `A` (age) predictor. However, since each subject has substantial observations at both levels of the `A` factor, we know that our analysis will feature a within-subjects design. 
+Our height responses could potentially be modeled on the basis of either apparent age group or veridical age group. Neither of these approaches would be *wrong* or *right*, instead, these would simply provide different information regarding our response variable. The boxplot in figure \@ref(fig:F52) presents a comparison of height judgments for our confusable speakers, organized according to perceived and veridical age. For each box, the first letter in the label indicates the apparent class and the second indicates the veridical class. Based on this plot we see that the apparent age of a speaker dominates their apparent height. For example, the first and third boxes indicate that speakers 'sounded' taller when speakers were identified as adult women, regardless of whether they were adults or children. Conversely, the second and fourth boxes indicate that speakers 'sounded' shorter when they were identified as children, even if they were adults. For this reason, the analysis in this chapter will focus on understanding the role of *apparent age* on the perception of speaker height. 
+
+```{r F52, fig.height = 3, fig.width=5, fig.cap = "Apparent height organized by apparent age (A) and veridical age (A_v). The first letter in each label indicates the apparent age of the speaker, either an adult (a) or a child (c).", echo = FALSE}
+par (mfrow = c(1,1), mar = c(4,4,1,1))
+boxplot (height ~ A + A_v, data = notmen, col = cols[1:4], 
+         xlab = "Age : Veridical Age", ylab = "Height (cm)")
+```
+
+By focusing on apparent age, we are effectively asking how apparent height as affected by whether the listener *thinks* the speaker is an adult or not. As a result, this experiment focuses on how our expectations and 'real world knowledge' can influence how we perceive the world. This may seem unusual but it is actually a very common thing. For example think of an image of a box of an unknown size. You estimate of how heavy this is, or how hard it is to move, will depend on how large the box is and on what is inside of it. Historically, research on the perception of speaker size from speech has taken a very mathematical approach, assuming humans are using acoustic information in an optimal and dispassionate manner. More recent work (cite), highlights the role of 'real world knowledge', and stereotypes about different kinds of speakers, in the determination (or reporting) of apparent speaker height. 
+
+One potential problem with using the apparent speaker category, is that this is not necessarily balanced across listeners. To investigate this, we can cross-tabulate age classifications made by each listener as seen below. We can use this information to see what kind of design we have from the options in \@ref(fig:F51). Since each listener has observations at both levels of the `A` factor (i.e. across each column), we know that apparent age varies within-subjects. If *all* of the columns contained one zero and one zero value, we would have a *between-subjects* design. Finally, if *some* of the columns featured one zero and others featured no zeros we would have the nameless (?) design. 
 
 ```{r}
 table(notmen$A, notmen$L)
 ```
 
-To analyze data representing data from two groups, we need to have it in a data frame with one row for each observation. One column should contain the dependent variable, the variable whose variation you're trying to predict. Another column should contain information about which group each observation belongs to. Finally, we need a column that indicates which speaker/listener/participant provided the data point. Our height responses could potentially be modeled on the basis of either apparent age group or veridical age group. Neither of these approaches would be *wrong* or *right*, instead, these would simply provide different information regarding our response variable. The boxplot below presents a comparison of height judgments for our speakers divided by perceived and veridical age group. For each box, the first letter in the label indicates the apparent class and the second indicates the veridical class. Based on this plot we see that the apparent age of a speaker dominates their apparent height. For example, the first and third boxes indicate that speakers 'sounded' taller when speakers were identified as adult women, regardless of whether they were adults or children. Conversely, the second and fourth boxes indicate that speakers 'sounded' shorter when they were identified as children, even if they were adults. For this reason, the analysis in this chapter will focus on understanding the role of *apparent age* on the perception of speaker height. 
-
-```{r F52, fig.height = 3, fig.width=5, fig.cap = "--.", echo = FALSE}
-par (mfrow = c(1,1), mar = c(4,4,1,1))
-boxplot (height ~ A + A_v, data = notmen, col = cols[1:4])
-```
-
-By focusing on apparent age, we are effectively asking how apparent height as affected by whether the listener *thinks* the speaker is an adult or not. As a result, this experiment focuses on how our expectations and 'real world knowledge' can influence how we perceive the world. This may seem unusual but it is actually a very common thing. For example think of an image of a box of an unknown size. You estimate of how heavy this is, or how hard it is to move, will depend on how large the box is and on what is inside of it. In this chapter we will build models that help us answer the following questions, among others: 
+To analyze data from two groups, we need to have it in a data frame with one row for each observation. One column should contain the dependent variable, the variable whose variation you're trying to predict. Another column should contain information about which group each observation belongs to. Finally, we need a column that indicates which source (speaker/listener/participant) provided the data point. In this chapter we will build models that help us answer the following questions, among others: 
 
   (Q1) How tall do speakers perceived as adult females sound? 
   
@@ -70,23 +73,29 @@ By focusing on apparent age, we are effectively asking how apparent height as af
   
   (Q3) What is the difference in apparent height associated with the perception of adultness? 
   
-Figure \@ref(fig:F53) presents between-speaker variation in average responses and within-speaker variation according to apparent age. The answer to question (1) above will depend on the between-speaker distribution of heights for speakers judged to be adults (the upper boxes in the figure). The answer to question (2)  will depend on the distribution of heights for speakers judged to be children (the lower boxes in the figure). The answer to (3) will depend on average differences between the upper and lower boxes for each listener.   
+Figure \@ref(fig:F53) presents between-speaker and within-speaker variation according to apparent age. The answer to (Q1) above will depend on the location of the left boxplot of the left panel of the figure. The answer to (Q2)  will depend on the location of the right boxplot of the left panel of the figure. The answer to (Q3) will depend on the difference between these boxes. Of course, we see that this is not the full story since there is substantial between-listener variation in the locations of, and difference between, these boxes. However, we will leave discussion of that for the next chapter. 
 
-```{r F53, fig.height = 3.5, fig.width=8, fig.cap = "Comparison of f0 productions by individual girls (cyan) and women (red). Densities compare whole distributions.", echo = FALSE}
+```{r F53, fig.height = 3.5, fig.width=8, fig.cap = "(left) Distribution of apparent heights according to apparent age group. (rght) Same as left panel but presented individually for each listener. In each case, the first box of each color (the upper box) indicates responses for speakers judged to be adults.", echo = FALSE}
 
 ################################################################################
 ### Figure 5.1
 ################################################################################
 
-par (mfrow = c(1,2), mar = c(4,4,1,1)); layout (mat = t(c(1,2)), widths = c(.7,.3))
-boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(100,200))
+par (mfrow = c(1,2), mar = c(4.1,.1,.5,.1),oma = c(0,4,0,.50)); layout (mat = t(c(1,2)), widths = c(.2,.8))
 
-boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(100,200))
+boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="")
+mtext (side=1, "Apparent Age Group", line=3)
+
+mtext (side = 2, outer = FALSE, "Height (cm)", line = 2.75)
+boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
+         ylab="",yaxt="n", xaxt="n",xlab="Listener")
+axis (side=1, at = seq(1.5,30.5,2), 1:15)
+
 ```
 
 ## Estimating the difference between two means with 'brms'
 
-In Chapter 4 we fit a model with the simplest possible 'fixed-effect' structure, an 'intercept only' model. To estimate a difference between two group means we need to include an 'real' predictor in our model,  a vector indicating perceived group membership for each observation. Remember that formulas look like this `y ~ predictor(s)`. Previously, our formula had no predictors and so it looked like this `height ~ 1 + (1|L) + (1|S)`, where the `1` indicates that this is an intercept-only model. To predict apparent height based on whether the talker is an adult or not, our model formula will now looks like this `height ~ A + (1|L) + (1|S)`. This assumes that we have a column in our dataframe that indicates whether each data point was produced by an adult or not, and that this column is called `A`. This model formula basically says "we expect height to vary around the intercept based on whether the speaker was judged to be an adult, in addition to listener and speaker-specific adjustments to the intercept'. If you at least one predictor in your model then you don't need to include a `1` in your formula, the intercept is included in the model by default. In fact, if you want to *suppress* (omit) an intercept from your model, then you should indicate this by placing a `0` in front of your model formula like this `height ~ 0 + A + (1|L) + (1|S)`.
+In Chapter 4 we fit a model with the simplest possible fixed-effect structure, an 'intercept only' model. To estimate a difference between two group means we need to include a 'real' predictor in our model, a variable indicating perceived group membership for each observation. Remember that formulas look like this `y ~ predictor(s)`. Previously, our formula had no (fixed effect) predictors and so it looked like this `height ~ 1 + (1|L) + (1|S)`, where the `1` indicates that this is an intercept-only model. To predict apparent height based on whether the talker is an adult or not, our model formula will now looks like this `height ~ 1 + A + (1|L) + (1|S)`. This assumes that we have a column in our data frame that indicates whether each data point was produced by an adult or not, and that this column is called `A`. This model formula basically says "we expect height to vary around the intercept based on whether the speaker was judged to be an adult, in addition to listener and speaker-specific adjustments to the intercept'. When you you at least one predictor in your model then you don't need to include a `1` in your formula, the intercept is included in the model by default. So, your model formula can look like this `height ~ A + (1|L) + (1|S)`. In fact, if you want to *suppress* (omit) an intercept from your model, then you should indicate this by placing a `0` in front of your model formula like this `height ~ 0 + A + (1|L) + (1|S)`.
 
 Usually, we would discuss the specific structure of this model now, *before* fitting the model. However, this time we're going to put this off for a little bit because an explanation involves some of the less intuitive concepts relating to regression. So, this time we're going to to fit the model first and then get to the details of the model later in the chapter, by which point they will make more sense.
 

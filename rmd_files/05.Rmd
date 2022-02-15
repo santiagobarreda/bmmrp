@@ -52,6 +52,11 @@ table(notmen$A_v, notmen$A)
 Our height responses could potentially be modeled on the basis of either apparent age group or veridical age group. Neither of these approaches would be *wrong* or *right*, instead, these would simply provide different information regarding our response variable. The boxplot in figure \@ref(fig:F52) presents a comparison of height judgments for our confusable speakers, organized according to perceived and veridical age. For each box, the first letter in the label indicates the apparent class and the second indicates the veridical class. Based on this plot we see that the apparent age of a speaker dominates their apparent height. For example, the first and third boxes indicate that speakers 'sounded' taller when speakers were identified as adult women, regardless of whether they were adults or children. Conversely, the second and fourth boxes indicate that speakers 'sounded' shorter when they were identified as children, even if they were adults. For this reason, the analysis in this chapter will focus on understanding the role of *apparent age* on the perception of speaker height. 
 
 ```{r F52, fig.height = 3, fig.width=5, fig.cap = "Apparent height organized by apparent age (A) and veridical age (A_v). The first letter in each label indicates the apparent age of the speaker, either an adult (a) or a child (c).", echo = FALSE}
+
+################################################################################
+### Figure 5.2
+################################################################################
+
 par (mfrow = c(1,1), mar = c(4,4,1,1))
 boxplot (height ~ A + A_v, data = notmen, col = cols[1:4], 
          xlab = "Age : Veridical Age", ylab = "Height (cm)")
@@ -78,7 +83,7 @@ Figure \@ref(fig:F53) presents between-speaker and within-speaker variation acco
 ```{r F53, fig.height = 3.5, fig.width=8, fig.cap = "(left) Distribution of apparent heights according to apparent age group. (rght) Same as left panel but presented individually for each listener. In each case, the first box of each color (the upper box) indicates responses for speakers judged to be adults.", echo = FALSE}
 
 ################################################################################
-### Figure 5.1
+### Figure 5.3
 ################################################################################
 
 par (mfrow = c(1,2), mar = c(4.1,.1,.5,.1),oma = c(0,4,0,.50)); layout (mat = t(c(1,2)), widths = c(.2,.8))
@@ -95,9 +100,13 @@ axis (side=1, at = seq(1.5,30.5,2), 1:15)
 
 ## Estimating the difference between two means with 'brms'
 
-In Chapter 4 we fit a model with the simplest possible fixed-effect structure, an 'intercept only' model. To estimate a difference between two group means we need to include a 'real' predictor in our model, a variable indicating perceived group membership for each observation. Remember that formulas look like this `y ~ predictor(s)`. Previously, our formula had no (fixed effect) predictors and so it looked like this `height ~ 1 + (1|L) + (1|S)`, where the `1` indicates that this is an intercept-only model. To predict apparent height based on whether the talker is an adult or not, our model formula will now looks like this `height ~ 1 + A + (1|L) + (1|S)`. This assumes that we have a column in our data frame that indicates whether each data point was produced by an adult or not, and that this column is called `A`. This model formula basically says "we expect height to vary around the intercept based on whether the speaker was judged to be an adult, in addition to listener and speaker-specific adjustments to the intercept'. When you you at least one predictor in your model then you don't need to include a `1` in your formula, the intercept is included in the model by default. So, your model formula can look like this `height ~ A + (1|L) + (1|S)`. In fact, if you want to *suppress* (omit) an intercept from your model, then you should indicate this by placing a `0` in front of your model formula like this `height ~ 0 + A + (1|L) + (1|S)`.
+In Chapter 4 we fit a model with the simplest possible fixed-effect structure, an 'intercept only' model. To estimate a difference between two group means we need to include a 'real' predictor in our model, a variable indicating perceived group membership for each observation. Remember that formulas look like this `y ~ predictor(s)`. Previously, our formula had no (fixed effect) predictors and so it looked like this `height ~ 1 + (1|L) + (1|S)`, where the `1` indicates that this is an intercept-only model. To predict apparent height based on whether the talker is an adult or not, our model formula will now looks like this:
 
-Usually, we would discuss the specific structure of this model now, *before* fitting the model. However, this time we're going to put this off for a little bit because an explanation involves some of the less intuitive concepts relating to regression. So, this time we're going to to fit the model first and then get to the details of the model later in the chapter, by which point they will make more sense.
+`height ~ 1 + A + (1|L) + (1|S)`
+
+This assumes that we have a column in our data frame that indicates whether each data point was produced by an adult or not, and that this column is called `A`. This model formula basically says "we expect height to vary around the intercept based on whether the speaker was judged to be an adult, in addition to listener and speaker-specific adjustments to the intercept'. When you you at least one predictor in your model then you don't need to include a `1` in your formula, the intercept is included in the model by default. So, your model formula can look like this `height ~ A + (1|L) + (1|S)`. In fact, if you want to *suppress* (omit) an intercept from your model, then you should indicate this by placing a `0` in front of your model formula like this `height ~ 0 + A + (1|L) + (1|S)`.
+
+Usually, we would discuss the structure of this model now, *before* fitting the model. However, this time we're going to put this off for a little bit because an explanation involves some of the less intuitive concepts relating to regression. So, this time we're going to to fit the model first and then get to the details of the model later in the chapter.
 
 ### Fitting the model
 
@@ -126,14 +135,14 @@ model = bmmb::get_model ('5_model.RDS')
 model = readRDS ('../models/5_model.RDS')
 ```
 
-Note that the specification of our priors now includes a new class of prior, `class = "b"`, which is the class for all fixed-effect predictors (those fit without partial pooling) that are *not* the intercept. Our model now includes a non-intercept term, age ($A$), and so we need to specify a prior for class `b` in addition to the priors we set in chapter 4. Below we see a summary of the classes of predictors we have set priors for so far. 
+Note that the specification of our priors includes a new class of prior, `class = "b"`, which is the class for all fixed-effect predictors (those fit without partial pooling) that are *not* the intercept. Our model now includes a non-intercept term, age ($A$), and so we need to specify a prior for class `b` in addition to the priors we set in chapter 4. Below we see a summary of the classes of predictors we have set priors for so far. 
 
 -   `Intercept`: this is a unique class, only for intercepts.
 -   `b`: This class includes all fixed-effect predictors *apart* from the intercept.
 -   `sd`: this is for our standard deviation parameters that relate to 'batches' of parameters. In our example this is `sd(Intercept)` for `L` ($\sigma_{L}$).
 -   `sigma`: the error term.
 
-To fit our model comparing two groups, we need to specify prior probabilities for our age predictor. We should also rethink all our priors given that our data has changed substantially (from *only* men to *no* men). We can do this using the information provided in CDC (cite). Based on this we know that adult females are about 162 cm tall on average, and 11 year old children are around 150 cm tall (our boys and girls were 10-12 years old). Based on this we can set the intercept to 156 cm, halfway between each average. We have set the standard deviations for all priors to the difference between group means, 12 cm. In general, this means that we expect that variation in the data, whether it be between groups (the $A$ predictor, class `b`) or within-listener error (class `sigma`), will be roughly on the order of the empirical group differences. 
+To fit our model comparing two groups, we need to specify prior probabilities for our age predictor. We should also rethink our priors since our data has changed substantially (from *only* men to *no* men). We can do this using the information provided in CDC (cite). Based on this we know that adult females are about 162 cm tall on average, and 11 year old children are around 150 cm tall (our boys and girls were 10-12 years old). Based on this we can set the intercept to 156 cm, halfway between each average. We have set the standard deviations for all priors to the difference between group means, 12 cm. In general, this means that we expect that variation in the data, whether it be between groups (the $A$ predictor, class `b`) or within-listener error (class `sigma`), will be roughly on the order of the empirical group differences. 
 
 ### Interpreting the model
 
@@ -144,14 +153,14 @@ We can inspect the model print statement, which is mostly familiar by now.
 bmmb::short_summary (model)
 ```
 
-However, there is a new predictor in the section on `Population-Level Effects` (i.e. the 'fixed' effects). In addition to the `Intercept` term, we now get estimates for a term called `Ac`. Admittedly, this is a strange name, but its how R handles predictors that are words (called *factors* in R). In general, R names predictors like these `factornameFactorlevel`. For example, a factor called `colors` with levels `red`, `green` and `blue` would have the levels `colorsred`, `colorsgreen`, and `colorsblue`. So, the `adultchild` name tells us is that this is the estimate for the `child` level of the `adult` factor. So, the `Ac` term in our model represents the average apparent height of speakers identified as children. But how does it represent this value? The 'Intercept' term in the model above seems to correspond to the mean apparent height for speakers perceived as adult females. We can confirm this: 
+However, there is a new predictor in the section on `Population-Level Effects` (i.e. the 'fixed' effects). In addition to the `Intercept` term, we now get estimates for a term called `Ac`. Admittedly, this is a strange name, but its how R handles predictors that are words (called *factors* in `R`). `R` names predictors like this `factornameFactorlevel`. For example, a factor called `colors` with levels `red`, `green` and `blue` would have the levels `colorsred`, `colorsgreen`, and `colorsblue`. So, the `Ac` name tells us is that this is the estimate for the `c` (child) level of the `A` (apparent age) factor. So, the `Ac` term in our model represents the average apparent height of speakers identified as children. But how does it represent this value? The 'Intercept' term in the model above seems to correspond to the mean apparent height for speakers perceived as adult females. We can confirm this: 
 
 ```{r, collapse = TRUE}
 # calculate means of f0 based on values of adult vector
 aggregate (height ~ A, data = notmen, FUN = mean)
 ```
 
-However, the value of our `Ac` predictor seems to reflect the differences between the group means (18.7 cm above). Ideally, it seems like our model would have three `population level` predictors, the intercept, a predictor with adult responses (i.e. `Aa`), and a predictor associated with child responses (`Ac`). To understand why this is not the case we need to talk about contrasts
+However, the value of our `Ac` predictor seems to reflect the differences between the group means (20.1 cm above). Ideally, it seems like our model would have three `population level` predictors, the intercept, a predictor with adult responses (i.e. `Aa`), and a predictor associated with child responses (`Ac`). To understand why this is not the case we need to talk about contrasts
 
 ## Contrasts
 
@@ -169,11 +178,11 @@ Why not? Because once you know 2 of those things you know the 3rd. For example, 
 
   3) When we had one group we obviously couldn't get the overall mean independently from the sample mean. All we had was one sample mean, and that was our best estimate of the Intercept too. Adding 1 more group allows us to calculate 1 more mean (the new group mean), not two (the new group mean and the intercept). That would mean adding a second group (with 1 mean) somehow contributed twice as much information as the first group did. Instead, adding a second mean changes our best guess for the population mean: It is now between the two groups. However, this information is not independent from the value of the two group means. 
   
-So, different coding schemes reflect the different ways that differences between groups can be represented, and different decisions regarding which effects to estimate (and which to ignore). Here we will discuss two such approaches, treatment coding and sum coding. 
+So, different contrast coding schemes reflect the different ways that differences between groups can be represented, and different decisions regarding which effects to estimate (and which to ignore). Here we will discuss two such approaches, treatment coding and sum coding. 
   
 ### Treatment coding
 
-The coding scheme you use determines how your model represents the differences it encodes. In the model above we used **treatment coding** (the default in R). In treatment coding, a 'reference' level is chosen to be the intercept, and all group effects reflect the difference between the mean for that group, and the value of the Intercept (i.e., the mean for the reference level). By default, R chooses the alphabetically-lowest level to be the reference level. In our model above, the `a` (adult) level was chosen as the reference level, and so the intercept represents the mean for this group. The effect for 'child' (`Ac`) represents the difference between the child mean and the adult mean. This means that our credible intervals also represent the *difference* in the means and not the means themselves. So, we expect the *difference* in the apparent heights of adults and children to be about 16.4 cm, and we think there is a 95% chance that the *difference* between the means is between 15.5 and 17.2 cm in magnitude.
+The coding scheme you use determines how your model represents the differences it encodes. In the model above we used **treatment coding** (the default in R). In treatment coding, a 'reference' level is chosen to be the intercept, and all group effects reflect the difference between the mean for that group, and the value of the Intercept (i.e., the mean for the reference level). By default, R chooses the alphabetically-lowest level to be the reference level. In our model above, the `a` (adult) level was chosen as the reference level, and so the intercept represents the mean for this group. The effect for 'child' (`Ac`) represents the *difference* between the child mean and the adult mean. This means that our credible intervals also represent the difference in the means and not the means themselves. So, we expect the *difference* in the apparent heights of adults and children to be about 17.5 cm, and we think there is a 95% chance that the *difference* between the means is between 16.1 and 18.9 cm in magnitude.
 
 To interpret treatment coded coefficients in a regression model:
 
@@ -183,17 +192,15 @@ To interpret treatment coded coefficients in a regression model:
 
 * To recover the mean estimate for any non-intercept group, we add `group effect + Intercept (reference group mean)`.
 
-Notice that under treatment coding you estimate a group mean and the differences between the group means, but you do not estimate an overall **grand mean**, that is the mean of the means. 
+Notice that under treatment coding you estimate a group mean and the differences between the group means, but you do not estimate an overall **grand mean**, that is the mean of the group means. 
 
 ### Sum coding
 
-- sum coding is that is used for random effects by the way
+There are multiple options for coding schemes, and the best one for you depends on what you want to get out of your model. Changing the coding scheme may substantially change the value of your coefficients and the way they should be interpreted. However, this will not change the fundamental relationships encoded in your model. Think of it this way, you can tell someone that the library is five miles west of your house or that your house is five miles east of the library. This sounds different but represents the same relationship. As a result, the selection of a coding scheme best suited for a model depends on which one results in the simplest interpretation of the model given the purpose of the research. That being said, going forward we will focus exclusively on what is known as **sum coding**. The focus on a single coding scheme will save space and minimize confusion for the reader. The reason for selecting sum coding specifically is because it has some desirable mathematical properties and it allows models to be interpreted in a style reminiscent of a traditional analysis of variance (to be discussed in chapter X), which many researchers may find useful. 
 
-There are multiple options for coding schemes, and the best one for you depends on what you want to get out of your model. Changing the coding scheme may substantially change the value of your coefficients and the way they should be interpreted. However, this will not change the fundamental relationships encoded in your model. As a result, the selection of a coding scheme best suited for a model depends on which one results in the simplest interpretation of the model given the purpose of the research. That being said, going forward we will focus exclusively on what is known as **sum coding**. The focus on a single coding scheme will save space and minimize confusion for the reader. The reason for selecting sum coding specifically is because it has some desirable mathematical properties and it allows models to be interpreted in a style reminiscent of a traditional analysis of variance (to be discussed in chapter X), which many researchers may find useful. 
+In sum coding, there is no reference level. Instead, the intercept represents the mean of all your groups, the overall grand mean. The effect for each individual group is then represented as a deviation from the intercept, and all of these effects are constrained to sum to zero. Just like for treatment coding, you can't estimate all of your group effects *and* the overall grand mean. Since we are estimating the grand mean, that means we will not be able to estimate *one* of our group effects. When using sum coding, R selects the *alphabetically last* level of your factor, and does not estimate it. The value of the missing effect is easy to recover algebraically since the sum of the coefficients must equal zero. As a result of the sum-to-zero constraint, the missing factor level will always be equal to the *negative sum* of the other factors. This means that if you add up the values of the levels that *are* present and flip the sign, the outcome is the value of your missing level. If you think about it, it must be this way. This is because the final missing value must cancel out the sum of the others if the sum of all the values is to equal zero.
 
-In sum coding, there is no reference level. Instead, the intercept represents the mean of all your groups, the overall grand mean. The effect for each individual group is then represented as a deviation from the intercept, and all of these effects are constrained to sum to zero. Just like for treatment coding, you can't estimate all of your group effects *and* the overall grand mean. Since we are estimating the grand mean, that means we will not be able to estimate *one* of our group effects. When using sum coding, R selects the *alphabetically last* level of your factor, and does not estimate it. The values of the missing effect is easy to recover algebraically since the sum of the coefficients must equal zero. As a result of the sum-to-zero constraint, the missing factor level will always be equal to the *negative sum* of the other factors. This means if you add up the values of the levels that *are* present and flip the sign, the outcome is the value of your missing level. If you think about it, it must be this way. This is because the final missing value must cancel out the sum of the others if the sum of all the values is to equal zero.
-
-As discussed earlier, with only two groups if you know the grand mean and the distance between one group to the grand mean, you also know the distance of the other group to the mean. This can be seen quite clearly below where the difference between each group to the overall mean has a magnitude of 9.3. So, if our sum-coded model tells us that the intercept is 157 cm and the adult mean is 9.3 cm above this, then the child mean *must* be 9.3 cm below (i.e., `Ac=-9.3`)). 
+As discussed earlier, with only two groups if you know the grand mean and the distance between one group to the grand mean, you also know the distance of the other group to the mean. This can be seen quite clearly below where the difference between each group to the overall mean has a magnitude of 9.3. So, if our sum-coded model tells us that the intercept is 155.4 cm and the adult mean is 10.1 cm above this, then the child mean *must* be 10.1 cm below. 
 
 ```{r, collapse = TRUE}
 # calculate group means
@@ -212,6 +219,8 @@ To interpret sum coded coefficients in regression models:
 
 * To recover the mean estimate for any other group, we add `group effect + Intercept (overall mean)`.
 
+Before continuing, we want to mention two things with respect to sum coding and random effects included in a model. In chapter 4 we noted that random effects are coded as deviations from the mean. Now we can be more specific and say that `brms` will use som coding to specify all of your random effects (i.e. all terms estimated with partial pooling). Second, you may have noted that last chapter we did, in fact, estimate all of the levels of the listener random effects. In other words, we did not omit the 'last' level of `L`, in this case the intercept offset for listener 15. The reason for this [@@ SB - shrinkage, cant find gelman explanation, its in his 2005 ANOVA paper I think.].
+
 ### Comparison of sum and treatment coding
 
 The image below presents a comparison of the way the two coding schemes represent the group means in a two-group model. In each case they estimate one intercept and one effect, letting you recreate one other effect (i.e., they each omit one parameter). In treatment coding the omitted value is the overall mean, which in the two-group case will always be `Intercept + estimatedEffect/2`. In the case of sum coding the omitted value is the effect for the second group, which will always be the same magnitude but have the opposite sign as the effect for the first group (i.e., `-estimatedEffect` in a two-group model). 
@@ -219,7 +228,7 @@ The image below presents a comparison of the way the two coding schemes represen
 ```{r F54, echo = FALSE, out.width = "100%", fig.cap = "Artists rendition of contrast and treatment coding differences for our data."}
 
 ################################################################################
-### Figure 3.3
+### Figure 5.4
 ################################################################################
 
 knitr::include_graphics("../images/coding.png")
@@ -262,24 +271,24 @@ model_sum_coding = bmmb::get_model ('5_model_sum_coding.RDS')
 model_sum_coding = readRDS ('../models/5_model_sum_coding.RDS')
 ```
 
-We're going to use the `fixef` (i.e. 'fixed effects') function in `brms` to inspect only the `Population-Level Effects` in our model. This is just to save space because the rest of the model should look the same, but check out the print statement for the whole model. The `Population-Level Effects` are also sometimes called *fixed* effects in part because they are 'fixed' across the population. For example, the effect for 'child' doesn't apply only to little Susie or little Johnny in particular, but to *children* broadly speaking. 
+We're going to use the `fixef` (i.e. 'fixed effects') function in `brms` to inspect only the `Population-Level Effects` in our model. This is just to save space because the rest of the model should look the same, but check out the print statement for the whole model. The `Population-Level Effects` are also sometimes called *fixed* effects in part because they are 'fixed' across the population. For example, the effect for 'child' doesn't apply only to little Susie or little Johnny in particular, but to speakers perceived as *children* broadly speaking. 
 
 ```{r, collapse = TRUE}
 # inspect model fixed effects
 brms::fixef (model_sum_coding)
 ```
 
-An inspection of the fixed effects shows that, as expected, the Intercept now reflects the overall mean and the single parameter reflects the distance of the adult mean to the overall mean. Note that the parameter is now called `A1`. This is just how `brm` handles factors under sum coding. Predictors representing factors will be named `factornameN`, where `factorname` is the predictor name and `N` is the level number. Levels are ordered, and numbered, alphabetically starting at one, and the alphabetically-last level will not be estimated. You can predict how your factor levels will be ordered by doing something like this:
+An inspection of the fixed effects shows that, as expected, the Intercept now reflects the overall mean and the single parameter reflects the distance between the adult mean and the overall mean. Note that the parameter is now called `A1`. This is just how `brm` handles factors with sum coding. Predictors representing factors will be named `factornameN`, where `factorname` is the predictor name and `N` is the level number. Levels are ordered, and numbered, alphabetically starting at one, and the alphabetically-last level will not be estimated. You can predict how your factor levels will be ordered by doing something like this:
 
 ```{r, collapse = TRUE}
-sort ( unique (notmen$A))
+sort (unique (notmen$A))
 ```
 
 So, `A1` in our model corresponds to the "adult" level of our predictor, and `A2` *would* be "child", but it is not separately estimated by our model (since `A2 = -A1`).
 
 ### Description of the model
 
-Regression models try to break up values into their components. This is why effects are expressed in terms of differences to some reference value. For example, imagine we say that a speaker's apparent height is 160 cm, and under some other condition their apparent height is also 160 cm. Didn't we just say that this condition has no *effect* on their apparent height? To say that this condition has no effect on apparent height is to say, at least in part, that it causes no difference in average height. On the other hand something that *does* cause a difference in apparent height *does* have an effect on mean height. As a result of this, we can express the *effect* of something in terms of the difference it causes. For example, we can say that under so and so conditions a person will tend to sound 16 cm shorter, relative to some reference value. More generally, we can think of any variable as the sum of a bunch of independent *effects*. This is just a way to *think* about variables, to break up observed values into their component parts. It should not be confused with the *reality* of these values and the processes that underlie them (whatever that is!). 
+Regression models try to break up values into their components. This is why effects are expressed in terms of differences to some reference value. For example, imagine we say that a speaker's apparent height is 160 cm, and under some other condition their apparent height is also 160 cm. Didn't we just say that this condition has no *effect* on their apparent height? To say that this condition has no effect on apparent height is to say, at least in part, that it causes no difference. On the other hand something that *does* cause a difference in apparent height *does* have an effect on mean height. As a result of this, we can express the *effect* of something in terms of the difference it causes. For example, we can say that under so and so conditions a person will tend to sound 17.5 cm shorter, relative to some reference value. More generally, we can think of any variable as the sum of a bunch of independent *effects*. This is just a way to *think* about variables, to break up observed values into their component parts. It should not be confused with the *reality* of these values and the process that underlies them (whatever that is!). 
 
 So far we have covered the fact that after picking a value to use as a reference point (the model intercept), our models:
   
@@ -287,11 +296,11 @@ So far we have covered the fact that after picking a value to use as a reference
   
   * Represent the listener and speaker-specific deviations from the intercept ($L_{[\bullet]}, S_{[\bullet]}$) as being centered at 0, with standard deviations of $\sigma_{L}$ and $\sigma_{S}$.
   
-  * represent the random error ($\varepsilon$) as having a mean of 0 and a standard deviation of $\sigma$. 
+  * Represent the random error ($\varepsilon$) as having a mean of 0 and a standard deviation of $\sigma$. 
   
 In each case, these model coefficients reflect *deviations* from some reference point. As a result, when the parameters associated with different effects equal 0, this means that no effect is present.
 
-  * When group coefficients are 0 the group lies exactly at the intercept. In sum coding this is the overall mean, meaning that the group is just like the population in general.  
+  * When group coefficients are 0 the group lies exactly at the intercept. In sum coding this is the overall mean, meaning that the group is basically average.  
   
   * When a listener or speaker-effect is 0 this listener/speaker is exactly average with respect to their group. This means there is nothing about this speaker's average that is unpredictable given knowledge of their group. 
   
@@ -311,21 +320,21 @@ This reflects the following considerations:
 
   * The average f0 across the groups is 157 cm.
   * The average for adult females is 8 cm above the overall mean (157 + 8 = 165).
-  * This speaker's average hright is 5 cm above the average for adult females (157 + 8 + 5 = 170).
-  * this particular production is 16 Hz higher than expected for this particular speaker (157 + 8 + 5 + 3 = 173). 
+  * This speaker's average apparent height is 5 cm above the average for adult females (157 + 8 + 5 = 170).
+  * This particular production is 3 cm higher than expected for this particular speaker (157 + 8 + 5 + 3 = 173). 
 
 Another observation from this talker might be: 
 
 164 = 157 (Intercept) + 8 (adult female effect) + 5 (speaker effect) - 7 (error)
 
-In this case, the error is -7 since the production is now 7 cm *below* the speaker average. However, no other part of the equation has change since this is the same speaker in the same group. Regressions models basically carry out these decompositions for us, and reflect information regarding the average of these in their model parameters. The full model specification, including prior probabilities, is presented in \@ref(eq:51) below. Here is how you would read this model description aloud in plain English:
+In this case, the error is -7 since the production is now 7 cm *below* the speaker average. However, no other part of the equation has change since this is the same speaker in the same group. Regression models basically carry out these decompositions for us, and reflect information regarding the average of these in their model parameters. The full model specification, including prior probabilities, is presented in \@ref(eq:51) below. Here is how you would read this model description aloud in plain English:
 
-> "apparent speaker height is expected to vary according to a normal distribution with some unknown mean and standard deviation. Means are expected to vary based on whether the listener identified the speaker as an adult or a child, and listener and speaker-dependent deviations form the mean. The listener and speaker effects were modeled as coming from a normal distribution with a mean of 0 and unknown standard deviations. The remaining parameters were given t-distributed priors centered at 0, with standard deviations of 12, and with nu parameters equal to 3."
+> "Apparent speaker height is expected to vary according to a normal distribution with some unknown mean and standard deviation. Means are expected to vary based on whether the listener identified the speaker as an adult or a child, and listener and speaker-dependent deviations form the mean. The listener and speaker effects were modeled as coming from a normal distribution with a mean of 0 and unknown standard deviations. The intercept was given a normal prior with a mean of 156 and a standard deviation of 12, and the remaining parameters were given normal priors centered at 0 with standard deviations of 12."
 
 $$
 \begin{equation}
 \begin{split}
-height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\ 
 \mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 L_{[\bullet]} \sim N(0,\sigma_L) \\
@@ -341,7 +350,6 @@ A1 \sim N(0,12) \\
 \end{equation}
 $$
 
-
 ### Interpreting the model and working with the posterior samples
 
 If you compare the output of the treatment and sum coded models:
@@ -354,16 +362,18 @@ bmmb::short_summary (model_sum_coding)
 You will note that the only noteworthy differences are in the population-level effects, seen below:
 
 ```{r, collapse = TRUE}
+# treatment coding
 brms::fixef (model)
 
+# sum coding
 brms::fixef (model_sum_coding)
 ```
 
-In the treatment-coded model the intercept represents the adult mean and the `Ac` effect reflects the difference between the intercept and the child mean. In the sum-coded model the intercept is the overall grand mean and the `A1` effect represents the difference between the adult mean and the intercept. We can see that the information contained in the models is equivalent, just represented differently. First, we can divide the `Ac` effect by two to find half the distance between the groups. which we know must be the distance between the grand mean and the child group. This is the same magnitude as the `A1` effect in the sum-coded model (since it represents the same distance). If we subtract this value from the adult mean, we recover the intercept of the sum coded model.
+In the treatment-coded model the intercept represents the adult mean and the `Ac` effect reflects the difference between the intercept and the child mean. In the sum-coded model the intercept is the overall grand mean and the `A1` effect represents the difference between the adult mean and the intercept. We can see that the information contained in the models is equivalent, just represented differently. First, we can divide the `Ac` effect by two to find half the distance between the groups, which we know must be the distance between the grand mean and the child group. This is the same magnitude as the `A1` effect in the sum-coded model (since it represents the same distance). If we subtract this value from the adult mean, we recover the intercept of the sum coded model.
 
 ```{r}
-16.4/2
-164.9 - (16.4/2)
+17.5/2
+164.9 - (17.5/2)
 ```
 
 We can take the opposite approach and add the `A1` effect to the intercept of the sum-coded model. This allows us to recreate the intercept of the treatment-coded model. Just as half the `Ac` effect equaled the magnitude of the `A1` effect, we can take the opposite approach below. Since `A1` reflects the difference between groups and the grand mean, twice this value must equal the distance between the group means themselves. 
@@ -373,7 +383,9 @@ We can take the opposite approach and add the `A1` effect to the intercept of th
 8.2*2
 ```
 
-In the examples above, we added the posterior means of our model coefficients together. What we mean by this is that we took the `Estimate` in the model print statement, and used that to represent our parameter. This approach is fine if we intend to quickly summarize the characteristics of our model parameters. However, we took this one step further above and *combined* values of our parameters to make further inferences. Again, the approach we took above, simply adding the posterior means, is fine for quickly summarizing or understanding the behavior of a model. However, this approach is not a reliable way to consider combinations of parameters for the models we are working with in this book. It's important to remember that our model is actually a series of samples from the posterior distribution of each parameter. The summaries of these samples are just that, summaries. When we want to think about combinations of parameters, we don't combine the summaries of parameters, we combines the samples themselves and then summarize those. This is extremely important so we will repeat it: When combining or otherwise manipulating parameters *always* do so with the original samples, and *then* summarize the manipulated samples. 
+### Working with the posterior samples
+
+In the examples above, we added the posterior means of our model coefficients together. What we mean by this is that we took the `Estimate` in the model print statement, and used that to represent our parameter. This approach is fine if we intend to quickly summarize the characteristics of our model parameters. However, we took this one step further above and *combined* values of our parameters to make further inferences. Again, the approach we took above, simply adding the posterior means, is fine for quickly summarizing or understanding the behavior of a model. However, this approach is not a reliable way to consider combinations of parameters for the models we are working with in this book. It's important to remember that our model is actually a series of samples from the posterior distribution of each parameter. The summaries of these samples are just that, summaries. When we want to think about combinations of parameters, we don't combine the summaries of parameters, we combines the samples themselves and then summarize those. This is extremely important so we'll repeat it: When combining or otherwise manipulating parameters *always* do so with the original samples, and *then* summarize the manipulated samples. 
 
 You can see the individual samples for our population-level (i.e. fixed effects) parameters by calling the `fixef` function and setting `summary` to `FALSE`. Below, we see the first 6 posterior samples for each parameter. 
 
@@ -389,19 +401,20 @@ If we were to find the mean of the samples across both columns, these would exac
 colMeans (samples)
 ```
 
-Our model was **parametrized** in a certain way. By this we mean that we made certain design choices, such as the use of sum coding, that resulted in some information being directly represented in the model (e.g. the grand mean), while other information is not (e.g. the group means). However, the information that is not directly represented in the model can still be recovered by combining parameter estimates in appropriate ways. For example, we know that our adult mean is equal to the sum of the intercept and the `A1` parameter. If we want to know what the value of `Intercept+A1` is according to out model, all we need to do is add the values of `A1` and the intercept, individually for each sample, and the consider the distribution of the sum. This means we add the elements of each row together resulting in a single vector as long as the two original columns. For example, combining the intercept and `A1` parameters in our model is as easy as seen below:
+Our model was **parametrized** in a certain way. By this we mean that we made certain design choices, such as the use of sum coding, that resulted in some information being directly represented in the model (e.g. the grand mean), while other information is not (e.g. the group means). However, some information that is not directly represented in the model can still be recovered by combining parameter estimates in appropriate ways. For example, we know that our adult mean is equal to the sum of the intercept and the `A1` parameter. If we want to know what the value of `Intercept+A1` is according to out model, all we need to do is add the values of `A1` and the intercept, individually for each sample, and the consider the distribution of the sum. This means we add the elements of each row together resulting in a single vector as long as the two original columns. For example, combining the intercept and `A1` parameters in our model is as easy as seen below:
 
 ```{r}
-adult_mean = samples[,1] + samples[,2]
+adult_mean = samples[,"Intercept"] + samples[,"A1"]
 ```
 
-Below we plot histograms, and the individual samples for the `Intercept` (the overall mean) and the `A1` parameter (the effect for adults). We also show that combinations of the intercept and the `A1` parameters can yield the posterior distributions for our child and adult means. 
+Below we plot histograms, and the individual samples, for the `Intercept` (the overall mean) and the `A1` parameter (the effect for adults). We also show that combinations of the intercept and the `A1` parameters can yield the posterior distributions for our child and adult means. 
 
 ```{r F55, fig.height = 4, fig.width = 8, fig.cap = "Comparison of histogram and trace plots of samples of selected parameters.", echo = FALSE}
 
 ################################################################################
-### Figure 3.4
+### Figure 5.5
 ################################################################################
+
 head(samples, 10)
 par (mfrow = c(2,4), mar = c(4,4,3,1))
 hist (samples[,'Intercept'],freq=FALSE, col = skyblue,main='Intercept',
@@ -414,7 +427,7 @@ hist (samples[,'Intercept']+samples[,'A1'], freq=FALSE,
       col = yellow,main='Intercept+A1',xlab="Apparent Height (cm)")
 plot (samples[,'Intercept'], col = skyblue,pch=16,ylab="Apparent Height (cm)")  
 plot (samples[,'A1'], col = deeppurple, pch=16,ylab="Apparent Height (cm)")  
-plot (-samples[,'A1'], col = teal, pch=16,ylab="Apparent Height (cm)")
+plot (samples[,'Intercept']-samples[,'A1'], col = teal, pch=16,ylab="Apparent Height (cm)")
 plot (samples[,'Intercept']+samples[,'A1'], col = yellow,
       pch=16,ylab="Apparent Height (cm)")  
 ```
@@ -422,7 +435,6 @@ plot (samples[,'Intercept']+samples[,'A1'], col = yellow,
 We can summarize combinations of parameters using the `posterior_summary` function, resulting in a mean, standard deviation, and credible interval for the new parameter. Below, we use this strategy to get information about posterior means and credible intervals for our adult and child means. Whereas the credible interval for the `A1` effect reflected uncertainty in the *difference* between the adult female mean and the Intercept, the values below provide information about the adult and child group means directly.
 
 ```{r, collapse = TRUE}
-# calculate child mean
 new_parameters = cbind(adult_mean = samples[,'Intercept'] + samples[,'A1'],
                        child_mean = samples[,'Intercept'] - samples[,'A1'])
 
@@ -432,19 +444,19 @@ brms::posterior_summary (new_parameters)
 
 ### Using the `hypothesis` function
 
-Working directly with the posterior samples is very simple, but it is not strictly necessary. The `brms` package contains a very useful function called `hypothesis` that helps us add terms very easily without having to do any of the above steps. You can ask the `hypothesis` function to add terms in your model (spelled just as they are in the print statement), and to compare the result to some number. If you compare the result to 0, it just tells you about the result of the terms you added. For example, the line below says "test my hypothesis that the Intercept plus the adult parameter is equal to zero". This is a slightly convoluted way of saying "tell me what the value of the adult mean is so I can see if it is different from zero. You will notice that the mean, error and credible intervals *exactly* correspond to the values obtained by calculating our `new_parameters` above. 
+Working directly with the posterior samples is very simple, but it is not strictly necessary. The `brms` package contains a very useful function called `hypothesis` that helps us add terms very easily without having to do any of the steps outlined in the previous section. You can ask the `hypothesis` function to add terms in your model (spelled just as they are in the print statement), and to compare the result to some number. If you compare the result to 0, it just tells you about the result of the terms you added. For example, the line below says "test my hypothesis that the Intercept plus the A1 parameter is equal to zero". This is a slightly convoluted way of saying "tell me what the value of the adult mean is so I can see if it is different from zero". You will notice that the mean, error and credible intervals *exactly* correspond to the values obtained by calculating our `new_parameters` above. 
 
 ```{r, collapse = TRUE}
 brms::hypothesis(model_sum_coding, "Intercept + A1 = 0")
 ```
 
-The hypothesis function provides a lot of extra information and formatting which is useful in 'real life' but is cumbersome for this book. As a result, we will be relying on the `short_hypothesis` function provided in the book R package (`bmmb`). This function is simply a wrapper for the `hypothesis` function that provides a more compact output while still maintaining most of the information we need. We can use the hypothesis function to confirm similar results for the model fit using treatment coding (`model`, fit above). In that model, the reference category was the adult female mean. So, if we call the `hypothesis` function on the intercept of the treatment-coding model, we can see that it will present similar values to those seen above.
+The hypothesis function provides a lot of extra information and formatting which is useful in 'real life' but is cumbersome for this book. As a result, we will be relying on the `short_hypothesis` function provided in the book R package (`bmmb`). This function is simply a wrapper for the `hypothesis` function that provides a more compact output while still maintaining most of the information we need. We can use the hypothesis function to confirm similar results for the model fit using treatment coding (`model`, fit above). In that model, the reference category was the adult female mean. So, if we call the `hypothesis` function on the intercept of the treatment-coding model, we can see that it will present a similar estimate to that seen above.
 
 ```{r, collapse = TRUE}
 short_hypothesis(model, "Intercept = 0")
 ```
 
-We can check several parameter combinations simultaneously. Below we use the information provided in sections (@@coding differences) to recreate all our mean estimates of interest, first for the sum coding model, and then for the treatment coding model. As noted earlier, these models clearly contain the same information, just represented in different ways.  
+We can check several parameter combinations simultaneously. Below we use the information provided in section X (coding differences) to recreate all our mean estimates of interest, first for the sum coding model, and then for the treatment coding model. As noted earlier, these models clearly contain the same information, just represented in different ways.  
 
 ```{r, collapse = TRUE}
 short_hypothesis(model_sum_coding, 
@@ -467,37 +479,42 @@ listener_effects_hat = ranef(model_sum_coding, summary = FALSE)$L[,,"Intercept"]
 str (listener_effects_hat)
 ```
 
-We can get the intercept from the model using the `fixef` function and asking for the column called "Intercept" from the output. 
+The `_hat` suffix represents the $\hat{}$ operator, which goes above variables to indicate that they represent modeled quantities. We can get the intercept from the model using the `fixef` function and asking for the column called "Intercept" from the output. 
 
 ```{r}
 Intercept_hat = fixef(model_sum_coding, summary = FALSE)[,"Intercept"]
 str (Intercept_hat)
 ```
 
-Then, we can combining the above samples and summarize these to get the conditional means and the listener effects, according to our model. The `_hat` suffix represents the $\hat{}$ operator, which goes above variables to indicate that they represent modeled quantities.  
+We can combine the above samples and summarize these to get the conditional means and the listener effects, according to our model.   
 
 ```{r}
 listener_means_hat = brms::posterior_summary (Intercept_hat + listener_effects_hat)
 listener_effects_hat = brms::posterior_summary (listener_effects_hat)
 ```
 
-We can calculate equivalent values directly from the data as seen below. First we find the average for each listener across each adult and child groups, and then we find the average of that. The reason for this is to control for the fact that adult and child responses may not be balanced across listeners, and we want the listener average to be half-way between the *category means* rather than simply reflecting the distribution of responses across groups. For example if a listener identified 90% of speakers as children their overall mean would obviously be closer to their adult responses than their child responses. 
+We can calculate equivalent values directly from the data as seen below. First we find the average for each listener across each adult and child groups, and then we find the average of that. The reason for this is to control for the fact that adult and child responses may not be balanced across listeners, and we want the listener average to be half-way between the adult and child *category means* rather than simply reflecting the distribution of responses overall. For example if a listener identified 90% of speakers as children their overall mean would obviously be closer to their adult responses than their child responses. 
 
 ```{r}
 listener_means = tapply (notmen$height, notmen[,c('A','L')], mean)
 listener_means = colMeans (listener_means)
 ```
 
-After finding the listener means we calcuate the mean of the means (the Intercept), and subtract this from the listener means to get the listener effects (i.e., the listener dependent deviations from the intercept).
+After finding the listener means we calculate the mean of the means (the Intercept), and subtract this from the listener means to get the listener effects (i.e., the listener dependent deviations from the intercept).
 
 ```{r}
 Intercept = mean (listener_means)
 listener_effects = listener_means - Intercept
 ```
 
-Below we plot the listener effects and means using `brmplot` and compare these to the equivalent values we calculated directly from the data. Clearly, these are a good match. A clear benefit of using the modeled parameters is that these come with credible intervals, so that we can make statements about likely bounds of values in addition to providing point estimates.
+Below we plot the listener effects and means estimated using `brms` (`listener_effects_hat`, `listener_means_hat`) and compare these to the equivalent values we calculated directly from the data (`listener_effects`, `listener_means`). Clearly, these are a good match. A clear benefit of using the modeled parameters is that these come with credible intervals, so that we can make statements about likely bounds for values in addition to providing point estimates.
 
-```{r, fig.height = 3.5, fig.width=8, fig.cap = ".", echo = TRUE}
+```{r F56, fig.height = 3.5, fig.width=8, fig.cap = ".", echo = TRUE}
+
+################################################################################
+### Figure 5.6
+################################################################################
+
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 bmmb::brmplot (listener_effects_hat, col = cols)
 points (listener_effects, cex=2, col = cols, pch = 4,lwd=2)
@@ -506,14 +523,14 @@ points (listener_means, cex=2, col = cols, pch = 4,lwd=2)
 abline (h = Intercept)
 ```
 
-Tthe above operations can be carried out using the `scope` and `group` parameters of the `hypothesis` (or `short_hypothesis`) function. For example, below we test the hypothesis that the intercept is equal to zero. We did something like this before in section X.
+Random effects can be investigated using the `scope` and `group` parameters of the `hypothesis` (or `short_hypothesis`) function. For example, below we test the hypothesis that the (fixed-effect) intercept is equal to zero. 
 
 ```{r}
 short_hypothesis(model_sum_coding, 
                  c("Intercept = 0"))
 ```
 
-However, if we set `scope=ranef` we tell the function to check for intercepts in the random effects, rather than our `population level` intercept. In addition, by setting `group=L` we tell the function to check for the random intercepts of the `L` factor specifically. Below we compare the first five lines of the listener effects calculated above with those obtained using the hypothesis function, to show that these are identical. 
+However, if we set `scope=ranef` we tell the function to check for intercepts in the random effects, rather than our `population level` intercept. In addition, by setting `group=L` we tell the function to check for the random intercepts of the `L` factor specifically. Below we compare the first five lines of the listener effects calculated above, with those obtained using the hypothesis function, to show that these are identical. 
 
 ```{r}
 
@@ -524,7 +541,7 @@ short_hypothesis(model_sum_coding,
 listener_effects_hat[1:5,]
 ```
 
-By changing the `scope` parameter to `coef` rather than `ranef`, we tell the `hypothesis` function to consider the value of intercept across random and fixed (i.e. population level) effects, for the factor `L` (since `group=L`). Below, we see that this approach also yields identical results to obtaining the individual samples, and adding and summarizing those.
+By changing the `scope` parameter to `coef` rather than `ranef`, we tell `hypothesis` to consider the value of intercepts across random and fixed (i.e. population level) effects. Since `group=L`, this is done for the grouping factor `L` (i.e. across listeners `group=L`). Below, we see that this approach also yields identical results to obtaining the individual samples, and adding and summarizing those.
 
 ```{r}
 short_hypothesis(model_sum_coding, 
@@ -534,7 +551,7 @@ short_hypothesis(model_sum_coding,
 listener_means_hat[1:5,]
 ```
 
-Finally, in section X we mentioned that it is valid to check for combinations of parameters, adding and subtracting these to answer specific questions or hypotheses. The same approach is applicable to the random effects. For example, we see above that listeners 11 and 12 appear to have differing. Is this really supported by our model? To answer this question we can check how different they are by subtracting the samples corresponding to the two parameters, and then summarizing the distribution of the difference below. We see that the average difference is 2.4 cm and the 95% credible interval is [0.025, 4.90], meaning that is is likely that listener 11 really does rate speakers as higher overall relative to listener 12. 
+Finally, in section X we mentioned that it is valid to check for combinations of fixed-effect parameters, adding and subtracting these to answer specific questions or hypotheses. In our Bayesian models, we can do this same thing using our random effects. For example, we see above that listeners 11 and 12 appear to have differing. Is this really supported by our model? To answer this question we can check how different they are by subtracting the samples corresponding to the two parameters, and then summarizing the distribution of the difference below. We see that the average difference is 2.4 cm and the 95% credible interval is [0.025, 4.90], meaning that is is likely that listener 11 really does rate speakers as higher overall relative to listener 12. 
 
 ```{r}
 listener_effects_hat = ranef(model_sum_coding, summary = FALSE)$L[,,"Intercept"]
@@ -553,10 +570,10 @@ Rather than focusing on the *mathematical* properties of priors, it's more usefu
 
 The shape of the **t distribution** is broadly similar to the standard normal distribution, it is symmetrical about its mean and has a similar 'bell' shape to it. However, the t distribution has a *degrees of freedom* parameter, called $\nu$, that affects the shape of the distribution. Lower values of $\nu$ result in 'pointier' distributions that also have more mass in the 'tails', far away from the mean of the distribution. We can see the effect of $\nu$ on the shape of the t distribution in figure \@ref(fig:F34). In the middle panel we see that, apart from when $\nu=1$, the shape of the distributions is pretty similar within about two standard deviations of the mean. Since we expect the large majority (about 95%) of our observations to fall inside this area, this means that $\nu$ is not expected to have a large effect on inference in many cases where data falls within 'typical' ranges. In contrast, in the right panel below see that the differences are quite large in the 'tails' of the distributions, the areas outside of three standard deviations or so.
 
-```{r F34, fig.height = 3, fig.width = 8, fig.cap='(left) A comparison of the density of a standard normal distribution (red curve) with the densities of t distributions with different degrees of freedom. (middle) The log-densities of the distributions in the left plot. (right) The same as the middle plot, except across a wider domain.', echo = FALSE}
+```{r F57, fig.height = 3, fig.width = 8, fig.cap='(left) A comparison of the density of a standard normal distribution (red curve) with the densities of t distributions with different degrees of freedom. (middle) The log-densities of the distributions in the left plot. (right) The same as the middle plot, except across a wider domain.', echo = FALSE}
 
 ################################################################
-### Figure 3.4
+### Figure 5.7
 ################################################################
 
 par (mfrow = c(1,3), mar = c(4,4,1,1))
@@ -723,7 +740,12 @@ $$
 
 The prior we have set for the $\nu$ parameter is seen below. This is the default prior set by `brms` but we are explicitly stating it just to be clear. We can see what this prior looks like using the `dgamma` and `curve` functions to draw the density of a gamma distribution with those parameters, as seen below. This pproach can also be taken to investigate the conequences of tweaking the distribution parameters, as see below. Remember that it is not so important if the prior of $\nu$ *really* has the shape of a gamma distribution with those parameters. Instead we need to worry about whether the density distributed credibility in the right places, and this one basically does.  
 
-```{r F35, fig.height = 3, fig.width = 8, fig.cap='(left) The density of a gamma distribution with the parameters specified in our model. (right) The log-density of the distribution in the left panel.', echo = TRUE}
+```{r F58, fig.height = 3, fig.width = 8, fig.cap='(left) The density of a gamma distribution with the parameters specified in our model. (right) The log-density of the distribution in the left panel.', echo = TRUE}
+
+################################################################################
+### Figure 5.8
+################################################################################
+
 par (mfrow = c(1,4), mar = c(4,4,1,1))
 curve (dgamma(x,2,0.1), xlim = c(1,250), xaxs='i', ylab="Density",xlab="",
        lwd=4, col = maroon, yaxs='i', ylim = c(0,0.045))

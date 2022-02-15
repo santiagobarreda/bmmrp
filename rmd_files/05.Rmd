@@ -122,10 +122,10 @@ set.seed (1)
 model =  
   brms::brm (height ~ A + (1|L) + (1|S), data = notmen, chains = 4, cores = 4,
        warmup = 1000, iter = 3500, thin = 2,
-       prior = c(brms::set_prior("normal(156, 15)", class = "Intercept"),
-                 brms::set_prior("normal(0, 15)", class = "b"),
-                 brms::set_prior("normal(0, 15)", class = "sd"),
-                 brms::set_prior("normal(0, 15)", class = "sigma")))
+       prior = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
+                 brms::set_prior("normal(0, 12)", class = "b"),
+                 brms::set_prior("normal(0, 12)", class = "sd"),
+                 brms::set_prior("normal(0, 12)", class = "sigma")))
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
@@ -258,10 +258,10 @@ set.seed (1)
 model_sum_coding =  
   brms::brm (height ~ A + (1|L) + (1|S), data = notmen, chains = 4, cores = 4,
        warmup = 1000, iter = 3500, thin = 2,
-       prior = c(brms::set_prior("normal(156, 15)", class = "Intercept"),
-                 brms::set_prior("normal(0, 15)", class = "b"),
-                 brms::set_prior("normal(0, 15)", class = "sd"),
-                 brms::set_prior("normal(0, 15)", class = "sigma")))
+       prior = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
+                 brms::set_prior("normal(0, 12)", class = "b"),
+                 brms::set_prior("normal(0, 12)", class = "sd"),
+                 brms::set_prior("normal(0, 12)", class = "sigma")))
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
@@ -551,24 +551,32 @@ short_hypothesis(model_sum_coding,
 listener_means_hat[1:5,]
 ```
 
-Finally, in section X we mentioned that it is valid to check for combinations of fixed-effect parameters, adding and subtracting these to answer specific questions or hypotheses. In our Bayesian models, we can do this same thing using our random effects. For example, we see above that listeners 11 and 12 appear to have differing. Is this really supported by our model? To answer this question we can check how different they are by subtracting the samples corresponding to the two parameters, and then summarizing the distribution of the difference below. We see that the average difference is 2.4 cm and the 95% credible interval is [0.025, 4.90], meaning that is is likely that listener 11 really does rate speakers as higher overall relative to listener 12. 
+Finally, in section X we mentioned that it is valid to check for combinations of fixed-effect parameters, adding and subtracting these to answer specific questions or hypotheses. In our Bayesian models, we can do this same thing using our random effects. For example, in figure \@ref(fig:F56) we see that listeners two and three appear to have reported different average apparent heights. Is this really supported by our model? To answer this question we can subtract the samples corresponding to the two parameters, and then summarize the distribution of the difference, as seen below. 
 
 ```{r}
 listener_effects_hat = ranef(model_sum_coding, summary = FALSE)$L[,,"Intercept"]
 
-difference_11_12 = listener_effects_hat[,11] - listener_effects_hat[,12]
+difference_11_12 = listener_effects_hat[,2] - listener_effects_hat[,3]
 posterior_summary (difference_11_12)
 ```
 
+We see that the average difference is 5.6 cm and the 95% credible interval is between 3.1 and 8.0 cm, meaning that is is likely that listener 3 really does rate speakers as higher overall relative to listener 2. A minimum difference of 3.1 cm may seem odd if we look at the intervals between the effects for listeners two and three in figure \@ref(fig:F56), which seem to overlap. This highlights why it is absolutely necessary to compare or manipulate samples *before* summarizing. When we summarize (by plotting) and then compare we see a small difference, but when we compare and then summarize we see a small difference. At this point we can offer only a conceptual explanation for this. If you plot the samples for these two parameters you will see that they seem to be related: One is higher when the other is higher and lower when the other is lower:  
+
+```{r, eval = FALSE}
+plot (listener_effects_hat[,2], listener_effects_hat[,3])
+```
+
+Imagine for a particular set of samples, the intercept is a bit higher than usual. Since the listener effects encode deviations from the mean, all effects above the mean will decrease in magnitude and all effects below the mean will decrease in magnitude. So, listener two and three's effects will tend to rise and fall together in relation to the value of the intercept for one set of posterior samples. 
+When we investigate the difference between parameters, what we care about is the difference for each set of posterior samples. When looking at summarizes, these patterns can be obscured. Imagine you tracked the precise elevation of the surface of harbor during the year, in addition to the elevation of a research buoy sitting on the harbor. Let's pretend the buoys is 1.5 meters tall and the center is at the top of the buoy. The height of the sensor on the buoy is related to the water level in the harbor in a similar way that our two parameters are related. If we plot the variation in water level over the year, and then plot the height of the sensor on the buoy over the yer, we would get two, wide, overlapping distributions. We might infer from this that the buoy was often under the water, and that water and the buoy seem somewhat independent. In contrast, imagine we plot the difference between water level and the sensor on the buoy over the course of the year. This would look more or less like a flat line, with some random error due to changes in the position of the buoys due to wind or waves. When we look at plots like figure \@ref(fig:F56) and compare across, we are looking at the independent plots of the water and buoy distribution. When we compare parameters and then summarize (or plot), we are looking at the difference between the water level and the buoy.
+
+
 ## Making our models more robust: The (non-standardized) t distribution
 
-By almost any objective measure, a Ferrari is a 'good' car. A Ferrari will be fast, beautiful, and precisely made. And yet a Ferrari will not do well on a bumpy dirt road or even over speed bumps. You could say that the design of the Ferrari assumes that it will be used on flat, clean(ish) roads. Someone who damaged their Ferrari driving fast on a bumpy dirt road would be foolish to blame the car, they used it 'incorrectly' by violating the assumptions implicit in the design of a Ferrari. You don't buy a Ferrari to drive it down dirt roads, because that's not what it was designed for. But not everything breaks just because you use it for something it wasn't designed for. One way to think of this is that a Ferrari is not very *robust*, it only works well if you stick to its design assumptions. A more robust car, like a reasonably-priced mid-sized sedan, may not be as 'good' a car as the Ferrari, however, it can be used successfully in a very wide range of circumstances. A statistical model is **robust** when it provides useful, reliable results in a wide range of situations. If we think of robustness as a continuous, rather than discrete property, more-robust statistical models are more reliable in a wider range of situations than less-robust statistical models. Since all statistical models make certain assumptions implicit in their design, robust statistical models are those which are either more tolerant to violations of their assumptions, or those that make assumptions that are violated in a smaller number of cases. 
+By almost any objective measure, a Ferrari is a 'good' car. A Ferrari will be fast, beautiful, and precisely made. And yet a Ferrari will not do well on a bumpy dirt road or even over speed bumps. You could say that the design of the Ferrari assumes that it will be used on flat, clean(ish) roads. Someone who damaged their Ferrari driving fast on a bumpy dirt road would be foolish to blame the car, they used it 'incorrectly' by violating the assumptions implicit in the design of a Ferrari. You don't buy a Ferrari to drive it down dirt roads, because that's not what it was designed for. Not everything breaks just because you use it for something it wasn't designed for. One way to think of this is that a Ferrari is not very *robust*, it only works well if you stick to its design assumptions. A more robust car, like a reasonably-priced mid-sized sedan, may not be as 'good' a car as the Ferrari, however, it can be used successfully in a very wide range of circumstances. A statistical model is **robust** when it provides useful, reliable results in a wide range of situations. If we think of robustness as a continuous (rather than discrete) property, more-robust statistical models are more reliable in a wider range of situations than less-robust statistical models. Since all statistical models make certain assumptions implicit in their design, robust statistical models are those which are either more tolerant to violations of their assumptions, or those that make assumptions that are violated in a smaller number of cases. 
 
-One of the simplest (for us) ways for us to increase the robustness of our models is to think about their **distributional robustness**, that is robustness related to the distributional assumptions made by our model. We have already seen an example of this in the specification of our priors using t distributions rather than normal distributions. This is because the t distribution can be substantially more tolerant to outliers than the normal distribution, and thus can be substantially more robust in the presence of outliers. We are now going to extend the use of the t distribution to the error in our model as well. 
+One of the simplest (for us) ways for us to increase the robustness of our models is to think about their **distributional robustness**, that is robustness related to the distributional assumptions made by the model. For example, using **t distributions** in place of normal distributions can lead to more robust models in many situations. This is because the t distribution is substantially more tolerant to outliers than the normal distribution, and thus can be substantially more robust in the presence of outliers. Rather than focusing on the mathematical properties of priors in the abstract, it's more useful to focus on whether or not the *shapes* of their densities reflect the distributions of interest. This is because, ultimately, any distribution you chose is at best an approximation and will not exactly correspond to the *true* underlying distribution, and the characteristics of the shape of the distribution can have a *direct* and practical effect on your outcomes.  
 
-Rather than focusing on the *mathematical* properties of priors, it's more useful to focus on whether or not their *shapes* reflect the distribution of credible parameter values a priori (before you conducted your experiment). This is because, ultimately, any distribution you chose is at best an approximation and will not be the *true* data-generating distribution. Even if it is, you most likely can't prove it. In contrast, the characteristics of the shape of the distribution have a *direct* and practical effect on your outcomes, and so should be of concern.  
-
-The shape of the **t distribution** is broadly similar to the standard normal distribution, it is symmetrical about its mean and has a similar 'bell' shape to it. However, the t distribution has a *degrees of freedom* parameter, called $\nu$, that affects the shape of the distribution. Lower values of $\nu$ result in 'pointier' distributions that also have more mass in the 'tails', far away from the mean of the distribution. We can see the effect of $\nu$ on the shape of the t distribution in figure \@ref(fig:F34). In the middle panel we see that, apart from when $\nu=1$, the shape of the distributions is pretty similar within about two standard deviations of the mean. Since we expect the large majority (about 95%) of our observations to fall inside this area, this means that $\nu$ is not expected to have a large effect on inference in many cases where data falls within 'typical' ranges. In contrast, in the right panel below see that the differences are quite large in the 'tails' of the distributions, the areas outside of three standard deviations or so.
+The shape of the **t distribution** is broadly similar to the standard normal distribution. It is symmetrical about its mean and has a similar 'bell' shape to it. However, the t distribution has a *degrees of freedom* parameter ($\nu$) that affects the shape of the distribution. Lower values of $\nu$ result in 'pointier' distributions that also have more mass in the 'tails', far away from the mean of the distribution. We can see the effect of $\nu$ on the shape of the t distribution in figure \@ref(fig:F34). When $\nu=\infty$, the t distribution converges on the normal distribution. As $\nu$ decreases in value, the t distribution becomes less like the normal distribution and more distinctively 't like'. In the middle panel we see that, apart from when $\nu=1$, the shape of the distributions are all pretty similar within about two standard deviations of the mean. Since we expect the large majority of our observations to fall inside this area, this means that $\nu$ is not expected to have a large effect on inference in many cases where data falls within 'typical' ranges (when $\nu>1$). In contrast, in the right panel below see that the differences can be quite large in the 'tails' of the distributions, the areas outside of three standard deviations or so.
 
 ```{r F57, fig.height = 3, fig.width = 8, fig.cap='(left) A comparison of the density of a standard normal distribution (red curve) with the densities of t distributions with different degrees of freedom. (middle) The log-densities of the distributions in the left plot. (right) The same as the middle plot, except across a wider domain.', echo = FALSE}
 
@@ -623,7 +631,7 @@ for (i in seq(-2,-8,-2)){
 }
 ```
 
-The most common implementation of the t distribution has only one parameter, $\nu$. This *standardized* t distribution always has a mean equal to zero and a variance equal to exactly $\nu / (\nu-2)$. In order to use the t distribution for variables with other means and variances, we need to refer to the **non-standardized t distribution**, a three-parameter distribution consisting of mean ($\mu$), scale ($s$), and degrees of freedom ($\nu$). The non-standardized t distributions consist of a t distributed variable ($t$) that has been scaled up by some value $s$ and then has had some value $\mu$ added to it, as in \@ref(eq:318). 
+The most common implementation of the t distribution has only one parameter, $\nu$. This *standardized* t distribution always has a mean equal to zero and a variance equal to exactly $\nu / (\nu-2)$. In order to use the t distribution for variables with other means and variances, we need to refer to the **non-standardized t distribution**, a three-parameter distribution consisting of mean ($\mu$), scale ($s$), and degrees of freedom ($\nu$). The non-standardized t distributions consist of a t distributed variable ($t$) that has been scaled up by some value $s$ and then has had some value $\mu$ added to it, as in \@ref(eq:52). 
 
 $$
 \begin{equation}
@@ -634,7 +642,7 @@ x = \mu + s*t
 \end{equation}
 $$
 
-The $\mu$ parameter allows for the probability distribution to be centered at different locations along the number line, and does represent the population mean. The $s$ parameter allows the distribution to have wider/narrower distributions than those seen in figure \@ref(fig:F34), but does *not* represent the standard deviation. Since we know that the variance of the t distribution is $\nu / (\nu-2)$, the standard deviation must be $\sqrt{\nu / (\nu-2)}$. Since the $s$ parameter simply scales the standard deviation up or down, the standard deviation of a non-standardized t distribution will be equal to $s \times\sqrt{\nu / (\nu-2)}$. these relations are presented in \@ref(eq:F34)
+The $\mu$ parameter allows for the probability distribution to be centered at different locations along the number line, and represents the population mean. The $s$ parameter allows the distribution to have wider/narrower distributions than those seen in figure \@ref(fig:F34), but does *not* represent the standard deviation. Since we know that the variance of the t distribution is $\nu / (\nu-2)$, the standard deviation must be $\sqrt{\nu / (\nu-2)}$. Since the $s$ parameter simply scales the standard deviation up or down, the standard deviation of a non-standardized t distribution will be equal to $s \times\sqrt{\nu / (\nu-2)}$. These relations are presented in \@ref(eq:53).
 
 $$
 \begin{equation}
@@ -649,25 +657,25 @@ $$
 
 ## Re-fitting with t-distributed errors {#re-fitting-with-t-distributed-errors.}
 
-Eagle-eyed readers may have noticed that the histograms we have been using have pretty wide tails. This suggests the presence of large outliers, which are not in line with a normal distribution. Below we scale our data, which means we subtract the mean and divide by the standard deviation. This has the effect of turning our data into data resembling a standard normal distribution and expresses all deviations from the mean in units of standard deviations. 
+Eagle-eyed readers may have noticed the presence of many outliers in some of our boxplots, which are not in line with a normal distribution. Below we get the residuals from our sum-coded model and take only the first column (the posterior estimates).
 
 ```{r, cache = TRUE}
 resids = residuals (model_sum_coding)[,1]
 ```
 
-When we check the range of our scaled values we see that our smallest value is 4.1 standard deviations from the mean, while our largest value is 3.4 standard deviations from the mean. 
+We scale our data, which means we subtract the mean and divide by the standard deviation. This has the effect of turning our data into data resembling a standard normal distribution and expresses all deviations from the mean in units of standard deviations. We do this because we know that the standard normal distribution has very little of its mass beyond three standard deviations from the mean. This means scaled residuals with magnitudes greater than three should be relatively rare. When we check the range of our scaled residuals we see that our smallest value is 4.1 standard deviations from the mean, while our largest value is 3.4 standard deviations from the mean.
 
 ```{r}
 range (scale(resids))
 ```
 
-Below, we see that this is not just one very deviant outlier, since there are several between -4 and -3.5 standard deviations from the mean. 
+Below, we see that this is not just two very deviant outliers, since there are several between -4 and -3.5 standard deviations from the mean. 
 
 ```{r}
 head (sort(scale(resids)))
 ```
 
-We can use the `pnorm` function to consider how likely these observations are given our model. The `pnorm` function takes in an $x$ value, values of $\mu$ and $\sigma$, and tells you how much of the mass of the probability density is to the *left* of the value $x$. So, the code below tells us what the probability is of finding a value smaller than our furthest outlier, which is only 0.000018. 
+We can use the `pnorm` function to consider how likely these observations are given our model. The `pnorm` function takes in an $x$ value, values of $\mu$ and $\sigma$, and tells you how much of the mass of the probability density is to the *left* of the value $x$. So, the code below tells us that the probability of finding a value smaller than our furthest outlier is only 0.000018. 
 
 ```{r, collapse = TRUE}
 mu = mean(resids)
@@ -677,14 +685,14 @@ sigma = sd(resids)
 pnorm (min (resids),mu,sigma)
 ```
 
-We can also use this probability to estimate the sample size we would expect before seeing an outlier this far out by inverting it. For example, imagine the probability were 1/10, meaning about one tenth of the population is as extreme as our observation. If we invert that we get 10, meaning that a sample of 10 can reasonably be expected to contain an observation as extreme as this, on average. When we do this for our probability above (0.000018), we see that the our furthest outlier is extremely improbable, and would be expected in a sample of about 54,552 observations (we have 1386).  
+We can use this probability to estimate the sample size we would expect before seeing an outlier this far out by inverting it. For example, imagine the probability were 1/10, meaning about one tenth of the population is as extreme as our observation. If we invert that we get 10, meaning that a sample of 10 can reasonably be expected to contain an observation as extreme as this, on average. When we do this for our probability above (0.000018), we see that the our furthest outlier is extremely improbable, and would be expected in a sample of about 54,552 observations (we have 1386).  
 
 ```{r, collapse = TRUE}
 # sample size before outlier this big expected
 1/pnorm (min (resids),mu,sigma)
 ```
 
-If this were the only outlier this far out we might adopt an "outliers happen" attitude and leave it at that. However, the fact that we have several such improbable outliers suggests three possibilities: 1) Our data is from a distribution with fatter tails, 2) the real standard deviation of the data is much larger than we think it is, 3) or something is wrong with our model or the observations. We can use the `fitdistr` function from the `MASS` package to get maximum likelihood estimates for $\nu$, $s$, and $\mu$ given our data, and assuming a non-standardized t distribution. We can see that the estimate for $\nu$ is a relatively small number, suggesting substantial deviations from a normal distribution in the tails of the data. 
+Again, if this were the only outlier this extreme we might adopt an "outliers happen" attitude and leave it at that. However, the fact that we have several such improbable outliers suggests three possibilities: 1) Our data is from a distribution with fatter tails, 2) the real standard deviation of the data is much larger than we think it is, 3) something else is wrong with our model or data. We can use the `fitdistr` function from the `MASS` package to get maximum-likelihood estimates for $\nu$, $s$, and $\mu$ given our data, and assuming a non-standardized t distribution. We can see that the estimate for $\nu$ is a relatively small number, suggesting substantial deviations from a normal distribution in the tails of the data. 
 
 ```{r, collapse = TRUE}
 # the 'lower' bounds are for the sd and df respectively
@@ -692,7 +700,7 @@ tparams = MASS::fitdistr (resids, 't', lower = c(0,1))
 tparams
 ```
 
-We can use these estimated parameters to find the probability of observing an observation this for from the mean in a t distribution. We do this with the `ptns` function which works very much like the `pnorm` function, except for non-standardized t distributions. This function takes in an $x$ value, values of $m$, $s$, and $df$ (i.e., $\nu$) and tells you how much of the mass of the probability density is to the *left* of the value $x$. So, the function below tells us what the probability is of finding a value smaller than our furthest outlier from a t distribution. As we can see, the outliers in our height judgments are unlikely but not *too* unlikely given a t distribution with $\nu=7.75$. For example, our sample size is 675 and we would expect to see an observation as unusual as our furthest outlier about one in every 1381 samples, about the same as our sample size.
+We can use these estimated parameters to find the probability of observing outliers as extreme as those seen above from a t distribution. We do this with the `ptns` function which works very much like the `pnorm` function, except for non-standardized t distributions. This function takes in an $x$ value, and values of $m$, $s$, and $df$ (i.e., $\nu$), and tells you how much of the mass of the probability density is to the *left* of the value $x$. So, the function below tells us what the probability is of finding a value smaller than our furthest outlier from a t distribution. As we can see, the outliers in our height judgments are unlikely but not *too* unlikely given a t distribution with $\nu=7.75$. For example, our sample size is 1386 and we would expect to see an observation as unusual as our furthest outlier about one in every 1381 samples.
 
 ```{r, collapse = TRUE}
 m = tparams[[1]][1]
@@ -706,7 +714,7 @@ bmmb::ptns (min (resids),m, s, df)
 1/bmmb::ptns (min (resids),m, s, df)
 ```
 
-Below, we see that our largest outlier is about 39 times more likely in the t distribution than the normal distribution. The benefit of using t distributions is that they allow for *outliers*, that is observations that are very unlike the 'typical' observation, without such a strong effect on your analysis. Basically, the normal distribution doesn't like extreme events. When an extreme event *does* occur, this will result in an increase in your standard deviation estimate so that the extreme event seems less extreme.
+Below, we see that our largest outlier is about 39 times more likely in the t distribution than the normal distribution. The benefit of using t distributions is that they allow for outliers, that is observations that are very unlike the 'typical' observation in a normal model, without such a strong effect on your analysis. Basically, the normal distribution doesn't like extreme events. When an extreme event *does* occur, this will result in an increase in your standard deviation estimate so that the extreme event seems less extreme. Since the t distribution encompasses more extreme events, they do not have such a strong effect on estimates of model parameters.
  
 ```{r}
 ptns (min (resids),m, s, df) / 
@@ -716,13 +724,13 @@ ptns (min (resids),m, s, df) /
 
 ### Description of the model
 
-We can update our model to include the fact that we now are modeling our height responses using a t-distribution, in the first line of the model description. We also add the prior for the $\nu$ (degrees of freedom) parameter to our model in the last line ofthe model. 
+We update our model to include the fact that we now are modeling our height responses using a t-distribution, in the first line of the model description. We also add the prior for the $\nu$ (degrees of freedom) parameter to our model in the last line of the model. 
 
 $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathcal{t}(\mu_{[i]},\sigma, \nu) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}]}  + L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 L_{[\bullet]} \sim N(0,\sigma_L) \\
 S_{[\bullet]} \sim N(0,\sigma_S) \\
@@ -738,7 +746,7 @@ A1 \sim N(0,12) \\
 \end{equation}
 $$
 
-The prior we have set for the $\nu$ parameter is seen below. This is the default prior set by `brms` but we are explicitly stating it just to be clear. We can see what this prior looks like using the `dgamma` and `curve` functions to draw the density of a gamma distribution with those parameters, as seen below. This pproach can also be taken to investigate the conequences of tweaking the distribution parameters, as see below. Remember that it is not so important if the prior of $\nu$ *really* has the shape of a gamma distribution with those parameters. Instead we need to worry about whether the density distributed credibility in the right places, and this one basically does.  
+The prior we have set for the $\nu$ parameter is seen below. This is the default prior set by `brms` but we are explicitly stating it just to be transparent. We can see what this prior looks like using the `dgamma` and `curve` functions to draw the density of a gamma distribution with those parameters, as seen below. This approach can also be taken to investigate the consequences of tweaking the distributional parameters, as see below. Remember that it is not so important if the prior of $\nu$ *really* has the shape of a gamma distribution with those parameters. Instead we need to worry about whether the density distributed credibility in the right places, and the default one basically does.  
 
 ```{r F58, fig.height = 3, fig.width = 8, fig.cap='(left) The density of a gamma distribution with the parameters specified in our model. (right) The log-density of the distribution in the left panel.', echo = TRUE}
 
@@ -756,9 +764,10 @@ curve (dgamma(x,2,0.02), xlim = c(1,250), xaxs='i', ylab="Density",xlab="",
 curve (dgamma(x,2,0.02), xlim = c(1,250), log='y', xaxs='i', ylab="Log Density",
        xlab="", lwd=4, col = lavender, yaxs='i', ylim = c(10^-7,0.05))
 ```
+
 ### Fitting and interpreting the model
 
-Below we fit the new model described in \@ref(eq:54). This model is exactly like our `model_sum_coding` model save for two differences. First, we specify that our error distribution is a t-distribution rather than gaussian by setting `family="student"`. Second, we set the prior probability for a new special class of parameter `nu` that is specific to the t distribution. We use the default prior for `nu` used by `brm`, but we explicitly state it in the model for clarity. 
+Below we fit the new model described in \@ref(eq:54). This model is exactly like our `model_sum_coding` model save for two differences. First, we specify that our error distribution is a t-distribution rather than Gaussian by setting `family="student"`. Second, we set the prior probability for a new special class of parameter (`nu`) that is specific to the t distribution. We use the default prior for `nu` used by `brm`, but we explicitly state it in the model for clarity. 
 
 ```{r}
 # Fit the model yourself
@@ -766,11 +775,11 @@ set.seed (1)
 model_sum_coding_t =  
   brms::brm (height ~ A + (1|L) + (1|S), data = notmen, chains = 4, cores = 4,
        warmup = 1000, iter = 3500, thin = 2, family="student",
-       prior = c(brms::set_prior("student_t(3, 156, 15)", class = "Intercept"),
-                 brms::set_prior("student_t(3, 0, 15)", class = "b"),
-                 brms::set_prior("student_t(3, 0, 15)", class = "sd"),
+       prior = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
+                 brms::set_prior("student_t(3, 0, 12)", class = "b"),
+                 brms::set_prior("student_t(3, 0, 12)", class = "sd"),
                  brms::set_prior("gamma(2, 0.1)", class = "nu"),
-                 brms::set_prior("student_t(3, 0, 15)", class = "sigma")))
+                 brms::set_prior("student_t(3, 0, 12)", class = "sigma")))
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
@@ -780,15 +789,14 @@ model_sum_coding_t = bmmb::get_model ('5_model_sum_coding_t.RDS')
 model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
 ```
 
-
-And inspect the short summary:
+We inspect the short summary:
 
 ```{r, collapse = TRUE}
 # inspect model
 bmmb::short_summary (model_sum_coding_t)
 ```
 
-We see that there is a new line in the family-specific parameters corresponding to our estimate of $\nu$. Again, we get a mean for this parameter and credible intervals. Although the `sigma` parameter above gets the same label as the $\sigma$ parameter in our normally-distributed models above, recall that this corresponds to the scale parameter of the non-standardized t distribution, and not the a standard deviation parameter. To recover the standard deviation we can carry out the operation given in X. The result of this is that our model is actually estimating a very similar standard deviation to what we find using a normal error (8.62 in `model_sum_coding`).
+And see that there is a new line in the family-specific parameters corresponding to our estimate of $\nu$. Again, we get a mean for this parameter and credible intervals. However, the `sigma` parameter reported by this model corresponds to the scale parameter of the non-standardized t distribution, and not the a standard deviation parameter. To recover the standard deviation we can carry out the operation given in \@ref(eq:53). The result of this is that our model is actually estimating a very similar standard deviation to what we find using a normal error (8.62 in `model_sum_coding`).
 
 ```{r}
 nu = 7.37
@@ -804,22 +812,11 @@ fixef (model_sum_coding)
 fixef (model_sum_coding_t)
 ```
 
-We may wonder, is it worth it to use t-distributed errors? On the one hand, we know that our error residuals sure don't seem to be normally distributed, which suggests that an important violation of the model we used in `model_sum_coding` is being violated. On the other hand, we know that no model is perfect, that we should never expect that our model will exactly match an underlying process, and that as a result we will always have to ignore slight misalignments between what our model and 'reality'. We need a principled way to think about whether an addition to a model is "worth it", and our approach will have to be more sophisticated than glancing at model output and seeing if things have changed. We will return to this topic in the next chapter. 
+We may wonder, is it worth using t-distributed errors? On the one hand, we know that our error residuals sure don't seem to be normally distributed, which suggests that an important violation of the model we used in `model_sum_coding` is being violated. On the other hand, we know that no model is perfect, that we should never expect that our model will exactly match an underlying process. As a result we will always have to ignore slight misalignments between what our model and 'reality'. So, when do we care that a model is 'wrong' and when do we not care that it's wrong? We need a principled way to think about whether an addition to a model is "worth it", and our approach will have to be more sophisticated than glancing at model output and seeing if things have changed. We will return to this topic in the next chapter. 
 
 ## Simulating the two-group model
 
-As in the last chapter, we're going to make fake data has the same properties as our real data by adding up its component parts. First, there is an intercept equal to 157 cm. The next step is to create a vector of length two that contains the effects for the adult and child groups. Notice that we are *not* drawing these values from a probability distribution. Instead we are treating these as effects as fixed for all speakers, for future experiments, etc. (hence the 'fixed effects' nomenclature). For the purposes of our simulated data, this means that these effects will be consistent across any number of simulations you run. In contrast, note that the `L_L` and `S_S` values (representing $L_{[\bullet]}$ ans $S_{[\bullet]}$) *are* drawn from a probability distribution. This is because every time we simulate our data (or re-run our experiment), we may encounter different speakers and listeners with totally different effects. 
-
-We need to highlight something that's very important about the way we are simulating our speaker and listener effects. When we simulated data last chapter, we saw that $\varepsilon$ do not distinguish between listeners. Instead our error variable is 'the same' accross groups and is divided arbitrarily among them. In the same way, our draws of $L_{[\bullet]}$ do not distinguish between our child and adult groups. Notice that all 100 speaker effects are drawn from the same distribution of speakers below. We can see this same behavior reflected in the print statement of our `model_sum_coding` model, which contains this text:
-
-```{r, eval = FALSE}
-~S (Number of levels: 94) 
-              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(Intercept)     2.86      0.30     2.31     3.48 1.00     2606     3696
-```
-
-We know that these speakers are divided into two groups, adults and children. However, our model is treating these as 94 observations from a single group with a standard deviation of 2.86 and a mean of zero. Rather than reflect differences between adult and child speakers in the characteristics of the random effects, our model does so with the fixed effects. What we mean by this is that our model represents differences between children and adults using the `A1` parameter, and so does not need to so do using the random effects. This is analogous to the way in which we draw our random error around 0, and then move these errors around the number line by adding them to (for instance) our listener effects.   
-
+As in the last chapter, we're going to make fake data has the same properties as our real data by adding up its component parts. First, there is an intercept equal to 157 cm. The next step is to create a vector of length two that contains the effects for the adult and child groups. Notice that we are *not* drawing these values from a probability distribution. Instead we are treating these effects as fixed for all speakers, for future experiments, etc. (hence the 'fixed effects' nomenclature). For the purposes of our simulated data, this means that these effects will be consistent across any number of simulations you run. In contrast, note that the `L_L` and `S_S` values (representing $L_{[\bullet]}$ ans $S_{[\bullet]}$) *are* drawn from probability distributions. This is because every time we simulate our data (or re-run our experiment), we may encounter different speakers and listeners with totally different effects. 
 
 ```{r}
 n_listeners = 15
@@ -847,8 +844,17 @@ epsilon = rnorm (n_speakers*n_listeners, 0, 8.3)
 height_rep = Intercept + A_[A] + L_[L] + S_[S] + epsilon
 ```
 
+We need to highlight something that's very important about the way we are simulating our speaker and listener effects. When we simulated data last chapter, we saw that $\varepsilon$ do not distinguish between listeners. Instead our error variable is 'the same' across groups and is divided arbitrarily among them. In the same way, our draws of $S_{[\bullet]}$ do not distinguish between our child and adult groups. Notice that all 100 speaker effects are drawn from the same distribution of speakers below. We can see this same behavior reflected in the print statement of our `model_sum_coding` model, which contains this text:
 
-Below we make three datasets that are 'incomplete': the first contains the intercept and noise only, the second contains the intercept and adultness effects only, and the third contains the intercept and speaker effects.
+```{r, eval = FALSE}
+~S (Number of levels: 94) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     2.86      0.30     2.31     3.48 1.00     2606     3696
+```
+
+We know that these speakers are divided into two groups, adults and children. However, our model is treating these as 94 observations from a single group with a standard deviation of 2.86 and a mean of zero. Rather than reflect differences between adult and child speakers in the characteristics of the random effects, our model does so with its fixed effect structure. What we mean by this is that our model represents differences between children and adults using the `A1` parameter, and so does not need to so do using the random effects. This is analogous to the way in which we draw our random error around 0, and then move these errors around the number line by adding them to (for instance) our listener effects.   
+
+Below we make five data sets that are 'incomplete': the first contains the intercept and noise only, the second contains the intercept and adultness effects only, the third contains the intercept and speaker effects, and the fourth contains the intercept, adultness effect and the error. The fifth 'incomplete' data set is *almost* complete, it contains everything in our full model save for the speaker effects.   
 
 ```{r}
 # only intercept and error
@@ -857,61 +863,57 @@ height_rep_1 = Intercept + epsilon
 height_rep_2 = Intercept + A_[A]
 # only intercept and speaker
 height_rep_3 = Intercept + L_[L]
-```
-
-In the figure below, we compare these 'incomplete' datasets to show the contribution that each makes to our data. Notice that the random error variation and speaker variation are centered on the intercept, rather than being affected by the adultness effect. Below we can make a few more datasets that mix more components, and compare these to our final simulated data. In each of the datasets shown in these figures, we can see what each source of variance contributes to the data by seeing how the figures change when the source is omitted from the replicated data.
-
-```{r}
 # intercept, adultness and error
 height_rep_4 = Intercept + A_[A] + epsilon
 # intercept, adutlness and speaker
 height_rep_5 = Intercept + A_[A] + L_[L] + epsilon
 ```
-```{r F58, fig.width = 8, fig.height = 5, fig.cap="(top) Combination of error variation and effect for adultness. (middle) Combination of between-speaker variation and effect for adultness, but no production error. (bottom) Simulated data containing within and between-speaker variation in f0, in addition to the effects of adultness.", echo = FALSE}
+
+In figure \@ref(fig:F58) we compare our incomplete, simulated data to our real data. In each of the figures, we can see what each source of variance contributes to the data by seeing how the figures change when the source is omitted from the replicated data.
+
+```{r F58, fig.width = 8, fig.height = 5, fig.cap="Boxplots comparing diffierent simulated datasets to the real data. ", echo = FALSE}
 
 ################################################################################
-### Figure 3.11
+### Figure 5.8
 ################################################################################
 
-par (mfrow = c(3,2), mar = c(1,3,1,1), oma = c(0,2,0,0))
+par (mfrow = c(3,2), mar = c(1,1,.5,.1), oma = c(0,3,1,1))
 boxplot (height_rep_1 ~ L, ylim = c(100,200),xaxt='n',
-         col=c(rep(teal,19),rep(coral,48)))
-text (5, 290, label = expression(paste(sigma["error"])), cex = 1.5)
+         col=c(rep(teal,19),rep(coral,48)),ylab="")
+text (1, 105, label = "Intercept + error", cex = 1.25,pos=4)
 abline (h=229,lty=2)
 
 boxplot (height_rep_2 ~ A + L, ylim = c(100,200),xaxt='n',
-         col=c(rep(teal,19),rep(coral,48)))
+         col=c(rep(teal,19),rep(coral,48)),ylab="",yaxt="n")
 abline (h=229,lty=2)
-text (5, 290, label = expression(paste(sigma["adult"])), cex = 1.5)
+text (1, 105, label = "Intercept + A", cex = 1.25,pos=4)
 
 boxplot (height_rep_3 ~ L, ylim = c(100,200),xaxt='n',
-         col=c(rep(teal,19),rep(coral,48))  )
+         col=c(rep(teal,19),rep(coral,48)),ylab="")
 abline (h=229,lty=2)
-text (5, 290, label = expression(paste(sigma["speaker"])), cex = 1.5)
+text (1, 105, label = "Intercept + L", cex = 1.25,pos=4)
 
-mtext (side=2,text="f0", outer = TRUE, line=0)
 boxplot (height_rep_4 ~ A + L, ylim = c(100,200),xaxt='n',
-         col=c(rep(teal,19),rep(coral,48)))
-text (10, 300, label = expression(paste(sigma["adult"]+sigma["error"])), cex = 1.5)
+         col=c(rep(teal,19),rep(coral,48)),ylab="",yaxt="n")
+text (1, 105, label = "Intercept + A + error", cex = 1.25,pos=4)
 abline (h=229,lty=2)
 
 boxplot (height_rep_5 ~ A + L, ylim = c(100,200),xaxt='n',
-         col=c(rep(teal,19),rep(coral,48)))
+         col=c(rep(teal,19),rep(coral,48)),ylab="")
 abline (h=229,lty=2)
-text (10, 300, label = expression(paste(sigma["adult"]+sigma["speaker"])), cex = 1.5)
+text (1, 105, label = "Intercept + A + L + error", cex = 1.25,pos=4)
 
 boxplot (height ~ A + L, ylim = c(100,200),xaxt='n',data = notmen,
-         col=c(rep(teal,19),rep(coral,48)))
+         col=c(rep(teal,19),rep(coral,48)),ylab="",yaxt="n")
 abline (h=229,lty=2)
-text (25, 300, label = expression(paste(sigma["adult"]+sigma["speaker"]+sigma["error"])), cex = 1.5)
+text (1, 105, label = "Real Data", cex = 1.25,pos=4)
 
-mtext (side=2,text="f0", outer = TRUE, line=0)
+mtext (side=2,text="Height (cm)", outer = TRUE, line=2)
 ```
-
 
 ## But what does it all mean?
 
-We have fit and interpreted a model, discussed the details of the results and seen several representations of the data. At this point we need to think about what it all 'means' in terms of our research questions:
+We've fit and interpreted a model, discussed the details of the results, and seen several representations of the data. At this point we need to think about what it all 'means' in terms of our research questions:
 
   (Q1) How tall do speakers perceived as adult females sound? 
   
@@ -921,50 +923,45 @@ We have fit and interpreted a model, discussed the details of the results and se
  
 Although these questions are framed in terms of differences between means, a full accounting of the patterns in our data will also discuss the random and systematic variation in our data. Below, we consider the distribution of height judgments across listeners and age groups, as in figure \@ref(fig:F51). However, this time information about the grand mean and the expected adult and child average apparent heights is presented on the figure.  
 
-```{r F59, fig.height = 3.5, fig.width=8, fig.cap = "--", echo = FALSE}
+```{r F59, fig.height = 3.5, fig.width=8, fig.cap = "(left) Distribution of apparent heights according to apparent age group. (rght) Same as left panel but presented individually for each listener. In each case, the first box of each color (the upper box) indicates responses for speakers judged to be adults.", echo = FALSE}
 
 ################################################################################
-### Figure 5.1
+### Figure 5.3
 ################################################################################
 
-par (mfrow = c(1,2), mar = c(4,.1,1,.1), oma = c(0,4,0,0)); 
-layout (mat = t(c(1,2)), widths = c(.75,.25))
-boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(100,200),
-         xaxt='n', xlab="Listener")
-abline (h = c(157+8.2, 157, 157-8.2), lty=c(3,1,3))
-boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(100,200),
-         xaxt='n',add=TRUE)
-axis (side=1, at = seq (1.5,30.5,2), labels = 1:15)
+par (mfrow = c(1,2), mar = c(4.1,.1,.5,.1),oma = c(0,4,0,.50)); layout (mat = t(c(1,2)), widths = c(.2,.8))
 
-boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(100,200), 
-         yaxt='n',ylab='',xlab="Age Group")
-abline (h = c(157+8.2, 157, 157-8.2), lty=c(3,1,3))
+boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="")
+mtext (side=1, "Apparent Age Group", line=3)
 
-mtext (side=2,outer=TRUE,text="Height (cm)",line=2.5,adj=0.6)
+mtext (side = 2, outer = FALSE, "Height (cm)", line = 2.75)
+boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
+         ylab="",yaxt="n", xaxt="n",xlab="Listener")
+axis (side=1, at = seq(1.5,30.5,2), 1:15)
+
 ```
 
 An look at our results (and figures) so far suggests that: 
 
 * The magnitude of between-listener and speaker variation is much smaller than the difference between the adult mean and the child mean (4.5 and 2.9 cm, vs 16 cm). This means that the group differences are not overwhelmed by random variation due to differences between the characteristics of speakers and the tendencies of listeners.  
 
-* The magnitude of the random error, i.e. the variation given a certain listener, speaker *and* apparent age judgment, is 8.3 cm. This is larger that the between-listener and between-speaker variation in our data. This means that for any two adults or children selected at random, the expected difference between them will be smaller than the variability in repeated height estimation for any given voice. So, we see that our height judgments are noisy and that this noisiness overwhelms at least some of the variation in our data
+* The magnitude of the random error, i.e. the variation given a certain listener, speaker *and* apparent age judgment, is 8.3 cm. This is larger that the between-listener and between-speaker variation in our data. This means that for any two adults or children selected at random, the expected difference between them will be smaller than the variability in repeated height estimation for any given voice. So, we see that our height judgments are noisy and that this noisiness overwhelms at least some of the systematic variation in our data
 
-* However, the difference in apparent height due to apparent age (16 cm in total) is twice as large as the random error and larger than the between speaker and between listener variation. This means that the systematic variation in apparent height due to apparent age is expected to be quite salient even in the face of the noisiness of our data. 
+* However, the difference in apparent height due to apparent age (17 cm in total) is twice as large as the random error and larger than the between speaker and between listener variation. This means that the systematic variation in apparent height due to apparent age is expected to be quite salient even in the face of the noisiness of our data. 
 
 If we were reporting this is in a paper, based on the sum coded model we might say something like:
 
 > "The overall mean apparent height across all speakers was 156 cm (sd = 1.3, 95% CI = [154.2, 159.2]). Mean apparent height was 164.9 cm (sd = 2.9, 95% CI = [215, 226]) for adult females, and 148.5 cm (sd = 1.38, 95% CI = [146.0, 151.1]) for children. The difference between the group means was 16.4 cm (sd = 0.44, 95% CI = [15.5,  17.2]). The standard deviation of the listener and speaker effects were 4.5 cm (s.d = 1.0, 95% CI = [3.1, 6.9]) and 2.9 cm (s.d = 0.30, 95% CI = [2.3, 3.5]) respectively, while the estimated residual error was 8.3 cm (s.d = 0.1, 95% CI = [8.1, 8.6]). Overall, results indicate a reliable difference in apparent speaker height due to apparent age which is larger than the expected random variation in apparent height judgments".  
 
-Notice that to report the difference between groups, I have just doubled the value of the estimated effect for `adult1`. This is because this reflects the distance of each group to the intercept, and therefore *half* of the distance between the two groups.
+Notice that to report the difference between groups, we just double the value of the estimated effect for `adult1`. This is because this reflects the distance of each group to the intercept, and therefore *half* of the distance between the two groups.
 
 ## Frequentist corner
 
 In frequentist corner, we're going to compare the output of `brms` to some more 'traditional', often called *frequentist* approaches. We're not going to talk about the traditional models in much detail since there are hundreds of other sources for this, and this book is long enough as it is (see section @@ for suggestions). The focus of these sections is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, feel free to skip these sections of the book, although they may still be helpful.  
 
-
 ### Bayesian multilevel modesl vs. lmer
 
-Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the lme4 R package. Below we fit a model that is analogous to our `model_sum_coding` model. Since we set contrasts to sum coding using the options above, this will still be in effect for this model. If you have not done so, run the line:
+Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the `lme4` package in `R`. Below we fit a model that is analogous to our `model_sum_coding` model. Since we set contrasts to sum coding using the options above, this will still be in effect for this model. If you have not done so, run the line:
 
 ```{r, eval = FALSE}
 options (contrasts = c("contr.sum","contr.sum"))

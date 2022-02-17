@@ -594,11 +594,16 @@ sigmas = short_hypothesis(model_t_het, "sigma_Intercept = 0",
 
 We compare these in the plot below,  exponenting the recreated sigma values to get the listener-specific standard deviation terms. 
 
-```{r, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+```{r F66, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+
+################################################################################
+### Figure 6.6
+################################################################################
+
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 brmplot (sigmas_centered, col = cols)
 brmplot (exp(sigmas), col = cols, ylim = c(1,13))
-abline (h = 7.71)
+#abline (h = 7.71)
 ```
 
 ## Model Comparison
@@ -655,14 +660,16 @@ for (i in 1:iter){
 }
 ```
 
-The above simulations result in six sets of likelihoods: In sample and out of sample likelihoods for the true model and for two other overly-complicated models. The average of each of these six likelihoods is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less probable* outcome. We can see that the In sample 
+The above simulations result in six sets of likelihoods: In sample and out of sample likelihoods for the true model and for two other overly-complicated models. The average of each of these six likelihoods is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less probable* outcome. We can see that the in sample likelihood increases as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the underlying process or to the dependent variable. Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do at least as well as the model with fewer possible explanations. Although the extra parameters increase the in sample prediction, they actually make the out of sample prediction worse. Why? @@ come back
 
 
-```{r F66}
+In contrast, the out of sample prediction gets steadily worse as more predictors are added. In other words, including 'extra' predictors in your model will help explain any data better, however, the additional predictors may not necessarily result in better out of sample prediction, and may actually make things worse.  
+
+
+```{r F66, fig.height = 4, fig.width = 7, fig.cap="--", cache = TRUE, echo = FALSE}
 ################################################################################
 ### Figure 6.6
 ################################################################################
-
 
 means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
 
@@ -682,10 +689,13 @@ legend (3.4,-70.5, legend= c("In sample","Out of sample"),
 
 ```
 
+In the example above we knew the true underlying model and generated out of sample data that exactly conformed to the characteristics of our sample. In real life, researchers do not usually have access to real out of sample data, nor do they they the characteristics of the 'true' model that underlies the data. As a result, 
 
-Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do at least as well as the model 
 
-In general we dont know what the difference between they two, but we do know that they tend to diverge at a certain rate. fixed slopes, uncertain intercept difference. Clever people have taken advantage of this from time.
+
+In real life, we 
+
+we dont know what the difference between they two, but we do know that they tend to diverge at a certain rate. fixed slopes, uncertain intercept difference. Clever people have taken advantage of this from time.
 
 
 
@@ -848,4 +858,41 @@ text ((1:4)+.1, -71, labels = round(c(means[1]-means[5],means[2]-means[6],
                                 means[3]-means[7],means[4]-means[8]),2))
 ```
 
+
+
+
+
+```{r}
+model_formula = brms::bf(height ~ A + (A|L))
+
+priors = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
+          brms::set_prior("student_t(3, 0, 12)", class = "b"),
+          brms::set_prior("student_t(3, 0, 12)", class = "sd"),
+          brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+          brms::set_prior("student_t(3, 0, 1.5)", class = "Intercept", dpar = "sigma"),
+          brms::set_prior("student_t(3, 0, 1.5)", class = "sd", dpar = "sigma"))
+
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+tmpp_modd = 
+  brms::brm (model_formula, data = notmen, chains = 4, cores = 4,
+             warmup = 1000, iter = 3500, thin = 2,  prior = priors)
+```
+
+
+```{r}
+sigmas_centered = short_hypothesis(tmpp_modd, "sigma_Intercept = 0", 
+                                   scope = "ranef",group="L")
+sigmas = short_hypothesis(tmpp_modd, "sigma_Intercept = 0", 
+                          scope = "coef",group="L")
+```
+
+We compare these in the plot below,  exponenting the recreated sigma values to get the listener-specific standard deviation terms. 
+
+```{r, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+brmplot (sigmas_centered, col = cols)
+brmplot (exp(sigmas), col = cols, ylim = c(2.5,12.3))
+abline (h = 6.55)
+```
 

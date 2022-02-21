@@ -1,6 +1,6 @@
 \newpage
 
-# Variation in parameters and error variance, and model comparison 
+# Variation in parameters, error variance, and model comparison 
 
 Before powerful computers were easily available, statisticians had to come up with clever solutions to answer difficult questions. The reason for this is that things needed to be solved with pen and paper, or eventually calculators, and this ruled out extremely time-consuming solutions such as sampling from the posterior distribution of models as complicated as the ones discussed here. Approaches to answer commonly-encountered experimental designs (and corresponding data structures) often involved making simplifying assumptions that make arriving at a solution simpler. For example, when comparing two groups statisticians might say "we can solve this problem if we assume that the errors are normally distributed and that the error variance is the same across all conditions". These assumptions are rarely true in practice (and never *exactly* true in reality), but are usually close enough to the truth to make our models be useful. There is nothing particularly 'wrong' with making these assumptions. However, when we build our own Bayesian models we don't need to make them, and so it is worth considering if we might benefit from making other sort of assumptions. 
 
@@ -43,7 +43,7 @@ notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',
 notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
 ```
 
-We recreate figure \ref(fig:51) as figure \ref(fig:61) below to show the distribution of apparent height by listener, and across apparent ages. We can use this figure that some of the design choices we used to build our model in the last chapter may not be totally valid for this data. First, we see that the effect of apparent age, the separation between the two boxes for each speaker, does appear to vary substantially between listeners. Second, we see that the error for this model, reflected by the width of the boxes, also seem to vary between listeners, and so many not be equal across all conditions. Third, our figure shows the presence of substantial numbers of outliers, the points individually plotted (beyond the *whiskers* for each box), suggesting that the error distribution may be more like a t-distribution than a normal one.  
+We recreate figure \ref(fig:51) as figure \ref(fig:61) below to show the distribution of apparent height by listener, and across apparent ages. We can use this figure that some of the design choices we used to build our model in the last chapter may not be totally valid for this data. First, we see that the effect of apparent age, the separation between the two boxes for each speaker, does appear to vary substantially between listeners. Second, we see that the error for this model, reflected by the width of the boxes, also seem to vary between listeners, and so many not be equal across all conditions. Third, our figure shows the presence of substantial numbers of outliers, the points individually plotted (beyond the *whiskers* for each box), suggesting that the error distribution may be more like a t-distribution than a normal one. In this chapter we are going to build models that allow for all of these details in the data to be estimated and represented by the model. However, before continuing to make our model more complicated we're going to address the question: Is any of this worth it?
 
 ```{r F61, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
 
@@ -56,6 +56,367 @@ boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(100,200))
 
 boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(100,200))
 ```
+
+## Model Comparison
+
+Bayesian models allow you to fit rather complicated 'bespoke' models for your data. A potential problem with this is at some point your model may be 'good enough' such that, although further tweaks could be made, they are no longer contributing any practical benefit to your model. In fact, you can build a model that is so good at predicting your own data that it can actually become bad at understanding the subject of investigation more generally. In this section we will offer a high-level conceptual understanding of Bayesian model comparison, along with an explanation of how to carry it out. For more information on the subject we recommend reading chapter X of the truly excellent *Statistical Rethinking* (cite). For an even more thorough treatment on the subject please see X and X. 
+
+An analogy can be made between model fitting and bespoke clothing made at a tailor. You can go to a tailor and get a shirt made that exactly fits your body proportions. We can consider that this involves altering the length of the sleeves relative to torso length, adjusting the circumference of the sleeves and torso independently, and perhaps even making each sleeve a lightly different length. Let's imagine that tailoring the perfect shirt for a human body usually involved adjusting ten 'shirt parameters' to ensure a perfect fit for an individual. Despite this, when you go to a store to buy a shirt, there is usually one parameter, size, and it often comes in a small number of variants (e.g. small, medium, large). Since the shirts vary only in a small number of way, they are very unlikely to fit any individual perfectly. Why do stores intentionally sell clothing that doesn't fit people as well as they could? Because the store is interested in selling clothes that fit everyone *pretty well*, rather than selling clothes that fit everyone perfectly. To sell clothes that fit everyone perfectly, the store would need to carry dozens or hundreds of models for each shirt. Each model would only be useful to a small number of people and would be useless for a large number of people. In contrast, by having a small number of models that fit the most people 'pretty well', the store can carry a small number of models and apply them successfully to customers in general.  
+
+This general problem is sometimes referred to as the **bias-variance tradeoff**. These are specialized uses of the words *bias* and *variance*. In this case *bias* refers to the model's ability to represent the 'true' relationship the underlies the data, and variance refers to the degree to which the model can offer consistent predictions to new data sets. Suppose we own a shirt store. When we first design we may use a model to design the fit of the shirt, and *fit* to shirt to this person's body. We can tailor it exactly to their body, which would result in a low bias. However, this would result in a high variance since it would not be as likely to fit others well. On the other hand if we specifically do not fit the shirt exactly to the model, we chose a fit with a higher bias. Although the fit may not be as perfect for the model, such a shirt design may fit other people better in general, and so have a lower variance. If we were to choose the low bias shirt for sale to the general public, this would be an example of *overfitting*. The problem with the overfit shirt is that while it is perfect for our model, it is not suitable for its purpose, which is to fit everyone at least *pretty well*. 
+
+In terms of statistical models, a model is **overfit** when it correspond to closely to the data that was used to fit it (the **in-sample data**), to the detriment of its ability to explain new datasets (the **out-of-sample data**). A model that is able to predict the in-sample data with high accuracy is generally desirable, but not if it cannot predict the characteristics of out of sample data. Recall that our models are usually employed to carry our inductive reasoning: Going from a limited number of observations to the general case. In light of this, overfitting a model is exactly contrary to the goals of inductive inference. A model that does a poor job of generalizing to new observations is not useful to carry out induction. Furthermore, a model that cannot explain out-of-sample data will not hold up to replication, which should be a concern for any researcher. 
+
+
+
+```{r}
+set.seed(1)
+x = -4:4
+y = x*0.1 + rnorm (9,0,2)
+tmp_dat = data.frame(y,x)
+n = length(x)
+
+par (mfrow = c(1,3), mar =c(4,4,1,1))
+
+plot (tmp_dat$x,tmp_dat$y,xlim = c(-5,5), ylim = c(-4,4),pch=16,col=4,cex=2)
+for (i in 1:n){
+  X = lm(y~x,tmp_dat[-i,])$coefficients
+  x = seq(-5,5,0.01)
+  y_hat = X[1] + X[2]*x
+  lines (x,y_hat)
+}
+
+plot (tmp_dat$x,tmp_dat$y,xlim = c(-5,5), ylim = c(-4,4),pch=16,col=4,cex=2)
+for (i in 1:n){
+  X = lm(y~x+I(x^2),tmp_dat[-i,])$coefficients
+  x = seq(-5,5,0.01)
+  y_hat = X[1] + X[2]*x + X[3]*x^2
+  lines (x,y_hat)
+}
+
+plot (tmp_dat$x,tmp_dat$y,xlim = c(-5,5), ylim = c(-4,4),pch=16,col=4,cex=2)
+for (i in 1:n){
+  X = lm(y~x+I(x^2)+I(x^3)+I(x^4)+I(x^5)+I(x^6)+I(x^7),tmp_dat[-i,])$coefficients
+  x = seq(-5,5,0.01)
+  y_hat = X[1]+X[1]*x+X[2]*x^2+X[3]*x^3+X[4]*x^4+X[5]*x^5+X[6]*x^6+X[7]*x^7+X[8]*x^8
+  lines (x,y_hat)
+}
+
+```
+
+
+
+In this section we are going to discuss three ways that we can test our models to make sure they generalize well, and then we are going to put these methods into practice to investigate whether the increased complexity we have discussed to this point is justified for our model. We will focus on a conceptual understanding of model comparison, and on developing practical skills. For a more thorough (and excellent) presentation of these topics please see stat reth. For an even more thorough treatment of these topics please see paper1 and paper2. 
+
+### In-sample prediction
+
+The simplest, and worst, way to consider out of sample prediction is by simply looking at the in sample prediction. Generally speaking, adding more and more predictors and making more and more complicated models will improve the fit of your model to the data you have, i.e. your in sample prediction. However, if the predictors are not related to true characteristics of the underlying model, they will also tend to decrease the fit of the model to new data. The 'common sense' analogy of the tailored clothing actually works perfectly for statistical models: A model that is perfectly suited to one particular set of data is, by its very nature, unlikely to generalize well to other models. 
+
+We can demonstrate this for some very simple models using simulations. In the code below, we generate three random variables consisting only of the values -1 and 1. We then use only the second one to 'simulate' some random data, and we add random Gaussian error to this fake variable. After this we generate two sets of data, an in sample and an out of sample set. We then fit three models to both data sets. These models include increasingly more predictor variables, however, we know that only the first one is useful to understand the underlying process. The models are fit with recognizable model formulas, though they use a function that we have not discussed to this point. The `lm` (linear model) function uses maximum-likelihood estimation (see section X) to fit regression models with relatively simple structures. We are going to use it here because it estimates regression parameters very quickly and therefore is reasonable to use when we want to fit 3000 models in no more than five seconds. We use the predicted values and $\sigma$ estimates provided by our maximum-likelihood models to estimate the likelihood of the entire model by adding together the log density over every individual observation (see X and X). 
+
+```{r, cache = TRUE}
+n = 50         # how many observations
+iter = 1000    # how many simulations
+# these will hold the model log likelihoods for each iteration
+in_sample_ll = matrix (0, iter, 3)
+out_of_sample_ll = matrix (0, iter, 3)
+
+set.seed(1)
+for (i in 1:iter){
+  # create 3 random predictors
+  x1 = sample (c(-1,1), n, replace=TRUE)
+  x2 = sample (c(-1,1), n, replace=TRUE)
+  x3 = sample (c(-1,1), n, replace=TRUE)
+
+  # generate the observed (in sample) data with an  
+  # underlying process that only uses the x1 predictor
+  y_in = 1 + x1 + rnorm (n, 0, 1)
+  # use the same process to simulate some "out of sample" data
+  y_out = 1 + x1 + rnorm (n, 0, 1)
+ 
+  for (j in 1:3){
+    # fit three models, the first using the real underlying model
+    if (j==1) mod = lm (y_in ~ 1+x1)
+    # the next two include random useless predictors
+    if (j==2) mod = lm (y_in ~ 1+x1 + x2)
+    if (j==3) mod = lm (y_in ~ 1+x1 + x2 + x3)
+    
+    # find the predicted value (mu) for each data point
+    yhat = mod$fitted.values
+    # and the estimated sigma parameter
+    sigma = summary(mod)$sigma
+    
+    in_sample_ll[i,j] = sum (dnorm (y_in, yhat, sigma, log = TRUE))
+    out_of_sample_ll[i,j] = sum (dnorm (y_out, yhat, sigma, log = TRUE))
+  }
+}
+```
+
+The above simulations result in six sets of likelihoods: In sample and out of sample likelihoods for the true model and for two other overly-complicated models. The average of each of these six likelihoods is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less probable* outcome. We can see that the in sample likelihood increases as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the underlying process or to the dependent variable. Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do at least as well as the model with fewer possible explanations. Although the extra parameters increase the in sample prediction, they actually make the out of sample prediction worse. Why? Because you (and your models) can always make up a story to explain some limited number of observations. You watch your friend rub her lucky hat before sinking free throws in a basketball game and infer that rubbing your lucky hat increases the probability of making a basket. If you were to apply this model to new data, you would realize that it does a poor job of explaining variation in free throw percentage between and within players. [@@ SB - the example is not good but its hard to explain without getting into causal stuff, the 'real' process model, etc. maybe this need to be explained already , or even in this chapter??]. 
+
+```{r F66, fig.height = 4, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.6
+################################################################################
+
+means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
+
+par (mfrow = c(1,2), mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "Model log-likelihhod",xlab="Predictors")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+arrows (1,means[1]-0.2, 1,means[4]+0.2,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[5]+0.2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[6]+0.2,code=3, length=0.1,lwd=2)
+text ((1:3)+.1, -71, labels = round(c(means[1]-means[4],means[2]-means[5],
+                                means[3]-means[6]),2))
+text (0.8,c(-69.25,-73.2), labels = c("More Likely","Less likely"), pos=4)
+
+mtext (side=2,text = "Log-likelihood", line = 2.5)
+#legend (3.4,-70.5, legend= c("In sample","Out of sample"), 
+#        col=c(1,2), lwd=2,bty="n")
+
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
+arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
+
+text (1:3, means[1:3]+.25, labels = means[1:3])
+text (1:3, means[4:6]-.25, labels = means[4:6])
+text (1:3, means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
+
+
+```
+
+In many situations, we care more, or perhaps exclusively, about out of sample prediction. When someone carries out a perceptual experiment they want to make statements about listeners in general and not only those that carried out the experiment. This means that when we evaluate our models, we may need to consider the out of sample prediction more than the in sample prediction. 
+
+### Out of sample prediction: Penalization
+
+In the example in figure \@ref(fig:F66) we knew the true underlying model and generated out of sample data that exactly conformed to the characteristics of our sample. In real life, researchers do not usually have access to out of sample data, they do not know the characteristics of the 'true' model that underlies their data, nor can they confirm that any out of sample data shares the exact underlying process as their in sample data. As a result, we can never *really* know what the difference is between in sample and out of sample prediction for our models. However, you may have noticed that: 1) The slopes of the lines in figure \@ref(fig:F66) seemed to have predictable slopes, 2) The lines seem to be a mirror image of each other. Mathematicians have noticed this too, and have used this to *penalize* in sample likelihoods to estimate out of sample likelihoods. 
+
+The logic of penalization can be understood with reference to figure \@ref(fig:F66). We would like to select the model with the highest value on the red line, given only the values on the black line. We can see that the difference between the black and red lines for each model increases by one for every parameter we add. If we assume that this is a general property of all models, we can subtract three from the likelihood of our most-complicated model to estimate the out of sample prediction, and subtract one from the likelihood of the least complicated model to estimate its out of sample prediction. Subtracting/adding a given value to a model likelihood based on model complexity is called *penalization*. If we did this we would arrived at penalized likelihoods of -71.2 (-70.2-1) and -72.2 (-69.2-3) for the least and most complex models. When we select the model with the highest *penalized* rather than in sample likelihood, we will not necessarily select the more complicated model. 
+
+- penalization will not just pick the least complicated model. 
+- the queston is: the the increase lilihood more than the increase we might expect by pure coincidence?
+- historically aic and dic. lots of great sources about these but we wont talk about them much.
+- historically penalized by numbr of parameter,s effective parameters for our models because params are semi independent due to partial pooling
+- now waic, we will show how to use this and compare
+- if errors come up this motivates loo!.
+
+
+
+```{r F67, fig.height = 4, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.7
+################################################################################
+n = 50         # how many observations
+iter = 1000    # how many simulations
+# these will hold the model log likelihoods for each iteration
+in_sample_ll = matrix (0, iter, 3)
+out_of_sample_ll = matrix (0, iter, 3)
+
+set.seed(1)
+for (i in 1:iter){
+  # create 3 random predictors
+  x1 = sample (c(-1,1), n, replace=TRUE)
+  x2 = sample (c(-1,1), n, replace=TRUE)
+
+  # generate the observed (in sample) data with an  
+  # underlying process that only uses the x1 predictor
+  y_in = 1 + x1 + rnorm (n, 0, 1)
+  # use the same process to simulate some "out of sample" data
+  y_out = 1 + x1 + rnorm (n, 0, 1)
+ 
+  for (j in 1:3){
+    # fit three models, the first using the real underlying model
+    if (j==1) mod = lm (y_in ~ 0+x1)
+    # the next two include random useless predictors
+    if (j==2) mod = lm (y_in ~ 1+x1)
+    if (j==3) mod = lm (y_in ~ 1+x1 + x2)
+    
+    # find the predicted value (mu) for each data point
+    yhat = mod$fitted.values
+    # and the estimated sigma parameter
+    sigma = summary(mod)$sigma
+    
+    in_sample_ll[i,j] = sum (dnorm (y_in, yhat, sigma, log = TRUE))
+    out_of_sample_ll[i,j] = sum (dnorm (y_out, yhat, sigma, log = TRUE))
+  }
+}
+
+
+
+means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
+
+par (mfrow = c(1,2), mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "Model log-likelihhod",xlab="Predictors")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+mtext (side=2,text = "Log-likelihood", line = 2.5)
+#legend (3.4,-70.5, legend= c("In sample","Out of sample"), 
+#        col=c(1,2), lwd=2,bty="n")
+
+  plot (means[1:3], type = "b", lwd = 2, ylim =c(-73.5,-69),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
+arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
+
+text (1:3, means[1:3]+.25, labels = means[1:3])
+text (1:3, means[4:6]-.25, labels = means[4:6])
+text (1:3, means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
+```
+
+
+```{r, cache = TRUE}
+model_sum_coding = brms::add_criterion (model_sum_coding, criterion="waic")
+model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="waic")
+model_re_t = brms::add_criterion (model_re_t, criterion="waic")
+```
+
+```{r}
+model_sum_coding$criteria$waic
+```
+
+```{r}
+head (model_sum_coding$criteria$waic$pointwise)
+```
+
+
+```{r}
+model_waic_info = model_sum_coding$criteria$waic$pointwise
+model_t_waic_info = model_sum_coding_t$criteria$waic$pointwise
+```
+
+```{r}
+colSums (model_waic_info)
+
+apply (model_waic_info,2,sd) * sqrt(1386)
+```
+
+
+```{r}
+brms::loo_compare (model_sum_coding,model_sum_coding_t, criterion ="waic")
+```
+
+```{r}
+sum(model_waic_info[,1]-model_t_waic_info[,1])
+sum(model_waic_info[,1]-model_t_waic_info[,1]) * sqrt(1386)
+```
+
+
+
+
+```{r, cache = TRUE}
+resids = residuals(model_sum_coding)[,1]
+resids_t = residuals(model_sum_coding_t)[,1]
+```
+
+```{r, cache = TRUE}
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+plot(model_sum_coding$criteria$waic$pointwise[,2], scale(resids), 
+     ylim = c(-5.5,5.5), xlim = c(0,1.1))
+grid()
+abline (v = 0.4)
+#abline (h=c(-2.5,2.5))
+
+plot(model_sum_coding_t$criteria$waic$pointwise[,2], scale(resids_t), 
+     ylim = c(-5.5,5.5), xlim = c(0,1.1))
+grid()
+abline (v = 0.4)
+#abline (h=c(-2.5,2.5))
+
+```
+
+
+### Out-of-sample prediction: Cross validation
+
+The last way to evaluate models that we'll be discussing is called **cross validation**. Cross validation consists of dividing your data into two groups. You use one group to fit a model (i.e. in sample data), and then use this model to predict the other group of data. To cross validate you need to pick a group to use for in group data. When one carries out a cross validation,  model predictive accuracy can be measured in any number of application-specific ways. For example, we might be interested in which model can accurately predict height judgments. We can measure predictive error using mean square error or absolute mean or median deviation among others. For each model, the measure (or measures of interest) are collected. This provides a set of observations that can be considered a sample. Researchers can then use this sample to infer the average value and an interval around that value. 
+
+You can leave out just one group (holdout) or split the data into groups and use each group as the out of sample data in turn. This is called k fold. A higher k is better because its less prone to bias. The logical endpoint of this is leave one out cross validation, where you leave a single data point out and predicting that. Leave one out cross validation is whats called exhaustive, it divides the data in all possible ways. If you do ten fold you are not using all 10 sized groups. This means that there is more bias since you randomly chose those groups. 
+
+Leave one out cross validation would be very time consuming and impossible for our models. Luckily, there is a package and function do do this in an efficient way. This loo package/function more or less combines elements of cross validation and penalization. It uses an estimation of leave one out cross validation to penalize predictive likelihoods.  
+
+- and it penalizes the model likelihood based on this
+- or actually penalizes unnormalized posteriors??
+
+### Comparing our models
+
+We will compare three models, the model we fit in the last chapter without listener dependent Age effects (random age affects by listener), the model with these age effects, and the model with age effects and also heteroskedastic errors. We will do so using both loo and waic. 
+
+- add them, compare them.
+- get one estimate for each set of samples so distribution per model. 
+- not so much about "how much is big" as how different are they. 
+
+
+
+```{r}
+model_sum_coding = brms::add_criterion (model_sum_coding, criterion="loo")
+model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="loo")
+model_re = brms::add_criterion (model_re, criterion="loo")
+model_t_het = brms::add_criterion (model_t_het, criterion="loo")
+```
+
+
+```{r}
+loo_compare (model_sum_coding, model_sum_coding_t, model_re, model_t_het,criterion = "loo")
+```
+
+```{r}
+loo_compare (model_sum_coding, model_sum_coding_t, model_re, model_t_het,criterion = "waic")
+```
+
+```{r}
+bmmb::short_summary (model_sum_coding)
+
+bmmb::short_summary (model_re)
+
+bmmb::short_summary (model_re_het)
+
+bmmb::short_summary (model_re_het_t)
+
+```
+
+
+classic adjustments work in a classic way, undersome basic assumptions thy tend to work
+
+
+
+```{r}
+model_re = add_criterion(model_re, "loo")
+model_t = add_criterion(model_t, "loo")
+model_t_het = add_criterion(model_t_het, "loo")
+
+qq = loo_compare(model_re, model_t, model_t_het, criterion="loo")
+```
+
+
+
+- explain elppd using example from model 1
+- it uses this and penalizes in a way based on parameters
+- out of sample prediction is always worse than in sample
+- talk about EXCELLENT explanation in statistical rethinking
+
+
+
+- using in sample as out of sample - bad
+- using penalized in sample - better theoretical
+- cross validation - better empirical
+
+- in sample vs out of sample
+- cross validation
+- dont know what you dont know
+
+
 
 ## Variation in parameters across sources of data
 
@@ -106,13 +467,13 @@ This formula told our model to draw the A parameter from a fixed prior distribut
 
 `height ~ 1 + A + L + (1|S)`
 
-We are doing this to highlight the two ways that we can include interactions in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and B, and the interaction between A and B".
+We are doing this to highlight the two ways that we can include interactions in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and L, and the interaction between A and L". The `:` symbol can be read as "given", which helps to highlight that these help represent conditional effects. So `A:L` can be read out loud as "A given L" or "the effect of A given the value of L". 
 
-`y ~ 1 + A + B + A:B`
+`y ~ 1 + A + L + A:L`
 
 As a shortcut, we can use the symbol `*` which means "include the main effects for these predictors and all interactions between them."
 
-`y ~ 1 + A * B`
+`y ~ 1 + A * L`
 
 So, if we wanted to include the marginal effects of age and listener, and the interaction between them we could include them in either of the two ways below, provided we want to estimated these without partial pooling. 
 
@@ -357,26 +718,28 @@ and `brm` (and STAN) will do the rest.
 We can fit a model with age coefficients that vary across listeners. Notice that the only change in the formula is the inclusion of the `A` predictor on the left-hand-side of the pipe in `(A|L)`. We now include a prior for a new class of parameter `cor` which applies to the correlation matrices for our multivariate normal variables. In addition, we specify the priors *outside* the `brm` function call, and pass this to the function. We will do this when the number of priors is large enough that including them directly in the function call makes the whole thing look too *busy* (in our opinion). 
 
 ```{r, eval = FALSE}
-priors = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
-           brms::set_prior("student_t(3, 0, 12)", class = "b"),
-           brms::set_prior("student_t(3, 0, 12)", class = "sd"),
+priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
+           brms::set_prior("student_t(3,0, 12)", class = "b"),
+           brms::set_prior("student_t(3,0, 12)", class = "sd"),
            brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
-           brms::set_prior("student_t(3, 0, 12)", class = "sigma")))
+           brms::set_prior("gamma(2, 0.1)", class = "nu"),
+           brms::set_prior("student_t(3,0, 12)", class = "sigma"))
 
 # Fit the model yourself
 set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
-model_re =  
+model_re_t =  
   brms::brm (height ~ A + (A|L) + (1|S), data = notmen, chains = 4, cores = 4,
-       warmup = 1000, iter = 3500, thin = 2, prior = priors)
+       warmup = 1000, iter = 3500, thin = 2, prior = priors, family = "student")
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
-model_re = bmmb::get_model ('6_model_re.RDS')
+model_re_t = bmmb::get_model ('6_model_re_t.RDS')
 ```
 ```{r, include = FALSE}
-model_re = readRDS ('../models/6_model_re.RDS')
+model_re_t = readRDS ('../models/6_model_re_t.RDS')
 ```
+
 
 ### Interpreting the model
 
@@ -438,7 +801,9 @@ bmmb::brmplot(comparison[c(3,7),], ylim = c(2,8),main="Lsd",
 bmmb::brmplot(comparison[c(4,8),], ylim = c(7,9.5),main="sigma", 
               xlim = c(.75,2.25), col = c(4,2))
 ```
+
 The change in the interval around the intercept is very small, and likely reflects our better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are know acknowledging the uncertainty between different listeners in the `A1` parameter, which we previously treated as fixed between listeners. Our model predicts a standard deviation of 4.2 cm in this effects between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can be. The standard deviation of our listener intercepts has decreased. This is to be expected as what previously seemed like variation in listener averages may have actually been variation in listener age effects. The separation of this into two separate variables may lead to the magnitude of variation in one being diminished. Finally, the decrease in the error standard deviation is due to the inclusion of the listener random effects for `A1`, and the fact that included listener-dependent values for `A1` helped explain our variable. 
+
 
 ## Varying variances: Heteroskedasticity and distributional (or mixture) models
 
@@ -538,27 +903,30 @@ Notice that we set these using the classes we have already discussed, `Intercept
 model_formula = brms::bf(height ~ A + (A|L) + (1|S),
                          sigma ~ 1 + (1|L))
 
-priors = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
-          brms::set_prior("student_t(3, 0, 12)", class = "b"),
-          brms::set_prior("student_t(3, 0, 12)", class = "sd"),
+priors = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
+          brms::set_prior("normal(0, 12)", class = "b"),
+          brms::set_prior("normal(0, 12)", class = "sd"),
           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
-          brms::set_prior("student_t(3, 0, 1.5)", class = "Intercept", dpar = "sigma"),
-          brms::set_prior("student_t(3, 0, 1.5)", class = "sd", dpar = "sigma"))
+          brms::set_prior("normal(0, 1.5)", class = "Intercept", dpar = "sigma"),
+          brms::set_prior("normal(0, 1.5)", class = "sd", dpar = "sigma"))
 
 set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
-model_t_het = 
+model_re_het_t = 
   brms::brm (model_formula, data = notmen, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2, family="student",
              prior = priors)
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
-model_t_het = bmmb::get_model ('6_model_t_het.RDS')
+model_re_het_t = bmmb::get_model ('6_model_re_het_t.RDS')
 ```
 ```{r, include = FALSE}
-model_t_het = readRDS ('../models/6_model_re_t_het.RDS')
+model_re_het_t = readRDS ('../models/6_model_re_het_t.RDS')
 ```
+
+
+saveRDS (model_re_het_t,'../models/6_model_re_het_t.RDS')
 
 
 ### Interpreting the model
@@ -606,153 +974,8 @@ brmplot (exp(sigmas), col = cols, ylim = c(1,13))
 #abline (h = 7.71)
 ```
 
-## Model Comparison
-
-- establish terms in sample and out of sample prediction.
-
-Bayesian models allow you to fit rather complicated 'bespoke' models for your data. A potential problem with this is at some point your model may be 'good enough' such that, although further tweaks could be made, they are no longer contributing any practical benefit to your model. In fact, you can build a model that is so good at predicting your own data that it can actually become bad at understanding the subject of investigation more generally. In this section we will offer a high-level conceptual understanding of Bayesian model comparison, along with an explanation of how to carry it out. For more information on the subject we recommend reading chapter X of the truly excellent *Statistical Rethinking* (cite). For an even more thorough treatment on the subject please see X and X. 
-
-An analogy can be made between model fitting and bespoke clothing made at a tailor. You can go to a tailor and get a shirt made that exactly fits your body proportions. We can consider that this involves altering the length of the sleeves relative to torso length, adjusting the circumference of the sleeves and torso independently, and perhaps even making each sleeve a lightly different length. Let's imagine that tailoring the perfect shirt for a human body usually involved adjusting ten 'shirt parameters' to ensure a perfect fit for an individual. Despite this, when you go to a store to buy a shirt, there is usually one parameter, size, and it often comes in a smaller number of variants, for example small medium and large. Since the shirts vary only in a small number of way, this means that they are very unlikely to fit any one individual perfectly. Why do stores intentionally sell clothing that doesn't fit people as well as it could? Because the store is interested in selling clothes that fit everyone *pretty well*, rather than selling clothes that fit one person perfectly, and everyone else poorly. To sell clothes that fit everyone perfectly, the store would need to carry dozens or hundreds of models for each shirt. Each model would only be useful to a small number of people and would be useless for a large number of people. In contrast, by having a small number of models that fit the most people 'pretty well', the store can carry a small number of models and apply them successfully to customers in general.  
-
-In the example above, we could say that offering dozens of specially tailored shirts that only fit very specific body types represents *overfitting*. The problem with the overfit shirts is that they are specifically tailored to the random between-speaker differences in body type rather than focusing on the commonalities of all human bodies. In terms of statistical models, a model is **overfit** when it correspond to closely to the data that was used to fit it, to the detriment of its ability to understand new datasets. Recall that our models are usually employed to carry our inductive reasoning: Going from a limited number of observations to the general case. In light of this, overfitting a model is exactly contrary to the goals of inductive inference. By definition, a model that does a poor job of generalizing to new observations is not optimal to carry out induction. In this section we are going to discuss three ways that we can test our models to make sure they generalize well, and then we are going to put these methods into practice to investigate whether the increased complexity we have discussed to this point is justified for our model. We will focus on a conceptual understanding of model comparison, and on developing practical skills. For a more thorough (and excellent) presentation of these topics please see stat reth. For an even more thorough treatment of these topics please see paper1 and paper2. 
-
-### In-sample prediction
-
-The simplest, and worst, way to consider out of sample prediction is by simply looking at the in sample prediction. Generally speaking, adding more and more predictors and making more and more complicated models will improve the fit of your model to the data you have, i.e. your in sample prediction. However, if the predictors are not related to true characteristics of the underlying model, they will also tend to decrease the fit of the model to new data. The 'common sense' analogy of the tailored clothing actually works perfectly for statistical models: A model that is perfectly suited to one particular set of data is, by its very nature, unlikely to generalize well to other models. 
-
-We can demonstrate this for some very simple models using simulations. In the code below, we generate three random variables consisting only of the values -1 and 1. We then use only the second one to 'simulate' some random data, and we add random Gaussian error to this fake variable. After this we generate two sets of data, an in sample and an out of sample set. We then fit three models to both data sets. These models include increasingly more predictor variables, however, we know that only the first one is useful to understand the underlying process. The models are fit with recognizable model formulas, though they use a function that we have not discussed to this point. The `lm` (linear model) function uses maximum-likelihood estimation (see section X) to fit regression models with relatively simple structures. We are going to use it here because it estimates regression parameters very quickly and therefore is reasonable to use when we want to fit 3000 models in no more than five seconds. We use the predicted values and $\sigma$ estimates provided by our maximum-likelihood models to estimate the likelihood of the entire model by adding together the log density over every individual observation (see X and X). 
-
-```{r, cache = TRUE}
-n = 50         # how many observations
-iter = 1000    # how many simulations
-# these will hold the model log likelihoods for each iteration
-in_sample_ll = matrix (0, iter, 3)
-out_of_sample_ll = matrix (0, iter, 3)
-
-set.seed(1)
-for (i in 1:iter){
-  # create 3 random predictors
-  x1 = sample (c(-1,1), n, replace=TRUE)
-  x2 = sample (c(-1,1), n, replace=TRUE)
-  x3 = sample (c(-1,1), n, replace=TRUE)
-
-  # generate the observed (in sample) data with an  
-  # underlying process that only uses the x1 predictor
-  y_in = x1 + rnorm (n, 0, 1)
-  # use the same process to simulate some "out of sample" data
-  y_out = x1 + rnorm (n, 0, 1)
- 
-  for (j in 1:3){
-    # fit three models, the first using the real underlying model
-    if (j==1) mod = lm (y_in ~ x1)
-    # the next two include random useless predictors
-    if (j==2) mod = lm (y_in ~ x1 + x2)
-    if (j==3) mod = lm (y_in ~ x1 + x2 + x3)
-    
-    # find the predicted value (mu) for each data point
-    yhat = mod$fitted.values
-    # and the estimated sigma parameter
-    sigma = summary(mod)$sigma
-    
-    in_sample_ll[i,j] = sum (dnorm (y_in, yhat, sigma, log = TRUE))
-    out_of_sample_ll[i,j] = sum (dnorm (y_out, yhat, sigma, log = TRUE))
-  }
-}
-```
-
-The above simulations result in six sets of likelihoods: In sample and out of sample likelihoods for the true model and for two other overly-complicated models. The average of each of these six likelihoods is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less probable* outcome. We can see that the in sample likelihood increases as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the underlying process or to the dependent variable. Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do at least as well as the model with fewer possible explanations. Although the extra parameters increase the in sample prediction, they actually make the out of sample prediction worse. Why? @@ come back
 
 
-In contrast, the out of sample prediction gets steadily worse as more predictors are added. In other words, including 'extra' predictors in your model will help explain any data better, however, the additional predictors may not necessarily result in better out of sample prediction, and may actually make things worse.  
-
-
-```{r F66, fig.height = 4, fig.width = 7, fig.cap="--", cache = TRUE, echo = FALSE}
-################################################################################
-### Figure 6.6
-################################################################################
-
-means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
-
-plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
-      pch=16, xlim = c(.8,4.5), ylab = "Model log-likelihhod",xlab="Predictors")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
-lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
-arrows (1,means[1]-0.2, 1,means[4]+0.2,code=3, length=0.1,lwd=2)
-arrows (2,means[2]-0.2, 2,means[5]+0.2,code=3, length=0.1,lwd=2)
-arrows (3,means[3]-0.2, 3,means[6]+0.2,code=3, length=0.1,lwd=2)
-text ((1:3)+.1, -71, labels = round(c(means[1]-means[4],means[2]-means[5],
-                                means[3]-means[6]),2))
-text (4,c(-68.5,-74), labels = c("More Likely","Less likely"))
-
-legend (3.4,-70.5, legend= c("In sample","Out of sample"), 
-        col=c(1,2), lwd=2,bty="n")
-
-```
-
-In the example above we knew the true underlying model and generated out of sample data that exactly conformed to the characteristics of our sample. In real life, researchers do not usually have access to real out of sample data, nor do they they the characteristics of the 'true' model that underlies the data. As a result, 
-
-
-
-In real life, we 
-
-we dont know what the difference between they two, but we do know that they tend to diverge at a certain rate. fixed slopes, uncertain intercept difference. Clever people have taken advantage of this from time.
-
-
-
-
-
-### Out of sample prediction: Penalization
-
-- historically aic and dic, now waic.
-- historically penalized by numbr of parameter,s effective parameters for our models because params are semi independent due to partial pooling
-
-
-### Out-of-sample prediction: Cross validation
-
-The second way to consider out of sample prediction is to carry out what is called a **cross validation**. 
-hold out, k fold, leave one out. 
-
-
-### Comparing our models
-
-
-
-```{r}
-bmmb::short_summary (model_sum_coding)
-
-bmmb::short_summary (model_t_het)
-
-```
-
-
-classic adjustments work in a classic way, undersome basic assumptions thy tend to work
-
-
-
-```{r}
-model_re = add_criterion(model_re, "loo")
-model_t = add_criterion(model_t, "loo")
-model_t_het = add_criterion(model_t_het, "loo")
-
-qq = loo_compare(model_re, model_t, model_t_het, criterion="loo")
-```
-
-
-
-- explain elppd using example from model 1
-- it uses this and penalizes in a way based on parameters
-- out of sample prediction is always worse than in sample
-- talk about EXCELLENT explanation in statistical rethinking
-
-
-
-- using in sample as out of sample - bad
-- using penalized in sample - better theoretical
-- cross validation - better empirical
-
-- in sample vs out of sample
-- cross validation
-- dont know what you dont know
 
 
 

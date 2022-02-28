@@ -1,20 +1,13 @@
 \newpage
 
-# Variation in parameters, error variance, and model comparison 
+# Variation in parameters ('random effects') and model comparison 
+
+ - chapter 4 introduced random effects, random intercepts.
+ - here we will consider the addition of other group-level variation in parameters.
 
 Before powerful computers were easily available, statisticians had to come up with clever solutions to answer difficult questions. The reason for this is that things needed to be solved with pen and paper, or eventually calculators, and this ruled out extremely time-consuming solutions such as sampling from the posterior distribution of models as complicated as the ones discussed here. Approaches to answer commonly-encountered experimental designs (and corresponding data structures) often involved making simplifying assumptions that make arriving at a solution simpler. For example, when comparing two groups statisticians might say "we can solve this problem if we assume that the errors are normally distributed and that the error variance is the same across all conditions". These assumptions are rarely true in practice (and never *exactly* true in reality), but are usually close enough to the truth to make our models be useful. There is nothing particularly 'wrong' with making these assumptions. However, when we build our own Bayesian models we don't need to make them, and so it is worth considering if we might benefit from making other sort of assumptions. 
 
-An analogy can be made to building your own furniture vs. shopping at a furniture store. The furniture at the store is perfectly fine and if you find something that suits you it will be fast and convenient. What happens if what you want is *not* at a store? Well if you don't know how to build your on furniture you are out of luck, you better just find the existing piece that is most similar to what you need, and try to make the most of it. Working with 'traditional' models based on maximum-likelihood estimation (discussed in X) is like going to the store. There are often a limited number of choices, and these choices make certain, often rigid, simplifying assumptions. Learning to use `brms` (or STAN directly) gives you the flexibility of trying many different assumptions, allowing you to build a model that might be very difficult to find 'at the store', but which is well-suited to your data.
-
-In the last chapter we focused on models comparing two groups. Our approach to this was a bit old-fashioned in that it adhered to the limitations of more 'traditional' models. Some of the design choices made that are more 'traditional' are:
-
-  (1) We did not consider the possibility of random variation in the effect of apparent speaker age across listeners. 
-
-  (2) We assumed that the error variance was the same for all conditions, all speakers and all listeners. 
-  
-  (3) We assumed that the error distribution was normal. 
-  
-In this chapter we will revisit the models we discussed last chapter. However, this time we will revisit, and change, the assumptions we made above.
+An analogy can be made to building your own furniture vs. shopping at a furniture store. The furniture at the store is perfectly fine and if you find something that suits you it will be fast and convenient. What happens if what you want is *not* at a store? Well if you don't know how to build your on furniture you are out of luck, you better just find the existing piece that is most similar to what you need, and try to make the most of it. Working with 'traditional' models based on maximum-likelihood estimation (discussed in X) is like going to the store. There are often a limited number of choices, and these choices make certain, often rigid, simplifying assumptions. Learning to use `brms` (or STAN directly) gives you the flexibility of trying many different assumptions, allowing you to build a model that might be very difficult to find 'at the store', but which is well-suited to your data. In the last chapter we focused on models comparing two groups. Our approach to this was a bit old-fashioned in that it adhered to the limitations of more 'traditional' models. In this chapter we will revisit the models we discussed last chapter. However, this time we will consider the possibility of random variation in the effect of apparent speaker age across listeners. 
 
 ## Data and research questions
 
@@ -44,7 +37,7 @@ notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',
 notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
 ```
 
-We recreate figure \ref(fig:51) as figure \ref(fig:61) below to show the distribution of apparent height by listener, and across apparent ages. We can use this figure that some of the design choices we used to build our model in the last chapter may not be totally valid for this data. First, we see that the effect of apparent age, the separation between the two boxes for each speaker, does appear to vary substantially between listeners. Second, we see that the error for this model, reflected by the width of the boxes, also seem to vary between listeners, and so many not be equal across all conditions. Third, our figure shows the presence of substantial numbers of outliers, the points individually plotted (beyond the *whiskers* for each box), suggesting that the error distribution may be more like a t-distribution than a normal one. In this chapter we are going to build models that allow for all of these details in the data to be estimated and represented by the model. However, before continuing to make our model more complicated we're going to address the question: Is any of this worth it?
+We recreate figure \ref(fig:51) as figure \ref(fig:61) below to show the distribution of apparent height by listener, and across apparent ages. We can use this figure that some of the design choices we used to build our model in the last chapter may not be totally valid for this data. First, we see that the effect of apparent age, the separation between the two boxes for each speaker, does appear to vary substantially between listeners. Second, our figure shows the presence of substantial numbers of outliers, the points individually plotted (beyond the *whiskers* for each box), suggesting that the error distribution may be more like a t-distribution than a normal one. In this chapter we are going to build models that allow for these details in the data to be estimated and represented by the model. After this, we're going to address the question: Are the extra complications included in our models worth it?
 
 ```{r F61, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
 
@@ -58,410 +51,9 @@ boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(100,200))
 boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(100,200))
 ```
 
-## Model Comparison
-
-Bayesian models allow you to fit rather complicated 'bespoke' models for your data. A potential problem with this is at some point your model may be 'good enough' such that, although further tweaks could be made, they are no longer contributing any practical benefit to your model. In fact, you can build a model that is so good at predicting your own data that it can actually become bad at understanding the subject of investigation more generally. An analogy can be made between model fitting and bespoke clothing made at a tailor. You can go to a tailor and get a shirt made that exactly fits your body proportions. We can consider that this involves altering the length of the sleeves relative to torso length, adjusting the circumference of the sleeves and torso independently, and perhaps even making each sleeve a lightly different length. Let's imagine that tailoring the perfect shirt for a human body usually involved adjusting ten 'shirt parameters' to ensure a perfect fit for an individual. Despite this, when you go to a store to buy a shirt, there is usually one parameter, size, and it often comes in a small number of variants (e.g. small, medium, large). Since the shirts vary only in a small number of way, they are very unlikely to fit any individual perfectly. Why do stores intentionally sell clothing that doesn't fit people as well as they could? Because the store is interested in selling clothes that fit everyone *pretty well*, rather than selling clothes that fit everyone perfectly. If stores sold shirts that fit people perfectly, each shirt model would only be useful to a small number of people and would be useless for a large number of people. In contrast, by having a small number of shirts that fit the most people 'pretty well', the store can carry a small number of models and apply them successfully to customers in general.  
-
-This general problem is sometimes referred to as the **bias-variance tradeoff**. In this case *bias* refers to the model's ability to represent the 'true' relationship the underlies the data, and variance refers to the degree to which the model is stable across data sets. Models that fit training data very well (i.e. the have a low variance) often change substantially when fit to new data sets (i.e. they have a high variance). This is analogous to the fact that the shape of a perfectly tailored shirt will potentially be very different across two people. On the other hand models that do not fit the data *too* well (i.e. they have a higher bias) often also have more consistent properties across new data sets (i.e. they have a low variance). This is analogous to the fact that two people are much more likely to pick the size size from a small, medium, or large choice of shirt, and these shirts are likely to fit each of these people pretty well. These issues can be understood with repsect to the extent to which our models can explain the behavior of in-sample dat and out-of-sample data. Your **in-sample** data is the data you used to fit the model, and the **out-of-sample** data is other data that you do not have access to. A statistical model is **overfit** when it corresponds too closely to your in-sample data, to the detriment of its ability to explain out-of-sample data. Recall that our models are usually used to carry our inductive reasoning: Going from a limited number of observations to the general case. In light of this, overfitting a model is exactly contrary to the goals of inductive inference. A model that does a poor job of generalizing to new observations is not useful to carry out induction. Further, a model that cannot explain out-of-sample data will not hold up to replication, which should be a concern for any researcher. This is because a researcher carrying out a replication will necessary be working with data that, from your perspective, is out-of-sample data. 
-
-In this section we will offer a high-level conceptual understanding of Bayesian model comparison, along with an explanation of how to carry this out. For more information on the subject we recommend reading chapter X of the truly excellent *Statistical Rethinking* (cite). For an even more thorough treatment on the subject please see X and X. Much of this section is information is  provided in Gelman et al (2013), and with more mathematical detail.
-
-### In-sample and out-of-sample prediction
-
-In order to compare models in a quantitative way, we need some number that can calculated for different models. For Bayesian models, we begin with what is called the **log pointwise predictive density**, abbreviated `lpd` (or `lppd`). The `lpd` can be calculated in several ways, but equation \@ref(eq:61) presents an example of the general case. The `lpd` is the sum of the logarithm of the density for each of your data points. The symbol $\theta$ represents posterior estimates of all of the estimated parameters necessary to determine the probability density over each data point. This value is clearly related to the log posterior density, discussed in section \@ref(c3-log-posterior). Since we are adding logarithmic values, we know we are multiplying the underlying probabilities. If the data points are independent given our parameter values, the `lpd` represents the joint proability of observing the data given the model structure and the parameter estimates ($\theta$). Although prior probabilites are not included in this calculation they do factor into the estimation of $\theta$, and as a result do have an effect on values of `lpd`. 
-
-$$
-\begin{equation}
-\mathrm{lpd} = \sum_{i=1}^{N} \mathrm{log} (p(y_i | \theta))
-(\#eq:61)
-\end{equation}
-$$
-
-Because $\mathrm{lpd}$ is a logarithmic value, we know large negative values are closer to zero. So, values of $\mathrm{lpd}$ closer to (or above) zero represent models that are more likely given the data. As a result, we might think that we should simply select the model with the highest $\mathrm{lpd}$ as our 'best' model. However, if we are not specifically interested in the in-sample prediction alone, then what we need to be concerned with is the possible characteristics of the out-of-sample prediction. We can think about this in terms of the **expected log pointwise predictive density**, abbreviated $\mathrm{elpd}$ (or $\mathrm{elppd}$), presented in \@ref(eq:62). Unlike the $\mathrm{lpd}$, the $\mathrm{elpd}$ is defined in terms of hypothetical out-of-sample data ($\tilde{y}$) instead of the in-sample data ($y$). The $\mathrm{E}()$ below represents the expected value function, which we have not really discussed to this point. The expected value of a variable is the ... [@@ SB - I don't know how to define this in the general case in an intuitive way]. So, the $\mathrm{elpd}$ basically represents the expected value of $\mathrm{lpd}$ for out-of-sample data. 
-
-$$
-\begin{equation}
-\mathrm{elpd} = \sum_{i=1}^{N} \mathrm{E}(\mathrm{log} (p(\tilde{y}_i | \theta)))
-(\#eq:62)
-\end{equation}
-$$
-
-Of course, you can't actually know the value of $\mathrm{E}(\mathrm{log} (p(\tilde{y}_i | \theta))$ because you do not have access to the true properties of ($\tilde{y}$). As a result, you must settle for an estimate of $\mathrm{elpd}$, $\widehat{\mathrm{elpd}}$. The simplest, and worst, way to estimate out-of-sample prediction($\mathrm{elpd}$) is by simply looking at the in sample prediction ($\mathrm{lpd}$). One of the reasons that this does not generally work is because making our models more and more complicated will generally improve your in-sample prediction. However, if the predictors are not related to true characteristics of the underlying model, they will also tend to decrease the fit of the model to new data. Returning to the analogy of shirt fits discussed above. You can buy a shirt from the store and take it to a tailor to get it customized. The more the tailor changes this from the 'standard' shape, the better the shirt will fit you and the worse it will fit everyone else. Only alterations which conform to the 'true' average torso shape will increase the fit for people in general (and may in fact reduce the fit for you).
-
-We can demonstrate this for some very simple models using simulations. In the code below, we generate three random variables consisting only of the values -1 and 1. We then use only the first variable (`x1`) to simulate some random data, and we add random Gaussian error to this fake variable. After this we generate two sets of data using the same data generating process, in_sample (`y`) and out-of-sample data (`y_tilde`). We then fit three models to both data sets. These models include increasingly more predictor variables, however, we know that only the first one is useful to understand the underlying process. The models are fit using a function that we have not discussed to this point. The `lm` (linear model) function uses maximum-likelihood estimation (see section X) to fit regression models with relatively simple structures. We use it here because it estimates regression parameters very quickly and therefore is reasonable to use when we want to fit 3000 models in no more than two seconds. We use the predicted values ($\mu$) and $\sigma$ estimates provided by our maximum-likelihood models to estimate the $\mathrm{lpd}$ and $\mathrm{elpd}$ for each model. In each case, we do so by calculating as in \@ref(eq:63)
-
-$$
-\begin{equation}
-\mathrm{lpd} = \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(y_i | \mu, \sigma))
-(\#eq:63)
-\end{equation}
-$$
-and \@ref(eq:64), where the $\tilde{y}$ is the out-of-sample data being predicted using the in-sample estimates of $\mu$ and $\sigma$ associated parameter estimates.
-
-$$
-\begin{equation}
-\mathrm{elpd} = \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(\tilde{y}_i | \mu, \sigma))
-(\#eq:64)
-\end{equation}
-$$
-
-In the formulas above, and in the code below, we replace $p(\tilde{y}_i | \theta)$ with $\mathrm{N}(y_i | \mu, \sigma)$ because the simulations below generate normally-distributed data. 
-
-
-```{r, cache = TRUE}
-n = 50         # how many observations
-iter = 1000    # how many simulations
-# these will hold the model log likelihoods for each iteration
-lpd = matrix (0, iter, 3)
-elpd = matrix (0, iter, 3)
-
-set.seed(1)
-for (i in 1:iter){
-  # create 3 random predictors
-  x1 = sample (c(-1,1), n, replace=TRUE)
-  x2 = sample (c(-1,1), n, replace=TRUE)
-  x3 = sample (c(-1,1), n, replace=TRUE)
-
-  # generate the observed (in sample) data with an  
-  # underlying process that only uses the x1 predictor
-  y = 1 + x1 + rnorm (n, 0, 1)
-  # use the same process to simulate some "out-of-sample" data
-  y_tilde = 1 + x1 + rnorm (n, 0, 1)
- 
-  for (j in 1:3){
-    # fit three models, the first using the real underlying model
-    if (j==1) mod = lm (y ~ 1+x1)
-    # the next two include random useless predictors
-    if (j==2) mod = lm (y ~ 1+x1 + x2)
-    if (j==3) mod = lm (y ~ 1+x1 + x2 + x3)
-    
-    # find the predicted value (mu) for each data point
-    yhat = mod$fitted.values
-    # and the estimated sigma parameter
-    sigma = summary(mod)$sigma
-    
-    lpd[i,j] = sum (dnorm (y, yhat, sigma, log = TRUE))
-    elpd[i,j] = sum (dnorm (y_tilde, yhat, sigma, log = TRUE))
-  }
-}
-```
-
-The above simulations result in three sets of $\mathrm{lpd}$ and three sets of $\mathrm{elpd}$, a pair of each for each of the models above. The average of each of these six sets of values is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less probable* outcome. We can see that the $\mathrm{lpd}$ increases as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the data generating process or to the dependent variable. Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do *at least as well* as the model with fewer possible explanations. However, although the extra parameters increase the $\mathrm{lpd}$, they actually *decrease values* of $\mathrm{elpd}$. Why? The extra predictors included in our model in no way relate to our data, the 'answers' they provide can only be due to overfitting, the learning of chacracteristics that are specific to the in-sample data rather than properties of the out-of-sample data. 
-
-```{r F62, fig.height = 3, fig.width = 8, fig.cap=" (left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now the elpd is estimated based on the number of parameters.", cache = TRUE, echo = FALSE}
-################################################################################
-### Figure 6.2
-################################################################################
-
-means = round (apply (cbind(lpd,elpd), 2, mean),1)
-
-layout (mat=t(c(1:3)), widths = c(.4,.4,.2))
-par (mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
-
-plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "lpd",xlab="Predictors")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
-lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
-arrows (1,means[1]-0.2, 1,means[4]+0.2,code=3, length=0.1,lwd=2)
-arrows (2,means[2]-0.2, 2,means[5]+0.2,code=3, length=0.1,lwd=2)
-arrows (3,means[3]-0.2, 3,means[6]+0.2,code=3, length=0.1,lwd=2)
-text ((1:3)+.1, -71, labels = round(c(means[1]-means[4],means[2]-means[5],
-                                means[3]-means[6]),2))
-text (0.8,c(-68.8,-73.6), labels = c("More Likely","Less likely"), pos=4)
-
-mtext (side=2,text = "log density", line = 2.75)
-#legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
-#        col=c(1,2), lwd=2,bty="n")
-
-plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
-lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
-lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
-arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
-arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
-arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
-
-text (1:3, means[1:3]+.25, labels = means[1:3])
-text (1:3, means[4:6]-.25, labels = means[4:6])
-text (1:3, means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
-
-plot (0, bty='n', xaxt='n',yaxt='n',xlab="",type="n")
-legend (.6,.2,legend = c("lpd","elpd","elpd_hat"), lwd=4, 
-        col = c(1,2,2),cex=1.4,lty = c(1,1,3))
-```
-
-So, we see that adding 'unneccessary' models can decrease our out-of-sample performance. Ok, so could we just not ever include any 'unnecessary' predictors in our models? Obviously this would be ideal, however, there are some complications. In the example in figure \@ref(fig:F63) we knew the true underlying model and generated out-of-sample data that exactly conformed to the characteristics of our sample. In real life, researchers do not usually have access to out-of-sample data, they do not know the characteristics of the 'true' model that underlies their data, nor can they confirm that any out-of-sample data shares the exact underlying process as their in sample data. As a result, we can never *really* know what the difference is between in sample and out-of-sample prediction for our models. However, you may have noticed that: 1) The slopes of the lines representing $\mathrm{elpd}$ and $\mathrm{lpd}$ in figure \@ref(fig:F63) seem to have predictable slopes, 2) The lines diverge form each other at predictable rates based on the complexity of the models. Mathematicians have noticed this too, and have used this to *adjust* $\mathrm{lpd}$ calculate on in-sample data in order to estimate values of $\mathrm{elpd}$ for out-of-sample data. 
-
-### out-of-sample prediction: Adjusting predictive accuracy
-
-The logic of adjusting $\mathrm{lpd}$ based on model complexity can be understood with reference to figure \@ref(fig:F63). Our goals is to select the model with the best out-of-sample prediction (i.e. the highest value on the red line), given only knowledge of the in-sample prediction (the values on the black line). In the left plot we can see that the difference between the black and red lines for each model increases by one for every parameter we add. Let us assume for the time being that this is a general property of all models. This means we can subtract one from the $\mathrm{lpd}$ of our least-complicated model to estimate the $\mathrm{elpd}$ for that model, and subtract three from the likelihood of the most-complicated model to estimate the $\mathrm{elpd}$ for that model. In general we can think of this as **penalizing** the value of $\mathrm{lpd}$ based on some penalty value $\mathrm{p}$. Different ways to estimate $\widehat{\mathrm{elpd}}$ differ in terms of how they estimate $\mathrm{lpd}$ and  $\mathrm{p}$. In the very simple example we are discussing here, we are setting $\mathrm{p}=k$, where $k$ is the number of parameters estimated by the model. If we set $\mathrm{p}=k$ and carry out the operation in \@ref(eq:65) usng the values in figure \@ref(fig:F63), we would arrived at values of $\mathrm{elpd}$ of -70.7 (-69.7-1) and -71.7 (-68.7-3) for the least and most complex models. If we chose models based on these estimates of $\widehat{\mathrm{elpd}}$ we would suggest the model with the worst $\mathrm{lpd}$, but the one that actually corresponded to the true data-degenrating process.
-
-$$
-\begin{equation}
-\widehat{\mathrm{elpd}} = \mathrm{lpd} - \mathrm{p}
-(\#eq:65)
-\end{equation}
-$$
-
-Penalization will not always result in the highest values of $\widehat{\mathrm{elpd}}$ for the simplest model. In figure \@ref(fig:F64) we simulate new fake data, except now we include $x_2$ to the 'real' underlying data generating process (i.e., `y = 1 + x1 + rnorm (n, 0, 1)`). So, for this data we actually *do* need both $x_1$ and $x_2$ in the model. As seen below, penalization does not obscure the benefit of adding $x_2$ to our model when it is warranted. This is because the relatively small penalty associated with the increased model complexity does not overwhelm the large benefit due to the inclusion of a predictor that is actually related to our dependent variable. 
-
-```{r F64, fig.height = 4, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
-################################################################################
-### Figure 6.4
-################################################################################
-n = 50         # how many observations
-iter = 1000    # how many simulations
-# these will hold the model log likelihoods for each iteration
-in_sample_ll = matrix (0, iter, 3)
-out_of_sample_ll = matrix (0, iter, 3)
-
-set.seed(1)
-for (i in 1:iter){
-  # create 3 random predictors
-  x1 = sample (c(-1,1), n, replace=TRUE)
-  x2 = sample (c(-1,1), n, replace=TRUE)
-
-  # generate the observed (in sample) data with an  
-  # underlying process that only uses the x1 predictor
-  y_in = 1 + x1 + rnorm (n, 0, 1)
-  # use the same process to simulate some "out-of-sample" data
-  y_out = 1 + x1 + rnorm (n, 0, 1)
- 
-  for (j in 1:3){
-    # fit three models, the first using the real underlying model
-    if (j==1) mod = lm (y_in ~ 0+x1)
-    # the next two include random useless predictors
-    if (j==2) mod = lm (y_in ~ 1+x1)
-    if (j==3) mod = lm (y_in ~ 1+x1 + x2)
-    
-    # find the predicted value (mu) for each data point
-    yhat = mod$fitted.values
-    # and the estimated sigma parameter
-    sigma = summary(mod)$sigma
-    
-    in_sample_ll[i,j] = sum (dnorm (y_in, yhat, sigma, log = TRUE))
-    out_of_sample_ll[i,j] = sum (dnorm (y_out, yhat, sigma, log = TRUE))
-  }
-}
-
-
-
-means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
-
-par (mfrow = c(1,2), mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
-plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "Model log-likelihhod",xlab="Predictors")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
-lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
-mtext (side=2,text = "Log-likelihood", line = 2.5)
-#legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
-#        col=c(1,2), lwd=2,bty="n")
-
-  plot (means[1:3], type = "b", lwd = 2, ylim =c(-73.5,-69),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
-lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
-lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
-arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
-arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
-arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
-
-text (1:3, means[1:3]+.25, labels = means[1:3])
-text (1:3, means[4:6]-.25, labels = means[4:6])
-text (1:3, means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
-```
-
-Historically, the $k$ terms is related to the number of independent parameters estimated by the model. Estimated parameters are those that are not specified a priori but instead depend on the data and structure of the model. This is not so straightforward in our multilevel models since parameters estimated with partial pooling (and shrinkage) are not fully independent. So, for example, a set of 10 'random effects' may in effect act as fewer than 10 totally independent parameters. In addition, the parameters and penalty terms involved in estimates of elpd have traditionally been *point estimates*, single values often based on maximum-likelihood estimation. Since our models consist of posterior distributions of parameters, we instead have *distributions* of lpd and p. In this section we are only going to discuss the **widely available information criterion** (WAIC) as calculated using the brms package. For a more complete treatement of other ways, and historical approaches, please see Gelman et al. (2013). 
-
-To calculate WAIC we first find the average probability of each data point given our model parameters across all posterior samples. Then we find the logarithm of this value and add this up across all of our data. This is presented in equation \@ref(eq:66)
-
-$$
-\begin{equation}
-\mathrm{lpd_{waic}} = \sum_{i=1}^{N} \mathrm{log} (\frac{1}{S} \sum_{s=1}^{S} p(y_i | \theta^s))
-(\#eq:66)
-\end{equation}
-$$
-
-$$
-\begin{equation}
-\mathrm{p_{waic}} = \sum_{i=1}^{N} Var_{s=1}^{\,S}(\mathrm{log} (p(y_i | \theta^s)))
-(\#eq:67)
-\end{equation}
-$$
-
-Why does this work? This is one of those thing that you may need to get used to rather than understand, although explanations can be found in?.
-
-
-$$
-\begin{equation}
-\widehat{\mathrm{elpd}}_{waic} = \mathrm{lpd_{waic}} - \mathrm{p_{waic}}
-(\#eq:68)
-\end{equation}
-$$
-
-
-
-
-Below we load the models we fit in the last chapter:
-
-```{r, eval = FALSE}
-# Or download it from the GitHub page:
-model_sum_coding = bmmb::get_model ('5_model_sum_coding.RDS')
-model_sum_coding_t = bmmb::get_model ('5_model_sum_coding.RDS_t')
-```
-```{r, include = FALSE}
-model_sum_coding = readRDS ('../models/5_model_sum_coding.RDS')
-model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
-```
-
-And set our options to sum coding to match the coding we used when we fit the models:
-
-```{r}
-options (contrasts = c('contr.sum','contr.sum'))
-```
-
-We can use the `add_criterion` function in `brms`, and specify `criterion="waic"` to add the `waic` criterion to our model object. We do this for both our model with the normal and the t distributed error. 
-
-```{r, cache = TRUE}
-model_sum_coding = brms::add_criterion (model_sum_coding, criterion="waic")
-
-model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="waic")
-```
-
-Adding the `waic` criterion to our model with Gaussian errors `model_sum_coding`) returns an error message. To understand why we get these errors we can investigate the model `waic` information, which we can see below:
-
-```{r}
-model_sum_coding$criteria$waic
-```
-
-The three rows represent the expected log pointwise predictive density (`elpd`), the penalty related to the flexibility of the model (`p_waic`) and the third column is the information criterion WAIC (`waic`) which is just -2 times the first row. The `p_waic' penalty term is sometimes referred to as the 'effective number of parameters', but Gelman (cite) cautions that this usage is somewhat figurative and should not be 'over interpreted'. The effective number of parameters relates to the complexity and flexibility of the model and its ability to adapt to new data. Our sum coding model has 114 estimated parameters (15 L + 1 lsd, 94 s + 1 ssd, 2 fe, 1 sigma, 114 = 16 + 95 + 2 +1) but only about 81 effective parameters. The statistics provided above are calculated individually for each data point. We can get the pointwise information as seen below: 
-
-```{r}
-model_waic_info = model_sum_coding$criteria$waic$pointwise
-model_t_waic_info = model_sum_coding_t$criteria$waic$pointwise
-```
-
-Below we have a look at the first six values: 
-
-```{r}
-# first six data points
-head (model_waic_info)
-```
-
-There are as many rows as data points were used to fit the model. The Estimates above simply correspond to the sum of each column. The standard error (SE) corresponds to the variance of the column times the square root of N (since the statistics are sums and not means). We recreate the summary values seen above:
-
-```{r}
-# the sum of each column
-colSums (model_waic_info)
-# the standard deviation of each column
-apply (model_waic_info,2,sd) * sqrt(1386)
-```
-
-The error message said that "28 (2.0%) p_waic estimates greater than 0.4". Large `p_waic` suggest a poor fit between data points and the model. To investigate this we can get the posterior mean residuals from each of the models we are considering:
-
-```{r, cache = TRUE}
-resids = scale(residuals(model_sum_coding)[,1])
-resids_t = scale(residuals(model_sum_coding_t)[,1])
-```
-
-We scale our residuals so that they represent standard deviations from the mean, and plot these against the `p_waic` value calculated for each data point by each model. Clearly, large residuals relate to large `p_waic` values. In other words, large `p_waic` values are relate to data points that are a very poor fit for our model. In our model with Gaussian errors this relationship is very predictable and quickly leads to large values in `p_waic`. For our model with t-distributed errors (`model_sum_coding_t`) residuals beyond about two standard deviations do not strongly affect `p_waic`. These differences are due to the different behaviors of the normal and t-distributions in their tails, as discussed in section X. 
-
-```{r}
-par (mfrow = c(1,2), mar = c(4,4,1,1))
-plot(model_sum_coding$criteria$waic$pointwise[,2], resids, 
-     ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
-grid()
-abline (v = 0.4)
-#abline (h=c(-2.5,2.5))
-
-plot(model_sum_coding_t$criteria$waic$pointwise[,2], resids_t, 
-     ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
-grid()
-abline (v = 0.4)
-```
-
-The warning message suggest that we use `loo` (discussed in the next section) rather than `waic` for model comparison. The reason for this is that, as seen above, some very large residuals in our model with Gaussian error result in large `p_waic` values. As to why large `p_waic` values are bad, when the assumptions underlying `waic` are met, there should not be large `p_waic` values. As a result, large `p_waic` suggest that the assumptions used by this method are being violated. When this occurs, as the error message suggests, you shouldn't use `waic`, even if it seems reliable and looks 'normal'. Think of it this way, if a bridge say it has a weight limit of three tonnes and you're driving a truck that weighs four tonnes, should you drive across the bridge? Maybe you get across safely and save some time. Maybe you crash of the bridge into the river. When you use something like this despite being warned not to you run the same risk: Maybe what you report is a true and reliable analysis, and maybe its not and you are reporting nonsense (the academic equivalent of crashing into the river). 
-
-### Out-of-sample prediction: Cross validation
-
-The last way to evaluate models that we'll be discussing is called **cross validation**. Cross validation consists of dividing your data into two groups. You use one group to fit a model (i.e. in sample data), and then use this model to predict the other group of data. To cross validate you need to pick a group to use for in group data. When one carries out a cross validation,  model predictive accuracy can be measured in any number of application-specific ways. For example, we might be interested in which model can accurately predict height judgments. We can measure predictive error using mean square error or absolute mean or median deviation among others. For each model, the measure (or measures of interest) are collected. This provides a set of observations that can be considered a sample. Researchers can then use this sample to infer the average value and an interval around that value. 
-
-You can leave out just one group (holdout) or split the data into groups and use each group as the out-of-sample data in turn. This is called k fold. A higher k is better because its less prone to bias. The logical endpoint of this is leave one out cross validation, where you leave a single data point out and predicting that. Leave one out cross validation is whats called exhaustive, it divides the data in all possible ways. If you do ten fold you are not using all 10 sized groups. This means that there is more bias since you randomly chose those groups. 
-
-Leave one out cross validation would be very time consuming and impossible for our models. Luckily, there is a package and function do do this in an efficient way. This loo package/function more or less combines elements of cross validation and penalization. It uses an estimation of leave one out cross validation to penalize predictive likelihoods.  
-
-- and it penalizes the model likelihood based on this
-- or actually penalizes unnormalized posteriors??
-
-
-We will compare three models, the model we fit in the last chapter without listener dependent Age effects (random age affects by listener), the model with these age effects, and the model with age effects and also heteroskedastic errors. We will do so using both loo and waic. 
-
-- add them, compare them.
-- get one estimate for each set of samples so distribution per model. 
-- not so much about "how much is big" as how different are they. 
-
-
-
-```{r}
-model_sum_coding = brms::add_criterion (model_sum_coding, criterion="loo")
-model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="loo")
-```
-
-
-```{r}
-brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
-```
-
-
-```{r}
-bmmb::short_summary (model_sum_coding)
-
-bmmb::short_summary (model_re_t)
-
-```
-
-
-classic adjustments work in a classic way, undersome basic assumptions thy tend to work
-
-
-
-
-
-```{r}
-brms::loo_compare (model_sum_coding,model_sum_coding_t, criterion ="waic")
-```
-
-```{r}
-sum(model_waic_info[,1]-model_t_waic_info[,1])
-sum(model_waic_info[,1]-model_t_waic_info[,1]) * sqrt(1386)
-```
-
-
-
-
-
-- explain elppd using example from model 1
-- it uses this and penalizes in a way based on parameters
-- out-of-sample prediction is always worse than in sample
-- talk about EXCELLENT explanation in statistical rethinking
-
-
-
-- using in sample as out-of-sample - bad
-- using penalized in sample - better theoretical
-- cross validation - better empirical
-
-- in sample vs out-of-sample
-- cross validation
-- dont know what you dont know
-
-
 ## Variation in parameters across sources of data
 
-The models we fit in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. An inspection of figure X last chapter clearly suggests that apparent age did not, in fact, have the same effect for the judgments of all listeners. 
-
-Another way to think about this is that our model modeled only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a main effect. Someone might ask "what is the average apparent height difference between children and adult females?" and you might say "about 16 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall effect*. In contrast, we may want to think about the effect of apparent age *conditional* on listener. Recall from chapter 2 that if the conditional distribution of a variable changes as a function of another variable then these are not independent. In the same way, if the conditional effects of a predictor change as a function of another predictor, then these effects are not independent. For example, if the effect of apparent age varies substantially across listeners then if someone asks "what is the average apparent height difference between children and adult females?" you may have to answer "well it depends on the listener".      
+The models we fit in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. An inspection of figure X last chapter clearly suggests that apparent age did not, in fact, have the same effect for the judgments of all listeners. Another way to think about this is that our model modeled only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a main effect. Someone might ask "what is the average apparent height difference between children and adult females?" and you might say "about 16 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall effect*. In contrast, we may want to think about the effect of apparent age *conditional* on listener. Recall from chapter 2 that if the conditional distribution of a variable changes as a function of another variable then these are not independent. In the same way, if the conditional effects of a predictor change as a function of another predictor, then these effects are not independent. For example, if the effect of apparent age varies substantially across listeners then if someone asks "what is the average apparent height difference between children and adult females?" you may have to answer "well it depends on the listener".      
 
 ```{r}
 listener_age_differences = tapply (notmen$height, notmen[c("A","L")], mean)
@@ -469,7 +61,7 @@ listener_age_effects = (listener_age_differences[1,]-listener_age_differences[2,
 ```
 
 
-```{r F622, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
+```{r F62, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
 
 ################################################################################
 ### Figure 6.2
@@ -570,10 +162,10 @@ listener_means = tapply (notmen$height, notmen[,"L"], mean)
 
 In the figure below we plot these, along with the listener age effects on apparent height, calculated (and presented) above. In the rightmost panel we see that these two variables seem to have a negative relationship such that smaller values of average heights tend to be associated with larger age effects. This suggests that these variables are negatively correlated. This is important because, if this is true, it suggests that we are unlikely to observe listener who reported tall speakers on average *and* had large age effects on height. 
 
-```{r F65, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
+```{r F63, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
 
 ################################################################################
-### Figure 6.5
+### Figure 6.3
 ################################################################################
 par (mfrow = c(1,3), mar = c(4,4,1,1))
 
@@ -659,10 +251,10 @@ In the left column below we compare three bivariate normal variables along the t
 
 Note the the marginal (independent) distributions of the variables (the left and right histograms) don't change as the correlation changes. The correlation is a reflection of the *joint* variation in the two variables and will not necessarily be evident in the marginal distributions of each variable.  
 
-```{r F66, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and slope coefficients from distributions with a mean of 0 and a standard deviation of 1. The correlation of the variables is 0 (top), 0.5 (middle) and 0.9 (bottom). The left column presents both variables together, the middle column presents intercepts and the right column presents slopes. ", cache = TRUE, echo = FALSE}
+```{r F64, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and slope coefficients from distributions with a mean of 0 and a standard deviation of 1. The correlation of the variables is 0 (top), 0.5 (middle) and 0.9 (bottom). The left column presents both variables together, the middle column presents intercepts and the right column presents slopes. ", cache = TRUE, echo = FALSE}
 
 ################################################################################
-### Figure 6.6
+### Figure 6.4
 ################################################################################
 
 par (mfrow = c(3,3), mar = c(4,4,3,1))
@@ -773,10 +365,10 @@ model_re_t_t =
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
-model_re_t_t = bmmb::get_model ('6_model_re_t.RDS')
+model_re_t = bmmb::get_model ('6_model_re_t.RDS')
 ```
 ```{r, include = FALSE}
-model_re_t_t = readRDS ('../models/6_model_re_t.RDS')
+model_re_t = readRDS ('../models/6_model_re_t.RDS')
 ```
 
 
@@ -785,7 +377,7 @@ model_re_t_t = readRDS ('../models/6_model_re_t.RDS')
 We can check out the summary of our model:
 
 ```{r}
-bmmb::short_summary (model_re_t_t)
+bmmb::short_summary (model_re_t)
 ```
 
 and see that the only new information is in the `L` group-level effects:
@@ -798,9 +390,7 @@ and see that the only new information is in the `L` group-level effects:
 ## cor(Intercept,A1)    -0.81      0.12    -0.96    -0.50
 ```
 
-which now includes an estimate of the standard deviation of the by-listener effect for age (i.e. the standard deviation of the listener by age interaction, $\sigma_{A1 \colon L}$ in \@ref(eq:61)), and the correlation between our listener-dependent intercept and age-effect terms. We can see that the estimate of this correlation (-0.81) is very similar to the correlation estimated for these terms in our example above (-0.86).
-
-You can get information about the variance, correlation, and covariance parameters using the `VarCorr` function in the `brms` package. As with the `fixef` and `ranef` function, this function also has the option of setting `summary=FALSE` to get the individual samples for these parameters, while by default it returns summaries of these samples. We are not going to talk much about the structure of this output, but we encourage you to investigate it using the `str` function. 
+which now includes an estimate of the standard deviation of the by-listener effect for age (i.e. the standard deviation of the listener by age interaction, $\sigma_{A1 \colon L}$ in \@ref(eq:61)), and the correlation between our listener-dependent intercept and age-effect terms. We can see that the estimate of this correlation (-0.81) is very similar to the correlation estimated for these terms in our example above (-0.86). You can get information about the variance, correlation, and covariance parameters using the `VarCorr` function in the `brms` package. As with the `fixef` and `ranef` function, this function also has the option of setting `summary=FALSE` to get the individual samples for these parameters, while by default it returns summaries of these samples. We are not going to talk much about the structure of this output, but we encourage you to investigate it using the `str` function. 
 
 ```{r, echo = FALSE}
 varcorr_information = brms::VarCorr (model_re_t_t)
@@ -819,9 +409,9 @@ model_sum_coding = readRDS ('../models/5_model_sum_coding.RDS')
 
 Despite the similarities between the models, there are some changes to the credible intervals around the parameters that are shared across both models (presented in figure \@ref(fig:F65)). It's always risky to make up explanations for things after the fact (post hoc), but we can try to think about why these changes may have occurred. Overall, our interpretation of the changed hinges on the fact that we can account for more variation in our data, and now explicitly allow for random variation to exist in the effect of `A` at the different levels of listener. 
 
-```{r F67, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+```{r F65, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
 ################################################################################
-### Figure 6.7
+### Figure 6.5
 ################################################################################
 comparison = rbind (brms::fixef(model_sum_coding),
                     brms::VarCorr (model_sum_coding)$L$sd,
@@ -843,188 +433,497 @@ bmmb::brmplot(comparison[c(4,8),], ylim = c(7,9.5),main="sigma",
 
 The change in the interval around the intercept is very small, and likely reflects our better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are know acknowledging the uncertainty between different listeners in the `A1` parameter, which we previously treated as fixed between listeners. Our model predicts a standard deviation of 4.2 cm in this effects between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can be. The standard deviation of our listener intercepts has decreased. This is to be expected as what previously seemed like variation in listener averages may have actually been variation in listener age effects. The separation of this into two separate variables may lead to the magnitude of variation in one being diminished. Finally, the decrease in the error standard deviation is due to the inclusion of the listener random effects for `A1`, and the fact that included listener-dependent values for `A1` helped explain our variable. 
 
+## Model Comparison
 
-## Varying variances: Heteroskedasticity and distributional (or mixture) models
+Bayesian models allow you to fit rather complicated 'bespoke' models for your data. A potential problem with this is at some point your model may be 'good enough' such that, although further tweaks could be made, they are no longer contributing any practical benefit to your model. In fact, you can build a model that is so good at predicting your own data that it can actually become bad at understanding the subject of investigation more generally. An analogy can be made between model fitting and bespoke clothing made at a tailor. You can go to a tailor and get a shirt made that exactly fits your body proportions. We can consider that this involves altering the length of the sleeves relative to torso length, adjusting the circumference of the sleeves and torso independently, and perhaps even making each sleeve a lightly different length. Let's imagine that tailoring the perfect shirt for a human body usually involved adjusting ten 'shirt parameters' to ensure a perfect fit for an individual. Despite this, when you go to a store to buy a shirt, there is usually one parameter, size, and it often comes in a small number of variants (e.g. small, medium, large). Since the shirts vary only in a small number of way, they are very unlikely to fit any individual perfectly. Why do stores intentionally sell clothing that doesn't fit people as well as they could? Because the store is interested in selling clothes that fit everyone *pretty well*, rather than selling clothes that fit everyone perfectly. If stores sold shirts that fit people perfectly, each shirt model would only be useful to a small number of people and would be useless for a large number of people. In contrast, by having a small number of shirts that fit the most people 'pretty well', the store can carry a small number of models and apply them successfully to customers in general.  
 
-Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption can be said to be **homoscedastic**. Historically, homogeneity of variance has been assumed in models because it makes models simpler to understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different conditions. Consider the residuals for the random effects model we just fit to our data, which we can get from the model using the `residuals` function:
+This general problem is sometimes referred to as the **bias-variance tradeoff**. In this case *bias* refers to the model's ability to represent the 'true' relationship the underlies the data, and variance refers to the degree to which the model is stable across data sets. Models that fit training data very well (i.e. the have a low variance) often change substantially when fit to new data sets (i.e. they have a high variance). This is analogous to the fact that the shape of a perfectly tailored shirt will potentially be very different across two people. On the other hand models that do not fit the data *too* well (i.e. they have a higher bias) often also have more consistent properties across new data sets (i.e. they have a low variance). This is analogous to the fact that two people are much more likely to pick the size size from a small, medium, or large choice of shirt, and these shirts are likely to fit each of these people pretty well. These issues can be understood with repsect to the extent to which our models can explain the behavior of in-sample dat and out-of-sample data. Your **in-sample** data is the data you used to fit the model, and the **out-of-sample** data is other data that you do not have access to. A statistical model is **overfit** when it corresponds too closely to your in-sample data, to the detriment of its ability to explain out-of-sample data. Recall that our models are usually used to carry our inductive reasoning: Going from a limited number of observations to the general case. In light of this, overfitting a model is exactly contrary to the goals of inductive inference. A model that does a poor job of generalizing to new observations is not useful to carry out induction. Further, a model that cannot explain out-of-sample data will not hold up to replication, which should be a concern for any researcher. This is because a researcher carrying out a replication will necessary be working with data that, from your perspective, is out-of-sample data. 
 
-```{r, cache = TRUE}
-residuals_re = residuals (model_re_t_t)
-```
+In this section we will offer a high-level conceptual understanding of Bayesian model comparison, along with an explanation of how to carry this out. For more information on the subject we recommend reading chapter X of the truly excellent *Statistical Rethinking* (cite). For an even more thorough treatment on the subject please see X and X. Much of this section is information is  provided in Gelman et al (2013), and with more mathematical detail.
 
-If we make a boxplot of the residuals we see that the distribution of errors is not exactly equal for all listeners. For example, the interquartile range for listener 10 is almost as wide as the entire distribution of residuals for listener 11. The model we just fit (`model_re_t_t`) allowed us to estimate between-listener differences in the apparent age effect on apparent height. In this section we will fit a model with listener-specific error variances ($\sigma$) in addition to listener-specific parameters related to specific effects. By allowing the random error to vary as a function of listener, our model may be able to provide more-reliable information regarding our data, in addition to letting us ask questions like "is listener 11's error variance actually smaller than listener 10's, or does it just seem that way?" in a more formal manner. 
+### In-sample and out-of-sample prediction
 
-```{r F68, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
-################################################################################
-### Figure 6.8
-################################################################################
-
-boxplot(residuals_re[,1] ~ model_re_t$data$L, col = cols)
-```
-
-Models that allow for heteroskedastic error are sometimes referred to as **mixture models** or **distributional models**. Mixture models refers to the fact that these models can be thought of resulting from a mixture of several different error distributions. One distribution provides the error in some cases and another in other cases, resulting in heteroskedastic error. Distributional models are those which seeks to model systematic variation in the error, just as more traditional models focus on systematic variation in means. In this section we will fit a distributional model to our data, we will seek to understand systematic variation in both the mean and standard deviation parameters in our model. 
-
-Before continuing, we need to talk about whether our (or your) data can realistically support the estimation of such a model. To this point we haven't discussed this much, but as our models get more and more complicated it is something we need to think about. Our data has between 84 and 94 observations for each listener, and seeks to estimate a listener-specific mean, apparent-age parameter, and error variance. So, we want to estimate three listener-dependent parameters using about 90 observations, which is reasonable. However, if we had only 10 observations per listener perhaps it may not be such a good idea to fit a heteroskedastic model to our data, or to add many more listener-specific parameters. In general, before fitting a model that you *can* fit, it is a good idea to think whether you *should* fit it given the nature of your data and the number of observations you have overall, and in different conditions. 
-
-### Description of our model
-
-Our heteroskedastic model is at the same time more complicated, but also more of the same. The `brms` package makes it exceptionally easy to fit models of this kind by letting you write formulas for the error just as you do for the mean. For example, the model formula for our previous model was:
-
-`height ~ A + (A|L) + (1|S)`
-
-This told `brms` "model apparent height as a function of an intercept, an effect for apparent age, listener-specific adjustments to the intercept and age effect, and speaker-specific intercepts". Implicitly, we know that all of this models variation in the $\nu$ parameter of a normal distribution. We want our model to fit listener-specific error terms, and we want to estimate these with partial pooling since it involves estimating 15 different parameters. We can do this by including a separate formula for our error, called `sigma` by `brms` using the following formula:
-
-`sigma ~ 1 + (A|L)`
-
-This formula tells `brms` "model the standard deviation of the error as varying around an overall intercept and listener-specific deviations (estimated with partial pooling)". We can 'stick' our two model formulas together using the `bf` (Bayes formula) function as shown below:
-
-```{r, eval = FALSE}
-model_formula = brms::bf(height ~ A + (A|L) + (1|S),
-                         sigma ~ 1 + (1|L))
-```
-
-Rather than estimate the `sigma` parameter directly, `brms` effectively models `log-sigma`, the logarithm of the error standard deviation (although hit still calls it sigma). The problem with trying to model the standard deviation parameter directly is that it is bounded by zero. As a result, effects need to get smaller and smaller as standard deviations approach zero, otherwise they may push standard deviations into negative territory (which is impossible). One way to deal with this is to log transform standard deviation (or variance) parameters and model those instead. The log transform helps model standard deviations because, just like standard deviations, logarithms are bounded by zero. Logarithms map all numbers from 0 to 1 to values between negative infinity and 0. So, when you model the logarithm of `sigma`, an effect can *always* results in a smaller sigma, a value towards, but never quite at, negative infinity. 
-
-Since we are modeling log-transformed sigmas, we now specify the priors for sigma in a log space. Previously, our prior for sigma was a t-distribution with a standard deviation of 15. This meant that the majority of the mass of the distribution was going to be between 0 and 30 cm. Now, we set the ditribution to 1.5, however, these are logarithmic units. This means we expect the mass of the distribution to be between $exp(-3)=0.05$ and $exp(3)=20.1$. We can use a prior with the same ranges for the standard deviation of our listener-dependent error adjustments ($\sigma_{L_\sigma}$). The full model specification is provided below: 
+In order to compare models in a quantitative way, we need some number that can calculated for different models. For Bayesian models, we begin with what is called the **log pointwise predictive density**, abbreviated `lpd` (or `lppd`). The `lpd` can be calculated in several ways, but equation \@ref(eq:61) presents an example of the general case. The `lpd` is the sum of the logarithm of the density for each of your data points. The symbol $\theta$ represents posterior estimates of all of the estimated parameters necessary to determine the probability density over each data point. This value is clearly related to the log posterior density, discussed in section \@ref(c3-log-posterior). Since we are adding logarithmic values, we know we are multiplying the underlying probabilities. If the data points are independent given our parameter values, the `lpd` represents the joint proability of observing the data given the model structure and the parameter estimates ($\theta$). Although prior probabilites are not included in this calculation they do factor into the estimation of $\theta$, and as a result do have an effect on values of `lpd`. 
 
 $$
 \begin{equation}
-\begin{split}
-height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma_{[i]}) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ 
-\sigma_{[i]} = \mathrm{Intercept_{\sigma}} + L_{\sigma[L_{[i]}]} \\ \\ 
-\mathrm{Priors:} \\ 
-L_{[\bullet]} \sim N(0,\sigma_L) \\
-A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L}) \\
-S_{[\bullet]} \sim N(0,\sigma_S) \\ \\
-L_{\sigma[\bullet]} \sim N(0,\sigma_{L_{\sigma}}) \\
-
-\\
-\mathrm{Intercept} \sim N(156,12) \\
-A1 \sim N(0,12) \\
-\sigma \sim N(0,12) \\
-\sigma_L \sim N(0,12) \\
-\sigma_{A1 \colon L} \sim N(0,12) \\
-\sigma_S \sim N(0,12) \\ \\ 
-\mathrm{Intercept_{\sigma}} \sim N(0,1.5) \\
-\sigma_{L_\sigma} \sim N(0,1.5) \\
-
-\end{split}
+\mathrm{lpd} = \sum_{i=1}^{N} \mathrm{log} (p(y_i | \theta))
 (\#eq:67)
 \end{equation}
 $$
 
-This model is quite large, but it only contains five new (or modified) lines compared to model presented in \@ref(eq:61). These lines are presented in \@ref(eq:68). First, our model now uses a trial-specific error term for trial $i$ ($\sigma_{[i]}$), whereas it always used a constant standard deviation previously. Second, we are now modeling this trial-specific $\sigma$ parameter using an intercept specific to our sigma term ($Intercept_{\sigma}$), and a listener-dependent deviation from this ($L_{\sigma[L_{[i]}]}$). Third, we specify the prior for our listener-dependent sigma effects. Finally, in the fourth and fifth lines and specify the prior for our sigma intercept, and for the standard deviation of the listener-specific sigma terms. In a sense, the model expressed in \@ref(eq:68) is effectively the model in \@ref(eq:61), with the additional structure in \@ref(eq:68) added to it. 
+Because $\mathrm{lpd}$ is a logarithmic value, we know large negative values are closer to zero. So, values of $\mathrm{lpd}$ closer to (or above) zero represent models that are more likely given the data. As a result, we might think that we should simply select the model with the highest $\mathrm{lpd}$ as our 'best' model. However, if we are not specifically interested in the in-sample prediction alone, then what we need to be concerned with is the possible characteristics of the out-of-sample prediction. We can think about this in terms of the **expected log pointwise predictive density**, abbreviated $\mathrm{elpd}$ (or $\mathrm{elppd}$), presented in \@ref(eq:62). Unlike the $\mathrm{lpd}$, the $\mathrm{elpd}$ is defined in terms of hypothetical out-of-sample data ($\tilde{y}$) instead of the in-sample data ($y$). The $\mathrm{E}()$ below represents the expected value function, which we have not really discussed to this point. The expected value of a variable is the ... [@@ SB - I don't know how to define this in the general case in an intuitive way]. So, the $\mathrm{elpd}$ basically represents the expected value of $\mathrm{lpd}$ for out-of-sample data. 
 
 $$
 \begin{equation}
-\begin{split}
-height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma_{[i]}) \\ 
-\sigma_{[i]} = \mathrm{Intercept_{\sigma}} + L_{\sigma[L_{[i]}]} \\ \\
-L_{\sigma[\bullet]} \sim N(0,\sigma_{L_{\sigma}}) \\ \\
-\mathrm{Intercept_{\sigma}} \sim N(0,1.5) \\
-\sigma_{L_\sigma} \sim N(0,1.5) \\
-
-\end{split}
+\mathrm{elpd} = \sum_{i=1}^{N} \mathrm{E}(\mathrm{log} (p(\tilde{y}_i | \theta)))
 (\#eq:68)
 \end{equation}
 $$
 
-### Fitting the model
+Of course, you can't actually know the value of $\mathrm{E}(\mathrm{log} (p(\tilde{y}_i | \theta))$ because you do not have access to the true properties of ($\tilde{y}$). As a result, you must settle for an estimate of $\mathrm{elpd}$, $\widehat{\mathrm{elpd}}$. The simplest, and worst, way to estimate out-of-sample prediction($\mathrm{elpd}$) is by simply looking at the in sample prediction ($\mathrm{lpd}$). One of the reasons that this does not generally work is because making our models more and more complicated will generally improve your in-sample prediction. However, if the predictors are not related to true characteristics of the underlying model, they will also tend to decrease the fit of the model to new data. Returning to the analogy of shirt fits discussed above. You can buy a shirt from the store and take it to a tailor to get it customized. The more the tailor changes this from the 'standard' shape, the better the shirt will fit you and the worse it will fit everyone else. Only alterations which conform to the 'true' average torso shape will increase the fit for people in general (and may in fact reduce the fit for you).
 
-For the first time below, we specify both the model formula (using the `bf` function) and the priors (using the `set_prior` function) outside of the call to `brm`. We do this to preserve the legibility of the code in general. Our prior specification includes two new lines to specify the priors for our sigma intercept ($\mathrm{Intercept_{\sigma}}$) and the standard deviations of our sigma-related terms ($\sigma_{L_\sigma}$). These priors are specified with the lines:
+We can demonstrate this for some very simple models using simulations. In the code below, we generate three random variables consisting only of the values -1 and 1. We then use only the first variable (`x1`) to simulate some random data, and we add random Gaussian error to this fake variable. After this we generate two sets of data using the same data generating process, in_sample (`y`) and out-of-sample data (`y_tilde`). We then fit three models to both data sets. These models include increasingly more predictor variables, however, we know that only the first one is useful to understand the underlying process. The models are fit using a function that we have not discussed to this point. The `lm` (linear model) function uses maximum-likelihood estimation (see section X) to fit regression models with relatively simple structures. We use it here because it estimates regression parameters very quickly and therefore is reasonable to use when we want to fit 3000 models in no more than two seconds. 
 
-```{r}
-brms::set_prior("student_t(3, 0, 1.5)", class = "Intercept", dpar = "sigma")
-brms::set_prior("student_t(3, 0, 1.5)", class = "sd", dpar = "sigma")
+```{r, cache = TRUE}
+n = 50         # how many observations
+iter = 1000    # how many simulations
+# these will hold the model log likelihoods for each iteration
+lpd = matrix (0, iter, 3)
+elpd = matrix (0, iter, 3)
+
+set.seed(1)
+for (i in 1:iter){
+  # create 3 random predictors
+  x1 = sample (c(-1,1), n, replace=TRUE)
+  x2 = sample (c(-1,1), n, replace=TRUE)
+  x3 = sample (c(-1,1), n, replace=TRUE)
+
+  # generate the observed (in sample) data with an  
+  # underlying process that only uses the x1 predictor
+  y = 1 + x1 + rnorm (n, 0, 1)
+  # use the same process to simulate some "out-of-sample" data
+  y_tilde = 1 + x1 + rnorm (n, 0, 1)
+ 
+  for (j in 1:3){
+    # fit three models, the first using the real underlying model
+    if (j==1) mod = lm (y ~ 1+x1)
+    # the next two include random useless predictors
+    if (j==2) mod = lm (y ~ 1+x1 + x2)
+    if (j==3) mod = lm (y ~ 1+x1 + x2 + x3)
+    
+    # find the predicted value (mu) for each data point
+    mu = mod$fitted.values
+    # and the estimated sigma parameter
+    sigma = summary(mod)$sigma
+    
+    lpd[i,j] = sum (dnorm (y, mu, sigma, log = TRUE))
+    elpd[i,j] = sum (dnorm (y_tilde, mu, sigma, log = TRUE))
+  }
+}
 ```
 
-Notice that we set these using the classes we have already discussed, `Intercept` and `sd` respectively. However, now we set `dpar` (distributional parameter) to `sigma` to tell `brm` that these priors are specifically for parameters related to the model error term, and not to variation in predicted values (i.e. $\nu$).
+We use the predicted values (`mu`, $\mu$) and (`sigma`, $\sigma$) estimates provided by our maximum-likelihood models to estimate the $\mathrm{lpd}$ and $\mathrm{elpd}$ for each model. In each case, we do so by calculating as in \@ref(eq:63):
+
+$$
+\begin{equation}
+\mathrm{lpd} = \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(y_i | \mu, \sigma))
+(\#eq:69)
+\end{equation}
+$$
+And \@ref(eq:64), where the $\tilde{y}$ is the out-of-sample data being predicted using the in-sample estimates of $\mu$ and $\sigma$.
+
+$$
+\begin{equation}
+\mathrm{elpd} = \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(\tilde{y}_i | \mu, \sigma))
+(\#eq:610)
+\end{equation}
+$$
+
+In the formulas above we replace $p(\tilde{y}_i | \theta)$ with $\mathrm{N}(y_i | \mu, \sigma)$ because the simulations generate normally-distributed data. Our simulations result in three sets of $\mathrm{lpd}$ and three sets of $\mathrm{elpd}$, a pair of each for each of the models above. The average of each of these six sets of values is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less probable* outcome. We can see that the $\mathrm{lpd}$ increases as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the data generating process or to the dependent variable. Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do *at least as well* as the model with fewer possible explanations. However, although the extra parameters increase the $\mathrm{lpd}$, they actually *decrease values* of $\mathrm{elpd}$. Why? The extra predictors included in our model in no way relate to our data, the 'answers' they provide can only be due to overfitting, the learning of chacracteristics that are specific to the in-sample data rather than consistent properties of the out-of-sample data. 
+
+```{r F66, fig.height = 3, fig.width = 8, fig.cap=" (left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now the elpd is estimated based on the number of parameters.", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.6
+################################################################################
+
+means = round (apply (cbind(lpd,elpd), 2, mean),1)
+
+layout (mat=t(c(1:3)), widths = c(.4,.4,.2))
+par (mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "lpd",xlab="Predictors")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+arrows (1,means[1]-0.2, 1,means[4]+0.2,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[5]+0.2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[6]+0.2,code=3, length=0.1,lwd=2)
+text ((1:3)+.1, -71, labels = round(c(means[1]-means[4],means[2]-means[5],
+                                means[3]-means[6]),2))
+text (0.8,c(-68.8,-73.6), labels = c("More Likely","Less likely"), pos=4)
+
+mtext (side=2,text = "log density", line = 2.75)
+#legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
+#        col=c(1,2), lwd=2,bty="n")
+
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
+arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
+
+text (1:3, means[1:3]+.25, labels = means[1:3])
+text (1:3, means[4:6]-.25, labels = means[4:6])
+text (1:3, means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
+
+plot (0, bty='n', xaxt='n',yaxt='n',xlab="",type="n")
+legend (.6,.2,legend = c("lpd","elpd","elpd_hat"), lwd=4, 
+        col = c(1,2,2),cex=1.4,lty = c(1,1,3))
+```
+
+So, we see that adding 'unneccessary' models can decrease our out-of-sample performance. Ok, so could we just not ever include any 'unnecessary' predictors in our models? Obviously this would be ideal, however, there are some complications. In the example in figure \@ref(fig:F63) we knew the true underlying model and generated out-of-sample data that exactly conformed to the characteristics of our sample. In real life, researchers do not usually have access to out-of-sample data, they do not know the characteristics of the 'true' model that underlies their data, nor can they confirm that any out-of-sample data shares the exact underlying process as their in sample data. As a result, we can never *really* know what the difference is between in sample and out-of-sample prediction for our models. However, you may have noticed that: 1) The slopes of the lines representing $\mathrm{elpd}$ and $\mathrm{lpd}$ in figure \@ref(fig:F63) seem to have predictable slopes, 2) The lines diverge form each other at predictable rates based on the complexity of the models. Mathematicians have noticed this too, and have used this to *adjust* $\mathrm{lpd}$ calculate on in-sample data in order to estimate values of $\mathrm{elpd}$ for out-of-sample data. 
+
+### Out-of-sample prediction: Adjusting predictive accuracy
+
+The logic of adjusting $\mathrm{lpd}$ based on model complexity can be understood with reference to figure \@ref(fig:F63). Our goals is to select the model with the best out-of-sample prediction (i.e. the highest value on the red line), given only knowledge of the in-sample prediction (the values on the black line). In the left plot we can see that the difference between the black and red lines for each model increases by one for every parameter we add. Let us assume for the time being that this is a general property of all models. This means we can subtract one from the $\mathrm{lpd}$ of our least-complicated model to estimate the $\mathrm{elpd}$ for that model, and subtract three from the likelihood of the most-complicated model to estimate the $\mathrm{elpd}$ for that model. In general we can think of this as **penalizing** the value of $\mathrm{lpd}$ based on some penalty value $\mathrm{p}$. Different ways to estimate $\widehat{\mathrm{elpd}}$ differ in terms of how they estimate $\mathrm{lpd}$ and  $\mathrm{p}$. In the very simple example we are discussing here, we are setting $\mathrm{p}=k$, where $k$ is the number of parameters estimated by the model. If we set $\mathrm{p}=k$ and carry out the operation in \@ref(eq:65) usng the values in figure \@ref(fig:F63), we would arrived at values of $\mathrm{elpd}$ of -70.7 (-69.7-1) and -71.7 (-68.7-3) for the least and most complex models. If we chose models based on these estimates of $\widehat{\mathrm{elpd}}$ we would suggest the model with the worst $\mathrm{lpd}$, but the one that actually corresponded to the true data-degenrating process.
+
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}} = \mathrm{lpd} - \mathrm{p}
+(\#eq:611)
+\end{equation}
+$$
+
+Penalization will not always result in the highest values of $\widehat{\mathrm{elpd}}$ for the simplest model. In figure \@ref(fig:F64) we simulate new fake data, except now we include $x_2$ to the 'real' underlying data generating process (i.e., `y = 1 + x1 + rnorm (n, 0, 1)`). So, for this data we actually *do* need both $x_1$ and $x_2$ in the model. As seen below, penalization does not obscure the benefit of adding $x_2$ to our model when it is warranted. This is because the relatively small penalty associated with the increased model complexity does not overwhelm the large benefit due to the inclusion of a predictor that is actually related to our dependent variable. 
+
+```{r F67, fig.height = 4, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.7
+################################################################################
+n = 50         # how many observations
+iter = 1000    # how many simulations
+# these will hold the model log likelihoods for each iteration
+in_sample_ll = matrix (0, iter, 3)
+out_of_sample_ll = matrix (0, iter, 3)
+
+set.seed(1)
+for (i in 1:iter){
+  # create 3 random predictors
+  x1 = sample (c(-1,1), n, replace=TRUE)
+  x2 = sample (c(-1,1), n, replace=TRUE)
+
+  # generate the observed (in sample) data with an  
+  # underlying process that only uses the x1 predictor
+  y_in = 1 + x1 + rnorm (n, 0, 1)
+  # use the same process to simulate some "out-of-sample" data
+  y_out = 1 + x1 + rnorm (n, 0, 1)
+ 
+  for (j in 1:3){
+    # fit three models, the first using the real underlying model
+    if (j==1) mod = lm (y_in ~ 0+x1)
+    # the next two include random useless predictors
+    if (j==2) mod = lm (y_in ~ 1+x1)
+    if (j==3) mod = lm (y_in ~ 1+x1 + x2)
+    
+    # find the predicted value (mu) for each data point
+    yhat = mod$fitted.values
+    # and the estimated sigma parameter
+    sigma = summary(mod)$sigma
+    
+    in_sample_ll[i,j] = sum (dnorm (y_in, yhat, sigma, log = TRUE))
+    out_of_sample_ll[i,j] = sum (dnorm (y_out, yhat, sigma, log = TRUE))
+  }
+}
+
+
+
+means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
+
+par (mfrow = c(1,2), mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "Model log-likelihhod",xlab="Predictors")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+mtext (side=2,text = "Log-likelihood", line = 2.5)
+#legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
+#        col=c(1,2), lwd=2,bty="n")
+
+  plot (means[1:3], type = "b", lwd = 2, ylim =c(-73.5,-69),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
+arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
+
+text (1:3, means[1:3]+.25, labels = means[1:3])
+text (1:3, means[4:6]-.25, labels = means[4:6])
+text (1:3, means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
+```
+
+Historically, the $\mathrm{p}$ term is related to the number of independent parameters estimated by the model. Estimated parameters are those that are not specified a priori but instead depend on the data and structure of the model. This is not so straightforward in our multilevel models since parameters estimated with partial pooling (and shrinkage) are not fully independent. So, for example, a set of 10 'random effects' may in effect act as fewer than 10 totally independent parameters. In addition, the parameters and penalty terms involved in estimates of elpd have traditionally been *point estimates*, single values often based on maximum-likelihood estimation. Since our models consist of posterior distributions of parameters, we instead have *distributions* of lpd and p. In this section we are only going to discuss the **widely available information criterion** (WAIC) as calculated using the brms package. For a more complete treatement of other ways, and historical approaches, please see Gelman et al. (2013). 
+To calculate WAIC we first find the average probability of each data point given our model parameters ($p(y|\theta)$) across all posterior samples ($S$). Then we find the logarithm of this value and add this up across all of our $i$ observations. This is presented in equation \@ref(eq:66).
+
+$$
+\begin{equation}
+\widehat{\mathrm{lpd}} = \sum_{i=1}^{N} \mathrm{log} (\frac{1}{S} \sum_{s=1}^{S} p(y_i | \theta^s))
+(\#eq:612)
+\end{equation}
+$$
+
+Rather than count the number of parameters estimated in our model, waic estimates the penalty term based on the variance of the logarithm of the posterior probability of each data point across all posterior draws, for each data point as seen in equation \@ref(eq:67). For example, imagein your model contains 5000 posterior samples from the parameters, and 1000 data points. For the first data point, we calculate the log density for each posterior sample. Then, we find the variance of these values across the samples. Then, we repeate this process for all 1000 of our data points and add these values up.
+
+$$
+\begin{equation}
+\mathrm{p_{waic}} = \sum_{i=1}^{N} Var_{s=1}^{\,S}(\mathrm{log} (p(y_i | \theta^s)))
+(\#eq:613)
+\end{equation}
+$$
+
+Why does this work? This is one of those thing that you may need to get used to rather than understand, at least for now, although explanations can be found in (?). The short, conceptual explanation is that more complex model exhibit more variation in their posterior probabilities. As a result, the variance of the log density across the posterior samples is a general way to estimate model complexity that avoids issues related to how many truly independent parameters a model estimates. Given our estimate of $\widehat{\mathrm{lpd}}$ and $\mathrm{p_{waic}}$, we can now estimate $\widehat{\mathrm{elpd}}_{waic}$ as in \@ref(eq:68).
+
+
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}}_{waic} = \widehat{\mathrm{lpd}} - \mathrm{p_{waic}}
+(\#eq:614)
+\end{equation}
+$$
+Below we load the sum-coded models we fit in the last chapter:
 
 ```{r, eval = FALSE}
-# Fit the model yourself
-model_formula = brms::bf(height ~ A + (A|L) + (1|S),
-                         sigma ~ 1 + (1|L))
-
-priors = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
-          brms::set_prior("normal(0, 12)", class = "b"),
-          brms::set_prior("normal(0, 12)", class = "sd"),
-          brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
-          brms::set_prior("normal(0, 1.5)", class = "Intercept", dpar = "sigma"),
-          brms::set_prior("normal(0, 1.5)", class = "sd", dpar = "sigma"))
-
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
-model_re_t_het = 
-  brms::brm (model_formula, data = notmen, chains = 4, cores = 4,
-             warmup = 1000, iter = 3500, thin = 2, family="student",
-             prior = priors)
-```
-```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
-model_re_t_het = bmmb::get_model ('6_model_re_t_het.RDS')
+model_sum_coding = bmmb::get_model ('5_model_sum_coding.RDS')
+model_sum_coding_t = bmmb::get_model ('5_model_sum_coding.RDS_t')
 ```
 ```{r, include = FALSE}
-model_re_t_het = readRDS ('../models/6_model_re_t_het.RDS')
+model_sum_coding = readRDS ('../models/5_model_sum_coding.RDS')
+model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
 ```
 
-### Interpreting the model
-
-If we look at the model output:
+And set our options to sum coding to match the coding we used when we fit the models:
 
 ```{r}
-bmmb::short_summary (model_re_t_het)
+options (contrasts = c('contr.sum','contr.sum'))
 ```
 
-We see a two new lines reflecting our new model parameters. The first new line is in the `Group-level effects` for `L`. This line indicates the standard deviation of the listener-specific sigma terms (`sd(sigma_Intercept)`), which we see is 0.34 (remember this is in a log scale). The second new line is in the `Population-level effects`, and it indicates the overall intercept for our sigma term (also on a log scale). If we exponentiate the value of `sigma_Intercept` ($exp(1.75)$), we get 5.X, the value of the sigma term in bla bla. 
+We can use the `add_criterion` function in `brms`, and specify `criterion="waic"` to add the `waic` criterion to our model object. We do this for both our model with the normal and the t distributed error. 
 
-Our listener-specific adjustments to the sigma intercept were fit with partial pooling, i.e. they are 'random' effects. As such, we can get these in the same two ways indicated for other random effects terms in section X. First, we can get these with the `ranef` function, which returns a matrix representing our listener random effects terms.
+```{r, cache = TRUE}
+model_sum_coding = brms::add_criterion (model_sum_coding, criterion="waic")
+
+model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="waic")
+```
+
+Adding the `waic` criterion to our model with Gaussian errors `model_sum_coding`) returns an error message. To understand why we get these errors we can investigate the model `waic` information, which we can see below:
 
 ```{r}
-str (ranef(model_re_t_het)$L)
+model_sum_coding$criteria$waic
 ```
 
-After this, we can get just the sigma intercepts, the first five of which are presented below. 
+The three rows represent the expected log pointwise predictive density (`elpd`), the penalty related to the flexibility of the model (`p_waic`) and the third column is the information criterion WAIC (`waic`) which is just -2 times the first row. The `p_waic` penalty term is sometimes referred to as the 'effective number of parameters', but Gelman (cite) cautions that this usage is somewhat figurative and should not be 'over interpreted'. The effective number of parameters relates to the complexity and flexibility of the model and its ability to adapt to new data. Our sum coding model has 114 estimated parameters (15 L + 1 lsd, 94 s + 1 ssd, 2 fe, 1 sigma, 114 = 16 + 95 + 2 +1) but only about 81 effective parameters. The statistics provided above are calculated individually for each data point. We can get the pointwise information as seen below: 
 
 ```{r}
-ranef(model_re_t_het)$L[1:5,,"sigma_Intercept"]
+model_waic_info = model_sum_coding$criteria$waic$pointwise
+model_t_waic_info = model_sum_coding_t$criteria$waic$pointwise
 ```
 
-Alternatively we can use the `hypothesis` function to get the listener random effects themselves, or the sum of these with the sigma intercept. 
+Below we have a look at the first six values: 
 
 ```{r}
-sigmas_centered = short_hypothesis(model_re_t_het, "sigma_Intercept = 0", 
-                                   scope = "ranef",group="L")
-sigmas = short_hypothesis(model_re_t_het, "sigma_Intercept = 0", 
-                          scope = "coef",group="L")
+# first six data points
+head (model_waic_info)
 ```
 
-We compare these in the plot below,  exponenting the recreated sigma values to get the listener-specific standard deviation terms. 
+There are as many rows as data points were used to fit the model. The Estimates above simply correspond to the sum of each column. The standard error (SE) corresponds to the variance of the column times the square root of N (since the statistics are sums and not means). We recreate the summary values seen above:
 
-```{r F69, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+```{r}
+# the sum of each column
+colSums (model_waic_info)
+# the standard deviation of each column
+apply (model_waic_info,2,sd) * sqrt(1386)
+```
 
+The error message said that "28 (2.0%) p_waic estimates greater than 0.4". Large `p_waic` suggest a poor fit between data points and the model. To investigate this we can get the posterior mean residuals from each of the models we are considering:
+
+```{r, cache = TRUE}
+resids = scale(residuals(model_sum_coding)[,1])
+resids_t = scale(residuals(model_sum_coding_t)[,1])
+```
+
+We scale our residuals so that they represent standard deviations from the mean, and plot these against the `p_waic` value calculated for each data point by each model. Clearly, large residuals relate to large `p_waic` values. In other words, large `p_waic` values are relate to data points that are a very poor fit for our model. In our model with Gaussian errors this relationship is very predictable and quickly leads to large values in `p_waic`. For our model with t-distributed errors (`model_sum_coding_t`) residuals beyond about two standard deviations do not strongly affect `p_waic`. These differences are due to the different behaviors of the normal and t-distributions in their tails, as discussed in section X. 
+
+```{r F68, fig.height = 4, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
 ################################################################################
-### Figure 6.9
+### Figure 6.8
 ################################################################################
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
-brmplot (sigmas_centered, col = cols)
-brmplot (exp(sigmas), col = cols, ylim = c(1,13))
-#abline (h = 7.71)
+plot(model_sum_coding$criteria$waic$pointwise[,2], resids, 
+     ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
+grid()
+abline (v = 0.4)
+#abline (h=c(-2.5,2.5))
+
+plot(model_sum_coding_t$criteria$waic$pointwise[,2], resids_t, 
+     ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
+grid()
+abline (v = 0.4)
 ```
 
+The warning message suggest that we use `loo` (discussed in the next section) rather than `waic` for model comparison. The reason for this is that, as seen above, some very large residuals in our model with Gaussian error result in large `p_waic` values. As to why large `p_waic` values are bad, when the assumptions underlying `waic` are met, there should not be large `p_waic` values. As a result, large `p_waic` suggest that the assumptions used by this method are being violated. When this occurs, as the error message suggests, you shouldn't use `waic`, even if it seems reliable and looks 'normal'. Think of it this way, if a bridge say it has a weight limit of three tonnes and you're driving a truck that weighs four tonnes, should you drive across the bridge? Maybe you get across safely and save some time. Maybe you crash of the bridge into the river. When you use something like this despite being warned not to you run the same risk: Maybe what you report is a true and reliable analysis, and maybe its not and you are reporting nonsense (the academic equivalent of crashing into the river). 
 
+### Out-of-sample prediction: Cross validation
 
+- explain pareto k, diagnostics
 
+The last way to evaluate models that we'll be discussing is called **cross validation**. Cross validation consists of dividing your data into two groups. You use one group to fit a model (i.e. your in-sample, or *training* data), and then use this model to predict the other group of data (i.e. the out-of-sample, or *testing* data). In this way, a cross validation is a way to simulate out-of sample rpediction using only the data you actually have. There are many ways to carry out cross validation, and these mostly differ in terms of the ways that they divide data into training and testing groups. **Holdout** cross validation selects makes one single partition and uses that to test and train. Obviously this is not ideal because the results will be highly dependent on the specific groups you made. In **k-fold** cross validation you split your data into k equal parts. You then train on parts $k_{-i}$ for iteration $i$, and predict the $ith$ group using that model. This approach can minimize on the problems of holdout cross validation since it uses k, rather than one, estimates of the out-of-sample performance. The logical endpoint of k-fold cross-validation is **leave-one-out** cross validation, sometimes referred to as LOO. In leave-one-out cross validation you leave out a single observation at a time. So, if you have $i$ observations you train the model on all observations but $i$ (i.e. $y_{-i}$), and then predict the lone held out point ($y_i$). Although LOO provides excellent estimates of out-of-sample prediction, in principle this is extremely computationally intensive since it involves the calculation of $i$ models for $i$ data points. For example, out relatively small data set (`notmen`) has 1386 observations, potentially requireing the fitting of 1386 models.
 
+Luckily, advances in the past few years have resulted in fast ways to approximate LOO elpd without having to refit models repeatedly (cite). The `loo` R package, and the associated functions implemented in the `brms` package makes it easy to carry out a LOO cross-validation in a very fast an efficient manner. In addition, this approach is substantially more robust than using `waic` as outlined above. The calculation of $\widehat{\mathrm{elpd}}_{loo}$ using LOO is more complicated than what we can explain here, however, we can provide an approximate definition here. In \@ref(eq:63) we use the $\approx$ symbol because we are not providing an exact definition of how $\widehat{\mathrm{elpd}}_{loo}$ is calculated in practice, but only in principle. Equation \@ref(eq:63) states that the estimate of $\mathrm{elpd}$ provided by LOO cross validation is equal to the sum of the log density of eqach datapoint ($y_i$) based on the parameters estimated using all the data *except* for that point ($\theta_{y_{-i}}$). 
 
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}}_{loo} \approx \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(y_i | \theta_{y_{-i}}))
+(\#eq:615)
+\end{equation}
+$$
 
+We define the relationship between $\widehat{\mathrm{elpd}}_{loo}$ and $\widehat{\mathrm{lpd}}$ using the same relationship defined in equation X, pdated for LOO below. 
+
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}}_{loo} = \widehat{\mathrm{lpd}} - \mathrm{p_{\mathrm{loo}}}
+(\#eq:617)
+\end{equation}
+$$
+
+Based on this, we can estimate $\mathrm{p_{\mathrm{loo}}}$ by rearranging the terms of the equation as below. Just as with WAIC, the $\mathrm{p_{\mathrm{loo}}}$ parameters reflects the effective number of parameters, an estimate of model complexity. 
+
+$$
+\begin{equation}
+\mathrm{p_{\mathrm{loo}}} = \widehat{\mathrm{lpd}} - \widehat{\mathrm{elpd}}_{loo}
+(\#eq:617)
+\end{equation}
+$$
+Estimates of $\widehat{\mathrm{elpd}}_{loo}$ and associated statistics can be added to our models using the code below:
+
+```{r}
+model_sum_coding = brms::add_criterion (model_sum_coding, criterion="loo")
+model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="loo")
+model_re_t = brms::add_criterion (model_re_t, criterion="loo")
+```
+
+We can see our new criteria using the code below. Notice that we no longer see the error message we got with WAIC above. 
+
+```{r}
+model_sum_coding$criteria$loo
+```
+
+Since we no longer have warnings, we can compare our models as seen below. This compares the values of $\widehat{\mathrm{elpd}}_{loo}$ for each data point across all our models, and presents the average difference and the standard error of the difference between the best performing model and the rest of the models. Below, `model_re_t` has an `elpd_diff` of 0, indicating that this is the best model. Values of `elpd_diff` for `model_sum_coding_t` and `model_sum_coding` are -204 and -222 respectively, indicating substantial differences in $\widehat{\mathrm{elpd}}_{loo}$ between our models.
+
+```{r}
+brms::loo_compare (model_sum_coding, model_sum_coding_t, model_re_t, criterion = "loo")
+```
+
+We can explore where these values come from by extracting the pointwise information from our models just as we did for WAIC. 
+
+```{r}
+model_loo_info = model_sum_coding$criteria$loo$pointwise
+model_t_loo_info = model_sum_coding_t$criteria$loo$pointwise
+model_re_t_lo_info = model_re_t$criteria$loo$pointwise
+```
+
+And we can see that the `elpd_diff` is just the sum of the `elpd` estimates across the two models. The standard error of the difference is simply the standard deviation of the difference times the square root of N. 
+
+```{r}
+sum(model_re_t_lo_info[,1]-model_t_loo_info[,1])
+sd(model_re_t_lo_info[,1]-model_t_loo_info[,1]) * sqrt(1386)
+```
+
+We can use this knowledge to calculate the difference between our two worst performing models since these are not directly compared above: 
+
+```{r}
+sum(model_t_loo_info[,1]-model_loo_info[,1])
+sd(model_t_loo_info[,1]-model_loo_info[,1]) * sqrt(1386)
+```
+
+And see that these values correspond to those obtained using the comparison function as seen below:
+
+```{r}
+brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
+```
+
+Finally, we can check out the estimated number of parameters by summing the third column of our pointwise information for each model, which contains information about `p_loo` for each model. We can compare this to the number of actual parameters estimated by our models. An easy way to find the number of estimated parameters is to get the posterior draws for a model, which contains one column for each estimated parameter, plus one columns for `lp` (discussed in chapter 3). So, if we find the number of columns minus one, we can quickly count the number of estimated parameters for most kinds of models. Below, we compare the actual number of parameters to each model with our effective number of parameters. For example, we can see that going from Gaussian to t distributed errors results in the estimation of one additional parameter ($\nu$), and the number of estimated parameters goes up by about 2.6. Adding random effects for apparent age to our model required the addition of 17 parameters: 15 listener-specific age effects, a standard deviation for these effects, and the correlation between the listener specific age and intercept effects. We can see that this has led to an increase of about 24 effective parameters. We can potentially explain this by thinking about how the inclusion of random effects for apparent age may have affected the estimation of the other random effects already included in the model. However, we are not going to worry too much and 'overinterpret' the effective number of parameters. 
+
+```{r}
+# Actual and effective number of parameters for simplest model
+ncol(brms::as_draws_matrix(model_sum_coding))-1
+sum(model_loo_info[,'p_loo'])
+
+# Actual and effective number of parameters for t model
+sum(model_t_loo_info[,'p_loo'])
+ncol(brms::as_draws_matrix(model_sum_coding_t))-1
+
+# Actual and effective number of parameters for 'random effects' model
+sum(model_re_t_lo_info[,'p_loo'])
+ncol(brms::as_draws_matrix(model_re_t))-1
+```
+
+### Selecting a model
+
+Which model should we use? Based on the comparison above, we see that `model_re_t` has an elpd that is 204 greater than the next best model. How large does an elpd difference need to be in order to be meaningful. There two things that need to be taken into account: The magnitude of any differences and the uncertainty in these differences. A general rule of thumb seems to be that a difference of at least 2-4 in elpd is necessary in order to signal a meaningful difference between the models (cite akis page and maybe something else if I can find it). However, this is simply a rule of thumb and does not mean that a difference of 1.99 does not matter and a difference of 2.01 does. On the other hand, even large differences between models may not be reliable in the presence of large standard error estimates. For example, below we see the difference between out two smaller models:
+
+```{r}
+brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
+```
+
+The difference is 18, which is obviously large enough to warrant consideration as a meaningful difference. However, the standard error is 7.3. This means that the difference is only about 2.5 standard errors from zero. How many standard errors away from zero does it need to be in order to be 'real'? This is impossible to say, and in fact the 'reality' of any given effect can not be definitively established by any statistical test. Ok, so how many standard errors from zero should it be before we make a fuss about it? The answer to this seems to be 'several' (cite), somewhere in the neighborhood of 2-5 at least. If we think of improvements to our model as continuous, we can think of differences that are two standard errors away as 'small' and differences that are 5+ standard errors away as 'large'. The decision of where exactly to draw a line between improvements that matter and those that don't is generally up to the researcher. In addition to the consideration of differences in `elpd` in isolation, the researcher may also consider how theoretically or practically warranted the changes in their model are. For example, we more or less know that our data contains way too many outliers to be a proper Gaussian distribution. As a result, although the improvement provided by using t distributed errors is not large, we may choose to keep using t distributed errors in our model anyways. On the other hand, given the small difference between the estimates provided by both models and the not-huge difference in elpd between the models, a researcher may be warranted in simply using normally distributed errors in their model. In contrast to these small differences, we see a difference of 204 in elpd due to the addition of random effects for apparent age, a whopping 10.7 standard errors away from zero. Kepp in mind this does not mean that a researcher *must* include this predictor nor that this structure would necessarily be an aspect of the *real* model. What it *does* mean is that: 1) The addition of random effects for apparent age greatly affects the fit of our model to our data, 2) This increase in fit is very likely to extend to those data we did *not* observe, and 3) We have pretty good evidence that the difference between the models is reliable. We could add to this: 4) It makes *sense* that there would be listener-dependent variation in the effect for apparent age, for several different reasons. Taken together, in this particular situation all of this suggests that our model is substantially improved by the addition of these random effects and so they should be included in our model. 
+
+```{r}
+brms::loo_compare (model_sum_coding, model_sum_coding_t, model_re_t, criterion = "loo")
+```
+
+Before finishing our discussion of model comparison, we want to show an example of when adding a predictor does *not* help in practice. To do this we add a useless predictor to our data frame, as below. This predictor is a random sample of -1 and 1 with no relationship to our height judgments. We can see below that the average reported height is basically the same for both values of our useless predictor. 
+
+```{r}
+set.seed(1)
+notmen$useless = sample (c(-1,1),nrow(notmen), replace = TRUE)
+tapply (notmen$height, notmen$useless, mean)
+```
+
+Below we fit out t distributed random effects model again, however, this time we include the useless predictor in the model formula, and even include a random effect for it:
+
+`height ~ A + useless + (A + useless|L) + (1|S)`
+
+We haven't actually discussed including multiple predictors in our formulas, and in fact we will discuss this in detail in the following chapter. For now, we are only interested in considering how this useless predictor affects our model comparisons. We fit this model below:
+
+```{r, eval = FALSE}
+priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
+           brms::set_prior("student_t(3,0, 12)", class = "b"),
+           brms::set_prior("student_t(3,0, 12)", class = "sd"),
+           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+           brms::set_prior("gamma(2, 0.1)", class = "nu"),
+           brms::set_prior("student_t(3,0, 12)", class = "sigma"))
+
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+model_re_t_tooBig =  
+  brms::brm (height ~ A + useless + (A + useless|L) + (1|S), data = notmen, chains = 4, cores = 4,
+       warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
+```
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+model_re_t_tooBig = bmmb::get_model ('6_model_re_t_tooBig.RDS')
+```
+```{r, include = FALSE}
+model_re_t_tooBig = readRDS ('../models/6_model_re_t_tooBig.RDS')
+```
+
+And add the `loo` criterion to it. 
+
+```{r}
+model_re_t_tooBig = brms::add_criterion (model_re_t_tooBig, criterion="loo")
+```
+
+Finally, we compare this to our equivalent model, minus the useless predictor. 
+
+```{r}
+brms::loo_compare (model_re_t, model_re_t_tooBig)
+```
+
+We can see that the more-complex model in this case actually has a lower elpd, indicating that our added predictor does not contribute to out of sample prediction. In addition, we can look at a summary of the fixed effects and see that the value of the useless predictor is near zero (0.08), and the credible interval is wide and approximately symmetrical about zero. So, does this mean that this predictor should be excluded from the model? We would be justified in doing so, but may not necessarily want to. For example, if one of our important research questions centered round the value of the useless predictor, the fact that it is around zero and not some other value (e.g. -100) may be useful information. For example, we might want to keep the predictor in the model so we can say something like "So & So (2007) reported a value of -100 for the useless predictor. However, our results suggest that this predictor has an effect on apparent height that is much closer to zero [mean = 0.08, sd = 0.20, 95% CI = [-0.31,0.48])". 
+
+```{r}
+brms::fixef(model_re_t_tooBig)
+```
 
 ## But what does it all mean? 
-
-
-
-
 
 
 

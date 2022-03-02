@@ -393,7 +393,7 @@ and see that the only new information is in the `L` group-level effects:
 which now includes an estimate of the standard deviation of the by-listener effect for age (i.e. the standard deviation of the listener by age interaction, $\sigma_{A1 \colon L}$ in \@ref(eq:61)), and the correlation between our listener-dependent intercept and age-effect terms. We can see that the estimate of this correlation (-0.81) is very similar to the correlation estimated for these terms in our example above (-0.86). You can get information about the variance, correlation, and covariance parameters using the `VarCorr` function in the `brms` package. As with the `fixef` and `ranef` function, this function also has the option of setting `summary=FALSE` to get the individual samples for these parameters, while by default it returns summaries of these samples. We are not going to talk much about the structure of this output, but we encourage you to investigate it using the `str` function. 
 
 ```{r, echo = FALSE}
-varcorr_information = brms::VarCorr (model_re_t_t)
+varcorr_information = brms::VarCorr (model_re_t)
 str (varcorr_information)
 ```
 
@@ -427,7 +427,7 @@ bmmb::brmplot(comparison[c(2,6),], ylim = c(6,11),main="A1",
               xlim = c(.75,2.25), col = c(4,2))
 bmmb::brmplot(comparison[c(3,7),], ylim = c(2,8),main="Lsd", 
               xlim = c(.75,2.25), col = c(4,2))
-bmmb::brmplot(comparison[c(4,8),], ylim = c(7,9.5),main="sigma", 
+bmmb::brmplot(comparison[c(4,8),], ylim = c(4,9.5),main="sigma", 
               xlim = c(.75,2.25), col = c(4,2))
 ```
 
@@ -923,34 +923,55 @@ We can see that the more-complex model in this case actually has a lower elpd, i
 brms::fixef(model_re_t_tooBig)
 ```
 
-## But what does it all mean? 
+## Answering our research questions
+
+We've fit and interpreted updated models, and can now return to what this all 'means' in terms of our research questions:
+
+  (Q1) How tall do speakers perceived as adult females sound? 
+  
+  (Q2) How tall do speakers perceived as children sound?
+  
+  (Q3) What is the difference in apparent height associated with the perception of adultness? 
+ 
 
 
 
+An look at our results (and figures) so far suggests that: 
 
+* The magnitude of between-listener and speaker variation is much smaller than the difference between the adult mean and the child mean (4.5 and 2.9 cm, vs 16 cm). This means that the group differences are not overwhelmed by random variation due to differences between the characteristics of speakers and the tendencies of listeners.  
+
+* The magnitude of the random error, i.e. the variation given a certain listener, speaker *and* apparent age judgment, is 8.3 cm. This is larger that the between-listener and between-speaker variation in our data. This means that for any two adults or children selected at random, the expected difference between them will be smaller than the variability in repeated height estimation for any given voice. So, we see that our height judgments are noisy and that this noisiness overwhelms at least some of the systematic variation in our data
+
+* However, the difference in apparent height due to apparent age (17 cm in total) is twice as large as the random error and larger than the between speaker and between listener variation. This means that the systematic variation in apparent height due to apparent age is expected to be quite salient even in the face of the noisiness of our data. 
+
+If we were reporting this is in a paper, based on the sum coded model we might say something like:
+
+> "The overall mean apparent height across all speakers was 156 cm (sd = 1.3, 95% CI = [154.2, 159.2]). Mean apparent height was 164.9 cm (sd = 2.9, 95% CI = [215, 226]) for adult females, and 148.5 cm (sd = 1.38, 95% CI = [146.0, 151.1]) for children. The difference between the group means was 16.4 cm (sd = 0.44, 95% CI = [15.5,  17.2]). The standard deviation of the listener and speaker effects were 4.5 cm (s.d = 1.0, 95% CI = [3.1, 6.9]) and 2.9 cm (s.d = 0.30, 95% CI = [2.3, 3.5]) respectively, while the estimated residual error was 8.3 cm (s.d = 0.1, 95% CI = [8.1, 8.6]). Overall, results indicate a reliable difference in apparent speaker height due to apparent age which is larger than the expected random variation in apparent height judgments".  
+
+Notice that to report the difference between groups, we just double the value of the estimated effect for `adult1`. This is because this reflects the distance of each group to the intercept, and therefore *half* of the distance between the two groups.
+
+
+ - update, this is from chapter 5
+
+ - this model has a wider interval around our effect. 
+ - when between speaker variation exists, this might infl
 - here at the end I need a part about how does this invalidate the last model, that reasoning is a problem, bla bla
 - model comparison?
 - compare previous chapter and this model.
 - 95% of published work fatures regular models which we see werent really apprpriate. does that make those fake and results invald. 
  - theres problems with this reasoning
  - also our model is also wrong
+ 
 
 
-So are they different yes or no? Statistics aside, a fair assessment of our data suggests that neither binary conclusion is fully supported: they are distinguishable but overlap substantially. If you want to use this model to highlight the differences between girls and women, I think it is valid. I also think it would be valid to use this data to talk about between and within-speaker variation, highlighting the overlap that exists between speakers. Both are true! To a large extent, the meaning is as much in our heads as it is in the model, and we are free to interpret the results as we see fit, as long as reviewers (and readers in general) will believe us. The model is simply a reflection of the relationships in our data, and the interpretation is up to us. 
 
-Keep in mind that the "as long as reviewers (and readers in general) will believe us" component is crucial. The results of the model will need to be interpreted in the larger context of the work it is presented in, and in terms of scientific and general knowledge that readers have. The results of any model will need to 'make sense' given this, and a statistical result on its own will not be enough to make people (including us) believe outlandish, or even weakly supported claims. 
+## Frequentist corner
 
-The model is not reality and should not be confused with reality. This is a very important point! A statistical finding does not *prove* that something is *true*. This kind of thinking has [caused many problems for researchers in the social sciences recently](https://slate.com/health-and-science/2017/06/daryl-bem-proved-esp-is-real-showed-science-is-broken.html). In general, we can imagine that 10 people might approach any given research question in 10 different ways, a concept known as [researcher degrees of freedom](https://en.wikipedia.org/wiki/Researcher_degrees_of_freedom). This would cause slight differences in their results, resulting in a sort of 'distribution' for any given result. How can a fixed underlying reality result in a distribution or results? When they are all slightly wrong! 
+In frequentist corner, we're going to compare the output of `brms` to some more 'traditional', often called *frequentist* approaches. We're not going to talk about the traditional models in much detail since there are hundreds of other sources for this, and this book is long enough as it is (see section @@ for suggestions). The focus of these sections is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, feel free to skip these sections of the book, although they may still be helpful.  
 
-For example, we know for a fact that f0 varies, weakly but systematically, across vowel categories, a concept known as [intrinsic f0](https://www.sciencedirect.com/science/article/abs/pii/S0095447095801650). A model that included vowel category as a within-speaker predictor would reduce the apparent error in our model (making $\sigma_{error}$ smaller), and might affect the precision of our other estimates. Would this new model invalidate our current model? Answering yes to this question is generally problematic because there is *always* a better model out there, and so every model would automatically be invalid.  
+### Bayesian multilevel models vs. lmer
 
-The solution is to think of your model not as a mathematical implementation of *reality* but instead as a mathematical implementation of your research questions. Your model should include the information and structure that you think are necessary to represent and investigate your questions. Using a different model can result in different results given the same data, but asking a different question can also lead to different results given then same data! One of my favorite phrases to use is "given our data and model structure". This phrase is helpful because it highlights the fact that your results are contingent on:
-
-  1) the data you collected. Given other data you may have come to other conclusions.
-  
-  2) the model you chose. Given another model you may have come to other conclusions.
-  
-
+Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the `lme4` package in `R`. Below we fit a model that is analogous to our `model_sum_coding` model. Since we set contrasts to sum coding using the options above, this will still be in effect for this model. If you have not done so, run the line:
 
 
 

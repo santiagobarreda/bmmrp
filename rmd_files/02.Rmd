@@ -7,9 +7,9 @@ In the previous chapter we introduced some experimental data and talked about va
 
 ## Data and research questions {#c2-data}
 
-We're going to think about a hypothetical value "the average apparent height of adults males in the United States (US)". To put it another way, we might wonder "how tall do men from the US 'sound'?". The apparent heights of men from the US cannot be known **a priori**. In other words, you don't know how tall a random man from the US will 'sound' until you actually observe the judgment. For this reason, "the average apparent height of men from the US" is a random variable. We're going to think about how we can use our experimental data to try to answer the following two questions: 
+We're going to think about a hypothetical value "the average apparent height of adults males in the United States (US)". To put it another way, we might wonder "how tall do men from the US 'sound'?". The apparent heights of men from the US cannot be known **a priori**. In other words, you don't know how tall a random man from the US will 'sound' until you actually observe the judgment. For this reason, "the average apparent height of men from the US" can be modeled as a random variable. We're going to think about how we can use our experimental data to try to answer the following two questions: 
 
-  Q1) How tall does the average man from the US sound?
+  Q1) How tall does the typical man from the US sound?
 
   Q2) Can we set limits on credible average apparent heights based on the data we collected?
 
@@ -19,7 +19,7 @@ Think of the (actual) average height of the people in a large city. You can go o
 
 As a result of this uncertainty, it can be difficult to rule out alternative possible answers to our research questions. For example, if 174 cm is a good estimate, what about 173.99 cm? What about 173 cm? 172 cm? Where do estimates of average height stop being 'good'? Without being able to say what is *not* a good estimate, it is not quite as useful to be able to say what *is*. A related issue arises with respect to the interpretation of average values. Imagine that you read about a miracle diet that was guaranteed to make you lose one gram of weight a day. You know that is not very impressive. How? Because you understand that a difference of one gram is not large relative to the variation that exists in the weight of a human body on a daily basis. You could gain the weight back (and more) by drinking a teaspoon of water. Without knowing how much human weights tend to vary between and within people, it's impossible to know whether a reduction of one gram constitutes a meaningful change in the mass of a human. In contrast, a diet that causes one gram of weight loss in the average hamster may actually be of interest to hamster owners, as this is a relatively large value relative to natural variation in hamster weight. 
 
-So, we see that imposing limits on credible ranges for our average values can be as important as finding the average values themselves. Further, in order to properly contextualize values and effects, we need to have some idea about the underlying variation in the measurements. Clearly, we need some principled way to 'guess' reasonable ranges based on our sample of observations, in addition to just talking about average values. In this chapter we will discuss how statistics provides us with a framework to answer both questions above using only our sample of values. 
+So, we see that imposing limits on credible ranges for our average values can be as important as finding the average values themselves. Further, in order to properly contextualize values and effects, we need to have some idea about the underlying variation in the measurements. Clearly, we need some principled way to 'guess' reasonable ranges based on our sample of observations, in addition to just talking about average values. In this chapter we will discuss how statistics provides us with a framework to answer both questions above using only our sample of values and a (statistical) model. 
 
 In order to discuss the apparent heights of adult males, we need to extract the subset of speakers judged to be adult males from our data. Below we load the book package (`bmmb`) and select the relevant rows from our experimental data. Recall that our experiment contained an acoustic manipulation such that speech resonances were changed to make speakers sound bigger (see section \@ref(c1-methods)). For now, we're going to focus only for the unmodified productions, the 'natural' speech produced by the men in our sample. 
 
@@ -41,13 +41,13 @@ We can have a look at some of the quantiles (see section \@ref(c1-quantitative) 
 quantile (mens_height)
 ```
 
-Obviously, an inspection of the distribution of our observed height judgments only gives us direct information about the judgments we *did* observe. To make inferences about the probable characteristics of the height judgments we did *not* observe, or to talk about height judgments for adult males from the US more generally, we rely on methods of statistical inference, as will be described below. 
+Obviously, an inspection of the distribution of our observed height judgments only gives us direct information about the judgments we observed. To make inferences about the probable characteristics of the height judgments we *have not* observed, or to talk about height judgments for adult males from the US more generally, we rely on methods of statistical inference, as will be described below. 
 
 ## Empirical Probabilities {#c2-empirical-prob}
 
-The **sample space** of a variable is the set of all possible outcomes/values that a variable can take. Classic examples are a coin flip, which can take on the values 'heads' or 'tails', or the roll of a die which can take on the values one through six. In other cases the sample space may have an infinite or practically infinite number of members. For example, since time is continuous there are an infinite number of durations an event may have, given adequate precision in measuring time. If we think of the human population, or the population of fish in the sea, these are theoretically finite but practically infinite. It would be extremely difficult to fully sample either of these populations, and impossible to do so before they changed substantially (i.e. before some members have died and others have been born).
+The **sample space** of a variable is the set of all possible outcomes/values that a variable can take. Classic examples are a coin flip, which can take on the values 'heads' or 'tails', or the roll of a standard six-sided die, which can take on the values one through six. In other cases the sample space may have an infinite or practically infinite number of members. For example, since time is continuous there are an infinite number of durations an event may have, given adequate precision in measuring time. If we think of the human population, or the population of fish in the sea, these are theoretically finite but practically infinite. It would be extremely difficult to fully sample either of these populations, and impossible to do so before they changed substantially (i.e. before some members have died and others have been born).
 
-The **probability** of an event/outcome is the number of times an outcome occurs, relative to every possible outcome that can occur (i.e. all of the outcomes in the sample space). By convention, the probability of each event is assigned a value between 0 and 1 and the total probability of all of the possible outcomes in the sample space is equal to one. As a result of this convention, you know that a probability of 0.5 means something is expected to occur half the time (i.e. on 50% of trials), and a probability of 0.25 indicates that something should happen 25% of the time, about one in every four trials. **Empirical probabilities** are the probabilities of different outcomes in a sample of data. For example, we can flip a coin 100 times and observe 65 heads. This means that the empirical probability of observing heads in our data is 0.65 (65% of trials). Empirical probabilities can also be referred to as relative frequencies or proportions. Later, we are going to talk about *theoretical* probabilities based on mathematical models.
+The **probability** of an event/outcome is the number of times an outcome may occur relative to the number of all possible outcomes that can occur (i.e. all of the outcomes in the sample space). By convention, the probability of each event is assigned a value between 0 and 1 and the total probability of all of the possible outcomes in the sample space is equal to one.^[This is an extremely brief, and vastly oversimplified, presentation of probability, a topic that can occupy one's entire mathematical career if one isn't careful. For more detailed, rigorous expositions, see, e.g., @@[some probability book references go here!]] As a result of this convention, you know that a probability of 0.5 means something is expected to occur half the time (i.e. on 50% of trials), and a probability of 0.25 indicates that something should happen 25% of the time, about one in every four trials. **Empirical probabilities** are the probabilities of different outcomes in a sample of data. For example, we can flip a coin 100 times and observe 65 heads. This means that the empirical probability of observing heads in our data is 0.65 (65% of trials). Empirical probabilities can also be referred to as relative frequencies or proportions. Later, we are going to talk about *theoretical* probabilities based on mathematical models.
 
 Suppose we want to know the probability of observing an apparent height judgment over 180 cm in our sample. To calculate the empirical probability of this occurring in our data we need to find 1) The number of times it occurred, and 2) the total number of observations for the variable. We can do this easily using the logical operators and variables discussed in Chapter 1. Below, we find the total number of outcomes that satisfy our restrictions (being over 180 cm), and divide this by the total number of observations being considered. 
 
@@ -166,7 +166,7 @@ Because of the experimental design, we know that every listener heard the same v
 mean (p_L10) * mean (dur_250)
 ```
 
-This short cut will not work for variables that are not independent. For example, let's consider the probability of observing a height judgments of greater than 180 cm provided by listener 10. Below we calculate this the *wrong* way by multiplying the marginal probabilities, substantially underestimating the probability of the event. The problem is that this method of calculation does not take into account that listener 10 was among the most likely listeners to report heights greater than 180 cm.  
+This short cut will not work for variables that are not independent. For example, let's consider the probability of observing a height judgment of greater than 180 cm provided by listener 10. Below we calculate this the *wrong* way by multiplying the marginal probabilities, substantially underestimating the probability of the event. The problem is that this method of calculation does not take into account that listener 10 was among the most likely listeners to report heights greater than 180 cm.  
 
 ```{r, collapse = TRUE}
 # TRUE is the listener is 10
@@ -209,11 +209,11 @@ P(A \,\&\, B \,\&\, C \,\&\, D) = P(A|B,C,D)*P(B|C,D)*P(C|D)*P(D)
 \end{equation}
 $$
 
-This means that we not only need to calculate many conditional probabilities, but most of these feature the conditioning of one variables on several other variables (i.e., $P(B|C,D)$). Although this may not matter when calculating the joint probability of a handful of observations, calculating the joint probability of hundreds or thousands of correlated variables can become difficult if not impossible in practice. 
+This means that we not only need to calculate many conditional probabilities, but most of these feature the conditioning of one variable on several other variables (e.g., $P(B|C,D)$). Although this may not matter when calculating the joint probability of a handful of observations, calculating the joint probability of hundreds or thousands of correlated variables can become difficult if not impossible in practice. 
 
 ## Probability distributions {#c2-theoretical}
 
-A probability distribution is a function that assigns probabilities to all the different outcomes in your sample space. We will discuss exactly what this means with reference to histograms. In the left panel of figure \@ref(fig:F23) we see a histogram of counts. This histogram shows the number of times a range of values was observed along the y axis. The heights of the bars reflect the frequencies of different sort of observations and so can tell you about the values you expect, and don't expect, for the variable. This sort of representation makes it difficult to compare distributions across samples of different sizes. For example, if the number of observations were tripled, so would the heights of all the bars in the histogram. 
+A probability distribution is a function that assigns probabilities to the different possible outcomes in a sample space. We will illustrate and discuss exactly what this means with reference to histograms. In the left panel of figure \@ref(fig:F23) we see a histogram of counts. This histogram shows the number of times different ranges of height values were observed. The heigh values are indicated on the x axis, and the heights of the bars reflect the number of times that different sets of heights were observed, and so can tell you about the values of the variable that are more or less frequent. This sort of representation makes it difficult to compare distributions across samples of different sizes. For example, if the number of observations were tripled (and if the relative frequency of each height observation was preserved), the heights of the bars in the histogram would also triple.
 
 ```{r F23, fig.height = 3, fig.width = 8, fig.cap='(left) A histogram of adult male height judgments showing counts in each bin. (middle) The same data from the left panel, this time showing the density of the distribution. (right) The same data from the middle plot, this time with heights expressed in meters.', echo = FALSE}
 
@@ -231,13 +231,11 @@ hist (mens_height/100, freq = FALSE, main = "", col = skyblue,
       xlim = c(1.30,2.00), ylim = c(0,07.0), xlab="Height (m)",cex.lab=1.3,cex.axis=1.3)
 ```
 
-Histograms can also be used to show the **probability densities** associated with different values. Imagine a circle, like a Venn diagram, that contains all possible values of your variable (i.e. the sample space). This circle has an area of one since it contains all possible values in the population. Imagine we took this circle and pressed it down against the number line, squishing it. We then spread out this circle along the x axis so that its shape reflected the relative frequencies of different values present in the population. For example, if some outcomes were five times more probable than others, the shape should be five times thicker there, and so on. If we managed to do this, the thickness (or **density**) of this shape would exactly correspond to the probability density of the variable.
+Histograms can also be used to show the **probability densities** associated with different values (i.e., the amount of probability per unit of the variable of interest). In the middle in figure \@ref(fig:F23) we see a histogram that shows the *density* of the distribution of height judgments, i.e. the thickness of the distribution at different locations along the number line. The values of the density are constrained by the fact that the area under the curve must equal one, since these reflect probabilities. In the case of our histograms this means that the total area of all the bars (rectangles) is constrained to equal one. As a result of this, when variables have wide ranges densities tend to be very small (as in the middle panel in Figure \@ref(fig:F23)). 
 
-In the middle in figure \@ref(fig:F23) we see a histogram that shows the *density* of the distribution of height judgments, i.e. the thickness of the distribution at different locations along the number line. The values of the density are constrained by the fact that the area under the curve must equal one, since these reflect probabilities. In the case of our histograms this means that the total area of all the bars (rectangles) is constrained to equal one. As a result of this, when variables have wide ranges densities tend to be very small (as in the middle panel in Figure \@ref(fig:F23)). 
+In the right panel of figure \@ref(fig:F23) we present heights in meters rather than centimeters. This has the effect of substantially increasing the values of the density (one-hundred fold) but does not otherwise affect the shape of the distribution. The relationship between variable ranges and density values means that densities can't really be interpreted in an absolute sense - they always reflect the amount of probability per unit, so if you change the unit, you change the interpretation of the corresponding density. A density value of 0.06 means very different things in the histograms in Figure \@ref(fig:F23). Regardless of the unit, density values can be interpreted relative to other density values along the same curve. A higher density in one location tells us that values in that vicinity are more probable than values in locations with lower densities, and differences in densities reflect differences in the relative probability of different values.
 
-In the right panel of figure \@ref(fig:F23) we present heights in meters rather than centimeters. This has the effect of substantially increasing the values of our density (one-hundred fold) but does not otherwise affect the shape of the curve. The relationship between variable ranges and density values means that densities can't really be interpreted in an absolute sense. A density value of 0.06 means very different things in the histograms in Figure \@ref(fig:F23). Instead, density values need to be interpreted relative to the other values along the same curve. A higher density in a certain location tells us values in that vicinity are more probable than values in locations with lower densities, and differences in densities reflect differences in the relative probability of different values or outcomes.
-
-Probability distributions sometimes have shapes that can be represented using mathematical functions. These functions have a limited number of **parameters** that determine their exact shape. Think of parameters like ways that things can be 'set' differently from each other. For example, a radio has three parameters: tuner frequency, band (AM/FM), and volume. A toaster may have only one, a single knob determining the degree of toasting required. The more parameters something has, the more complicated it is (an airplane has thousands). For example, consider the code below, which defines a slope and intercept and draws a line based on these parameters. You can change the values of the intercept and the slope and draw many kinds of lines. However, there no way to change the characteristics of a line other than by changing its slope and intercept: A line is entirely defined by its slope and intercept. 
+Probability distributions sometimes have shapes that can be represented using mathematical functions. These functions typically have a limited number of **parameters** that determine their exact shape. Think of parameters like ways that different properties of a system can be 'set' separately from each other. For example, a radio has three parameters: tuner frequency, band (AM/FM), and volume. A toaster may have only one, a single knob determining the degree of toasting required. The more parameters something has, the more complicated it is (e.g., an airplane has thousands). For example, consider the code below, which defines a slope and intercept and draws a line based on these parameters. You can change the values of the intercept and the slope and draw many kinds of lines. However, there no way to change the characteristics of a line other than by changing its slope and intercept: A line is entirely defined by its slope and intercept. 
 
 ```{r, eval = FALSE}
 
@@ -254,7 +252,7 @@ Sometimes the same sorts of probability density shapes pop up over and over, and
 
 ## The normal distribution {#c2-normal}
 
-The distribution of many random variables (at least approximately) follows what's known as the **normal** or **Gaussian** distribution. This means that if you take a sample of a random variable and arrange observations into bins, they resulting histogram will tend to have the familiar, bell-shaped curve common to normally-distributed data (seen in the histograms in figure \@ref(fig:F23)). The normal distribution has the following important characteristics: 
+The distribution of many random variables (at least approximately) follows what's known as the **normal** or **Gaussian** distribution. This means that if you take a sample of a random variable and arrange observations into bins, they resulting histogram will tend to have the familiar bell-shaped curve (seen in the histograms in figure \@ref(fig:F23)). The normal distribution has the following important characteristics: 
 
 1. The distribution is symmetrical - i.e., producing a higher or lower than average f0 is equally likely.  
 
@@ -262,11 +260,11 @@ The distribution of many random variables (at least approximately) follows what'
 
 3. It's easy to work with, very well understood, and naturally arises in many domains. 
 
-Normal distributions have two parameters, meaning they vary from each other in only two ways. The parameters are:
+Normal distributions have two parameters, meaning they differ from each other in only two ways. The parameters are:
 
-1. A mean parameter ($\mu$) which determines the location of the distribution along the x axis. When the mean changes, the whole shape of the distribution 'slides' along the number line. The mean is the 50% halfway point of the 'mass' of the distribution. If the distribution were an physical object, its mean would be its center of gravity and you would balance the distribution on your fingertip at this point. 
+1. A mean parameter ($\mu$) which determines the location of the distribution along the x axis. When the mean changes, the whole shape of the distribution 'slides' along the number line. The mean is the 50% halfway point of the 'mass' of the distribution (i.e., it's also the median). If the distribution were a physical object, its mean would be its center of gravity and you would balance the distribution on your fingertip at this point. 
 
-2. A variance ($\sigma^2$) or standard deviation ($\sigma=\sqrt{\sigma^2}$) that determines its *spread* along the x axis. When the standard deviation changes the distribution is stretched wide or made very narrow, but stays in place. Since every distribution has an area under the curve equal to one (i.e., they all have the same 'volume'), distributions with small variances must necessarily be very dense. 
+2. A variance ($\sigma^2$) or standard deviation ($\sigma=\sqrt{\sigma^2}$) that determines its *spread* along the x axis. When the standard deviation changes the distribution is stretched wide or made very narrow, but stays in the same place. Since every distribution has an area under the curve equal to one (i.e., they all have the same 'volume'), distributions with small variances must necessarily be very dense.
 
 In principle, a given probability distribution can be thought of as having fixed parameters. For example, we might imagine that the average apparent height of adult male speakers from the US is exactly 175.91254... cm. However, in most situations we can't be certain of what the 'true' parameters of a distribution are. Instead, we must be satisfied with estimating the values of parameters based on our samples. These are **statistics**, estimates of our population parameters based on our sample. **Statistical inference** consists of using statistics (based on our sample) to make inferences about the characteristics of the overall population (i.e. the 'true' parameters). In the case of the normal distribution we are interested in two statistics: The sample mean and the sample standard variance. 
 
@@ -274,9 +272,9 @@ In principle, a given probability distribution can be thought of as having fixed
 
 The sample mean is our 'best' guess for the population mean. We'll be more specific about what this means later, but for now we can consider that if you don't know the population parameter for a given distribution, the sample mean will provide you the best available estimate.
 
-a reliable estimate. The formula for the sample mean is given in equation \@ref(eq:21). Initially, reading these mathematical formulas may seem daunting. However, learning to read these is just a skill that is developed with practice. In addition, you will begin to see the same 'chunks' or structures come up in formulas over and over, and reading these becomes much easier once you start to recognize the meaning of these repetitive structures intuitively. 
+The formula for the sample mean is given in equation \@ref(eq:21). Initially, reading these mathematical formulas may seem daunting. However, learning to read these is just a skill that is developed with practice. In addition, you will begin to see the same 'chunks' or structures come up in formulas over and over, and reading these becomes much easier once you start to recognize the meaning of these repetitive structures intuitively. 
 
-Equation \@ref(eq:21) says that the sample mean of $y$ ($\hat{\mu}_{y}$) is equal to the sum of all of the elements of the vector $y$, divided by $N$ where $N$ is equal to the length of the $y$ vector. We use the little hat symbol ($\hat{\mu}$) to indicate that this is an estimate of the mean, and to distinguish it from the population mean which goes hatless ($\mu$). The summation ($\sum$) symbol represents the repetitive adding of whatever is the the right of the symbol to some total. The summation beings at the number below the $\sum$ and performs one operation for every integer value of $i$ between the starting point and the end point (indicated above the $\sum$). The counter variable, in this case $i$, is also often used to index values of a vector (or other structure) that is being summed (as seen below).   
+Equation \@ref(eq:21) says that the sample mean of $y$ ($\hat{\mu}_{y}$) is equal to the sum of all of the elements of the vector $y$, divided by $N$, where $N$ is equal to the length of the $y$ vector (i.e., the number of observations). We use the little hat symbol ($\hat{\mu}$) to indicate that this is an estimate of the mean, and to distinguish it from the population mean, which we cannot observed directly, and which goes hatless ($\mu$). The summation ($\sum$) symbol represents the repetitive adding of whatever is the the right of the symbol to some total. The summation begins at the number below the $\sum$ and performs one operation for every integer value of $i$ between the starting point and the end point (indicated above the $\sum$). The counter variable, in this case $i$, is also often used to index values of a vector (or other structure) that is being summed (as seen below).   
 
 $$
 \begin{equation}
@@ -306,7 +304,7 @@ Here are some useful things to know about sample means, in no particular order:
 
 2) The mean of the sum of two sets of variables (of the same length) $x$ an $y$ is equal to $\mu_{x}+\mu_{y}$. In other words, the average of the sum is just the sum of the averages. 
 
-3) The sum of sample's deviations from the sample mean equals zero (seen in \@ref(eq:22)). This means that the sum of the distances between positive and negative differences from the sample mean exactly balance out. To some extent this makes sense since the mean is the 'center of gravity' of a distribution. It is worth noting that this does not apply to deviations form the *population* mean since this is not specifically fit to the characteristics of the sample.
+3) The sum of sample's deviations from the sample mean equals zero (seen in \@ref(eq:22)). This means that the sum of the distances between positive and negative differences from the sample mean exactly balance out. To some extent this makes sense since the mean is the 'center of gravity' of a distribution. It is worth noting that this does not apply to deviations form the *population* mean since the population mean is not estimated from the characteristics of a sample.
 
 $$
 \begin{equation}
@@ -314,6 +312,14 @@ $$
 (\#eq:22)
 \end{equation}
 $$
+Note, too, that the sample mean is a special case of the expected value. For discrete variables, the expected value is the sum of the values multiplied by the probability of each value:
+
+$$
+\begin{equation}
+\mathbf{E}(y) = \sum_{i=-\infty}^{\infty} yP(y)
+\end{equation}
+$$
+In the case of the sample mean, the division by $N$ reflects the fact that we treat each observation as equally likely, estimating its probability as $1\N$. Continuous variables have an analogous formula defining the expected value with an integral and a probability density function.
 
 ### The sample variance (or standard deviation) {#c2-sample-variance}
 
@@ -393,77 +399,8 @@ f(x) = \frac{1}{\sigma\sqrt{2\pi}}* \exp( -\frac{1}{2\sigma^2}(x-\mu)^{2}\,)
 \end{equation}
 $$
 
-The equation in \@ref(eq:25) features **exponentiation** ($\exp()$), that is raising the base $e=2.718...$ (Euler's number) to some power as in $e^x$. In \@ref(eq:25), the value being exponentiated is $-\frac{1}{2\sigma^2}(x-\mu)^{2}$. The **logarithm** (`log`) is the inverse function to exponentiation, it basically *erases* or *undoes* exponentiation. We can apply a logarithmic transformation to both sides of \@ref(eq:25), resulting in the **log density** seen in equation \@ref(eq:27). Before explaining equation \@ref(eq:27), we will discuss some basic properties of logarithms that are useful to understand probabilities and probability distributions, as these often involve exponentiation and logarithms. The first line in \@ref(eq:26) shows the basic behavior of logarithms. The next four lines pertain to the values expected, or undefined, for values of $x$. The next two lines highlight the fact that exponentiation of numbers is equivalent to the multiplication of their logarithms. The final two lines highlight the fact that multiplication of two numbers is equivalent to the addition of the logarithms of the numbers. 
+The equation in \@ref(eq:25) features **exponentiation** ($\exp()$), that is raising the base $e=2.718...$ (Euler's number) to some power as in $e^x$. In \@ref(eq:25), the value being exponentiated is $-\frac{1}{2\sigma^2}(x-\mu)^{2}$.
 
-$$
-\begin{equation}
-\begin{split}
-\log(e^x)=x \\ \\
-\log(1) = 0 \\
-\textrm{if} \: x < 1, \: \log(x) < 0 \\
-\textrm{if} \: x > 1, \: \log(x) > 0 \\
-\textrm{if} \: x < 0, \: \log(x) = \textrm{undefined} \\ \\
-\log(x^y)=\log(x)*y \\
-\log(\sqrt[y]{x})=\log(x)/y \\ \\
-\log(x)+\log(y)= log(x*y) \\
-\log(x)-\log(y)= log(x/y) \\
-\end{split}
-(\#eq:26)
-\end{equation}
-$$
-
-Armed with knowledge of the behavior of logarithms, we can see that compared to equation \@ref(eq:25), we have removed the $\exp()$ function around the rightmost term $-\frac{1}{2\sigma^2}\left(x-\mu\right)^2$, and added the $\log()$ function around all terms that were *not* previously exponentiated. In addition, the multiplication of the two terms in the right hand side of the equation has turned into addition, or subtraction in this case because we are adding a negative term. 
-
-$$
-\begin{equation}
-\log(f(x)) =  \log(\frac{1}{\sigma\sqrt{2\pi}})-\frac{1}{2\sigma^2}\left(x-\mu\right)^2
-(\#eq:27)
-\end{equation}
-$$
-
-We can use the properties of logarithms to turn $\log(\frac{1}{\sigma\sqrt{2\pi}})$ into $-\log({\sigma\sqrt{2\pi}})$ and move this term to the rightmost end of the equation as in \@ref(eq:28). At this point the function is that of a parabola in vertex form, $y=a(x-h)^2+k$, where $a=-\frac{1}{2\sigma^2}$, $h=\mu$, and $h=-ln({\sigma\sqrt{2\pi}})$. So, we can see that the normal distribution is just an exponentiated parabola that is scaled by $\frac{1}{\sigma\sqrt{2\pi}}$ so that the area under the curve is equal to one. The parabola has its vertex at $(\mu, -ln({\sigma\sqrt{2\pi}})$, and opens downwards since the $a$ term is negative. When a parabola is in vertex form, the relationship between parabola width and the value of $a$ is inverted, its width decreases as the value of $a$ increases. However, because $a=-\frac{1}{2\sigma^2}$, this means that in the case of normal distributions the parabola width increases as $\sigma$ grows larger. As a result, a larger standard deviation leads to wider parabolas and wider probability densities. 
-
-
-$$
-\begin{equation}
-\log(f(x)) =  -\frac{1}{2\sigma^2}\left(x-\mu\right)^2 - \log({\sigma\sqrt{2\pi}})
-(\#eq:28)
-\end{equation}
-$$
-
-Equation \@ref(eq:28) shows how the $\mu$ and $\sigma$ parameters work to make observations further from the means less probable. First, we know that negative logarithmic values will fall between 0 and 1, with more negative values being closer to zero (i.e. less probable). As observations ($x$) are further from the mean, the value of $(x-\mu)^2$ will be greater so that values further from the mean will be generally less probable. However, whether a deviation is big or small is relative, and so this distance is scaled with respect to the average expected squared deviation from the mean (i.e. the variance $\sigma^2$). Variation of 1 cm in body length means different things for an earthworm as opposed to an anaconda. As a result, large values of $(x-\mu)^2$  can be offset by large values of $\sigma^2$ when determining the probability of an outcome.
-
-The nice thing about working in R is that you don't need to take our word for any of this, you can see it for yourself. In fact, we strongly encourage you to 'test' the things we say or check to see if your intuitions about things using toy examples in R. You can use the code below to confirm that the 'shape' of the normal distribution is just an exponentiated parabola:
-
-```{r, eval = FALSE, collapse = TRUE}
-par (mfrow = c(1,2), mar = c(4,4,1,1))
-# draw an parabola
-curve (-x^2, xlim = c(-3,3), lwd=2)
-# same thing but exponentiated
-curve (exp (-x^2), xlim = c(-3,3), lwd=2)
-```
-
-The code below will generate densities for normal distributions based on the equations in the text above:
-
-```{r}
-# you can change the ranges, mean and standard deviation (sigma) to any value
-x = seq (-4,4,.01)
-mu = 0
-sigma = 1
-eq25 = 1/(sigma*sqrt(2*pi)) * exp (-(1/(2*sigma^2))*(x-mu)^2)
-eq27 = log(1/(sigma*sqrt(2*pi))) + -(1/(2*sigma^2))*(x-mu)^2
-eq28 = -(1/(2*sigma^2))*(x-mu)^2 - log((sigma*sqrt(2*pi))) 
-```
-
-And these plots can be used to confirm the relations outlined above. For example, the output of equations \@ref(eq:27)) and  \@ref(eq:28)) should equal, and this can be confirmed below. 
-
-```{r, eval = FALSE}
-par (mfrow = c(1,2), mar = c(4,4,1,1))
-plot (x, eq25, cex=1.2, col=skyblue,pch=1)
-lines (x, exp(eq27), col = coral, lwd = 2)
-plot (x, eq27, cex=1.2, col=skyblue)
-lines (x, eq28, col = coral, lwd = 2)
-```
 
 ### The standard normal distribution {#c2-standard-normal}
 
@@ -678,7 +615,83 @@ $$
 \end{equation}
 $$
 
-We can log-transform both sides of the equation to turn multiplication into addition, get rid of the exponentiation, and re-arrange the terms as in equation \@ref(eq:213) (as explained for equation \@ref(eq:28) above). Because they make working with likelihoods much simpler, statisticians often refer to the logarithms of likelihood functions, referred to as **log-likelihoods**, denoted using the symbol $\mathcal{L}\mathcal{L}_{(\mu|x)}$. When you see this, $\mathcal{L}\mathcal{L}_{(\mu|x)}$, just think "the logarithm of the likelihood of the mean given the data $x$". In equation \@ref(eq:213) we see that the log-likelihood of these two observations is the sum of two parabolas. Since the sum of parabolas will (almost always) also be a parabola, we know that the log-likelihood of the mean given these, and any number of other observations, will also be a parabola. As a result, we see that the (non-log) likelihood of the mean is an exponentiated parabola and has the same general shape as the normal distribution. 
+### A brief aside on logarithms
+
+The **logarithm** (`log`) is the inverse function to exponentiation, it basically *erases* or *undoes* exponentiation. We can apply a logarithmic transformation to both sides of \@ref(eq:25), resulting in the **log density** seen in equation \@ref(eq:27). Before explaining equation \@ref(eq:27), we will discuss some basic properties of logarithms that are useful to understand probabilities and probability distributions, as these often involve exponentiation and logarithms. The first line in \@ref(eq:26) shows the basic behavior of logarithms. The next four lines pertain to the values expected, or undefined, for values of $x$. The next two lines highlight the fact that exponentiation of numbers is equivalent to the multiplication of their logarithms. The final two lines highlight the fact that multiplication of two numbers is equivalent to the addition of the logarithms of the numbers. 
+
+$$
+\begin{equation}
+\begin{split}
+\log(e^x)=x \\ \\
+\log(1) = 0 \\
+\textrm{if} \: x < 1, \: \log(x) < 0 \\
+\textrm{if} \: x > 1, \: \log(x) > 0 \\
+\textrm{if} \: x < 0, \: \log(x) = \textrm{undefined} \\ \\
+\log(x^y)=\log(x) \times y \\
+\log(\sqrt[y]{x})=\log(x)/y \\ \\
+\log(x)+\log(y)= log(x \times y) \\
+\log(x)-\log(y)= log(x/y) \\
+\end{split}
+(\#eq:26)
+\end{equation}
+$$
+
+Armed with knowledge of the behavior of logarithms, we can see that compared to equation \@ref(eq:25), we have removed the $\exp()$ function around the rightmost term $-\frac{1}{2\sigma^2}\left(x-\mu\right)^2$, and added the $\log()$ function around all terms that were *not* previously exponentiated. In addition, the multiplication of the two terms in the right hand side of the equation has turned into addition, or subtraction in this case because we are adding a negative term. 
+
+$$
+\begin{equation}
+\log(f(x)) =  \log(\frac{1}{\sigma\sqrt{2\pi}})-\frac{1}{2\sigma^2}\left(x-\mu\right)^2
+(\#eq:27)
+\end{equation}
+$$
+
+We can use the properties of logarithms to turn $\log(\frac{1}{\sigma\sqrt{2\pi}})$ into $-\log({\sigma\sqrt{2\pi}})$ and move this term to the rightmost end of the equation as in \@ref(eq:28). At this point the function is that of a parabola in vertex form, $y=a(x-h)^2+k$, where $a=-\frac{1}{2\sigma^2}$, $h=\mu$, and $h=-ln({\sigma\sqrt{2\pi}})$. So, we can see that the normal distribution is just an exponentiated parabola that is scaled by $\frac{1}{\sigma\sqrt{2\pi}}$ so that the area under the curve is equal to one. The parabola has its vertex at $(\mu, -ln({\sigma\sqrt{2\pi}})$, and opens downwards since the $a$ term is negative. When a parabola is in vertex form, the relationship between parabola width and the value of $a$ is inverted, its width decreases as the value of $a$ increases. However, because $a=-\frac{1}{2\sigma^2}$, this means that in the case of normal distributions the parabola width increases as $\sigma$ grows larger. As a result, a larger standard deviation leads to wider parabolas and wider probability densities. 
+
+
+$$
+\begin{equation}
+\log(f(x)) =  -\frac{1}{2\sigma^2}\left(x-\mu\right)^2 - \log({\sigma\sqrt{2\pi}})
+(\#eq:28)
+\end{equation}
+$$
+
+Equation \@ref(eq:28) shows how the $\mu$ and $\sigma$ parameters work to make observations further from the means less probable. First, we know that negative logarithmic values will fall between 0 and 1, with more negative values being closer to zero (i.e. less probable). As observations ($x$) are further from the mean, the value of $(x-\mu)^2$ will be greater so that values further from the mean will be generally less probable. However, whether a deviation is big or small is relative, and so this distance is scaled with respect to the average expected squared deviation from the mean (i.e. the variance $\sigma^2$). Variation of 1 cm in body length means different things for an earthworm as opposed to an anaconda. As a result, large values of $(x-\mu)^2$  can be offset by large values of $\sigma^2$ when determining the probability of an outcome.
+
+The nice thing about working in R is that you don't need to take our word for any of this, you can see it for yourself. In fact, we strongly encourage you to 'test' the things we say or check to see if your intuitions about things using toy examples in R. You can use the code below to confirm that the 'shape' of the normal distribution is just an exponentiated parabola:
+
+```{r, eval = FALSE, collapse = TRUE}
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+# draw an parabola
+curve (-x^2, xlim = c(-3,3), lwd=2)
+# same thing but exponentiated
+curve (exp (-x^2), xlim = c(-3,3), lwd=2)
+```
+
+The code below will generate densities for normal distributions based on the equations in the text above:
+
+```{r}
+# you can change the ranges, mean and standard deviation (sigma) to any value
+x = seq (-4,4,.01)
+mu = 0
+sigma = 1
+eq25 = 1/(sigma*sqrt(2*pi)) * exp (-(1/(2*sigma^2))*(x-mu)^2)
+eq27 = log(1/(sigma*sqrt(2*pi))) + -(1/(2*sigma^2))*(x-mu)^2
+eq28 = -(1/(2*sigma^2))*(x-mu)^2 - log((sigma*sqrt(2*pi))) 
+```
+
+And these plots can be used to confirm the relations outlined above. For example, the output of equations \@ref(eq:27)) and  \@ref(eq:28)) should equal, and this can be confirmed below. 
+
+```{r, eval = FALSE}
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+plot (x, eq25, cex=1.2, col=skyblue,pch=1)
+lines (x, exp(eq27), col = coral, lwd = 2)
+plot (x, eq27, cex=1.2, col=skyblue)
+lines (x, eq28, col = coral, lwd = 2)
+```
+
+### Characteristics of likelihoods, continued
+
+We can log-transform both sides of equation \@ref(eq:212) to turn multiplication into addition, get rid of the exponentiation, and re-arrange the terms as in equation \@ref(eq:213) (as explained for equation \@ref(eq:28) above). Because they make working with likelihoods much simpler, statisticians often refer to the logarithms of likelihood functions, referred to as **log-likelihoods**, denoted using the symbol $\mathcal{L}\mathcal{L}_{(\mu|x)}$. When you see this, $\mathcal{L}\mathcal{L}_{(\mu|x)}$, just think "the logarithm of the likelihood of the mean given the data $x$". In equation \@ref(eq:213) we see that the log-likelihood of these two observations is the sum of two parabolas. Since the sum of parabolas will (almost always) also be a parabola, we know that the log-likelihood of the mean given these, and any number of other observations, will also be a parabola. As a result, we see that the (non-log) likelihood of the mean is an exponentiated parabola and has the same general shape as the normal distribution. 
 
 $$
 \begin{equation}

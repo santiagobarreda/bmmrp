@@ -507,7 +507,6 @@ Intercept = mean (listener_means)
 listener_effects = listener_means - Intercept
 ```
 
-[@@ SB - I need to talk about this section from here on down.]
 Below we plot the listener effects and means estimated using `brms` (`listener_effects_hat`, `listener_means_hat`) and compare these to the equivalent values we calculated directly from the data (`listener_effects`, `listener_means`). Clearly, these are a good match. A benefit of using the modeled parameters is that these come with credible intervals, so that we can make statements about likely bounds for values in addition to providing point estimates.
 
 ```{r F56, fig.height = 3, fig.width=8, fig.cap = "(left) Estimated listener means and 95% credible intervals. Crosses indicate maximum likelihood estimes. (right) Estimated listener effects and 95% credible intervals. Crosses indicate centered maximum likelihood estimes.", echo = TRUE}
@@ -516,14 +515,14 @@ Below we plot the listener effects and means estimated using `brms` (`listener_e
 ### Figure 5.6
 ################################################################################
 
-par (mfrow = c(1,3), mar = c(4,4,1,1))
+par (mfrow = c(1,2), mar = c(4,4,1,1))
 bmmb::brmplot (listener_means_hat, col = cols,ylim=c(143,168))
 points (listener_means, cex=2, col = cols, pch = 4,lwd=2)
 abline (h = Intercept)
 bmmb::brmplot (listener_effects_hat, col = cols,ylim=c(-12,13))
 points (listener_effects, cex=2, col = cols, pch = 4,lwd=2)
-bmmb::brmplot (qq, col = cols,ylim=c(-12,13))
-points (listener_effects, cex=2, col = cols, pch = 4,lwd=2)
+#bmmb::brmplot (qq, col = cols,ylim=c(-12,13))
+#points (listener_effects, cex=2, col = cols, pch = 4,lwd=2)
 ```
 
 Random effects can be investigated using the `scope` and `group` parameters of the `hypothesis` (or `short_hypothesis`) function. For example, below we test the hypothesis that the (fixed-effect) intercept is equal to zero. 
@@ -551,6 +550,7 @@ short_hypothesis(model_sum_coding, "Intercept = 0",
 listener_means_hat[1:5,]
 ```
 
+[@@ SB - I need to talk about this section from here on down.]
 Finally, in section X [@@ SB - do we? make sure this is spelled out] we mentioned that it is valid to check for combinations of fixed-effect parameters, adding and subtracting these to answer specific questions or hypotheses. In our Bayesian models, we can do this same thing using our random effects. For example, in figure \@ref(fig:F56) we see that listeners two and three appear to have reported different average apparent heights. Is this really supported by our model? To answer this question we can subtract the samples corresponding to the two parameters, and then summarize the distribution of the difference, as seen below. 
 
 ```{r}

@@ -2,16 +2,11 @@
 
 # Variation in parameters ('random effects') and model comparison 
 
- - chapter 4 introduced random effects, random intercepts.
- - here we will consider the addition of other group-level variation in parameters.
-
-Before powerful computers were easily available, statisticians had to come up with clever solutions to answer difficult questions. The reason for this is that things needed to be solved with pen and paper, or eventually calculators, and this ruled out extremely time-consuming solutions such as sampling from the posterior distribution of models as complicated as the ones discussed here. Approaches to answer commonly-encountered experimental designs (and corresponding data structures) often involved making simplifying assumptions that make arriving at a solution simpler. For example, when comparing two groups statisticians might say "we can solve this problem if we assume that the errors are normally distributed and that the error variance is the same across all conditions". These assumptions are rarely true in practice (and never *exactly* true in reality), but are usually close enough to the truth to make our models be useful. There is nothing particularly 'wrong' with making these assumptions. However, when we build our own Bayesian models we don't need to make them, and so it is worth considering if we might benefit from making other sort of assumptions. 
-
-An analogy can be made to building your own furniture vs. shopping at a furniture store. The furniture at the store is perfectly fine and if you find something that suits you it will be fast and convenient. What happens if what you want is *not* at a store? Well if you don't know how to build your on furniture you are out of luck, you better just find the existing piece that is most similar to what you need, and try to make the most of it. Working with 'traditional' models based on maximum-likelihood estimation (discussed in X) is like going to the store. There are often a limited number of choices, and these choices make certain, often rigid, simplifying assumptions. Learning to use `brms` (or STAN directly) gives you the flexibility of trying many different assumptions, allowing you to build a model that might be very difficult to find 'at the store', but which is well-suited to your data. In the last chapter we focused on models comparing two groups. Our approach to this was a bit old-fashioned in that it adhered to the limitations of more 'traditional' models. In this chapter we will revisit the models we discussed last chapter. However, this time we will consider the possibility of random variation in the effect of apparent speaker age across listeners. 
+In chapter 4 we introduced 'random effects', that is, intercept terms that are specific to 'clusters' of data (e.g., listener, speaker). We used these because we know that each listener in our data can potentially have slightly different data averages (the intercept in an intercept-only model). In chapter 5 we built models that compared two groups of measurements by including a single fixed effect that distinguished the groups. However, our models assumed that the difference between the groups, the effect of the single predictor, was fixed across all clusters such as listener. In this chapter we will build models that allow for listener-specific variation in group differences, in addition to listener-specific variation in the intercepts. In addition, in this chapter we will discuss comparing different models fit to the same data in hopes of determining which is 'better'. 
 
 ## Data and research questions
 
-We're going to use the same data from the last chapter, we are going to exclude adult males and focus on the apparent height of adult females, girls and boys. We're going to build models that build on those of last chapter to ask the same questions:
+We're going to use the same data from the last chapter, again excluding adult males and focus on the apparent height of adult females, girls and boys. We're going to build models that build on those of last chapter to ask the same questions:
 
   (Q1) How tall do speakers perceived as adult females sound? 
   
@@ -37,7 +32,7 @@ notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',
 notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
 ```
 
-We recreate figure \ref(fig:51) as figure \ref(fig:61) below to show the distribution of apparent height by listener, and across apparent ages. We can use this figure that some of the design choices we used to build our model in the last chapter may not be totally valid for this data. First, we see that the effect of apparent age, the separation between the two boxes for each speaker, does appear to vary substantially between listeners. Second, our figure shows the presence of substantial numbers of outliers, the points individually plotted (beyond the *whiskers* for each box), suggesting that the error distribution may be more like a t-distribution than a normal one. In this chapter we are going to build models that allow for these details in the data to be estimated and represented by the model. After this, we're going to address the question: Are the extra complications included in our models worth it?
+We recreate figure \ref(fig:F53) as figure \ref(fig:F61) below to show the distribution of apparent height by listener, and across apparent ages. In the last chapter we focused on 'the difference' between groups as a singular thing. This is a bit like focusing only on the difference between boxes in the left panel of figure \ref(fig:F61). However, if we instead focus on the right panel in figure \ref(fig:F61) we see that there is not a single difference between groups but rather a slightly different listener-specific difference between them. By allowing our models to represent these listener-specific differences, the model we will consider in this chapter will put us in a better position to answer the third question above.
 
 ```{r F61, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
 
@@ -45,23 +40,41 @@ We recreate figure \ref(fig:51) as figure \ref(fig:61) below to show the distrib
 ### Figure 6.1
 ################################################################################
 
-par (mfrow = c(1,2), mar = c(4,4,1,1)); layout (mat = t(c(1,2)), widths = c(.7,.3))
-boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(100,200))
+par (mfrow = c(1,2), mar = c(4.1,.1,.5,.1),oma = c(0,4,0,.50)); layout (mat = t(c(1,2)), widths = c(.2,.8))
 
-boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(100,200))
+boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="")
+mtext (side=1, "Apparent Age Group", line=3)
+
+mtext (side = 2, outer = FALSE, "Height (cm)", line = 2.75)
+boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
+         ylab="",yaxt="n", xaxt="n",xlab="Listener")
+axis (side=1, at = seq(1.5,30.5,2), 1:15)
 ```
 
 ## Variation in parameters across sources of data
 
-The models we fit in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. An inspection of figure X last chapter clearly suggests that apparent age did not, in fact, have the same effect for the judgments of all listeners. Another way to think about this is that our model modeled only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a main effect. Someone might ask "what is the average apparent height difference between children and adult females?" and you might say "about 16 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall effect*. In contrast, we may want to think about the effect of apparent age *conditional* on listener. Recall from chapter 2 that if the conditional distribution of a variable changes as a function of another variable then these are not independent. In the same way, if the conditional effects of a predictor change as a function of another predictor, then these effects are not independent. For example, if the effect of apparent age varies substantially across listeners then if someone asks "what is the average apparent height difference between children and adult females?" you may have to answer "well it depends on the listener".      
+The models we fit in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. Another way to think about this is that our model included only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a **main effect**. Someone might ask "what is the average apparent height difference between children and adult females?" and you might say "about 17 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall* effect. In contrast, we may want to think about the effect of apparent age *conditional* on listener. However, ff the effect of apparent age varies substantially across listeners then if someone asks "what is the average apparent height difference between children and adult females?" you may have to answer "well it depends on the listener". Below we find the average height reported by each listener for apparent adults and children, and half the difference between these averages (to estimate the adultness effect). 
 
 ```{r}
 listener_age_differences = tapply (notmen$height, notmen[c("A","L")], mean)
 listener_age_effects = (listener_age_differences[1,]-listener_age_differences[2,])/2
 ```
 
+Figure \ref(fig:F62) presents several ways to consider this information. In the left panel we see that the distance between the top and bottom lines, reflecting the effect for apparent age, varies from listener to listener. So, the effect of apparent age is dependent on the level of listener you are observing. Recall from chapter 2 that if the conditional distribution of a variable changes as a function of another variable then these are variables are not independent. In the same way, if the conditional effect of a predictor changes as a function of another predictor, then these effects are not independent. In the middle panel we see how the listener-specific age effect varies around the average (marginal, or main) effect, indicated by the horizontal line.
 
-```{r F62, fig.height = 3, fig.width=8, fig.cap = "--.", echo = FALSE}
+
+
+Recall from chapter 2 that variables are said to be independent when their marginal distributions match their conditional distributions. The same can be said of effects: Effects are independent when the marginal effects are equal to the conditional effects. In terms of the middle panel in figure \ref(fig:F62), this means that we would like every point on the line, the listener-dependent effects, to fall exactly on the horizontal line. When two variables do not have independent effects on your outcome, they are said to **interact** and have an **interaction**. In the right panel we see what can be thought of as interaction effects, the difference between the main (average) effect and the listener-dependent effect. If there is no interaction, then the effect of adultness conditional on listener is equal to the main effect for adultness. In other words, in the absence of a listener by adultness interaction, all the arrows in the right panel of figure \ref(fig:F62) would have lengths of zero, or perhaps show small amounts of random variation.   
+
+
+
+The parameters in your model that help you capture these conditional effects are referred to as interactions or **interaction effects**. So, the 'fixed' effect for `A1` really represents the marginal (overall) effect for the predictor. To investigate the values of this predictor *conditional* on listener, we need to include the listener by `A1` *interaction* in our model.
+
+
+
+
+
+```{r F62, fig.height = 3, fig.width=8, fig.cap = " (left) Average height reported by each listener for apparent adults and children. Horizontal lines indicated the grand mean (solid) and the adult (upper dotted) and child means (lower dotted). (middle) The listener-dependent age effects, the difference between the adult and child means reported by each listener. The horizontal line indicates the average differences between listeners. (right) Arrows represent the magnitude of listener-specific deviations from the overall average difference across all listeners (horizontal line).", echo = FALSE}
 
 ################################################################################
 ### Figure 6.2
@@ -86,7 +99,9 @@ abline (h = mean(listener_age_effects))
 
 ```
 
-When two variables do not have independent effects on your outcome, they are said to **interact** and have an **interaction**. The parameters in your model that help you capture these conditional effects are referred to as interactions or **interaction effects**. So, the 'fixed' effect for `A1` really represents the marginal (overall) effect for the predictor. To investigate the values of this predictor *conditional* on listener, we need to include the listener by `A1` *interaction* in our model.
+
+
+
 
 ### Description of our model
 
@@ -98,7 +113,7 @@ This formula told our model to draw the A parameter from a fixed prior distribut
 
 `height ~ 1 + A + L + (1|S)`
 
-We are doing this to highlight the two ways that we can include interactions in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and L, and the interaction between A and L". The `:` symbol can be read as "given", which helps to highlight that these help represent conditional effects. So `A:L` can be read out loud as "A given L" or "the effect of A given the value of L". 
+We're doing this to highlight the two ways that we can include interactions in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and L, and the interaction between A and L". The `:` symbol can be read as "given", which helps to highlight that these help represent conditional effects. So `A:L` can be read out loud as "A given L" or "the effect of A given the value of L". 
 
 `y ~ 1 + A + L + A:L`
 
@@ -106,7 +121,7 @@ As a shortcut, we can use the symbol `*` which means "include the main effects f
 
 `y ~ 1 + A * L`
 
-So, if we wanted to include the marginal effects of age and listener, and the interaction between them we could include them in either of the two ways below, provided we want to estimated these without partial pooling. 
+So, if we wanted to include the marginal effects of age and listener, and the interaction between them we could include them in either of the two ways below, provided we want to estimate these without adaptive partial pooling. 
 
 `height ~ 1 + A + L + A:L + (1|S)`
 
@@ -116,11 +131,11 @@ However, we know that is is advisable to estimate factors with large numbers of 
 
 `height ~ 1 + A + (1 + A|L) + (1|S)`
 
-When we do this, we tell our model to fit the age by listener interaction using partial pooling just like we did for the listener intercept effects. Actually, our 'listener intercept effects' are actually an intercept by listener interaction. In other words, out listener effects are simply listener-specific deviations from the intercept conditional on listener, i.e. the listener by intercept interaction. When our formula has a non intercept predictor, we can omit rthe `1` and make our formula as follows: 
+When we do this, we tell our model to fit the age by listener interaction using partial pooling just like we did for the listener intercept effects. Actually, our 'listener intercept effects' are simply listener-specific deviations from the intercept, i.e. the listener by intercept interaction. When our formula has a non intercept predictor, we can omit the `1` and write our formula as follows: 
 
 `height ~ A + (A|L) + (1|S)`
 
-The formula above tells `brms`: "height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept. It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Our model formula might specify a model that looks like below:
+The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Our model formula might specify a model that looks like below:
 
 $$
 \begin{equation}

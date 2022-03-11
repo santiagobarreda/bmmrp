@@ -102,6 +102,8 @@ Although interactions are invertible, conceptually it may be useful to think of 
 
 ### Description of our model
 
+[@@ SB - totally unclear that both levels of A exist in the model but only one is estimated. Note this explicitly. Use A throughout rather than A1?]
+
 Before including interactions in our model, let's take  step back and consider the model formula we used last chapter. Below, we explicitly include the leading one (indicating the intercept) to make the following discussion simpler. 
 
 `height ~ 1 + A + (1|L) + (1|S)`
@@ -132,7 +134,7 @@ When we do this, we tell our model to fit the age by listener interaction using 
 
 `height ~ A + (A|L) + (1|S)`
 
-The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Our model formula might specify a model as in \@ref(eq:54). Compared to the t distributed model we fit at the end of chapter 5, the only changes have been the addition of a new term ($A1 \colon L_{[A_{[i]}]}$) and its associated priors ($A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L}) ,\; \sigma_{A1 \colon L} \sim N(0,12)$). 
+The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Our model formula might specify a model as in \@ref(eq:61). Compared to the t distributed model we fit at the end of chapter 5, the only changes have been the addition of a new term ($A1 \colon L_{[A_{[i]}]}$) and its associated priors ($A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L}) ,\; \sigma_{A1 \colon L} \sim N(0,12)$). 
 
 $$
 \begin{equation}
@@ -152,7 +154,7 @@ A1 \sim N(0,12) \\
 \sigma_S \sim N(0,12) \\ 
 \nu \sim gamma(2, 0.1) \\ 
 \end{split}
-(\#eq:54)
+(\#eq:61)
 \end{equation}
 $$
 
@@ -350,6 +352,31 @@ The above was a full explanation of what information the model needs and why it 
   
 And `brm` (and Stan) will do the rest.
 
+### Updating our model description
+
+Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:66b). Only two things have changed with respect to the description in \@ref(eq:61). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than independently. Second, we specift a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal, $\Sigma$. This is because, as noted in section 6.X, `Stan` constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A1 \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$). 
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mathrm{Priors:} \\ 
+S_{[\bullet]} \sim N(0,\sigma_S) \\
+\begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\ \\
+\\
+\mathrm{Intercept} \sim N(156,12) \\
+A1 \sim N(0,12) \\
+\sigma \sim N(0,12) \\
+\sigma_L \sim N(0,12) \\
+\sigma_{A1 \colon L} \sim N(0,12) \\
+\sigma_S \sim N(0,12) \\ 
+\nu \sim gamma(2, 0.1) \\ 
+R \sim \mathrm{LKJCorr} (2)
+\end{split}
+(\#eq:66b)
+\end{equation}
+$$
 
 ### Fitting the model
 

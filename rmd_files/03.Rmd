@@ -6,17 +6,17 @@ In this chapter we're going to start to answer basic research questions with Bay
 
 ## What are regression models? {#c3-what-is-reg}
 
-It's difficult to offer a precise definition for **regression** because the term is so broad, but regression models can be thought of as models that help you understand systematic variation the mean parameter ($\mu$) of a normal distribution. Actually, you can model variation in other parameters (and use other probability distributions), but for now we will focus on models based on the normal distribution. Basically it goes like this:
+It's difficult to offer a precise definition for **regression** because the term is so broad, but regression models are very often models that help you understand systematic variation in the mean parameter ($\mu$) of a normal distribution. Actually, you can model variation in other parameters and use a variety of other probability distributions, but for now we will focus on models based on the normal distribution. Basically it goes like this:
 
-* You have a variable you are interested in, $y$, which is is a vector containing $N$ observations. We can refer to any one of these observations like this $y_{[i]}$ for the $i^{th}$ observation. Although it's not necessary, we're going to put the index variables associated with trial number ($i$) in brackets like this $y_{[i]}$. This is just to make it easier to identify, and to highlight the similarity to vectors (e.g., `mens_height[i]`).
+* You have a variable you are interested in, $y$, which is is a vector containing $N$ observations. We can refer to any one of these observations like this $y_{[i]}$ for the $i^{th}$ observation. Although it's a bit atypical and, strictly speaking, not necessary, we're going to put the index variables associated with trial number ($i$) in brackets like this $y_{[i]}$. This is just to make it easier to identify, and to highlight the similarity to vectors in R (e.g., `mens_height[i]`).
 
-* You assume that the random variation in your data is well described by a normal probability distribution. This is a mathematical function ($N(\mu,\sigma)$) that describes what is and is not probable based on two parameters. You also assume that the random variation in your data is independent. This means, for example, that you can't really say why any two observations are above or below the mean.
+* You assume that the random variation in your data is well described by a normal probability distribution. This is a mathematical function ($N(\mu,\sigma)$) that describes what is and is not probable based on two parameters. You also assume that the random variation in each observation is independent from the random variation in each other observation. This means, for example, that you can't really say why any two observations are above or below the mean.
 
 * The mean of this distribution is either fixed, or varies in a systematic manner. The standard deviation of the error distribution is usually fixed, but can vary (more on this in chapter X). 
 
-* The variation in the mean of this distribution can be understood using some other variables, and regression tries to understand these relations. 
+* The variation in the mean of this distribution can be understood using some other variables, and regression is a tool for modeling these relations. 
 
-We can write our model more formally as in Equation \@ref(eq:31). This says that we expect that the tokens of the variable we are interested in are distributed according to ($\sim$) a normal distribution with parameters equal to $\mu$ and $\sigma$. Notice hat $y$ gets a subscript while $\mu$ and $\sigma$ do not. That means that in this model those parameters are fixed for all observations, while the value of $y$ changes for each observation based on the $i$ subscript. 
+We can write our model more formally as in Equation \@ref(eq:31). This says that we expect that the tokens of the variable we are interested in are distributed according to ($\sim$) a normal distribution with parameters equal to $\mu$ and $\sigma$. Notice hat $y$ gets a subscript while $\mu$ and $\sigma$ do not. That means that we are modeling all of the observations with just these two parameters, while the value of $y$ changes for each observation based on the $i$ subscript. 
 
 $$
 \begin{equation}
@@ -25,7 +25,7 @@ y_{[i]} \sim N(\mu,\sigma)
 \end{equation}
 $$
 
-We're going to learn to read and write formal descriptions of our models. The relationship between statistical concepts and the formal notation used to represent them is very similar to the ability to play music and musical notation. Someone who can play a song undoubtedly *knows* that song. However, in the absence of formal musical training that same person might not recognize sheet music representing the song. This person would also lack the vocabulary to discuss components of the song, and may find it difficult to learn to play new pieces. In the same way, most people have an excellent intuitive understanding of many statistical concepts (to be discussed in upcoming chapters) such as slopes, interactions, error, and so on. However, they lack the notational knowledge to understand these concepts when expressed in the formalisms often used to express these ideas. As a result, learning to read/write this notation will help you describe your models efficiently, and understand the models used by other people more effectively.
+We're going to learn to read and write formal descriptions of our models. The relationship between statistical concepts and the formal notation used to represent them is very similar to the ability to play music and read musical notation. Someone who can play a song undoubtedly *knows* that song. However, in the absence of formal musical training that same person might not recognize sheet music representing the song. This person would also lack the vocabulary to discuss components of the song, and may find it difficult to learn to play new pieces. In the same way, most people have an excellent intuitive understanding of many statistical concepts (to be discussed in upcoming chapters) such as slopes, interactions, error, and so on. However, they lack the knowledge of formal statistical notation that enables a deeper understanding of and ability to generalize these concepts. As a result, learning to read/write this notation will help you describe your models efficiently, and understand the models used by other people more effectively.
 
 Equation \@ref(eq:31) formalizes the fact that we think the *shape* of our data distribution will be like that of a normal distribution with a mean equal to $\mu$ and a standard deviation equal to $\sigma$. When you see this, $\mathcal{N}(\mu,\sigma)$, picture in your mind the shape of a normal distribution just like if you see this $y=x^2$ you may imagine a parabola. $N(\mu,\sigma)$ Really just represents that shape of the normal distribution, and the associated expectations about more and less probable outcomes. The above relationship can also be presented as in Equation \@ref(eq:32).
 
@@ -38,13 +38,13 @@ $$
 
 Notice that we got rid of the $\sim$ symbol, moved $\mu$ out of the distribution function ($N()$), and that the mean of the distribution function is now 0. Under this interpretation, it is not the case that the entirety of the variable is random and unknowable. This representation breaks up our variable into two components:
 
-1) A systematic component, the **predicted value** $\mu$, that is expected for the variable $y$. 
+1) A systematic component, the **expected value** $\mu$ of the variable $y$. 
 
 2) A random component, the *error* $\mathcal{N}(0,\sigma)$, that causes unpredictable variation around $\mu$. 
 
-Regression models separate variables into their **systematic** and **random** components. In this case, the systematic component is predictable for all observations in the data. The random component represents the *noise*, or *error* in our data, random variation around our predicted values that can't be explained. This doesn't mean that it's inexplicable in general, it only means that we've structured our model in a way that doesn't let us explain it. In other words, a model like this thinks all variations from the mean as noise because it is structured in such a way that treats all deviations as noise. 
+Regression models separate observed variables into their **systematic** and **random** components. In this case, the systematic component is predictable for all observations in the data. The random component represents the *noise*, or *error* in our data, random variation around our expected values that isn't explained. This doesn't mean that it's inexplicable in general, it only means that we've structured our model in a way that doesn't let us explain it. In other words, a model like this thinks all variations from the mean is noise because it is structured in such a way that treats such deviations as noise. 
 
-In regression models, we can try to understand variation in $\mu$ using predictor variables $\mathrm{x}$. These predictor variables co-vary (vary with) our $y$ variable, and we think help explain the variation in $y$. For example, in \@ref(eq:33) we're saying we think $\mu$ is equal to some combination of the three predictor variables $\mathrm{x}_{1}$, $\mathrm{x}_{2}$, and $\mathrm{x}_{3}$. For example, we might expect that the apparent height of a speaker is affected by their f0 ($\mathrm{x}_{1}$), vocal-tract length ($\mathrm{x}_{2}$), and resonance ($\mathrm{x}_{1}$). So, when we combine these predictors we think we can come up with a pretty good estimate of how tall someone will sound.
+In regression models, we can try to understand variation in $\mu$ using predictor variables $\mathrm{x}$. These predictor variables co-vary (vary with) our $y$ variable, and, we think (or hope), help explain the variation in $y$. For example, in \@ref(eq:33) we're saying we think $\mu$ is equal to some combination of the three predictor variables $\mathrm{x}_{1}$, $\mathrm{x}_{2}$, and $\mathrm{x}_{3}$. For example, we might expect that the apparent height of a speaker is affected by their f0 ($\mathrm{x}_{1}$), vocal-tract length ($\mathrm{x}_{2}$), and resonance ($\mathrm{x}_{1}$). So, when we combine these predictors we think we can come up with a pretty good estimate of how tall someone will sound.
 
 $$
 \begin{equation}
@@ -62,7 +62,7 @@ $$
 \end{equation}
 $$
 
-The predicted value ($\mu_{[i]}$) for a given trial is very unlikely to be an equal combination of the predictors (as in equation \@ref(eq:34)), so that a *weighting* of the predictors will be necessary. We can use the symbol $\alpha$ for these weights as in equation \@ref(eq:35). For example, maybe $\mathrm{x}_{1}$ is twice as important as the other two predictors and so $\alpha_1=2$, while $\alpha_2=1$ and $\alpha_3=1$. Actually, maybe one predictor has a *negative* effect so that $\alpha_3=-1$. The 'weights' associated with each predictor are the **coefficients** (or parameters) of our model. Note that the weight terms ($\alpha$) do not get an $i$ subscript. This is because they do not change from trial to trial. The *values* of the predictors change from trial to trial, but the way that these are combined does not, they are a stable property of the model. 
+The predicted value ($\mu_{[i]}$) for a given trial is very unlikely to be a simple combination of the predictors (as in equation \@ref(eq:34)), so that a *weighting* of the predictors will be necessary. We can use the symbol $\alpha$ for these weights as in equation \@ref(eq:35). For example, maybe $\mathrm{x}_{1}$ is twice as important as the other two predictors and so $\alpha_1=2$, while $\alpha_2=1$ and $\alpha_3=1$. Actually, maybe one predictor has a *negative* effect so that $\alpha_3=-1$. The 'weights' associated with each predictor are the **coefficients** (or parameters) of our model. Note that the weight terms ($\alpha$) do not get an $i$ subscript. This is because they do not change from trial to trial. The values of the *predictors* change from trial to trial, but the way that they are combined to produce an expected value for any given trial does not. The weights are a stable property of the model. 
 
 $$
 \begin{equation}
@@ -71,7 +71,7 @@ $$
 \end{equation}
 $$
 
-We can insert equation \@ref(eq:35) into equation \@ref(eq:32) resulting in equation \@ref(eq:36). At this point our model consists of an average value that has been broken up into three component parts, and the random component represented by normally-distributed noise. 
+We can insert equation \@ref(eq:35) into equation \@ref(eq:32), which gives us equation \@ref(eq:36). At this point our model consists of an average value that has been broken up into three component parts and the random component represented by normally-distributed noise. 
 
 $$
 \begin{equation}
@@ -80,7 +80,7 @@ y_{[i]} =  (\alpha_1*\mathrm{x}_{1[i]} + \alpha_2*\mathrm{x}_{2[i]} + \alpha_3*\
 \end{equation}
 $$
 
-Often, $\varepsilon$ is used to represent the random component, the error term, as in equation \@ref(eq:37). Notice that the error term *does* get an, $i$ subscript, as in $\varepsilon_{[i]}$. That is because the exact value of the error *does* change from trial to trial, even though the general characteristics of the error (i.e., $N(0,\sigma)$) do not. When expressed in this way this is now a *regression equation* or a *regression model*. **Fitting** a regression model basically consists of trying to find the 'best' values of its coefficients, $\alpha_1$, $\alpha_2$, and $\alpha_3$ given our data and model structure. 
+Often, $\varepsilon$ is used to represent the random component, the error term, as in equation \@ref(eq:37). Notice that the error term *does* get an $i$ subscript, as in $\varepsilon_{[i]}$. This is because the exact value of the error *does* change from trial to trial, even though the statistical characteristics of the error (i.e., $N(0,\sigma)$) do not. This is a typical way to express a *regression equation* or a *regression model*. **Fitting** a regression model to data basically consists of finding the 'best' values of its coefficients, $\alpha_1$, $\alpha_2$, and $\alpha_3$ and the parameter governing the error, $\sigma$, given our data and model structure. 
 
 $$
 \begin{equation}
@@ -89,7 +89,7 @@ y_{[i]} = \alpha_1*\mathrm{x}_{1[i]} + \alpha_2*\mathrm{x}_{2[i]} + \alpha_3*\ma
 \end{equation}
 $$
 
-Notice that according to equation \@ref(eq:36), regression models do not require that our *data* be normally distributed, but only that the *random variation* in our data ($\varepsilon$) be normally distributed. In \@ref(eq:38), we see the sort of representation of our model that we will use in this book. This representation splits the systematic and random components of our regression model and clearly and succinctly informs us of the structure of out model. In plain English this is:
+Notice that according to equation \@ref(eq:36), regression models do not require that our *data* be normally distributed, but only that the *random variation* in our data ($\varepsilon$) be normally distributed. In \@ref(eq:38), we see the sort of representation of our model that we will use in this book. This representation states the systematic and random components of our regression model separately, and it clearly and succinctly describes the structure of our model. In plain English this is:
 
 >"We expect the average value of our variable to vary from trial to trial based on three predictors. The combination of these predictors is based on model specific coefficients that are static across trials. Our observations are expected to be randomly distributed around the mean value according to a normal distribution with a standard deviation equal to sigma".
 
@@ -105,7 +105,7 @@ $$
 
 ## What's 'Bayesian' about these models? {#c3-whats-bayes}
 
-Traditional approaches to statistics (sometimes generally referred to as **frequentist**) estimate parameters by trying to find the most likely values for parameters. They do this by referring to likelihood functions based on theoretical probability distributions (i.e., maximum-likelihood estimation) as discussed in Chapter 2. We're not going to discuss this approach to statistical inference in any detail as there are hundreds, if not thousands, of books available on the subject (for reading on the subject see section X). Rather than dwell on these 'traditional' approaches to statistical inference, we're going to focus on what makes Bayesian inference *Bayesian*. Rather than rely on the likelihoods of parameter values, Bayesian models rely on the **posterior probabilities** of parameters. To explain what posterior probabilities are we need to talk about joint probabilities again. We'll begin by stating something obvious: The probability of events $A$ and $B$ occurring is the same as the probability of $B$ and $A$ occurring.
+In one common traditional approach to statistics, model parameters are estimated by trying to find the values that produce the largest value of a likelihood functions based on a theoretical probability distribution of interest to a particular problem (i.e., maximum-likelihood estimation,  as discussed in Chapter 2). We're not going to discuss this approach to statistical inference in any detail as there are hundreds, if not thousands, of books available on the subject (for reading on the subject see section X). Rather than dwell on these 'traditional' approaches to statistical inference, we're going to focus on what makes Bayesian inference *Bayesian*. Rather than estimating parameters using only information from likelihood functions (and data), Bayesian models estimate the **posterior probabilities** of parameters. To explain what posterior probabilities are we need to talk about joint probabilities again. We'll begin by stating something obvious: The probability of events $A$ and $B$ occurring is the same as the probability of $B$ and $A$ occurring.
 
 $$
 \begin{equation}
@@ -123,7 +123,7 @@ P(A|B)*P(B) = P(B|A)*P(A)
 \end{equation}
 $$
 
-Recall that $P(A)$ and $P(B)$ are simply placeholders for the probability of some hypothesis or assertion. We can replace these with $P(y)$ and $P(\mu)$, which represent "the probability of observing your data" and "the probability of observing a certain parameter value" respectively. This is seen in equation \@ref(eq:311), which states that "the probability of the parameter and the data is the same as the probability of the data and parameter".
+Recall that $P(A)$ and $P(B)$ are simply placeholders for the probability of some event. We can replace these with $P(y)$ and $P(\mu)$, which represent "the probability of observing your data" and "the probability of observing a certain parameter value" respectively. This is seen in equation \@ref(eq:311), which states that "the probability of the parameter and the data is the same as the probability of the data and parameter".
 
 $$
 \begin{equation}
@@ -132,7 +132,7 @@ P(\mu|y)*P(y) = P(y|\mu)*P(\mu)
 \end{equation}
 $$
 
-We can isolate $P(\mu|y)$ on the left hand side by dividing both sides by $P(y)$, resulting in equation \@ref(eq:312). When structured in this way, this is called **Bayes theorem**, and it underlies Bayesian statistical inference. Note however, that all we did was state a basic principle of probability theory (equation \@ref(eq:39)) and then re-arrange some terms. 
+We can isolate $P(\mu|y)$ on the left hand side by dividing both sides by $P(y)$, resulting in equation \@ref(eq:312). When structured in this way, this is a common formulation of **Bayes theorem**, and it underlies Bayesian statistical inference. Note however, that all we did was state a basic principle of probability theory (equation \@ref(eq:39)) and then re-arrange some terms. 
 
 $$
 \begin{equation}
@@ -141,15 +141,15 @@ P(\mu|y) = \frac{P(y|\mu)*P(\mu)}{P(y)}
 \end{equation}
 $$
 
-Each of the components in \@ref(eq:312) have a name:
+Each of the components in \@ref(eq:312) has a name:
 
-* $P(\mu)$ is the **prior probability** (of the parameter). This is the **a priori** probability of parameter values *before* the current experiment, and independently of the data $y$. This a priori expectation can come from world knowledge, previous experiments, common sense, or some combination thereof. For example, before you measure the height of adults in San Francisco, you know the average is not 4 feet and it is not 7 feet.
+* $P(\mu)$ is the **prior probability** (of the parameter). This is the **a priori** probability of parameter values independent of the data $y$. This a priori expectation can come from world knowledge, previous experiments, common sense, or some combination thereof. For example, before you measure the height of adults in San Francisco, you know the average is not 4 feet and it is not 7 feet.
 
-* $P(y|\mu)$ is the likelihood. This is the probability that the data $y$ would be observed/generated for particular values of $\mu$. The likelihood establishes the distribution of possible/credible parameter values given the *current* data and probability model. If we assume our data is normally distributed, $P(y|\mu)$ can be thought of as the probability density of individual points given normal distributions as specified by $\mu$.
+* $P(y|\mu)$ is the likelihood. This is the probability that the data $y$ would be observed or generated for particular values of $\mu$. The likelihood tells us the distribution of possible/credible parameter values given the data and probability model. If we assume our data is normally distributed, $P(y|\mu)$ can be thought of as the probability density of individual points given normal distributions as specified by $\mu$. [@@ are we talking about the likelihood for all the observations, i.e., the product from i to N? It seems like it, but if so, it's a product of the probability density values corresponding to the data points at each value of $\mu$]
 
-* $P(\mu|y)$ is the **posterior probability**, the probability of parameter values *after* your current experiment. This is the **a posteriori** probability that the parameter is $\mu$ given your data $y$. You get the posterior probability by combining the prior distribution and the likelihood, and in doing so combining your prior beliefs with your current observations. 
+* $P(y)$ is the **marginal probability** of the data. This is necessary to scale the numerator so that the posterior density has a total area under the curve equal to one. However, you will note that the marginal probability does not vary as a function of $\mu$. As a result, this does affect the posterior probability of different values of $\mu$. For this reason, and for computation reasons described later [@@ I don't know if we actually describe this anywhere, so please feel free to delete this bit, but it seems like it's maybe worth mentioning that you can sample from the posterior even if you don't calculate the denominator],you don't typically need to worry about the marginal probability. 
 
-* $P(y)$ is the **marginal probability**. This is necessary to scale the numerator so that the posterior density has a total area under the curve equal to one. However, you will note that the marginal probability does not vary as a function of $\mu$. As a result, this does affect the posterior probability of different values of $\mu$, and so you don't really need to worry about the marginal probability very much. 
+* $P(\mu|y)$ is the **posterior probability** of the parameter given the data, the probability model, and the prior. This is the **a posteriori** probability that the parameter is $\mu$ given your data $y$, the particular likelihood function you've chosen, and the prior model of the parameters. You get the posterior probability by combining the prior distribution and the likelihood, and in doing so incorporating your current observations into your prior beliefs. 
 
 As noted above, 'traditional' models focus primarily (or exclusively) on how likely different conclusions are given your data. In contrast, Bayesian models focus on the posterior probability of different parameter values, that is on the combination of the likelihood and prior probabilities of parameters.
 
@@ -163,9 +163,9 @@ The use of prior probabilities is sometimes said to make Bayesian models inheren
 
 The calculation of posterior distributions involves the combination of the likelihood function with the prior probability distribution and the marginal probability. The marginal probability does not affect the 'shape' of the posterior distribution, and exists to scale the posterior so that the area under the curve is equal to one (to satisfy the requirements of basic probability theory). As a result, we will focus on the combination of the likelihood and prior probabilities. 
 
-The combination of the likelihood and prior probability distributions is straightforward conceptually: You multiply the values of the two densities at each x-axis location. This works because we are interested in the *joint* probability of the likelihood and the prior, and since these are independent of each other we know we can just multiply them. The resulting curve then represents the **joint density** of the two distributions. In Figure \@ref(fig:F31) several likelihoods and priors are combined, showing the effects of variations in these on posterior distributions. Each column of figure \@ref(fig:F31) differs in terms of the number of observations used to calculate the likelihood (n = 3, 10, 675), and rows differ in terms of the standard deviation of the prior probabilities of the mean with $\mu$ equal to 180 cm and $\sigma$ = 100, 15, 1. In each case, the calculation of the likelihood assumes that the data has the same standard deviation as our apparent height data (7.8 cm). In each plot, all curves have been scaled to have the same height in the figure. This is only to make the figures visually interpretable but does not affect any of the points made below. 
+The combination of the likelihood and prior probability distributions is straightforward conceptually: You multiply the values of the two functions at each x-axis location. This works because we are interested in the *joint* probability of the likelihood and the prior, reformulated as the product of a conditional probability (the likelihood) and a marginal probability (the prior). The resulting curve then represents the **joint density** of the two distributions. In Figure \@ref(fig:F31) several likelihoods and priors are combined, showing the effects of variations in these on posterior distributions. Each column of figure \@ref(fig:F31) differs in terms of the number of observations used to calculate the likelihood (n = 3, 10, 675), and rows differ in terms of the standard deviation of the prior probabilities of the mean with $\mu$ equal to 180 cm and $\sigma$ = 100, 15, 1. In each case, the calculation of the likelihood assumes that the data has the same standard deviation as our apparent height data (7.8 cm). In each plot, all curves have been scaled to have the same height in the figure. This is only to make the figures visually interpretable but does not affect any of the points made below. 
 
-The different standard deviations used for the prior probabilities of $\mu$ encode different levels of prior belief regarding what heights of adult male speakers from the US. The top, middle, and bottom rows represent what can be referred to as **vague**, **weakly informative** and **informative** priors. The boundaries between these kinds of priors is somewhat fuzzy, however, they can be distinguished as follows. A vague prior provides almost no information about the expected range of plausible results, a weakly informative prior provides some information, and an informative prior provides a lot. You can think of these as three different approaches to using prior information. 
+The different standard deviations used for the prior probabilities of $\mu$ encode different levels of prior belief regarding what heights of adult male speakers from the US. The top, middle, and bottom rows represent what can be referred to as **vague**, **weakly informative** and **informative** priors. The boundaries between these kinds of priors is fuzzy. However, they can be distinguished as follows. A vague prior provides almost no information about the expected range of plausible results, a weakly informative prior provides some information, and an informative prior provides a lot. You can think of these as three different approaches to using prior information. [@@ "almost no information", "some information", and "a lot" don't seem any less fuzzy to me, tbh]
 
 
 ```{r F31, echo = FALSE, fig.height = 5.5, fig.width = 8, fig.cap='Demonstration of the effect of different prior probabilities and number of observations on likelihoods on posterior distributions.', cache = TRUE}
@@ -275,35 +275,37 @@ mtext (side = 1, outer = TRUE, text = "Height (cm)", line = 2.5)
 
 ```
 
-In the top row of Figure \@ref(fig:F31) we see the influence of a *vague* or *diffuse* prior on inference. Since this distribution has a standard deviation of 100 and a mean of 180, this means that basically all heights from zero to 400 cm are plausible a priori. A prior probability this wide is only going to place very minimal constraints on the posterior probabilities. This is reflected in the top row of figure \@ref(fig:F31) where even in the case of only three observations the posterior probability almost exactly matches the likelihood. So, in the presence of very weak prior beliefs the most credible values for your parameters a posteriori (after experimentation) will be dominated by the most likely values. This makes sense.
+In the top row of Figure \@ref(fig:F31) we see the influence of a *vague* or *diffuse* prior on inference. Since this distribution has a standard deviation of 100 and a mean of 180, this means that basically all heights from zero to 400 cm are plausible a priori. A prior probability this wide is only going to place very minimal constraints on the posterior probabilities. This is reflected in the top row of figure \@ref(fig:F31) where even in the case of only three observations the posterior probability almost exactly matches the likelihood. So, in the presence of very weak prior beliefs, the most credible values for your parameters a posteriori (after incorporating your data) will be dominated by the most likely values. This makes sense.
 
-In the middle row of Figure \@ref(fig:F31) we see the influence of a *weakly informative* prior. This distribution has a standard deviation of 15 and a mean of 180. The standard deviation was set to twice the value of the standard deviation of adult male heights in the United States (cite). As a result, it places reasonable constraints on our expectations but it will not overly influence results within that reasonable range. We see that in this case, the likelihood still dominates the posterior even when only five observations are available. 
+In the middle row of Figure \@ref(fig:F31) we see the influence of a *weakly informative* prior. This distribution has a standard deviation of 15 and a mean of 180. The standard deviation was set to twice the value of the standard deviation of adult male heights in the United States (cite). As a result, it places reasonable constraints on our expectations but it will not strongly influence results within that reasonable range. We see that in this case, the likelihood still dominates the posterior even when only five observations are available. 
 
 In the bottom row of Figure \@ref(fig:F31) we see the influence of a *informative* prior. This distribution has a standard deviation of 1 and a mean of 180. A prior distribution this narrow basically says that we are *sure* that the average height is around 180 cm. This is because the prior probability of any value outside of 178-182 cm is nearly zero, meaning that we do not believe values outside this bound before collecting our data. We can see that under these conditions, the prior distribution actually can have a strong effect on the posterior, especially in cases with few observations. However, with a large enough sample size the likelihood can still come to dominate even the narrowest prior distributions. 
 
 ### Characteristics of posterior distributions
 
-If we focus on the general characteristics of posterior distributions with respect the the characteristics of priors and likelihoods, a pattern emerges. Specifically, the posterior is a mix of the prior and likelihood which takes their relative 'variances' into account. We know (see section \@ref(c2-chars-of-likelihoods)) that the width of the likelihood function is dependent on the underlying error in the data and on the sample size: Error increases the width of the likelihood while more observations result in a narrower and narrower likelihood. So, we see that the characteristics of the posterior distribution will depend on: The 'width' of the prior distribution, the amount of noise in your dependent variable, and the number of samples involved in the calculation of your likelihood. 
+If we focus on the general characteristics of posterior distributions with respect the the characteristics of priors and likelihoods, a pattern emerges. Specifically, the posterior is a mix of the prior and likelihood which takes their relative 'variances' into account. We know (see section \@ref(c2-chars-of-likelihoods)) that the width of the likelihood function is dependent on the underlying error in the data and on the sample size. Greater error increases the width of the likelihood, since a wider spread of data will be compatible with a wider range of parameter values. On the other hand, more observations will tend to decrease the width of the likelihood, since it consists of the product of density values across all the observations in a data set. So, we see that the characteristics of the posterior distribution will depend simultaneously on the 'width' of the prior distribution, the amount of noise in your dependent variable, and the size of the sample involved in the calculation of your likelihood. 
 
-A consequence of the 'merging' of prior information with the likelihood is that posterior distributions can be **shrunk** towards the prior. Recall from chapter 2 that the maximum likelihood estimate of a parameter can be thought of as the 'best' parameter in that it is the parameter that makes your data as probable as it can be given the model structure. In figure \@ref(fig:F31) we see that in some cases the posterior distribution is not exactly like the likelihood and has been *pulled* towards the prior. This *pull* is referred to as **shrinkage**, because it tends to *shrink* the magnitude of effects by pulling them towards the mean (which is often zero). Broadly speaking, deviations from prior expectations are maintained when there is good enough evidence for them, and shrunk when there is not. What constitutes 'enough' evidence is based on the structure of the model and the nature of the data. As seen in figure \@ref(fig:F31) a wide enough prior will not meaningfully affect estimates even for extremely small sample sizes. You may wonder, is shrinkage a good thing? It turns out that shrinkage can help models arrive at more reliable parameter estimates by reducing weakly supported values that deviate substantially from prior expectations (cite). This will be discussed further in the following chapter. 
+A consequence of the 'merging' of prior information with the likelihood is that posterior distributions can be **shrunk** towards the prior. Recall from chapter 2 that the maximum likelihood estimate of a parameter can be thought of as the 'best' parameter in that it is the parameter that makes your data as probable as it can be given the model structure. In figure \@ref(fig:F31) we see that in some cases the posterior distribution is not exactly like the likelihood and has been *pulled* towards the prior. This *pull* is referred to as **shrinkage**, because it tends to *shrink* the magnitude of effects by pulling them towards the mean (which is often zero). Broadly speaking, deviations from prior expectations are maintained when there is good enough evidence for them, and shrunk when there is not. What constitutes 'enough' evidence is based on the structure of the model and the nature of the data. As seen in figure \@ref(fig:F31) a wide enough prior will not meaningfully affect estimates even for extremely small sample sizes. You may wonder, is shrinkage a good thing? It turns out that shrinkage can help models arrive at more reliable parameter estimates by reducing weakly supported values that deviate substantially from prior expectations (cite). This will be discussed further in the following chapter.
+
+[@@ Is it *shrinkage* with just a prior and likelihood? I guess I tend to think of shrinkage only in the context of multilevel models, where partial pooling "shrinks" estimates toward a mean parameter being estimated - I'm kind of just thinking out loud here, and the more I do, the more I think I'm okay with this use of "shrinkage" ... anyway, let's talk about it]
 
 ## Sampling from the posterior using STAN and `brms` {#c3-sampling}
 
-We want to understand the posterior distribution of parameters. How do we get this information? For very simple models posterior distributions can be understood **analytically**, that is by finding exact solutions to a series of equations. However, for more complicated models such as the ones we'll discuss in this book, it can be difficult (if not impossible) to understand the characteristics of the posterior distributions of parameters in this way. As a result, these questions are answered **numerically** using software that randomly samples from posterior distributions. Given enough enough random samples from the posterior distribution, we can begin to draw the general expected shape of the distribution (just as with sampling from any other variable).
+We want to understand the posterior distribution of parameters. How do we get this information? For very simple models, posterior distributions can be derived **analytically**, that is by finding exact solutions to a series of equations. However, for more complicated models, such as the ones we'll discuss in this book, it can be difficult (if not impossible) to understand the characteristics of the posterior distributions of parameters in this way. As a result, these questions are answered **numerically** using software that samples from posterior distributions using one or more algorithms designed to do so as accurately and efficiently as possible. Given enough samples from the posterior distribution, we can estimate the properties of the distribution (just as we could by sampling any other variable).
 
-Many different software approaches to sampling from posterior distributions have been developed through the years including *winBUGS*, *JAGS*, and *STAN*. The software used in this book is **STAN**. We use this because it is (quick)relatively) fast, reliable, and widely adopted. However, the modeling and statistical principles explained in this book apply generally to all Bayesian models regardless of the software used to fit them, and the general concepts extend to all linear modeling more general. 
+Many different software approaches to sampling from posterior distributions have been developed through the years including *winBUGS*, *JAGS*, *PyMC*, and *STAN*. The software used in this book is **STAN**. We use this because it is (relatively) fast, reliable, extremely flexible, and widely adopted. However, the modeling and statistical principles explained in this book apply generally to all Bayesian models regardless of the software used to fit them, and the general concepts extend to linear modeling more generally. 
 
-One downside with working with STAN directly is that you need to write your own models. This is not too difficult, but it is not *easy* either, and it can be a bit time consuming especially for complicated models that we want to fit quickly. In this book we will rely on the `brms` package to use STAN. `brms` effectively simplifies the use of STAN by making the specification of highly-efficient models very simple, and providing us with a great deal of flexibility in doing so. It also includes many of helper functions that make working with Bayesian models very convenient. So, even though we will use `brms` for simplicity, everything we discuss in this book could be used to directly write your own models for STAN (or any other statistical software). 
+One downside with working with STAN directly is that you need to write your own models. This is not too difficult, but it is not particularly *easy* either, and it can be a bit time consuming, especially for complicated models. In this book we will rely on the `brms` package to use STAN. `brms` effectively simplifies the use of STAN by making the specification of highly-efficient models very simple, and providing us with a great deal of flexibility in doing so. It also includes many helper functions that make working with Bayesian models very convenient. So, even though we will use `brms` for simplicity, everything we discuss in this book could be used to directly write your own models for STAN (or any other statistical software). 
 
-In order to sample from the posterior distribution using software like STAN, the user provide some data and a description of a model which specifies: 
+In order to sample from the posterior distribution using software like STAN, the user provides data and a description of a model which specifies: 
 
   * The relations between the variables in the data. For example, what is the dependent variable? What are the independent variables? How do these relate? 
   
   * The nature of random variation in the model. To this point we have only discussed single sources of normally-distributed noise in our models. 
   
-  * Prior distributions for all estimated parameters. 
-  
-Given this information, STAN takes random samples from the posterior distribution and returns them all, rather than looking for the single 'best' estimate. For each parameter, STAN does a more-complicated version of the following algorithm:
+  * Prior distributions for all estimated parameters.
+
+Given this information, STAN samples from the posterior distribution and returns arrays containing these samples, rather than looking for the single 'best' estimate. For each parameter, STAN does a more-complicated version of the following algorithm:
 
 1) Pick a random value for the parameter (i.e., $\mu_{tmp}$ = 173 cm).
 
@@ -313,7 +315,9 @@ Given this information, STAN takes random samples from the posterior distributio
 
 4) Go back to step 1. 
 
-The result of this process is a **chain** of estimates of $\mu_{estimate}$, and any other parameter you are estimating in your model. This *chain* is a vector of sequential samples of the posterior distribution of $\mu_{estimate}$, which together tell us about the characteristics of the parameter it represents. Incredibly, under a very reasonable set of conditions the process below will result in a distribution of $\mu_{estimate}$ that will converge on the posterior distribution of $\mu$ given your data and model structure (including prior probabilities). 
+[@@ how confident are you that this is actually what STAN does? I know that this is a pretty reasonable description of the Metropolis algorithm, but Hamiltonian Monte Carlo is, as far as I know, *way* more complicated that this, and STAN has a number of fancy things built on top of plain Hamiltonian Monte Carlo...]
+
+The result of this process is a **chain** of estimates of $\mu_{estimate}$, and any other parameter you are estimating in your model. This *chain* is a vector containing the sequence of samples from the posterior distribution of $\mu_{estimate}$, which together tell us about the characteristics of the parameter it represents. Incredibly, under a very reasonable set of conditions the process below will result in a distribution of $\mu_{estimate}$ that will converge on the posterior distribution of $\mu$ given your data and model structure (including prior probabilities). 
 
 ## Estimating a single mean with the `brms` package
 
@@ -344,6 +348,8 @@ However, this time we are going to approach these questions using a Bayesian reg
 ### Description of the model
 
 We're beginning with a model that treats all of our data as random deviations drawn from a single, undifferentiated normal distribution. Our model for a single group of normally distributed values can be thought of in several different ways. In \@ref(eq:313a) the value of your dependent variable for any given trial ($y_{[i]}$) is thought of as being a normally-distributed variable with a trial-specific mean of $\mu_i$, and a fixed standard deviation $\sigma$.
+
+[@@ it seems confusing to me to talk about a "single, undifferentiated normal distribution" and then immediately show a model with $\mu$ indexed by trial]
 
 
 $$
@@ -391,7 +397,7 @@ Put in plain English, each line in the model says the following:
 
 * The expected value for any given trial ($\mu_{[i]}$) is equal to the intercept of the model for all trials. This means its fixed and we have the same expected value for all tokens.
 
-What the model also implicitly says that the error, the random variation around $\mu$, is drawn from a normal distribution with a mean of 0 and a standard deviation of $\sigma$. This distribution represents all deviations in apparent height around the mean apparent height for the sample ($\mu_{[i]}$). In other words, the error for this model is expected to look like:
+The model also implicitly says that the error, the random variation around $\mu$, is drawn from a normal distribution with a mean of 0 and a standard deviation of $\sigma$. This distribution represents all deviations in apparent height around the mean apparent height for the sample ($\mu_{[i]}$). In other words, the error for this model is expected to look like:
 
 $$
 \begin{equation}
@@ -418,7 +424,7 @@ $$
 \end{equation}
 $$
 
-As noted in section \@ref(c3-what-is-reg), regression models assume that the random error, the unpredictable deviations about the expected value for a trial, are independent and identically distributed. We can now be more specific and say that we expect that our model *residuals* to be independent of each other. This assumption is obviously violated for this data since we have multiple observations from each listener, each of which had their own tendencies (as discussed in section \@ref(c2-conditional)). For this reason, we can say that this model is 'wrong'; it is built in such a way that we know it is not a good fit for our data. We will discuss this, and the problems it causes, in the following chapter.
+As noted in section \@ref(c3-what-is-reg), regression models assume that the random error, the unpredictable deviations about the expected value across trials, are independent and identically distributed. We can now be more specific and say that we expect that our model *residuals* to be independent of each other. This assumption is obviously violated for this data since we have multiple observations from each listener, each of which had their own tendencies (as discussed in section \@ref(c2-conditional)). For this reason, we can say that this model is 'wrong'; it is built in such a way that we know it is not a good fit for our data. We will discuss this, and the problems it causes, in the following chapter.
 
 ### The model formula
 
@@ -474,7 +480,7 @@ model = brms::brm (height ~ 1, data = men, chains = 1, cores = 1)
 model = readRDS ('../models/3_model.RDS')
 ```
 
-By default, `brms` takes 2000 samples, throwing out the first 1000 samples and returning the last 1000. The first 1000 samples are the **warmup**, the time the model uses to find appropriate parameter values for the model. The output above shows you that the sampler is working, and tells you about the progress as it works. This is a small amount of data and a simple model so it should be pretty fast. This is the only time we will be actually fitting a model in the code chunks. For all of the models discussed in this book, you can fit any of these models yourself locally using the code provided, or you can download them directly from the course GitHub using the code below. 
+By default, `brms` takes 2000 samples, throwing out the first 1000 samples and returning the last 1000. The first 1000 samples are the **warmup**, the time the model uses to find appropriate parameter values for the model [@@ I think warmup in STAN is (also?) used to tune the sampling algorithm]. The output above shows you that the sampler is working, and tells you about the progress as it works. This is a small amount of data and a simple model so it should be pretty fast. This is the only time we will be actually fitting a model in the code chunks. For all of the models discussed in this book, you can fit any of these models yourself locally using the code provided, or you can download them directly from the book GitHub repo using the code below. 
 
 ```{r, eval = FALSE}
 # Download it from the GitHub page:
@@ -501,7 +507,7 @@ The first part provides you with some basic information and part tells you some 
 ##         total post-warmup draws = 1000
 ```
 
-Next we see estimated effects for our predictors, in this case only an intercept. This is a **population-level effect** because is is shared by all observations in our sample, and not specific to any one observation.
+Next we see estimated effects for our predictors, in this case only an intercept. This is an estimated **population-level effect** because it is shared by all observations in our sample, and it is not specific to any particular subset of observations.
 
 ```{r}
 ## Population-Level Effects: 
@@ -529,7 +535,7 @@ This last section is just boilerplate and contains some basic reminders which wi
 
 ### Seeing the samples
 
-In section \@ref(c3-sampling) we discussed that Bayesian modeling software (like STAN) takes *samples* of the posterior distributions of parameters given the data and model structure. It is helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summarizes of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a matrix. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the middle column is the error (`sigma`). The third column (`lp__`) is the log posterior density, to be discussed in section X. 
+In section \@ref(c3-sampling) we discussed that Bayesian modeling software (like STAN) takes *samples* of the posterior distributions of parameters given the data and model structure. It is helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summaries of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a matrix. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the middle column is the error (`sigma`). The third column (`lp__`) is the log posterior density, to be discussed in section X. 
 
 ```{r, collapse = TRUE}
 # get posterior samples from model
@@ -604,7 +610,7 @@ abline (0,1,col=2,lwd=2)
 
 ## Checking model convergence
 
-Our parameter estimates are based of a set of samples from the posterior distribution of a parameter. As with any other inference based on samples, our parameter estimates will be unreliable if we don't have enough samples, or if our samples do not represent the population we are trying to understand. For this reason, it's important to look at the **ESS** values (the *expected sample size*), and the **Rhat** values provided for `brm` model print statements. ESS tells you about how many *independent* samples you have taken from the posterior. Bulk ESS tells you how many samples the sampler took in the 'thick' part of the density, and Tail ESS reflects how much time the sampler spent in the 'thin' part, in the tails of the distribution. Rhat tells you about whether your 'chains' have converged (more on this later). As noted in the 'boilerplate' at the end of the `brm` model print statement, values of Rhat near 1 are good, and values higher than around 1.1 are a bad sign. Ideally we would like several hundred samples (at least) for mean estimates, and thousands to be confident in the 95% confidence intervals. If you fit a model and get a warning message like this:
+Our parameter estimates are based of a set of samples from the posterior distribution of a parameter. As with any other inference based on samples, our parameter estimates will be unreliable if we don't have enough samples, or if our samples do not represent the population we are trying to understand. For this reason, it's important to look at the **ESS** values (the *effective sample size*), and the **Rhat** values provided for `brm` model print statements. ESS tells you approximately how many *independent* samples you have taken from the posterior. Bulk ESS tells you how many samples the sampler took in the 'thick' part of the density, and Tail ESS reflects how much time the sampler spent in the 'thin' part, in the tails of the distribution. Rhat tells you about whether your 'chains' have converged (more on this later). As noted in the 'boilerplate' at the end of the `brm` model print statement, values of Rhat near 1 are good, and values higher than around 1.1 are a bad sign. Ideally we would like several hundred samples (at least) for mean estimates, and thousands to be confident in the 95% confidence intervals. You may sometimes fit a model and get a warning message like this:
 
 ```{r}
 ## Warning messages:
@@ -623,7 +629,7 @@ That is `brms` telling you that you need to collect more samples in order to be 
 parallel::detectCores()
 ```
 
-The example code throughout this book will use four cores to fit models. If you only have four total cores, change the models to use 2-3 chains and cores. One thing to keep in mind is that these models can be computationally intensive to fit. As the data sets become larger and the models become more complicated, more powerful computers are needed in order to fit a model in a reasonable amount of time. Below, we re-fit our initial model but run it on four chains, and on four cores at once.
+The example code throughout this book will use four cores to fit models. If you only have four total cores on your computer, you should change the models to use 2-3 chains and cores so that your computer can take care of other necessary functions while you fit your model(s). One thing to keep in mind is that these models can be computationally intensive to fit. As the data sets become larger and the models become more complicated, more powerful computers are needed in order to fit a model in a reasonable amount of time. Below, we re-fit our initial model but run it on four chains, and on four cores at once.
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -664,7 +670,7 @@ model_thinned = bmmb::get_model ('3_model_thinned.RDS')
 model_thinned = readRDS ('../models/3_model_thinned.RDS')
 ```
 
-We inspect the model print statement and see that despite having the same number of samples as the `model_multicore`, the ESS for this model is higher than for the previous model, in particular ofr the `sigma` parameter.
+We inspect the model print statement and see that despite having the same number of samples as the `model_multicore`, the ESS for this model is higher than for the previous model, in particular for the `sigma` parameter.
 
 ```{r, collapse = TRUE}
 # inspect model
@@ -803,7 +809,9 @@ log (P(\theta|y)) = log (P(y|\theta)) + log(P(\theta))
 \end{equation}
 $$
 
-Let's pause to think about what \@ref(fig:319) means and why it is a useful measure. First, let's talk about $P(y|\theta)$ which is the model likelihood: The joint probability of the data given the values of the parameters. For example, we can think about the probability of observing each of the observations in our height data given the posterior means estimates of $\mu$ and $\sigma$ provided by `model_priors`. Below, we see the values of the probability density above the first six observations, and then the logarithm of these values below. 
+Let's pause to think about what \@ref(fig:319) means and why it is a useful measure. First, let's talk about $P(y|\theta)$ which is the model likelihood: The joint probability of the data given the values of the parameters. For example, we can think about the probability of observing each of the observations in our height data given the posterior means estimates of $\mu$ and $\sigma$ provided by `model_priors`. Below, we see the values of the probability density above the first six observations, and then the logarithm of these values below.
+
+[@@ here is where `height` is invoked, but apparently undefined, at least in this chapter, or maybe it's just because I'm trying to knit using plain on knitting]
 
 ```{r, collapse = TRUE}
 head (dnorm (height, 173.8, 7.78))
@@ -855,7 +863,9 @@ In frequentist corner, we're going to compare the output of `brms` to some more 
 
 ### One-sample t-test vs. intercept-only Bayesian models 
 
-A one sample t-test helps investigate whether the mean of a set of observations is likely to be zero. The t-test answers questions by investigating the likelihood of parameters given the data (priors and posteriors are not involved). In addition, t-tests are calculated using analytic (exact) methods, and do not involve sampling from distributions. The t-test assumes that all of your observations are independent, so it is not appropriate to use for this data. However, we just want to compare it to our initial Bayesian model (which made the same assumptions). We can apply a one-sample t-test to our vector of apparent-height judgments:
+A one sample t-test helps investigate whether the mean of a set of observations is consistent with a true underlying value of zero. The t-test answers questions by investigating the likelihood of parameters given the data (priors and posteriors are not involved). In addition, t-tests are calculated using analytic (exact) methods, and do not involve sampling from distributions. The t-test assumes that all of your observations are independent, so it is not appropriate to use for this data. However, we just want to compare it to our initial Bayesian model (which made the same assumptions). We can apply a one-sample t-test to our vector of apparent-height judgments:
+
+[@@ I think you're conflating frequentist *testing* and maximum likelihood estimation. Tests in MLE approaches typically (always?) rely on frequentist testing assumptions, but most frequentist testing does not rely on MLE. For example, the variance estimator in the denominator of a t-test is explicitly *not* the maximum likelihood estimate of the variance - it's the unbiased estimate (dividing by $n$ produces the maximum likelihood estimate, dividing by $n-1$ produces the unbiased estimate). I like the idea of explicitly comparing different approaches at the ends of chapters, but I think I'm inclined to avoid doing so in a "frequentist vs Bayesian" way, or at least I think that we should minimize our focus on that distinction, per se. I need to think about this some more, and we should talk about it.]
 
 ```{r}
 t.test (mens_height)

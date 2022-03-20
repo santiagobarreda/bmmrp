@@ -864,7 +864,7 @@ $$
 
 Estimates of $\widehat{\mathrm{elpd}}_{LOO}$ and associated statistics can be added to our models using the code below. We will now include our model with random age effects in our comparison.
 
-```{r}
+```{r, cache = TRUE}
 model_sum_coding = brms::add_criterion (model_sum_coding, criterion="loo")
 model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="loo")
 model_re_t = brms::add_criterion (model_re_t, criterion="loo")
@@ -906,13 +906,13 @@ sd(model_loo_info[,1]-model_t_loo_info[,1]) * sqrt(1386)
 
 And see that these values correspond to those obtained using the comparison function as seen below:
 
-```{r}
+```{r, cache = TRUE}
 brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
 ```
 
 Finally, we can check out the estimated number of parameters by summing the third column of our pointwise information for each model, which contains information about $\mathrm{p_{\mathrm{LOO}}}$ for each model. We can compare this to the number of actual parameters estimated by our models. An easy way to find the number of estimated parameters is to get the posterior draws for a model using the `as_draws_matrix` function from `brms`. This will return a matrix that contains one column for each estimated parameter, plus one columns for the `lp` (discussed in chapter 3). So, if we find the number of columns minus one, we can quickly count the number of estimated parameters for most kinds of models. Below, we compare the actual number of parameters to each model with our effective number of parameters. For example, we can see that going from Gaussian to t distributed errors results in the estimation of one additional parameter ($\nu$), but the number of estimated parameters goes up by about 2.6. Adding random effects for apparent age to our model required the addition of 17 parameters: 15 listener-specific age effects, a standard deviation for these effects, and the correlation between the listener specific age and intercept effects. We can see that this has led to an increase of about 24 effective parameters. We can potentially explain this by thinking about how the inclusion of random effects for apparent age may have affected the estimation of the other random effects already included in the model. However, we are not going to worry too much and 'overinterpret' the effective number of parameters. 
 
-```{r}
+```{r, cache = TRUE}
 # Actual and effective number of parameters for simplest model
 ncol(brms::as_draws_matrix(model_sum_coding))-1
 sum(model_loo_info[,'p_loo'])
@@ -930,7 +930,7 @@ ncol(brms::as_draws_matrix(model_re_t))-1
 
 Which model should we use? Based on the comparison above, we see that `model_re_t` has an $\mathrm{elpd}$ that is 204 greater than the next best model. How large does an $\mathrm{elpd}$ difference need to be in order to be meaningful. There two things that need to be taken into account: The magnitude of any differences and the uncertainty in these differences. A general rule of thumb seems to be that a difference of at least 2-4 in $\mathrm{elpd}$ is necessary in order to signal a meaningful difference between the models (cite akis page and maybe something else if I can find it). However, this is simply a rule of thumb and does not mean that a difference of 1.99 does not matter and a difference of 2.01 does. On the other hand, even large differences between models may not be reliable in the presence of large standard error estimates. For example, below we see the difference between out two smaller models:
 
-```{r}
+```{r, cache = TRUE}
 brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
 ```
 
@@ -975,19 +975,19 @@ model_re_t_tooBig = readRDS ('../models/6_model_re_t_tooBig.RDS')
 
 And add the `loo` criterion to it. 
 
-```{r}
+```{r, cache = TRUE}
 model_re_t_tooBig = brms::add_criterion (model_re_t_tooBig, criterion="loo")
 ```
 
 Finally, we compare this to our equivalent model, minus the useless predictor. 
 
-```{r}
+```{r, cache = TRUE}
 brms::loo_compare (model_re_t, model_re_t_tooBig)
 ```
 
 We can see that the more-complex model in this case actually has a lower (worse) $\mathrm{elpd}$, indicating that our added predictor does not contribute to out of sample prediction. In addition, we can look at a summary of the fixed effects and see that the value of the useless predictor is near zero (0.08), and the credible interval is wide and approximately symmetrical about zero. So, does this mean that this predictor should be excluded from the model? We would be justified in doing so, but may not necessarily want to. For example, if one of our important research questions centered round the value of the useless predictor, the fact that it is around zero and not some other value (e.g. -100) may be useful information. For example, we might want to keep the predictor in the model so we can say something like "So & So (2007) reported a value of -100 for the useless predictor. However, our results suggest that the effect of this predictor are likely to be zero or at least quite small [mean = 0.08, sd = 0.20, 95% CI = [-0.31,0.48])". 
 
-```{r}
+```{r, cache = TRUE}
 brms::fixef(model_re_t_tooBig)
 ```
 

@@ -451,9 +451,9 @@ Despite clear the similarities between the models, there are some changes to the
 ################################################################################
 ### Figure 6.5
 ################################################################################
-comparison = rbind (brms::fixef(model_sum_coding),
-                    brms::VarCorr (model_sum_coding)$L$sd,
-                    brms::VarCorr (model_sum_coding)$residual__$sd,
+comparison = rbind (brms::fixef(model_sum_coding_t),
+                    brms::VarCorr (model_sum_coding_t)$L$sd,
+                    brms::VarCorr (model_sum_coding_t)$residual__$sd,
                     brms::fixef(model_re_t),
                     varcorr_information$L$sd[1,],
                     varcorr_information$residual__$sd)
@@ -618,7 +618,7 @@ $$
 \end{equation}
 $$
 
-You may have noticed that our penalization does not exactly recreate the line reflecting $\mathrm{elpd}}$ but rather results in a line parallel to it. We can never know what the real difference is between $\mathrm{lpd}$ and $\mathrm{elpd}}$, the solid red and black lines in figure \@ref(fig:F66), because we can never know the true properties of out-of-sample data. However, penalization allows us to estimate a line parallel to $\mathrm{elpd}}$ (broken red line in figure \@ref(fig:F66)) and base our inference based on this line. 
+You may have noticed that our penalization does not exactly recreate the line reflecting $\mathrm{elpd}$ but rather results in a line parallel to it. We can never know what the real difference is between $\mathrm{lpd}$ and $\mathrm{elpd}$, the solid red and black lines in figure \@ref(fig:F66), because we can never know the true properties of out-of-sample data. However, penalization allows us to estimate a line parallel to $\mathrm{elpd}$ (broken red line in figure \@ref(fig:F66)) and base our inference based on this line. 
 
 In this very simple example we are discussing here we are setting $\mathrm{p}=k$, where $k$ is the number of parameters estimated by the model. If we set $\mathrm{p}=k$ and carry out the operation in \@ref(eq:65) using the values in figure \@ref(fig:F66), we would arrived at values of $\mathrm{elpd}$ of -70.7 ($-69.7 - 1$) and -71.7 ($-68.7-3$) for the least and most complex models. Based on these estimates of $\widehat{\mathrm{elpd}}$, we expect that the model with the worst $\mathrm{lpd}$ actually has the best  $\mathrm{elpd}$. In fact, we know that in this case the 'best' model corresponds exactly to the true data generating process. However, penalization will not always result in the highest values of $\widehat{\mathrm{elpd}}$ for the simplest model. In figure \@ref(fig:F67) we simulate new fake data, except now we include $x_2$ in the 'real' underlying data generating process (i.e., `y = x1 + x2 + rnorm (n, 0, 1)`). As a result, for this data we actually *do* need both $x_1$ and $x_2$ in the model. As seen below, penalization does not obscure the benefit of adding $x_2$ to our model when it is warranted. This is because the relatively small penalty associated with the increased model complexity does not overwhelm the large benefit due to the inclusion of a predictor that is actually related to our dependent variable. 
 
@@ -1072,7 +1072,7 @@ And the listener-dependent age effects provided by both approaches. In both case
 ################################################################################
 
 par (mfrow = c(1,1), mar = c(4,4,1,1))
-brmplot ( ranef (random_slopes_model)$speaker[,,1], col= skyblue)
+brmplot ( ranef (model_re_t)$S[,,1], col= skyblue)
 points (ranef (model)$speaker[,1], col = skyblue, pch=4,lwd=2, cex=2)
 abline (h=0,lty=3)
 ```

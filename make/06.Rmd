@@ -1,0 +1,1082 @@
+\newpage
+
+# Variation in parameters ('random effects') and model comparison 
+
+In chapter 4 we introduced 'random effects', that is, intercept terms that are specific to 'clusters' of data (e.g., listener, speaker). We used these because we know that each listener in our data can potentially have slightly different data averages (the intercept in an intercept-only model). In chapter 5 we built models that compared two groups of measurements by including a single fixed effect that distinguished the groups. However, our models assumed that the difference between the groups, the effect of the single predictor, was fixed across all clusters such as listener. In this chapter we will build models that allow for listener-specific variation in group differences, in addition to listener-specific variation in the intercepts. In addition, in this chapter we will discuss comparing different models fit to the same data in hopes of determining which is 'better'. 
+
+## Data and research questions
+
+We're going to use the same data from the last chapter, again excluding adult males and focus on the apparent height of adult females, girls and boys. We're going to build models that build on those of last chapter to ask the same questions:
+
+  (Q1) How tall do speakers perceived as adult females sound? 
+  
+  (Q2) How tall do speakers perceived as children sound?
+  
+  (Q3) What is the difference in apparent height associated with the perception of adultness? 
+ 
+Below we load the data and add a column (`A`) that indicates the apparent age of the speaker, `c` for child and `a` for adult.
+
+```{r}
+library (brms)
+library (bmmb)
+data (height_exp)
+tmp = as.numeric(height_exp$L) * 0 
+count=1
+for (i in c(15,2,1,14,3,13,4,12,5,6,11,10,8,7,9)){
+  tmp[as.numeric(height_exp$L)==i] = count 
+  count = count + 1
+}
+height_exp$L = tmp
+
+notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
+notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
+```
+
+We recreate figure \ref(fig:F59) as figure \ref(fig:F61) below to show the distribution of apparent height by listener, and across apparent ages. In the last chapter we focused on 'the difference' between groups as a singular thing. This is a bit like focusing only on the difference between boxes in the left panel of figure \ref(fig:F61). However, if we instead focus on the right panel in figure \ref(fig:F61) we see that there is not a single difference between groups but rather a slightly different listener-specific difference between them. By allowing our models to represent these listener-specific differences, the model we will consider in this chapter will put us in a better position to answer the third question above.
+
+```{r F61, fig.height = 3.5, fig.width=8, fig.cap = "(left) Distribution of apparent heights according to apparent age group. (rght) Same as left panel but presented individually for each listener. In each case, the first box of each color (the upper box) indicates responses for speakers judged to be adults. The horizontal lines running through the figures represent the grand mean (black), the adult mean (blue), and the child mean (green).", echo = FALSE}
+
+################################################################################
+### Figure 5.9
+################################################################################
+
+par (mfrow = c(1,2), mar = c(4.1,.1,.5,.1),oma = c(0,4,0,.50)); layout (mat = t(c(1,2)), widths = c(.2,.8))
+
+boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="")
+mtext (side=1, "Apparent Age Group", line=3)
+abline (h = c(155.3,155.3+8.8,155.3-8.8), lwd = c(3,2,2), col = c(1,4,4))
+boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="",add=TRUE)
+
+mtext (side = 2, outer = FALSE, "Height (cm)", line = 2.75)
+boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
+         ylab="",yaxt="n", xaxt="n",xlab="Listener")
+axis (side=1, at = seq(1.5,30.5,2), 1:15)
+abline (h = c(155.3,155.3+8.8,155.3-8.8), lwd = c(3,2,2), col = c(1,4,3))
+boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
+         ylab="",yaxt="n", xaxt="n",xlab="Listener", add = TRUE)
+```
+
+## Variation in parameters across sources of data
+
+The models we fit in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. Another way to think about this is that our model included only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a **main effect**. Someone might ask "what is the average apparent height difference between children and adult females?" and you might say "about 17 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall* effect. In contrast, we may want to think about the effect of apparent age *conditional* on listener. For example, imagine that this effect varies conditionally based on the listener such that it is large for some listeners and small for others. In this case if someone asks "what is the average apparent height difference between children and adult females?" you may have to answer "well it depends on the listener". When the effect of one predictor varies based on the value of another predictor, these are said to **interact** and have an **interaction**. The parameters in your model that help you capture these conditional effects are referred to as interactions or **interaction effects**. 
+
+The 'fixed' effect for `A1` we included in our models in the last chapter really represents the marginal (overall) effect for the predictor. To investigate the values of this predictor *conditional* on listener, we need to include the listener by `A1` *interaction* in our model. We can consider a possible interaction between adultness and listener in our data. Below we find the average height reported by each listener for apparent adults and children, and half the difference between these averages (to estimate the adultness effect). 
+
+```{r, collapse = TRUE}
+listener_age_differences = tapply (notmen$height, notmen[c("A","L")], mean)
+#The average height for each age group for each listener
+listener_age_differences
+
+listener_age_effects = (listener_age_differences[1,]-listener_age_differences[2,])/2
+# The difference in apparent height  between age groups for each listener
+listener_age_effects
+```
+
+Figure \ref(fig:F62) presents several ways to consider this information. In the left panel we see that the distance between the top and bottom lines, i.e. the effect for apparent age, varies from listener to listener. This listener-specific variation in the age effect is evidence of an interaction between listener and age in our data. In other words, to accurately predict the effect of age you need to know the listener. The first panel also highlights the fact that interactions are always invertible: The listener-specific age effects are also, necessarily, age-specific listener effects. What we mean by this is that if the difference between the line for any given listener can vary arbitrarily, then necessarily, for each age level we also need an unpredictable average value for each listener. 
+
+```{r F62, fig.height = 3, fig.width=8, fig.cap = " (left) Average height reported by each listener for apparent adults and children. Horizontal lines indicated the grand mean (solid) and the adult (upper dotted) and child means (lower dotted). (middle) The listener-dependent age effects, the difference between the adult and child means reported by each listener. The horizontal line indicates the average differences between listeners. (right) Arrows represent the magnitude of listener-specific deviations from the overall average difference across all listeners (horizontal line).", echo = FALSE}
+
+################################################################################
+### Figure 6.2
+################################################################################
+par (mfrow = c(1,3), mar = c(4,4,1,1))
+
+plot(listener_age_differences[1,], cex=2,
+     type = 'b', col = lavender, pch=16, ylim = c(132,172),ylab = "Height (cm)",lwd=2)
+lines(listener_age_differences[2,],cex=2, 
+      type = 'b', col = deepgreen, pch=16,lwd=2)
+abline (h = c(157, 165, 149), lty = c(1,3,3))
+
+plot(listener_age_effects, lwd=2,lty=1,cex=2,
+     type = 'b', col = darkorange, pch=16, ylim = c(0,18),ylab = "Height difference (cm)")
+abline (h = mean (listener_age_effects))
+
+plot(listener_age_effects, lwd=1,lty=3,
+     type = 'n', col = darkorange, pch=16, ylim = c(0,18),ylab = "Height difference (cm)")
+arrows (1:15, rep(mean(listener_age_effects),15), 1:15, listener_age_effects,
+        length=.1, lwd=2, col=skyblue)
+abline (h = mean(listener_age_effects))
+
+```
+
+Although interactions are invertible, conceptually it may be useful to think of them primarily one way or another. In our case, we will focus on the listener-dependence of the age effect, presented in the middle panel of figure \ref(fig:F62). In the complete and total absence of an interaction between listener and age, the orange line in the figure would be horizontal at just above 10 (the marginal effect). In the presence of an interaction, our marginal and listener-dependent effects may diverge in a seemingly random manner. As noted in several times to this point, regression models represent the difference between means and not the means themselves. In the case of interactions, interaction effects represent the difference between the marginal effect and the conditional effect. We can see values analogous to interaction effects in the right panel of figure \ref(fig:F62). These effects are represented by the magnitude of the arrows representing deviations from the average effect. If there were no interaction, all the arrows in the right panel of figure \ref(fig:F62) would have lengths of zero, or perhaps show small amounts of random variation. So, the presence of large deviations from the marginal effect, i.e. arrows with large magnitudes, suggests that our model should include coefficients that can help represent this variation between listeners.  
+
+### Description of our model
+
+[@@ SB - totally unclear that both levels of A exist in the model but only one is estimated. Note this explicitly. Use A throughout rather than A1?]
+
+Before including interactions in our model, let's take  step back and consider the model formula we used last chapter. Below, we explicitly include the leading one (indicating the intercept) to make the following discussion simpler. 
+
+`height ~ 1 + A + (1|L) + (1|S)`
+
+This formula told our model to draw the A parameter from a fixed prior distribution and to draw the `L` and `S` terms from distributions whose standard deviations were estimated from the data (i.e. using adaptive partial pooling). We can pretend that we want to estimate our `L` terms as 'fixed' effects (i.e. without partial pooling) by pulling it out of the parentheses, as seen below.    
+
+`height ~ 1 + A + L + (1|S)`
+
+We're doing this to highlight the two ways that we can include interactions in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and L, and the interaction between A and L". The `:` symbol can be read as "given", which helps to highlight that these help represent conditional effects. So `A:L` can be read out loud as "A given L" or "the effect of A given the value of L". 
+
+`y ~ 1 + A + L + A:L`
+
+As a shortcut, we can use the symbol `*` which means "include the main effects for these predictors and all interactions between them."
+
+`y ~ 1 + A * L`
+
+So, if we wanted to include the marginal effects of age and listener, and the interaction between them we could include them in either of the two ways below, provided we want to estimate these without adaptive partial pooling. 
+
+`height ~ 1 + A + L + A:L + (1|S)`
+
+`height ~ 1 + A * L + (1|S)`
+
+However, we know that is is advisable to estimate factors with large numbers of levels using partial pooling, regardless of how 'random' the effect may be (see section X). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. This leads to the second way of including interactions in our model. Whenever any fixed effects interacts with our random effects, it is most common to include these inside the parentheses belonging to the random effect they interact with, like so:
+
+`height ~ 1 + A + (1 + A|L) + (1|S)`
+
+When we do this, we tell our model to fit the age by listener interaction using partial pooling just like we did for the listener intercept effects. Actually, our 'listener intercept effects' are simply listener-specific deviations from the intercept, i.e. the listener by intercept interaction. When our formula has a non intercept predictor, we can omit the `1` and write our formula as follows: 
+
+`height ~ A + (A|L) + (1|S)`
+
+The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Our model formula might specify a model as in \@ref(eq:61). Compared to the t distributed model we fit at the end of chapter 5, the only changes have been the addition of a new term ($A1 \colon L_{[A_{[i]}]}$) and its associated priors ($A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L}) ,\; \sigma_{A1 \colon L} \sim N(0,12)$). 
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mathrm{Priors:} \\ 
+L_{[\bullet]} \sim N(0,\sigma_L) \\
+A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L}) \\
+S_{[\bullet]} \sim N(0,\sigma_S) \\
+\\
+\mathrm{Intercept} \sim N(156,12) \\
+A1 \sim N(0,12) \\
+\sigma \sim N(0,12) \\
+\sigma_L \sim N(0,12) \\
+\sigma_{A1 \colon L} \sim N(0,12) \\
+\sigma_S \sim N(0,12) \\ 
+\nu \sim gamma(2, 0.1) \\ 
+\end{split}
+(\#eq:61)
+\end{equation}
+$$
+
+This model is perfectly fine, sort of. One potential problem is that we are now estimating two parameters for each listener, an intercept and an effect for `A`. Our model above draws each of these variables from independent distributions as if these were totally unrelated. The problem with treating multiple listener-specific effects as independent is that they are often not, and it turns out that recognizing this fact can improve our models.
+
+### Correlations between random parameters
+
+Below we calculate mean height judgments for each listener. These are our listener-dependent means.
+
+```{r}
+listener_means = tapply (notmen$height, notmen[,"L"], mean)
+```
+
+In figure \@ref(fig:F63) we plot these against the listener-dependent age effects on apparent height (`listener_age_effects`), calculated above. In the rightmost panel we see that these two variables seem to have a negative relationship such that smaller values of average heights tend to be associated with larger age effects. This is important because, if this is true, it suggests that we are unlikely to observe listeners who reported tall speakers on average *and* had large age effects on height (or vice versa). This is because as seen in figure \@ref(fig:F63), speakers who reported tall speakers on average exhibited small age effects.
+
+```{r F63, fig.height = 3, fig.width=8, fig.cap = "(left) Average overall reported height by each listener. (middle) The magnituve of the age effect for each listener. (right) Listener averages plotted against listener age effects.", echo = FALSE}
+
+################################################################################
+### Figure 6.3
+################################################################################
+par (mfrow = c(1,3), mar = c(4,4,1,1))
+
+plot(listener_means[c(15,1,2,14,3,13,4,12,5,6,11,10,8,7,9)],ylim=c(142,167),cex=1.5, 
+     type = 'b', col = lavender, pch=16, ylab = "Height Intercept (cm)",lwd=2,
+     xlab = "Listener")
+abline (h = mean(listener_means), lty=3)
+
+plot(listener_age_effects[c(15,1,2,14,3,13,4,12,5,11,6,10,8,7,9)], lwd=2,lty=1,cex=1.5,
+     type = 'b', col = darkorange, pch=16, ylab = "Age Effect (cm)",ylim=c(1,18),
+     xlab = "Listener")
+abline (h = mean(listener_age_effects), lty=3)
+
+plot(listener_means,listener_age_effects, lwd=1,lty=3,xlim=c(142,167),ylim=c(1,18),
+     type = 'p', col = cols[4], pch=16, ylab = "Age Effect (cm)",cex=1.5,
+     xlab = "Height Intercept (cm)")
+abline (v = mean(listener_means), h = mean(listener_age_effects), lty=3)
+
+```
+
+The **linear correlation** between two variables (often referred to simply as the **correlation**) is a measure of the linear relationship between two variables. An informal (but accurate) way to think of this is that when you make a scatter plot using the two variables (see section 1.X) the organization of the points should resemble a line. The more the dots form a single perfect line, the closer the magnitude of the correlation gets to 1. Whether the value of the correlation is 1 or -1 depends on if the line is sloped up (1) or down (-1) left to right. A correlation of 0 means no linear relationship between the variables. So, if two variables have a correlation of 0 you would be hard-pressed to draw any kind of line that captured the relationship between the variables. Figure \@ref(fig:F63) suggests that listener means and age effects are *negatively correlated*. 
+
+There are many ways to estimate correlations, but the most common way is by using **Pearson's correlation coefficient**, defined in equation \@ref(eq:62) for variables $x$ and $y$. Equation \@ref(eq:62) a term we have not seen yet, $\sigma_{xy}^2$, corresponding to the *covariance* between $x$ and $y$. The variance of a variable is the expected value (i.e. mean) of squared deviations from the mean. The **covariance** of two variables is the expected value of the product of deviations from their respective means. The correlation is the ratio of the covariance of two variables over the product of the individual standard deviations. 
+
+$$
+\begin{equation}
+r = \frac {\sigma_{xy}^2} 
+          {\sigma_x \sigma_y}
+(\#eq:62)
+\end{equation}
+$$
+
+The correlation ($r$) between $x$ and $y$ can be estimated from a sample using the formula below. 
+
+$$
+\begin{equation}
+r = \frac {\Sigma(x_i-\bar{x})(y_i-\bar{y})} 
+          {(N-1) \times \hat{\sigma}_x \hat{\sigma}_y}
+(\#eq:63)
+\end{equation}
+$$
+
+Using equation \@ref(eq:63), we can calculate Pearson's correlation coefficient for two variables. We can do this for any two vectors in R using the `cor` function. As seen below, this tells us that the correlation between these variables is -0.85, representing a strong negative correlation between these two variables. 
+
+```{r}
+cor (listener_means, listener_age_effects)
+```
+
+We can develop some intuitions regarding correlations by considering the very simple vectors seen below. The elements of the second vector are exactly equal to twice every element of the first vector: They are perfectly predictable one from the other. As a result, these two vectors have a correlation of 1. 
+
+```{r}
+x1 = c(-1, -1, 1, 1)
+y1 = c(-2, -2, 2, 2)
+cor (x1, y1)
+```
+
+Below we see the opposite situation. The second vector is still twice the first vector, but now every sign differs across the two vectors. These are still perfectly predictable, just backwards. For example, if a gambler were wrong 100% of the time, anyone who did the opposite would win every bet. Below, we see that these vectors have a correlation of -1.
+
+```{r}
+x1 = c(-1, -1,  1,  1)
+y1 = c( 2,  2, -2, -2)
+cor (x1, y1)
+```
+
+In the next example we see that the signs of each element of the second vector are totally *unpredictable* from the corresponding element in the first vector. In half the cases the signs match and in half the cases they do not. This results in a correlation of 0 between the vectors. 
+
+```{r}
+x1 = c(-1, -1,  1, 1)
+y1 = c(-2,  2, -2, 2)
+cor (x1, y1)
+```
+
+Finally, we see a situation where the vectors *almost* match. In the example below three of the four elements match in sign, resulting in a positive correlation between 0 and 1. 
+
+```{r}
+x1 = c(-1, -1,  1, 1)
+y1 = c(-2, -2, -2, 2)
+cor (x1, y1)
+```
+
+### Random effects and the multivariate normal distribution
+
+The **multivariate normal** distribution is a straightforward and very useful generalization of the normal distribution. A multivariate normal variable can be thought of as a set of variables whose marginal distributions are themselves normal. Each of these variables represents a **dimension** of the multivariate normal. When our models feature multiple predictors for a factor whose levels are estimated with partial pooling (e.g., speaker, listener), we draw these from a multivariate normal distribution. In doing so we estimate the standard deviation of each dimension *and* the correlation between all pairs of dimensions. The easiest way to see why the correlation between dimensions matters is by drawing bivariate (2-dimensional) normal variables with different correlations and plotting the results.
+
+Below we simulate five samples of a two-dimensional (bivariate) normal distribution by independently sampling from two univariate normal distributions and sticking these together as columns. Each row represents a single observation from the variable and each column represents a different dimension of the variable for that observation. For the variable below, the dimensions reflect the variation in the listener means and listener age effects presented in figure \@ref(fig:F63). So, the first dimension has a mean and standard deviation equal to the mean and standard deviation of our listener means (153 and 4.8 cm respectively), and the second dimension has a mean and standard deviation equal to the mean and standard deviation of our listener age effects (10 and 4.8 cm respectively).
+
+```{r}
+multivariate_normal = cbind(rnorm (5,153,10),rnorm (5,10,4.3))
+multivariate_normal
+```
+
+The dimensions of the multivariate normal can have arbitrarily different means and standard deviations, but their marginal distributions will always be a (univariate) normal. However, the dimensions are not always totally independent, as they are for our small sample above. In figure \@ref(fig:F64) we plot samples from three different bivariate normal distributions, one variable presented in each row. The variables in all three rows have the same means and standard deviations used to make our small sample above (i.e. the reflect the listener means and standard deviations). However, the variables presented in the rows differ in terms of the correlation between the two dimensions. We can use the simulated variables presented in figure \@ref(fig:F64) to imagine possible relationships between listener means and age effects across some large sample of listeners. In the absence of any correlation between variables (top row), a plot of this distribution will resemble a circle in 2 dimensions (if the standard deviations are equal). When there is a correlation between the two dimensions, the distribution starts looking more and more like a straight diagonal line. When there is a negative correlation, the line points down (left to right) rather than up. Note the the marginal (independent) distributions of the variables (the left and middle columns) don't change as the correlation changes. The correlation is a reflection of the *joint* variation in the two variables and will not necessarily be evident in the marginal distributions of each variable. 
+
+```{r F64, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and slope coefficients from distributions with a mean of 0 and a standard deviation of 1. The correlation of the variables is 0 (top), 0.5 (middle) and 0.9 (bottom). The left column presents both variables together, the middle column presents intercepts and the right column presents slopes. ", cache = TRUE, echo = FALSE}
+
+################################################################################
+### Figure 6.4
+################################################################################
+
+#mean (listener_means)
+#sd (listener_means)
+#mean (listener_age_effects)
+#sd (listener_age_effects)
+
+par (mfrow = c(3,3), mar = c(4,4,3,1))
+
+ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,0,0,4.3^2),2,2))
+hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(130,175))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+plot (ranefs, pch=16,col=4,xlim=c(130,180),ylim=c(-10,27),xlab='Intercept',
+      ylab='A1')
+phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3)
+grid()
+
+ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,5,5,4.3^2),2,2))
+hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(130,175))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+plot (ranefs, pch=16,col=4,xlim=c(130,180),ylim=c(-10,27),xlab='Intercept',
+      ylab='A1')
+phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3, xlim = c(145,175))
+grid()
+
+ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,-14.8,-14.8,4.3^2),2,2))
+hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(130,175))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+plot (ranefs, pch=16,col=4,xlim=c(130,180),ylim=c(-10,27),xlab='Intercept',
+      ylab='A1')
+phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3, xlim = c(145,175))
+grid()
+```
+
+Understanding the correlation between dimensions is important because it helps you understand which combinations of parameter values are more or less likely. When our dimensions are uncorrelated it is difficult to make useful predictions from one dimension to the other. For example, in the top row we see that an age effect (`A1`) of 0 is about as likely as one of 20 for a mean height of 140 cm. As a result, knowing that the speaker mean is 140 cm does nor provide you much information about whether the age effect is likely to be large or small. However, when the dimensions *are* correlated we can use this to make better predictions using our data. For example, in the bottom row we see a negative correlation between our dimensions. As a result an average height of 140 cm is very likely when age effects are 20 cm, but *extremely* unlikely to be seen with an age effect of zero. So, in this case, knowing the speaker mean would actually help you narrow down the range of plausible listener effects. For this reason, when there is more than one random effect is estimated for each grouping factor, these are usually treated as a *multivariate normal* variable rather than as a set of independent normal distributions.  
+
+### Specifying priors for a multivariate normal distribution
+
+The shape of the multivariate normal distribution (i.e. how much it looks like a circle vs an ellipse in the bivariate case) is determined by a covariance matrix, often represented by a capital sigma ($\Sigma$). This matrix is a square $n$ x $n$ matrix for a variable with $n$ dimensions. When we dealt with unidimensional normal distributions for our previous random effects, we specified priors for the (unidimensional) standard deviations using t distributions. The specification of priors for our covariance matrix is only slightly more complicated. In our models, we won't actually include priors for $\Sigma$ directly. This is because `brms` (and STAN) build up $\Sigma$ for us from the components we *do* specify. In this section we will provide more information that you *really* need to fit these models, but it helps to understand why the priors are specified the way they are for our random effects. Consider two random effects, a random by subject intercept $L$, and a random by-listener age effect called $A1 \colon L$. The covariance matrix for our random effects is created by multiplying the standard deviations of our individual dimensions by a correlation matrix ($R$) specifying the correlations between each dimension. The operation is like this:
+
+$$
+\begin{equation}
+\begin{split}
+\Sigma = \begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A1 \colon L} \\ \end{bmatrix} 
+\times R \times
+\begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A1 \colon L} \\ \end{bmatrix} \\
+\end{split}
+(\#eq:64)
+\end{equation}
+$$
+
+The non-zero values in the outside matrices are the (univariate) standard deviations of the random intercepts ($\sigma_{L}$) and age effects that individually. The correlation matrix $R$ contains information about the correlation between the dimensions of the variable (e.g., $\rho_{L , A1 \colon L}$). The correlation matrix $R$ will look as in \@ref(eq:65) for a two-dimensional variable. In a correlation matrix each row gives you information about the correlation of one dimension with the others. For example, the first row represents the correlation of the first dimension to itself (first column) and the second dimension (second column). Correlation matrices contain only values of 1 on the main diagonal since the correlation of something with itself is one. They will also have mirrored values across the main diagonal (e.g. $r_{[1,2]}=r_{[2,1]}$) because the correlation of $x$ and $y$ equals the correlation of $y$ and $x$.
+
+$$
+\begin{equation}
+\begin{split}
+R = \begin{bmatrix} 1 & r \\ r & 1 \\ \end{bmatrix} \\ \\
+\end{split}
+(\#eq:65)
+\end{equation}
+$$
+
+So, when we have multiple random effects and draw these from a multivariate normal, we need to specify priors for each dimension, and for the correlation matrix between all dimensions, but not for $\Sigma$ directly. We provide priors for the standard deviations of the individual dimensions in the same way as we do for 'unidimensional' random effects. We specify priors for correlation matrices using the $LKJCorr$ distribution in `brms`. This distribution has a single parameter that determines how peaked the distribution is around 0. Basically, higher numbers make it harder to find larger correlations (and therefore yield more conservative estimates). 
+
+$$
+\begin{equation}
+\begin{split}
+R \sim \mathrm{LKJCorr} (2)
+\end{split}
+(\#eq:66)
+\end{equation}
+$$
+
+The above was a full explanation of what information the model needs and why it needs it. You don't need to *understand* any of the above to use random effects correctly. The important take away is that whenever you are estimating any random effects above and beyond a random intercept, you need to: 
+
+  1) Specify priors for the standard deviation of each dimension.
+  
+  2) Specify a prior for the correlation matrix for the multivariate normal used for the random parameters.
+  
+And `brm` (and Stan) will do the rest.
+
+### Updating our model description
+
+Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:66b). Only two things have changed with respect to the description in \@ref(eq:61). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than independently. Second, we specift a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal, $\Sigma$. This is because, as noted in section 6.X, `Stan` constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A1 \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$). 
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mathrm{Priors:} \\ 
+S_{[\bullet]} \sim N(0,\sigma_S) \\
+\begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\ \\
+\\
+\mathrm{Intercept} \sim N(156,12) \\
+A1 \sim N(0,12) \\
+\sigma \sim N(0,12) \\
+\sigma_L \sim N(0,12) \\
+\sigma_{A1 \colon L} \sim N(0,12) \\
+\sigma_S \sim N(0,12) \\ 
+\nu \sim gamma(2, 0.1) \\ 
+R \sim \mathrm{LKJCorr} (2)
+\end{split}
+(\#eq:66b)
+\end{equation}
+$$
+
+### Fitting the model
+
+Below we fit a model where age coefficients vary across listeners. Notice that the only change in the formula is the inclusion of the `A` predictor on the left-hand-side of the pipe in `(A|L)`. We now include a prior for a new class of parameter `cor` which applies to the correlation matrices for our multivariate normal variables. In addition, we specify the priors *outside* the `brm` function call, and pass this to the function. We will do this when the number of priors is large enough that including them directly in the function call makes the whole thing look too *busy* (in our opinion). We are also going to regularly set the contrasts right before we fit the model because it is very easy to forget otherwise.  
+
+```{r, eval = FALSE}
+priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
+           brms::set_prior("student_t(3,0, 12)", class = "b"),
+           brms::set_prior("student_t(3,0, 12)", class = "sd"),
+           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+           brms::set_prior("gamma(2, 0.1)", class = "nu"),
+           brms::set_prior("student_t(3,0, 12)", class = "sigma"))
+
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+model_re_t_t =  
+  brms::brm (height ~ A + (A|L) + (1|S), data = notmen, chains = 4, cores = 4,
+       warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
+```
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+model_re_t = bmmb::get_model ('6_model_re_t.RDS')
+```
+```{r, include = FALSE}
+model_re_t = readRDS ('../models/6_model_re_t.RDS')
+```
+
+
+### Interpreting the model
+
+We can check out the summary of our model:
+
+```{r}
+bmmb::short_summary (model_re_t)
+```
+
+And see that the only new information is in the `L` group-level effects:
+
+```{r}
+## Group-Level Effects:
+## ~L (Number of levels: 15)
+##                   Estimate Est.Error l-95% CI u-95% CI
+## sd(Intercept)         4.25      0.84     2.95     6.16
+## sd(A1)                4.34      0.86     3.06     6.35
+## cor(Intercept,A1)    -0.82      0.11    -0.95    -0.54
+```
+
+Which now includes an estimate of the standard deviation of the by-listener effect for age (i.e. the standard deviation of the listener by age interaction, $\sigma_{A1 \colon L}$ in \@ref(eq:61)), and the correlation between our listener-dependent intercept and age-effect terms. We can see that the estimate of this correlation (-0.82) is very similar to the correlation estimated for these terms in our example above (-0.86). You can get information about the variance, correlation, and covariance parameters using the `VarCorr` function in the `brms` package. 
+
+```{r}
+varcorr_information = brms::VarCorr (model_re_t)
+varcorr_information$L$cor[,,1]
+```
+
+As with the `fixef` and `ranef` function, this function returns summaries of these samples by default but you can set `summary=FALSE` to get the individual samples for these parameters. We're not going to talk much about the structure of this output, but we encourage you to investigate it using the `str` function. 
+
+```{r, echo = FALSE}
+str (varcorr_information)
+```
+
+We can load the sum-coded, t distributed model we fit in the last chapter. This model contained an identical fixed-effects structure but does not include listener-dependent age affects (and associated parameters).
+
+```{r}
+model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
+```
+
+Despite clear the similarities between the models, there are some changes to the credible intervals around the parameters that are shared across both models (presented in figure \@ref(fig:F65)). It's always risky to make up explanations for things after the fact (post hoc), but we can try to think about why these changes may have occurred. The change in the interval around the intercept is very small, and likely reflects our (slightly) better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are now acknowledging between-listener variation in the `A1` parameter, which our previous model ignored (or treated as zero). Our model predicts a standard deviation of 4.2 cm in this effects between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can be. The standard deviation of our listener intercepts appears to decrease slightly at the inclusion of random effects for age. This is likely because what previously seemed like variation in listener averages may have actually been variation in listener age effects. The separation of this into two separate predictors may lead to the magnitude of variation in one being diminished. Finally, the decrease in the error standard deviation is due to the inclusion of the listener random effects for `A1`, and the fact that included listener-dependent values for `A1` helped explain our variable. The error is just what the model can't explain, so as our models explain more, our error tends to get smaller. 
+
+```{r F65, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.5
+################################################################################
+comparison = rbind (brms::fixef(model_sum_coding),
+                    brms::VarCorr (model_sum_coding)$L$sd,
+                    brms::VarCorr (model_sum_coding)$residual__$sd,
+                    brms::fixef(model_re_t),
+                    varcorr_information$L$sd[1,],
+                    varcorr_information$residual__$sd)
+
+par (mfrow = c(1,4), mar = c(4,4,3,1))
+bmmb::brmplot (comparison[c(1,5),], ylim = c(152,159),main="Intercept", 
+               xlim = c(.75,2.25), col = c(4,2))
+bmmb::brmplot(comparison[c(2,6),], ylim = c(6,11),main="A1", 
+              xlim = c(.75,2.25), col = c(4,2))
+bmmb::brmplot(comparison[c(3,7),], ylim = c(2,8),main="Lsd", 
+              xlim = c(.75,2.25), col = c(4,2))
+bmmb::brmplot(comparison[c(4,8),], ylim = c(4,9.5),main="sigma", 
+              xlim = c(.75,2.25), col = c(4,2))
+```
+
+
+## Model Comparison
+
+Bayesian models allow you to fit rather complicated 'bespoke' models for your data. A potential problem with this is that at some point your model may be 'good enough' such that, although further tweaks could be made, they are no longer contributing any practical benefit to your model. In fact, you can build a model that is so good at predicting your data that it can actually become bad at understanding the subject of investigation more generally. An analogy can be made between model fitting and bespoke clothing made at a tailor. You can go to a tailor and get a shirt made that exactly fits your body proportions. Let's imagine that tailoring the perfect shirt for a human body usually involved adjusting ten 'shirt parameters' (e.g. torso circumference, torso to sleeve length, etc.) to ensure a perfect fit for an individual. Despite this, when you go to a store to buy a shirt, there is usually one parameter, size, and it often comes in a small number of variants (e.g. small, medium, large). Since the shirts vary only in a small number of way, they are very unlikely to fit any individual perfectly. Why do stores intentionally sell clothing that doesn't fit people as well as they could? Because the store is interested in selling clothes that fit everyone *pretty well*, rather than selling clothes that fit everyone perfectly. If stores sold shirts that fit people perfectly, each shirt model would only be useful to a very small number of people and would be useless for a large number of people. In contrast, by having a small number of shirts that fit the most people 'pretty well', the store can carry a small number of models and apply them successfully to customers in general.  
+
+This problem is sometimes referred to as the **bias-variance tradeoff**. In this case *bias* refers to the model's ability to represent the 'true' relationship the underlies the data, and variance refers to the degree to which the model is stable across data sets. Models that fit data very well (i.e. the have a low bias) often change substantially when fit to new data sets (i.e. they have a high variance). This is analogous to the fact that the shape of two shirts perfectly tailored (low bias) for two different people will potentially be very different from each other (high variance). On the other hand models that do not fit the data *too* well (higher bias) often also have more consistent properties across new data sets (lower variance). This is analogous to the fact that shirts that vary in terms of small, medium, and large differ from each other only very slightly, but they are likely to fit every only pretty well. The bias-variance tradeoff can be understood in terms of the prediction of in-sample and out-of-sample data. Your **in-sample** data is the data you used to fit your model, and the **out-of-sample** data is other data that you do not have access to. A statistical model is **overfit** when it corresponds too closely to your in-sample data to the detriment of its ability to explain out-of-sample data. Recall that our models are usually used to carry our inductive reasoning: Going from a limited number of observations to the general case. In light of this, overfitting a model is exactly contrary to the goals of inductive inference. A model that does a poor job of generalizing to new observations is not useful to carry out induction. Further, a model that cannot explain out-of-sample data will not hold up to replication, which should be a concern for any researcher. This is because a researcher carrying out a replication will necessary be working with data that, from your perspective, is out-of-sample data. 
+
+In this section we will offer a high-level conceptual understanding of Bayesian model comparison, along with an explanation of how to carry this out. For more information on the subject we recommend reading chapter X of the truly excellent *Statistical Rethinking* (cite). For an even more thorough treatment on the subject please see X and X. Much of this section is information is provided in Gelman et al (2013), and with more mathematical detail.
+
+### In-sample and out-of-sample prediction
+
+In order to compare models in a quantitative way, we need some value that can calculated for different models that captures how 'good' the model is. For Bayesian models, we begin with what is called the **log pointwise predictive density**, abbreviated $\mathrm{lpd}$ (or $\mathrm{lpd}$). The $\mathrm{lpd}$ can be calculated in several ways, but equation \@ref(eq:67) presents an example of the general case. The $\mathrm{lpd}$ is the sum of the logarithm of the density for each of your data points. The symbol $\theta$ represents posterior estimates of all of the estimated parameters necessary to determine the probability density over each data point. This can be thought of as the general case of the log-likelihood outlined for the normal distribution in section 2.X. The $\mathrm{lpd}$ value is clearly related to the log posterior density, discussed in section \@ref(c3-log-posterior). Since we are adding logarithmic values, we know we are multiplying the underlying probabilities. If the data points are independent given our parameter values, the $\mathrm{lpd}$ represents the joint density of observing the data given the model structure and the parameter estimates ($\theta$). Although prior probabilites are not included in this calculation they do factor into the estimation of $\theta$, and as a result do have an effect on values of $\mathrm{lpd}$. 
+
+$$
+\begin{equation}
+\mathrm{lpd} = \sum_{i=1}^{N} \mathrm{log} (p(y_i | \theta))
+(\#eq:67)
+\end{equation}
+$$
+
+Because $\mathrm{lpd}$ is a logarithmic value, we know large negative values are closer to zero. So, values of $\mathrm{lpd}$ closer to (or above) zero represent models that are more likely given the data. As a result, we might think that we should simply select the model with the highest $\mathrm{lpd}$ as our 'best' model. However, $\mathrm{lpd}$ does not tell us directly about expected out-of-sample prediction. We can think about out-of-sample prediction in terms of the **expected log pointwise predictive density**, abbreviated $\mathrm{elpd}$ (or $\mathrm{elppd}$), presented in \@ref(eq:68). Unlike the $\mathrm{lpd}$, the $\mathrm{elpd}$ is defined in terms of hypothetical out-of-sample data ($\tilde{y}$) instead of the in-sample data ($y$). The $\mathrm{E}()$ below represents the expected value function (discussed in section X). So, the $\mathrm{elpd}$ basically represents the expected value of $\mathrm{lpd}$ for out-of-sample data. 
+
+$$
+\begin{equation}
+\mathrm{elpd} = \sum_{i=1}^{N} \mathrm{E}(\mathrm{log} (p(\tilde{y}_i | \theta)))
+(\#eq:68)
+\end{equation}
+$$
+
+Of course, you can't actually know the value of $\mathrm{E}(\mathrm{log} (p(\tilde{y}_i | \theta))$ because you do not have access to the true properties of ($\tilde{y}$). As a result, you must settle for an estimate of $\mathrm{elpd}$, $\widehat{\mathrm{elpd}}$. The simplest, and worst, way to estimate out-of-sample prediction is by simply looking at the in sample prediction. One of the reasons that this does not really work is because making our models more and more complicated will always improve in-sample prediction, at least a little. However, if the predictors are not related to true characteristics of the underlying model, they will also tend to decrease the fit of the model to new data. Returning to the analogy of shirt fits discussed above. You can buy a shirt from the store and take it to a tailor to get it customized. The more the tailor changes this from the 'standard' shape, the better the shirt will fit you and the worse it will fit everyone else. Only alterations which conform to the 'true' average torso shape will increase the fit for people in general (and may in fact reduce the fit for you).
+
+We can demonstrate this for some very simple models using simulations. In the code below, we generate three random variables consisting only of the values -1 and 1. We then use only the first variable (`x1`) to simulate some random data, and we add random Gaussian error to this fake variable. After this we generate two sets of data using the same data generating process, in-sample (`y`) and out-of-sample data (`y_tilde`). We then fit three models to both data sets. These models include increasingly more predictor variables, however, we know that only $x_1$ is useful to understand the underlying process. The models are fit using a function that we have not discussed to this point. The `lm` (linear model) function uses maximum-likelihood estimation (see section X) to fit regression models with relatively simple structures. We use it here because it estimates regression parameters very quickly and therefore is reasonable to use when we want to fit 3000 models in no more than two seconds. 
+
+```{r, cache = TRUE}
+n = 50         # how many observations
+iter = 1000    # how many simulations
+# these will hold the model log likelihoods for each iteration
+lpd = matrix (0, iter, 3)
+elpd = matrix (0, iter, 3)
+
+set.seed(1)
+for (i in 1:iter){
+  # create 3 random predictors
+  x1 = sample (c(-1,1), n, replace=TRUE)
+  x2 = sample (c(-1,1), n, replace=TRUE)
+  x3 = sample (c(-1,1), n, replace=TRUE)
+
+  # generate the observed (in sample) data with an  
+  # underlying process that only uses the x1 predictor
+  y = 1 + x1 + rnorm (n, 0, 1)
+  # use the same process to simulate some "out-of-sample" data
+  y_tilde = 1 + x1 + rnorm (n, 0, 1)
+ 
+  for (j in 1:3){
+    # fit three models, the first using the real underlying model
+    if (j==1) mod = lm (y ~ 1+x1)
+    # the next two include random useless predictors
+    if (j==2) mod = lm (y ~ 1+x1 + x2)
+    if (j==3) mod = lm (y ~ 1+x1 + x2 + x3)
+    
+    # find the predicted value (mu) for each data point
+    mu = mod$fitted.values
+    # and the estimated sigma parameter
+    sigma = summary(mod)$sigma
+    
+    ## equivalent to equation 6.9
+    lpd[i,j] = sum (dnorm (y, mu, sigma, log = TRUE))
+    ## equivalent to equation 6.10
+    elpd[i,j] = sum (dnorm (y_tilde, mu, sigma, log = TRUE))
+  }
+}
+```
+
+We use the predicted values (`mu`, $\mu$) and error estimates (`sigma`, $\sigma$) provided by our maximum-likelihood models to estimate the $\mathrm{lpd}$ and $\mathrm{elpd}$ for each model. In each case, we do so by calculating \@ref(eq:69):
+
+$$
+\begin{equation}
+\mathrm{lpd} = \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(y_i | \mu, \sigma))
+(\#eq:69)
+\end{equation}
+$$
+
+And \@ref(eq:610), where the $\tilde{y}$ is the out-of-sample data being predicted using the in-sample estimates of $\mu$ and $\sigma$.
+
+$$
+\begin{equation}
+\mathrm{elpd} = \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(\tilde{y}_i | \mu, \sigma))
+(\#eq:610)
+\end{equation}
+$$
+
+In the formulas above we replace $p(\tilde{y}_i | \theta)$ with $\mathrm{N}(y_i | \mu, \sigma)$ because the simulations generate normally-distributed data. Our simulations result in three sets of $\mathrm{lpd}$ and three sets of $\mathrm{elpd}$, a pair of each for each of the models above. The average of each of these six sets of values is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less likely* outcome. We can see that the $\mathrm{lpd}$ improves as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the data generating process or to the dependent variable. Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do *at least as well* as the model with fewer possible explanations. However, although the extra parameters increase the $\mathrm{lpd}$, they actually *decrease values* of $\mathrm{elpd}$, indicating a worse out of sample fit. Why? Because since the extra predictors included in our model in no way relate to our data, the 'answers' they provide can only be due to overfitting, the learning of characteristics that are specific to the in-sample data rather than consistent properties of the out-of-sample data. 
+
+```{r F66, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.6
+################################################################################
+
+means = round (apply (cbind(lpd,elpd), 2, mean),1)
+
+layout (mat=t(c(1:3)), widths = c(.4,.4,.2))
+par (mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "lpd",xlab="Predictors")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+arrows (1,means[1]-0.2, 1,means[4]+0.2,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[5]+0.2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[6]+0.2,code=3, length=0.1,lwd=2)
+text ((1:3)+.1, -71, labels = round(c(means[1]-means[4],means[2]-means[5],
+                                means[3]-means[6]),2))
+text (0.8,c(-68.8,-73.6), labels = c("More Likely","Less likely"), pos=4)
+
+mtext (side=2,text = "log density", line = 2.75)
+#legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
+#        col=c(1,2), lwd=2,bty="n")
+
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
+arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
+
+text (1:3, means[1:3]+.25, labels = means[1:3])
+text (1:3, means[4:6]-.25, labels = means[4:6])
+text (1:3, means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
+
+plot (0, bty='n', xaxt='n',yaxt='n',xlab="",type="n")
+legend (.6,.2,legend = c("lpd","elpd","elpd_hat"), lwd=4, 
+        col = c(1,2,2),cex=1.4,lty = c(1,1,3))
+```
+
+So, we see that adding 'unnecessary' predictors can decrease our out-of-sample performance. Ok, maybe we should just not ever include any 'unnecessary' predictors in our models? Obviously this would be ideal, however, there are some complications. In the example in figure \@ref(fig:F66) we knew the true underlying model and generated out-of-sample data that exactly conformed to the characteristics of our in-sample data. In real life, researchers do not usually have access to out-of-sample data, they do not know the characteristics of the 'true' model that underlies their data, nor can they confirm that any out-of-sample data shares the exact underlying process as their in-sample data. As a result, we can never *really* know what the difference is between in sample and out-of-sample prediction for our models. However, you may have noticed that: 1) The slopes of the lines representing $\mathrm{elpd}$ and $\mathrm{lpd}$ in figure \@ref(fig:F63) seem to have predictable slopes, 2) The lines diverge form each other at predictable rates based on the complexity of the models. Mathematicians have noticed this too, and have used this to *adjust* $\mathrm{lpd}$ in order to estimate values of $\mathrm{elpd}$ for out-of-sample data. 
+
+### Out-of-sample prediction: Adjusting predictive accuracy
+
+The logic of adjusting $\mathrm{lpd}$ based on model complexity can be understood with reference to figure \@ref(fig:F66). Our goal is to select the model with the best out-of-sample prediction (i.e. the highest value on the red line), given only knowledge of the in-sample prediction (the values on the black line). In the left plot we can see that the difference between the black and red lines for each model increases by approximately one for every parameter we add. Let us assume for the time being that this is a general property of all models. Since our models had one, two and three parameters respectively let's subtract one, two and three from their respective $\mathrm{lpd}$ values to estimate $\mathrm{elpd}$ for each model. We can think of this as **penalizing** the value of $\mathrm{lpd}$ based on some penalty value $\mathrm{p}$ as in \@ref(eq:611). Different ways to estimate $\widehat{\mathrm{elpd}}$ differ in terms of how they estimate $\mathrm{lpd}$ and $\mathrm{p}$. 
+
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}} = \mathrm{lpd} - \mathrm{p}
+(\#eq:611)
+\end{equation}
+$$
+
+You may have noticed that our penalization does not exactly recreate the line reflecting $\mathrm{elpd}}$ but rather results in a line parallel to it. We can never know what the real difference is between $\mathrm{lpd}$ and $\mathrm{elpd}}$, the solid red and black lines in figure \@ref(fig:F66), because we can never know the true properties of out-of-sample data. However, penalization allows us to estimate a line parallel to $\mathrm{elpd}}$ (broken red line in figure \@ref(fig:F66)) and base our inference based on this line. 
+
+In this very simple example we are discussing here we are setting $\mathrm{p}=k$, where $k$ is the number of parameters estimated by the model. If we set $\mathrm{p}=k$ and carry out the operation in \@ref(eq:65) using the values in figure \@ref(fig:F66), we would arrived at values of $\mathrm{elpd}$ of -70.7 ($-69.7 - 1$) and -71.7 ($-68.7-3$) for the least and most complex models. Based on these estimates of $\widehat{\mathrm{elpd}}$, we expect that the model with the worst $\mathrm{lpd}$ actually has the best  $\mathrm{elpd}$. In fact, we know that in this case the 'best' model corresponds exactly to the true data generating process. However, penalization will not always result in the highest values of $\widehat{\mathrm{elpd}}$ for the simplest model. In figure \@ref(fig:F67) we simulate new fake data, except now we include $x_2$ in the 'real' underlying data generating process (i.e., `y = x1 + x2 + rnorm (n, 0, 1)`). As a result, for this data we actually *do* need both $x_1$ and $x_2$ in the model. As seen below, penalization does not obscure the benefit of adding $x_2$ to our model when it is warranted. This is because the relatively small penalty associated with the increased model complexity does not overwhelm the large benefit due to the inclusion of a predictor that is actually related to our dependent variable. 
+
+```{r F67, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations abovem modified to also include the second predictor in the data generating process. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.7
+################################################################################
+n = 50         # how many observations
+iter = 1000    # how many simulations
+# these will hold the model log likelihoods for each iteration
+in_sample_ll = matrix (0, iter, 3)
+out_of_sample_ll = matrix (0, iter, 3)
+
+set.seed(1)
+for (i in 1:iter){
+  # create 3 random predictors
+  x1 = sample (c(-1,1), n, replace=TRUE)
+  x2 = sample (c(-1,1), n, replace=TRUE)
+
+  # generate the observed (in sample) data with an  
+  # underlying process that only uses the x1 predictor
+  y_in = 1 + x1 + rnorm (n, 0, 1)
+  # use the same process to simulate some "out-of-sample" data
+  y_out = 1 + x1 + rnorm (n, 0, 1)
+ 
+  for (j in 1:3){
+    # fit three models, the first using the real underlying model
+    if (j==1) mod = lm (y_in ~ 0+x1)
+    # the next two include random useless predictors
+    if (j==2) mod = lm (y_in ~ 1+x1)
+    if (j==3) mod = lm (y_in ~ 1+x1 + x2)
+    
+    # find the predicted value (mu) for each data point
+    yhat = mod$fitted.values
+    # and the estimated sigma parameter
+    sigma = summary(mod)$sigma
+    
+    in_sample_ll[i,j] = sum (dnorm (y_in, yhat, sigma, log = TRUE))
+    out_of_sample_ll[i,j] = sum (dnorm (y_out, yhat, sigma, log = TRUE))
+  }
+}
+
+
+
+means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
+
+layout (mat=t(c(1:3)), widths = c(.4,.4,.2))
+par (mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+
+plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "Model log-likelihhod",xlab="Predictors")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+mtext (side=2,text = "Log-likelihood", line = 2.5)
+#legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
+#        col=c(1,2), lwd=2,bty="n")
+
+  plot (means[1:3], type = "b", lwd = 2, ylim =c(-73.5,-69),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
+lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
+arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
+arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
+arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
+
+text (c(1,2.2,3), means[1:3]+.25, labels = means[1:3])
+text (c(1,2.2,3), means[4:6]-.25, labels = means[4:6])
+text (c(1,2.2,3), means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
+
+plot (0, bty='n', xaxt='n',yaxt='n',xlab="",type="n")
+legend (.6,.2,legend = c("lpd","elpd","elpd_hat"), lwd=4, 
+        col = c(1,2,2),cex=1.4,lty = c(1,1,3))
+```
+
+Two aspects involved in the traditional estimation of $\mathrm{elpd}$ will need to be updated to use these measures for multilevel Bayesian models. The first of these is the way that models are penalized based on their complexity. Historically, the $\mathrm{p}$ term is related to the number of independent parameters estimated by the model since more complex models require more parameters. Estimated parameters are those that are not specified a priori but instead depend on the data and structure of the model. Counting the number of independent parameters is not so straightforward in our multilevel models since parameters estimated with partial pooling (and shrinkage) are not fully independent. For example, a set of 10 'random effects' that have all been pulled slightly towards their shared mean can hardly be considered totally independent. On the other hand they do vary from each other in unpredictable ways. As a result, it seems like our random effect with ten levels may represent somewhere between zero and ten independent parameters, based on how much they have been *shrunk* towards their mean. Our estimate of $\mathrm{elpd}$ will need a way to estimate model complexity that takes this into account. Secondly, $\mathrm{lpd}$ and $\mathrm{p}$ have traditionally been *point estimates*, single values often based on maximum-likelihood estimation. Since our models consist of posterior distributions of parameters, we instead have *distributions* of $\mathrm{lpd}$ and $\mathrm{p}$. 
+
+In this section we are only going to discuss the **widely available information criterion** ($\mathrm{WAIC}$) as calculated using the brms package. For a more complete treatment of other methods (and historical approaches), please see Gelman et al. (2013). To calculate $\mathrm{WAIC}$ we first find the average density of each data point ($i$) given our model parameters ($p(y|\theta^s)$) across all posterior samples ($S$). This is presented for data point $i$ in \@ref(eq:612). For example, imagine a case where we have 5000 posterior draws so that $S=5000$. To calculate the value below for our first data point ($y_{[1]}$) we would find the density for for every one of the 5000 posterior draws based on the changing values of $\theta^s$ across our draws. Then we would find the average of these values.   
+
+$$
+\begin{equation}
+\frac{1}{S} \sum_{s=1}^{S} p(y_{[1]} | \theta^s)
+(\#eq:612a)
+\end{equation}
+$$
+
+To estimate $\widehat{\mathrm{lpd}}$ for a set of $N$ data points we take logarithm of the value in \@ref(eq:612a) and add this up across all of our observations. This is presented in equation \@ref(eq:612).
+
+$$
+\begin{equation}
+\widehat{\mathrm{lpd}} = \sum_{i=1}^{N} \mathrm{log} (\frac{1}{S} \sum_{s=1}^{S} p(y_i | \theta^s))
+(\#eq:612)
+\end{equation}
+$$
+
+Rather than count the number of parameters estimated in our model, $\mathrm{WAIC}$ estimates the penalty term based on the characteristics of the predictive density. First, you find the log density for each individual data point across all posterior draws, and then find the variance of this. Equation \@ref(eq:613a) shows an example of this for the first data point. Following Gelman (2013?), the $Var_{s=1}^{\,S}$ term indicates that we are finding the variance of $\mathrm{log} (p(y_{[1]} | \theta^s))$ across values of $S$.
+
+$$
+\begin{equation}
+Var_{s=1}^{\,S}(\mathrm{log} (p(y_{[1]} | \theta^s)))
+(\#eq:613a)
+\end{equation}
+$$
+
+To estimate the penalty terms for WAIC, $\mathrm{p_{WAIC}}$, the value in \@ref(eq:613a) is added up for all $N$ data points as in \@ref(eq:613).
+
+$$
+\begin{equation}
+\mathrm{p_{\mathrm{WAIC}}} = \sum_{i=1}^{N} Var_{s=1}^{\,S}(\mathrm{log} (p(y_i | \theta^s)))
+(\#eq:613)
+\end{equation}
+$$
+
+Why does this work? This is one of those thing that you may need to *get used to* rather than *understand*, although explanations can be found in (?). The short, conceptual explanation is that more complex models exhibit more variation in their posterior probabilities. As a result, the variance of the log density across the posterior samples is a general way to estimate model complexity that avoids issues related to how many truly independent parameters a model estimates. Given our estimate of $\widehat{\mathrm{lpd}}$ and $\mathrm{p_{WAIC}}$, we can now estimate $\widehat{\mathrm{elpd}}_{WAIC}$ as in \@ref(eq:614).
+
+
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}}_{WAIC} = \widehat{\mathrm{lpd}} - \mathrm{p_{WAIC}}
+(\#eq:614)
+\end{equation}
+$$
+
+Below we load the sum-coded models we fit in the last chapter:
+
+```{r, eval = FALSE}
+# Or download it from the GitHub page:
+model_sum_coding = bmmb::get_model ('5_model_sum_coding.RDS')
+model_sum_coding_t = bmmb::get_model ('5_model_sum_coding.RDS_t')
+```
+```{r, include = FALSE}
+model_sum_coding = readRDS ('../models/5_model_sum_coding.RDS')
+model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
+```
+
+And set our options to sum coding to match the coding we used when we fit the models:
+
+```{r}
+options (contrasts = c('contr.sum','contr.sum'))
+```
+
+We can use the `add_criterion` function in `brms`, and specify `criterion="waic"` to add the `waic` criterion to our model object. We do this for both of our models. 
+
+```{r, cache = TRUE}
+model_sum_coding = brms::add_criterion (model_sum_coding, criterion="waic")
+
+model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="waic")
+```
+
+Adding the `waic` criterion to our model with Gaussian errors (`model_sum_coding`) returns in an error message. To understand why we get these errors we can investigate the model `waic` information, which we can see below:
+
+```{r}
+model_sum_coding$criteria$waic
+```
+
+The first two rows represent the expected log pointwise predictive density ($\widehat{\mathrm{elpd}}_{WAIC}$, `elpd`), and the penalty related to the flexibility of the model ($\mathrm{p_{WAIC}}$, `p_waic`). The third column is the information criterion $\mathrm{WAIC}$ which is just -2 times the first row. The $\mathrm{p_{WAIC}}$ penalty term is sometimes referred to as the **effective number of parameters**, but Gelman (cite) cautions that this usage is somewhat figurative and should not be 'over interpreted'. The effective number of parameters relates to the complexity and flexibility of the model and its ability to adapt to new data. Our sum coding model has 114 estimated parameters: 15 listener means, 1 listener standard deviation, 94 speaker means, 1 speaker standard deviation, 2 fixed effects terms, and one error standard deviation. Despite this, we see that our effective nuber of parameters is closer to 80.  
+
+The statistics provided above are calculated individually for each data point. We can get the pointwise information as seen below: 
+
+```{r}
+model_waic_info = model_sum_coding$criteria$waic$pointwise
+model_t_waic_info = model_sum_coding_t$criteria$waic$pointwise
+```
+
+There will be as many rows as data points were used to fit the model. Below we can have a look at the first six values: 
+
+```{r}
+# first six data points
+head (model_waic_info)
+```
+
+The estimates above simply correspond to the sum of each column. The standard error (SE) corresponds to the variance of the column times the square root of N (since the statistics are sums and not means). We recreate the summary values seen above:
+
+```{r}
+# the sum of each column
+colSums (model_waic_info)
+# the standard deviation of each column
+apply (model_waic_info,2,sd) * sqrt(1386)
+```
+
+Now we can return to the issue of the error message, which said that "`28 (2.0%) p_waic estimates greater than 0.4`". Large values of `p_waic` suggest a poor fit between data points and the model. To investigate this we can get the posterior mean residuals from each of the models we are considering:
+
+```{r, cache = TRUE}
+resids = scale(residuals(model_sum_coding)[,1])
+resids_t = scale(residuals(model_sum_coding_t)[,1])
+```
+
+We scale our residuals so that they are represented in terms of standard deviations from the mean, and plot these against the `p_waic` values calculated for each data point by each model. Clearly, large residuals relate to large `p_waic` values. In other words, large `p_waic` values are related to data points that are a very poor fit for our model. In our model with Gaussian errors this relationship is very predictable and quickly leads to large values in `p_waic`. For our model with t distributed errors (`model_sum_coding_t`) residuals beyond two standard deviations do not strongly affect `p_waic`. These differences are due to the different behaviors of the normal and t distributions in their tails, as discussed in section X. 
+
+```{r F68, fig.height = 3, fig.width = 8, fig.cap="(left) Standardized model residuals plotted against values of the WAIC penalty term (P_WAIC) for each data point for the model with Gaussian errors. (right) The same as on the left but for the model with t distributed errors.", cache = TRUE, echo = FALSE}
+################################################################################
+### Figure 6.8
+################################################################################
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+plot(model_sum_coding$criteria$waic$pointwise[,2], resids,xlab="P_WAIC",ylab="Residual", 
+     ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
+grid()
+abline (v = 0.4)
+#abline (h=c(-2.5,2.5))
+
+plot(model_sum_coding_t$criteria$waic$pointwise[,2], resids_t,xlab="P_WAIC",ylab="Residual", 
+     ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
+grid()
+abline (v = 0.4)
+```
+
+The warning message suggest that we use `loo` (discussed in the next section) rather than `waic` because some `p_waic` values are too large. Why is this bad? Because the theory underlying the use of $\widehat{\mathrm{elpd}}_{WAIC}$ basically assumes that there will *not* be large values of $\widehat{\mathrm{elpd}}_{WAIC}$. So, if there are large values of $\widehat{\mathrm{elpd}}_{WAIC}$ that suggests that something is wrong and $\widehat{\mathrm{elpd}}_{WAIC}$ may no longer be reliable. When this occurs, as the error message suggests, you shouldn't use $\widehat{\mathrm{elpd}}_{WAIC}$ even if it seems reliable and looks 'fine'. Think of it this way, if a bridge say it has a weight limit of three tonnes and you're driving a truck that weighs four tonnes, should you drive across the bridge? Maybe you get across safely and save some time. Maybe you crash off the bridge into the river. When you use something like this despite being warned not to you run the same risk: Maybe what you report is a true and reliable analysis, and maybe its not and you are reporting nonsense (the academic equivalent of crashing into the river). 
+
+
+### Out-of-sample prediction: Cross validation
+
+[@@ SB - explain pareto k, diagnostics?]
+
+The last way to evaluate models that we'll be discussing is called **cross validation**. Cross validation consists of dividing your data into two groups. You use one group to fit a model (i.e. your in-sample, or **training data**), and then use this model to predict the other group of data (i.e. the out-of-sample, or **testing data**). In this way, cross validation is a way to simulate out-of sample prediction using only the data you actually have. There are many ways to carry out cross validation, and these mostly differ in terms of the ways that data is divided into training and testing groups. **Holdout** cross validation makes one single partition and uses that to test and train. Obviously this is not ideal because the results will be highly dependent on the specific groups you made. In **k-fold** cross validation you split your data into $k$ equal parts. You then train on parts $k_{-i}$ for iteration $i$, and predict the $ith$ group using that model. This approach can minimize on the problems of holdout cross validation since it uses k, rather than one, estimates of the out-of-sample performance. The logical endpoint of k-fold cross-validation is **leave-one-out** cross validation, sometimes referred to as $\mathrm{LOO}$. In leave-one-out cross validation you leave out a single observation at a time. So, if you have $i$ observations you train the model on all observations but $i$ (i.e. $y_{[-i]}$), and then predict the lone held out point ($y_[i]$). Although $\mathrm{LOO}$ provides excellent estimates of out-of-sample prediction, this approach can be extremely computationally intensive since it involves the calculation of $i$ models for $i$ data points. For example, out relatively small data set (`notmen`) has 1386 observations, potentially requiring the fitting of 1386 models. 
+
+Luckily, advances in the past few years have resulted in fast ways to approximate $\widehat{\mathrm{elpd}}_{LOO}$, i.e. estimates of $\mathrm{elpd}$ based on $\mathrm{LOO}$, without having to refit models repeatedly (cite). The `loo` package in R and the associated functions implemented in the `brms` make it easy to estimate $\widehat{\mathrm{elpd}}_{LOO}$ in a very fast an efficient manner. In addition, $\mathrm{LOO}$ works in many cases where $\mathrm{WAIC}$ does not, hence the suggestion in the error message above to use $\mathrm{LOO}$ for model comparison. The calculation of $\widehat{\mathrm{elpd}}_{LOO}$ is more complicated than what we can explain here, however, we can provide an approximate definition here. In \@ref(eq:615) we use the $\approx$ symbol because we are not providing an exact definition of how $\widehat{\mathrm{elpd}}_{LOO}$ is calculated in practice, but only in principle. Equation \@ref(eq:63) states that the estimate of $\mathrm{elpd}$ provided by LOO cross validation is equal to the sum of the log density of eqach datapoint ($y_i$) based on the parameters estimated using all the data *except* for that point ($\theta_{y_{-i}}$). 
+
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}}_{LOO} \approx \sum_{i=1}^{N} \mathrm{log} (\mathrm{N}(y_i | \theta_{y_{-i}}))
+(\#eq:615)
+\end{equation}
+$$
+
+We define the relationship between $\widehat{\mathrm{elpd}}_{LOO}$ and $\widehat{\mathrm{lpd}}$ using the same general relationship outlined above, updated for $\mathrm{LOO}$ in \@ref(eq:617). 
+
+$$
+\begin{equation}
+\widehat{\mathrm{elpd}}_{LOO} = \widehat{\mathrm{lpd}} - \mathrm{p_{\mathrm{LOO}}}
+(\#eq:617)
+\end{equation}
+$$
+
+Based on this, we can estimate $\mathrm{p_{\mathrm{LOO}}}$ by rearranging the terms of the equation as below. Just as with $\mathrm{LOO}$, $\mathrm{p_{\mathrm{LOO}}}$ reflects the effective number of parameters, an estimate of model complexity. 
+
+$$
+\begin{equation}
+\mathrm{p_{\mathrm{LOO}}} = \widehat{\mathrm{lpd}} - \widehat{\mathrm{elpd}}_{LOO}
+(\#eq:617)
+\end{equation}
+$$
+
+Estimates of $\widehat{\mathrm{elpd}}_{LOO}$ and associated statistics can be added to our models using the code below. We will now include our model with random age effects in our comparison.
+
+```{r}
+model_sum_coding = brms::add_criterion (model_sum_coding, criterion="loo")
+model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="loo")
+model_re_t = brms::add_criterion (model_re_t, criterion="loo")
+```
+
+We can see our new criteria using the code below. Notice that we no longer see the error message we got with $\mathrm{WAIC}$ above. 
+
+```{r}
+model_sum_coding$criteria$loo
+```
+
+Since we no longer have warnings, we can compare our models as seen below. This comparison contrasts the values of $\widehat{\mathrm{elpd}}_{LOO}$ for each data point across all our models. It presents the sum of the difference, and the standard error of that sum, with respect to the best performing model and the rest of the models. Below, `model_re_t` has an `elpd_diff` of 0, indicating that this is the best model. Values of `elpd_diff` for `model_sum_coding_t` and `model_sum_coding` are -204 and -222 respectively, indicating substantial differences in $\widehat{\mathrm{elpd}}_{LOO}$ between our models.
+
+```{r}
+brms::loo_compare (model_sum_coding, model_sum_coding_t, model_re_t, criterion = "loo")
+```
+
+We can explore where these values come from by extracting the pointwise information from our models just as we did for $\mathrm{WAIC}$. 
+
+```{r}
+model_loo_info = model_sum_coding$criteria$loo$pointwise
+model_t_loo_info = model_sum_coding_t$criteria$loo$pointwise
+model_re_t_lo_info = model_re_t$criteria$loo$pointwise
+```
+
+We can see that the `elpd_diff` is just the sum of the `elpd` estimates across the two models. The standard error of the difference is simply the standard deviation of the difference times the square root of N. 
+
+```{r}
+sum(model_t_loo_info[,1]-model_re_t_lo_info[,1])
+sd(model_t_loo_info[,1]-model_re_t_lo_info[,1]) * sqrt(1386)
+```
+
+We can use this knowledge to calculate the difference between our two worst performing models since these are not directly compared above: 
+
+```{r}
+sum(model_loo_info[,1]-model_t_loo_info[,1])
+sd(model_loo_info[,1]-model_t_loo_info[,1]) * sqrt(1386)
+```
+
+And see that these values correspond to those obtained using the comparison function as seen below:
+
+```{r}
+brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
+```
+
+Finally, we can check out the estimated number of parameters by summing the third column of our pointwise information for each model, which contains information about $\mathrm{p_{\mathrm{LOO}}}$ for each model. We can compare this to the number of actual parameters estimated by our models. An easy way to find the number of estimated parameters is to get the posterior draws for a model using the `as_draws_matrix` function from `brms`. This will return a matrix that contains one column for each estimated parameter, plus one columns for the `lp` (discussed in chapter 3). So, if we find the number of columns minus one, we can quickly count the number of estimated parameters for most kinds of models. Below, we compare the actual number of parameters to each model with our effective number of parameters. For example, we can see that going from Gaussian to t distributed errors results in the estimation of one additional parameter ($\nu$), but the number of estimated parameters goes up by about 2.6. Adding random effects for apparent age to our model required the addition of 17 parameters: 15 listener-specific age effects, a standard deviation for these effects, and the correlation between the listener specific age and intercept effects. We can see that this has led to an increase of about 24 effective parameters. We can potentially explain this by thinking about how the inclusion of random effects for apparent age may have affected the estimation of the other random effects already included in the model. However, we are not going to worry too much and 'overinterpret' the effective number of parameters. 
+
+```{r}
+# Actual and effective number of parameters for simplest model
+ncol(brms::as_draws_matrix(model_sum_coding))-1
+sum(model_loo_info[,'p_loo'])
+
+# Actual and effective number of parameters for t model
+sum(model_t_loo_info[,'p_loo'])
+ncol(brms::as_draws_matrix(model_sum_coding_t))-1
+
+# Actual and effective number of parameters for 'random effects' model
+sum(model_re_t_lo_info[,'p_loo'])
+ncol(brms::as_draws_matrix(model_re_t))-1
+```
+
+### Selecting a model
+
+Which model should we use? Based on the comparison above, we see that `model_re_t` has an $\mathrm{elpd}$ that is 204 greater than the next best model. How large does an $\mathrm{elpd}$ difference need to be in order to be meaningful. There two things that need to be taken into account: The magnitude of any differences and the uncertainty in these differences. A general rule of thumb seems to be that a difference of at least 2-4 in $\mathrm{elpd}$ is necessary in order to signal a meaningful difference between the models (cite akis page and maybe something else if I can find it). However, this is simply a rule of thumb and does not mean that a difference of 1.99 does not matter and a difference of 2.01 does. On the other hand, even large differences between models may not be reliable in the presence of large standard error estimates. For example, below we see the difference between out two smaller models:
+
+```{r}
+brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
+```
+
+The difference is 18, which is obviously large enough to be considered a meaningful improvement in the model. However, the standard error is 7.3. This means that the difference is only about 2.5 standard errors from zero. How many standard errors away from zero does a difference need to be in order to be 'real'? This is impossible to say, and in fact the 'reality' of any given model can not be definitively established by any statistical test. Ok, so how many standard errors from zero should it be before we make a fuss about it? The answer to this seems to be 'several' (cite), somewhere in the neighborhood of 2-5 at least. If we think of improvements to our model as continuous, we can think of differences that are two standard errors away as 'small' and differences that are 5+ standard errors away as 'large'. However, the decision about which model to use is generally up to the researcher. In addition to considering differences in $\mathrm{elpd}$ in isolation, the researcher may also consider how theoretically or practically warranted the changes in their model are. For example, we more or less know that our data contains way too many outliers to be a proper Gaussian distribution. As a result, although the improvement provided by using t distributed errors is not large, we may choose to keep using t distributed errors in our model anyways. On the other hand, given the small difference between the estimates provided by both models and the not-huge difference in $\mathrm{elpd}$ between the models, a researcher may be warranted in simply using normally distributed errors in their model. In contrast to these small differences, we see a difference of 204 in $\mathrm{elpd}$ due to the addition of random effects for apparent age, a whopping 10.7 standard errors away from zero. Keep in mind this does not mean that a researcher *must* include this predictor nor that this structure would necessarily be an aspect of the *real* model. What it *does* mean is that: 1) The addition of random effects for apparent age greatly improves the fit of our model to our data, 2) This increase in fit is very likely to extend to those data we did *not* observe, and 3) We have pretty good evidence that the difference between the models is reliable. We could add to this: 4) It makes *sense* that there would be listener-dependent variation in the effect for apparent age, for many reasons. As a result, in this situation it seems that random age effects should be included in our model. 
+
+Before finishing our discussion of model comparison, we want to show an example of a situation where adding a predictor does *not* help. To do this we add a useless predictor to our data frame, as below. This predictor is a random sample of -1 and 1 with no relationship to our height judgments. We can see below that the average reported height is basically the same for both values of our useless predictor. 
+
+```{r}
+set.seed(1)
+notmen$useless = sample (c(-1,1),nrow(notmen), replace = TRUE)
+tapply (notmen$height, notmen$useless, mean)
+```
+
+Below we fit our t distributed random effects model again, however, this time we include the useless predictor in the model formula, and even include a random effect for it:
+
+`height ~ A + useless + (A + useless|L) + (1|S)`
+
+We haven't discussed including multiple predictors in our formulas yet, and in fact we will do so in the following chapter. For now, we are only interested in considering how this useless predictor affects our model comparisons. We fit this model below:
+
+```{r, eval = FALSE}
+priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
+           brms::set_prior("student_t(3,0, 12)", class = "b"),
+           brms::set_prior("student_t(3,0, 12)", class = "sd"),
+           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+           brms::set_prior("gamma(2, 0.1)", class = "nu"),
+           brms::set_prior("student_t(3,0, 12)", class = "sigma"))
+
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+model_re_t_tooBig =  
+  brms::brm (height ~ A + useless + (A + useless|L) + (1|S), data = notmen, chains = 4, cores = 4,
+       warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
+```
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+model_re_t_tooBig = bmmb::get_model ('6_model_re_t_tooBig.RDS')
+```
+```{r, include = FALSE}
+model_re_t_tooBig = readRDS ('../models/6_model_re_t_tooBig.RDS')
+```
+
+And add the `loo` criterion to it. 
+
+```{r}
+model_re_t_tooBig = brms::add_criterion (model_re_t_tooBig, criterion="loo")
+```
+
+Finally, we compare this to our equivalent model, minus the useless predictor. 
+
+```{r}
+brms::loo_compare (model_re_t, model_re_t_tooBig)
+```
+
+We can see that the more-complex model in this case actually has a lower (worse) $\mathrm{elpd}$, indicating that our added predictor does not contribute to out of sample prediction. In addition, we can look at a summary of the fixed effects and see that the value of the useless predictor is near zero (0.08), and the credible interval is wide and approximately symmetrical about zero. So, does this mean that this predictor should be excluded from the model? We would be justified in doing so, but may not necessarily want to. For example, if one of our important research questions centered round the value of the useless predictor, the fact that it is around zero and not some other value (e.g. -100) may be useful information. For example, we might want to keep the predictor in the model so we can say something like "So & So (2007) reported a value of -100 for the useless predictor. However, our results suggest that the effect of this predictor are likely to be zero or at least quite small [mean = 0.08, sd = 0.20, 95% CI = [-0.31,0.48])". 
+
+```{r}
+brms::fixef(model_re_t_tooBig)
+```
+
+## Answering our research questions
+
+We've selected our model with random effects as the 'best' model and are ready to revisit our research questions from last chapter again:
+
+  (Q1) How tall do speakers perceived as adult females sound? 
+  
+  (Q2) How tall do speakers perceived as children sound?
+  
+  (Q3) What is the difference in apparent height associated with the perception of adultness? 
+  
+Our answers to the main research questions are largely unchanged from the previous chapter (section 5.X), however, the information provided in our random effects model can help us provide more context. The increased credible interval around the age effect usefully highlights the amount of uncertainty in the estimate due to substantial between-listener variation in the effect. In addition, we saw that there was a strong negative correlation between the listener means and age effects. The reason for this is clearly evident in figure \@ref(fig:61). Listeners generally provided quite stable estimates for adult speakers. However, they exhibited substantial variation in their average judged height for child speakers. This makes sense. Most people probably have a good sense for approximately how tall adult females are on average. However, how tall are children 10-12? This is much harder to answer. Not only is there more variability in height in these age ranges, but in addition most people are not around large numbers of children 10-12 and so may not have a good sense of how tall they are on average. Since the adult heights are more or less fixed across listeners, listeners that indicated shorter children necessarily indicated shorter speakers overall. In addition, listeners that indicated shorter children also would tend to exhibit larger age effects. In this way, the listener means and age effect become negatively correlated. 
+
+Although we said we would stick to sum coding for this book, it is worth noting that this is actually a situation where it might sense to use treatment coding, using adult as the reference level (see section X). This would not affect our answers to the questions above but it would make the structure of the model more closely reflect the structure of the data, and it would decrease the correlation between the listener-dependent random effects. Why? Because when the listener intercepts correspond to their adult means (and not the grand mean), the intercept no longer helps you predict their age effect. As we can see in figure \@ref(fig:61), all listeners rate adult speakrs about the same height regardless of how tall/short they think the children are. 
+
+
+## Frequentist corner
+
+In frequentist corner, we're going to compare the output of `brms` to some more 'traditional', often called *frequentist* approaches. We're not going to talk about the traditional models in much detail since there are hundreds of other sources for this, and this book is long enough as it is (see section @@ for suggestions). The focus of these sections is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, feel free to skip these sections of the book, although they may still be helpful.  
+
+### Bayesian multilevel models vs. lmer
+
+Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the `lme4` package in `R`. Below we fit a model that is analogous to our `model_sum_coding` model. Since we set contrasts to sum coding using the options above, this will still be in effect for this model. If you have not done so, run the line:
+
+```{r, eval = FALSE}
+options (contrasts = c("contr.sum","contr.sum"))
+```
+
+Before fitting the model below so that its output looks as expected. We can fit a model with random age effects using `lmer` with the code below: 
+
+```{r, cache = TRUE}
+model = lme4::lmer (height ~ A +  (A|L) + (1|S), data = notmen)
+```
+
+Below is the model print statement. The model now includes the correlation between the listener random effects and a (point) estimate of the standard deviation of the listener-dependent age effects.
+
+```{r}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: height ~ A + (A | L) + (1 | S)
+##    Data: notmen
+## REML criterion at convergence: 9793.884
+## Random effects:
+##  Groups   Name        Std.Dev. Corr 
+##  S        (Intercept) 3.560         
+##  L        (Intercept) 4.003            
+##           A1          4.052    -0.93   <=== Correlation
+##  Residual             7.702         
+## Number of obs: 1386, groups:  S, 94; L, 15
+## Fixed Effects:
+## (Intercept)           A1  
+##     155.014        8.589  
+```
+
+Below is a comparison of the listener means and age effects fit by both approaches. Clearly the results are very similar save for the fact that just as with our correlations and standard deviations, `brms` gives us intervals while `lmer` only gives us point estimates. 
+
+```{r F69, fig.width = 8, fig.height =3.5, fig.cap="(left) Listener-dependent mean effects and credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer. (right) Same as the left panel but showing the listener-dependent age effects.", echo=FALSE,cache=TRUE}
+
+################################################################################
+### Figure 6.9
+################################################################################
+
+random_effects = ranef(model_re_t)$L
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+
+brmplot (random_effects[,,1], col = cols)
+points (ranef (model)$L[,1], pch=4,lwd=2, cex=3, col = cols)
+abline (h=0,lty=3)
+brmplot (random_effects[,,2], col = cols)
+points (ranef (model)$L[,2], pch=4,lwd=2, cex=3, col = cols)
+abline (h=0,lty=3)
+```
+
+And the listener-dependent age effects provided by both approaches. In both cases we see that we arrive at basically the same results using either analysis method, however, our Bayesian model again provides un credible intervals where `lmer` only provides point estimates. 
+
+```{r F6-15, fig.width = 8, fig.height =3, fig.cap="Speaker random intercepts and credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer.", echo=FALSE,cache=TRUE}
+
+################################################################################
+### Figure 6.15
+################################################################################
+
+par (mfrow = c(1,1), mar = c(4,4,1,1))
+brmplot ( ranef (random_slopes_model)$speaker[,,1], col= skyblue)
+points (ranef (model)$speaker[,1], col = skyblue, pch=4,lwd=2, cex=2)
+abline (h=0,lty=3)
+```
+
+
+
+

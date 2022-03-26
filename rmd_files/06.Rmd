@@ -101,9 +101,11 @@ abline (h = mean(listener_age_effects))
 
 Although interactions are invertible, conceptually it may be useful to think of them primarily one way or another. In our case, we will focus on the listener-dependence of the age effect, presented in the middle panel of figure \ref(fig:F62). In the complete and total absence of an interaction between listener and age, the orange line in the figure would be horizontal at just above 10 (the marginal effect). In the presence of an interaction, our marginal and listener-dependent effects may diverge in a seemingly random manner. As noted in several times to this point, regression models represent the difference between means and not the means themselves. In the case of interactions, interaction effects represent the difference between the marginal effect and the conditional effect. We can see values analogous to interaction effects in the right panel of figure \ref(fig:F62). These effects are represented by the magnitude of the arrows representing deviations from the average effect. If there were no interaction, all the arrows in the right panel of figure \ref(fig:F62) would have lengths of zero, or perhaps show small amounts of random variation. So, the presence of large deviations from the marginal effect, i.e. arrows with large magnitudes, suggests that our model should include coefficients that can help represent this variation between listeners.  
 
-### Description of our model
+Before moving on, we need to discuss the concepts of **crossing** and **nesting**, and how these relate to interactions. When two factors **crossed**, this means that all levels of one factor appear at all levels of the other factor. When levels of one factor appear exclusively at specific levels of the other factor they are said to be *nested*. To estimate the interaction between two factors, these factors must be *crossed*. Since our 'random effects' are just interactions, this means that to include a random effect for a predictor given some grouping factor (like listener), it needs to be crossed with our factor. For example, consider a situation where listeners are divided according to native language. The listener factor will necessarily be nested within first language because each speaker only has a single first language. As a result, in such a situation our model could not include a term like `(first language|listener)`. The reason for this is very straightforward. If we do not observe the effect of first language for each level of listener, we are not in a position to say anything about the *listener-dependent* effect of first language. 
 
-[@@ SB - totally unclear that both levels of A exist in the model but only one is estimated. Note this explicitly. Use A throughout rather than A1?]
+In terms of our data, this means that to include our `(A|L)` term we need to make sure listener is crossed with apparent age. We can see in the `listener_age_differences` above that we have average heights for both ages for all listeners, meaning that age and listener are crossed, and it is possible to estimate the interaction between these (i.e. include the `(A|L)` term in our model).
+
+### Description of our model
 
 Before including interactions in our model, let's take  step back and consider the model formula we used last chapter. Below, we explicitly include the leading one (indicating the intercept) to make the following discussion simpler. 
 
@@ -141,7 +143,7 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1_{[A_{[i]}}  + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1 + L_{[L_{[i]}]} + A1 \colon L_{[A_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 L_{[\bullet]} \sim N(0,\sigma_L) \\
 A1 \colon L_{[\bullet]} \sim N(0,\sigma_{A1 \colon L}) \\
@@ -1008,7 +1010,7 @@ Although we said we would stick to sum coding for this book, it is worth noting 
 
 ## Frequentist corner
 
-In frequentist corner, we're going to compare the output of `brms` to some more 'traditional', often called *frequentist* approaches. We're not going to talk about the traditional models in much detail since there are hundreds of other sources for this, and this book is long enough as it is (see section @@ for suggestions). The focus of these sections is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, feel free to skip these sections of the book, although they may still be helpful.  
+In frequentist corner, we're going to compare the output of `brms` to some more 'traditional', often called *frequentist* approaches. We're not going to talk about the traditional models in much detail since there are hundreds of other sources for this, and this book is long enough as it is (see section 0.X for suggestions). The focus of these sections is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, feel free to skip these sections of the book, although they may still be helpful.  
 
 ### Bayesian multilevel models vs. lmer
 

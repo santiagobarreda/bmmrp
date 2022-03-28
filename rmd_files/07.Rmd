@@ -599,9 +599,9 @@ Ok, so we have a single interaction term, but what does it *mean*? The `A1:G1` t
 
 Figure \@ref(fig:F78) presents an example of how our interaction plot can be built up from the components in our fixed effects above, and is very useful for understanding the geometry of main effects and interactions. In (a) we see that the intercept lifts up a line from 0 to the level of the overall mean apparent height of 160 cm. Then, the effect for `A1` (adult, +10 cm) and `-A1` (children, -10 cm) are added to this value, causing the separation between the lines indicating a 'main effect' for adultness. Notice that the lines are parallel with respect to each other, and also parallel to the x-axis. This is because we have not added either an effect for gender (indicated as a slope along the x axis), or an interaction between gender an adultness. In (b) we see the addition of the gender effect: `G1` (female, -2.74 cm), and  `-G1` (male, 2.74 cm). Notice that the effect is added to one end of each line segment and subtracted from the other end of the line segment. The result is the same non-zero slope for both lines (i.e. no interaction yet). Panel (c) shows the addition of all of the effects shown in the top row, the result of a model that includes both main effects but no interaction. In (e) we add the gender interaction `A1:G1`, which was -1.45 cm. 
 
-Notice that the interaction effect has different signs when added to the same line, and also for each end of each line segment. We can see that starting form the parallel lines in (d), the interaction in (e) constitutes an equal 'pinch' of one end of the lines and a spreading of the other side of the lines. This equal pinch is necessary in order to maintain the same average slope across both lines (the gender main effect) and the same average spacing between both ends of the lines (the age main effect). It turns out that to deviate from pararellism in a way that maintains the average slopes of the lines *and* the average spacings between the line segment end points, the same number must be added or subtracted from all four of the end points in the lines below, and this is why we get only a single interaction term in our model.
+Notice that the interaction effect has different signs when added to the same line, and also for each end of each line segment. This means that the interaction terms *cancel out* at each end of the line segments across lines, but also for different endpoints of the same line. We can see that starting form the parallel lines in (d), the interaction in (e) constitutes an equal 'pinch' of one end of the lines and a spreading of the other side of the lines. This equal pinch is necessary in order to maintain the same average slope across both lines (the gender main effect) and the same average spacing between both ends of the lines (the age main effect). It turns out that to deviate from pararellism in a way that maintains the average slopes of the lines *and* the average spacings between the line segment end points, the same number must be added or subtracted from all four of the end points in the lines below, and this is why we get only a single interaction term in our model.
 
-```{r F78, echo = FALSE, out.width = "75%", fig.cap = "An interaction plot built up from its individual components."}
+```{r F78, echo = FALSE, out.width = "75%", fig.cap = "An interaction plot built up from its individual components. Need to add letters to plots."}
 
 ################################################################################
 ### Figure 7.8
@@ -610,11 +610,11 @@ Notice that the interaction effect has different signs when added to the same li
 knitr::include_graphics("../images/interactionplot.png")
 ```
 
-Recovering the predicted group means using the model coefficients is straightforward, but a bit tedious: We must now either add or subtract the value of the interaction term (`A1:G1`) from each group. We can easily determine which to do for this model because the sign on the interaction term is the product of the signs on the relevant 'main effects' terms. So, two positive or negative signs result in a positive interaction term, while a mismatched positive and negative term results in a negative interaction. Another trick is to remember that a single sign flip changes one side of the interaction while a double sign flip changes both. For example, `A1:G1` represents the first level of the age and gender factors, adult females. If we flip the sign to `-A1:G1`, this now represents both adult males *and* female children. Below, we use the `hypothesis` function provided in `brms` to reconstruct expected group means given the fixed effects above. The fourth hypothesis we are testing below is the simplest to understand, so we will start there. This hypothesis asks whether the sum of the `Intercept`, `A1` (the effect for adultness), `G1` (the effect for femaleness), and `A1:G1` (the interaction of adult and female). Because of the specific parameters we combined, this results in the comparison of the 'woman' mean height to zero. The first hypothesis we are testing below says `Intercept + -A1 + -G1 + A1:G1 = 0`. Since we have flipped the sign on `A1` and `G1`, these now correspond to the effects of 'child' and 'male'. Since both `A1` and `G1` are negative, we flip the sign on the interaction term twice and it remains positive Note that for all of our hypotheses below, the sign on the interaction terms always depends on the signs of the corresponding main effects terms. By comparing our recovered group means to we can see that the inclusion of an interaction term allows our model to capture group averages more accurately than the model without intercepts.
+Recovering the predicted group means using the model coefficients is straightforward, but a bit tedious: We must now either add or subtract the value of the interaction term (`A1:G1`) from each group. We can easily determine which to do for this model because the sign on the interaction term is the product of the signs on the relevant 'main effects' terms. So, two positive or negative signs result in a positive interaction term, while a mismatched positive and negative term results in a negative interaction. Another trick is to remember that a single sign flip changes one side of the interaction while a double sign flip changes both. For example, `A1:G1` represents the first level of the age and gender factors, adult females. If we flip the sign to `-A1:G1`, this now represents both adult males *and* female children. Below, we use the `hypothesis` function provided in `brms` to reconstruct expected group means given the fixed effects above. The fourth hypothesis we are testing below is the simplest to understand, so we will start there. This hypothesis asks whether the sum of the `Intercept`, `A1` (the effect for adultness), `G1` (the effect for femaleness), and `A1:G1` (the interaction of adult and female). Because of the specific parameters we combined, this results in the comparison of the 'woman' mean height to zero. The first hypothesis we are testing below says `Intercept + -A1 + -G1 + A1:G1 = 0`. Since we have flipped the sign on `A1` and `G1`, these now correspond to the effects of 'child' and 'male'. Since both `A1` and `G1` are negative, we flip the sign on the interaction term twice and it remains positive. Note that for all of our hypotheses below, the sign on the interaction terms always depends on the signs of the corresponding main effects terms. 
+
+By comparing our recovered group means to we can see that the inclusion of an interaction term allows our model to capture group averages more accurately than the model without intercepts by representing the differing effect for gender across levels of age (and age across levels of gender).
 
 ```{r, collapse = TRUE}
-# actual data means
-tapply (height_exp$height, height_exp$C, mean)
 # intercept, boys, girls, men, women
 means_pred_interaction = 
   bmmb::short_hypothesis (model_interaction, 
@@ -622,6 +622,10 @@ means_pred_interaction =
                             "Intercept + -A1 +  G1 + -A1:G1 = 0",
                             "Intercept +  A1 + -G1 + -A1:G1 = 0",
                             "Intercept +  A1 +  G1 +  A1:G1 = 0"))
+
+# actual data means
+tapply (height_exp$height, height_exp$C, mean)
+
 # predictions with no interaction term
 means_pred[,1]
 
@@ -629,13 +633,13 @@ means_pred[,1]
 means_pred_interaction[,1]
 ```
 
-Below we print the estimates of the 'fixed' effects in the model so we can focus on those. If you fit a model like this and are having trouble interpreting it, we would really encourage you to write the coefficient values down and try to recreate expected effects them using pen and paper, focusing on the decomposition of values provided by the regression model. An example of this process will be given below.  
+Below we print the estimates of the 'fixed' effects in the model so we can focus on those. If you fit a model like this and are having trouble interpreting it, we would encourage you to write the coefficient values down and try to recreate expected effects using pen and paper, focusing on the decomposition of values provided by the regression model. We've previously warned againt averaging parameters first and combining them second, however, this approach can be useful for a quick investigation of our model parameters. An example of this process will be given below.  
 
 ```{r, collapse = TRUE}
 brms::fixef (model_interaction)
 ```
 
-For example, we can recover the simple effects for age at the levels of gender. The average apparent height across all groups is 160 cm. There is an age-based 10 cm deviation from the intercept, meaning the difference between adults and children is 20 cm (10 * 2). This means that, overall, the adults and children averages are about 170 and 150 cm (160 ± 10). However, the `A1:G1` interaction is -1.5 cm. This means that when the speaker was female (`G1`), the affect for adultness decreased from 10 cm to 8.5 cm (10 - 1.5, `A1+A1:G1`), meaning the difference across adults and children was 17 cm (`2*8.5`). In contrast, while when the speaker was a male (`-G1`), the affect for adultness increased from 10 cm to 11.5 cm (10+1.5, `A1-A1:G1`), meaning the difference according to age group was about 23 cm. We could instead consider the simple effects for gender given age. There is a gender-based 2.7 cm deviation from the intercept, meaning the difference between adults and children is -5.4 cm (-2.7 * 2). This means that, overall, the female and male averages are about 165.4 and 154.6 cm (160 ± -5.4). However, the `A1:G1` interaction is -1.5 cm. This means that when the speaker was an adult (`A1`) the affect for gender increased in magnitude from -2.7 cm to -4.5 cm (-2.7 - 1.5, `G1+A1:G1`), resulting in a difference between groups of about 9 cm. Finally, when the speaker was a child (`-A1`), the effect for gender decreased in magnitude from -2.7 cm to 1.2 cm (-2.7+1.5, `G1-A1:G1`), resulting in a difference in groups of about 2.4 cm based on apparent gender. 
+First, we will recover the simple effects for age at the levels of gender. The average apparent height across all groups is 160 cm. There is an age-based 10 cm deviation from the intercept, meaning the difference between adults and children is 20 cm (10 * 2). This means that, overall, the adult and child averages are about 170 and 150 cm (160 ± 10). However, the `A1:G1` interaction is -1.5 cm. This means that when the speaker was female (`G1`), the affect for adultness decreased from 10 cm to 8.5 cm (10 - 1.5, `A1+A1:G1`), meaning the difference across women and girls was 17 cm (`2*8.5`). In contrast, while when the speaker was a male (`-G1`), the affect for adultness increased from 10 cm to 11.5 cm (10+1.5, `A1-A1:G1`), meaning the difference between boys and men was about 23 cm. We could instead consider the simple effects for gender given age. There is a gender-based 2.7 cm deviation from the intercept, meaning the difference between adults and children is -5.4 cm (-2.7 * 2). This means that, overall, the female and male averages are about 154.6 and 165.4 cm respectively (160 ± -5.4). However, the `A1:G1` interaction is -1.5 cm. This means that when the speaker was an adult (`A1`) the effect for gender increased in magnitude from -2.7 cm to -4.5 cm (-2.7 - 1.5, `G1+A1:G1`), resulting in a difference between groups of about 9 cm. Finally, when the speaker was a child (`-A1`), the effect for gender decreased in magnitude from -2.7 cm to 1.2 cm (-2.7+1.5, `G1-A1:G1`), resulting in a difference in groups of about 2.4 cm based on apparent gender. 
 
 Below we carry out these same calculations using our hypothesis function. In each case, we take the main effect and add or subtract the interaction in order to estimate the simple effects.
 
@@ -654,16 +658,16 @@ simple_effects
 
 ### Assessing model fit: Bayesian $R^2$
 
-We can asses model fit for the model including interaction terms by making more posterior predictions with our new model. We will focus on the average predictions for each data point since our objective is to see to what extend the fixed effects can represent the patterns in the data. 
+We can asses the fit for our model including interaction terms by making more posterior predictions with our new model. We will focus on the average predictions for each data point since our objective is to see to what extent the fixed effects can represent the patterns in the data. 
 
 ```{r, cache = TRUE, collapse = TRUE}
 y_post_pred_int = predict (model_interaction)
 y_post_pred_no_re_int = predict (model_interaction, re_formula = NA)
 ```
 
-Below we compare our data, the predictions of our original model, and the predictions of our model that includes interactions (both models with no random effects). Whereas the model with no interactions enforced parallelism on the simple effects, our new model is able to capture the interaction in our data by representing different effects for gender at different levels of age (and vice versa). 
+In figure \@ref(fig:F79) we compare our data, the predictions of our original model, and the predictions of our model that includes interactions (both models with and without random effects). Whereas the model with no interactions enforced parallelism on the simple effects, our new model is able to capture the interaction in our data by representing different effects for gender at different levels of age (and vice versa). Although both of our models are able to capture the pattern in the data when random effects are included, only one of these is able to do so with its fixed effect structure. 
 
-```{r F79, fig.height=5,fig.width=8,fig.cap="Interaction plots showing comparing our f0 data to posterior predictions, with and without interaction terms (neither contains Random Effects)."}
+```{r F79, fig.height=5,fig.width=8,fig.cap="--."}
 
 ###############################################################################
 ### Figure 7.9
@@ -720,7 +724,11 @@ The comparison suggests a large difference between the models, but also substant
 brms::loo_compare (model_both, model_interaction)
 ```
 
-To some extent the difference may appear to be smaller than it is because our random effects do a good job of explaining listener and speaker-dependent deviations from the expectations set out by the fixed effects. To quantify how well our models fit our data we can use **Bayesian $R^2$**. The account of Bayesian $R^2$ presented here is a summary of the proposal outlined in Gelman (cite). $R^2$ is a measure of model fit that breaks down the total variance in your dependent variable into two parts: 1) The variance that your model can explain, and 2) the variance that your model *cannot* explain, the residual. This is shown in \@ref(eq:79). The discussion of $R^2$ to follow assumes that your model involves either Gaussian or t-distributed errors and a continuous dependent variable. 
+To some extent the difference may appear to be smaller than it is because our random effects do a good job of explaining listener and speaker-dependent deviations from the expectations set out by the fixed effects. Explaining things with 'random' effects is less useful for understanding the general properties in your data. If we were to replicate this experiment with new speakers and listeners we would expect all the random effects to change. However, if the relations between apparent age and gender and apparent height expressed in our model are 'true', we would expect the 'fixed' effects in the replication to be about the same. For this reason it is extremely useful to consider fixed effects prediction in addition to the predictive power of a complete model including both fixed and random effects.
+
+To quantify how well our models fit our data we can use **Bayesian $R^2$**. There are potentially different ways to define $R^2$ in a Bayesian context. The account of Bayesian $R^2$ presented here is a summary of the proposal outlined in Gelman (cite). In addition, the discussion of $R^2$ to follow assumes that your model involves either Gaussian or t-distributed errors and a continuous dependent variable. 
+
+$R^2$ is a measure of model fit that breaks down the total variance in your dependent variable into two parts: 1) The variance that your model can explain, and 2) the variance that your model *cannot* explain, the residual. This is shown in \@ref(eq:79). 
 
 $$
 \begin{equation}
@@ -738,7 +746,7 @@ R^2 = \frac{ \sigma^2_{explained} }{ \sigma^2_{total} } = \frac{ \sigma^2_{expla
 \end{equation}
 $$
 
-To make $R^2$ a *Bayesian* $R^2$, we need to incorporate the posterior distribution of parameter values into our estimation, as shown in \@ref(eq:711). For every posterior sample of parameter values $s$ (from $S$ total samples) we calculate the variance in the predicted values ($\hat{y}$) of the dependent variable for our $N$ data points ($V_{n=1}^N \; \hat{y}^s_n$) and the variance of the residual error for our $N$ data points ($V_{n=1}^N \; \hat{e}^s_n$).
+To make $R^2$ a *Bayesian* $R^2$, we need to incorporate the posterior distribution of parameter values into our estimation. This is done, in part, by calculating a value of $R^2$ for every individual set of posterior samples, as shown in \@ref(eq:711). For every posterior sample of parameter values $s$ (from $S$ total samples) we calculate: 1) The variance in the predicted values ($\hat{y}$) of the dependent variable for our $N$ data points ($V_{n=1}^N \; \hat{y}^s_n$), and 2) the variance of the residual error for our $N$ data points ($V_{n=1}^N \; \hat{e}^s_n$).
 
 $$
 \begin{equation}
@@ -747,7 +755,7 @@ R^2_s = \frac{V_{n=1}^N \; \hat{y}^s_n}{ V_{n=1}^N \; \hat{y}^s_n + V_{n=1}^N \;
 \end{equation}
 $$
 
-The residual error is the difference between predicted and observed values for each data point, shown in \@ref(eq:711).
+The residual error is the difference between predicted ($\hat{y}$) and observed ($y$) values for each data point, shown in \@ref(eq:711).
 
 $$
 \begin{equation}
@@ -756,14 +764,14 @@ $$
 \end{equation}
 $$
 
-The `brms` package includes a function called `bayes_R2` that helps you calculate Bayesian $R^2$ for `brm` models. However, we are going to use the `bayes_r2` function from the `bmmb` package instead because this function allows for control over the fixed effects included in the prediction. Below we calculate $R&2$ for the models we fit this chapter. 
+This results in a *distribution* of $R62$ values, unlike more 'traditional' estimates of $R^2$ that result in point estimates. The `brms` package includes a function called `bayes_R2` that helps you calculate Bayesian $R^2$ for `brm` models. However, we are going to use the `r2_bayes` function from the `bmmb` package instead because this function allows you to modify (or omit) the fixed effects included in the prediction. Below we calculate $R^2$ for the models we fit this chapter. 
 
 ```{r, cache = TRUE}
 r2_both = r2_bayes(model_both)
 r2_interaction = r2_bayes(model_interaction)
 ```
 
-We can inspect the output and see that they have very similar values. 
+We can inspect the output and see that they have very similar values. This is not surprising given their similarities seen in figure \@ref(fig:F79). 
 
 ```{r}
 r2_both
@@ -778,7 +786,7 @@ r2_both_no_re = r2_bayes(model_both, re_formula = NA)
 r2_interaction_no_re = r2_bayes(model_interaction, re_formula = NA)
 ```
 
-Now a comparison suggests a more substantial difference between the models. 
+Now a comparison reveals a more substantial difference in explanatory power between the models. 
 
 ```{r}
 r2_both_no_re
@@ -786,7 +794,7 @@ r2_both_no_re
 r2_interaction_no_re
 ```
 
-Figure \@ref(fig:F710) compares our $R^2$ values with and without random effects. These values sort of just formalize what we saw in our interaction plots in figure \@ref(fig:F79), that the interaction term helps model fit a lot of we consider only the model fixed effects structure. 
+Figure \@ref(fig:F710) compares our $R^2$ values with and without random effects. These values just formalize what we saw in our interaction plots in figure \@ref(fig:F79), that the interaction term helps model fit in a noticeable way if we only consider the model fixed effects structure. 
 
 ```{r  F710, fig.height=3,fig.width=8,fig.cap="."}
 
@@ -801,13 +809,13 @@ bmmb::brmplot(rbind(r2_both_no_re,r2_interaction_no_re), ylim = c(.25,.7),
               labels = c("No Int.","With Int."))
 ```
 
-In our situation we would rather explain as much as possible using fixed as opposed to random effects. In addition the interactions 'makes sense' given our domain knowledge. What we mean by the is that we know that the difference in veridical height between boys and girls 10-12 years old is inconsistent and may be about zero on average. So, we should not be too surprised if the effect for apparent gender on apparent height is smaller for children. However, there is a larger and more consistent difference in average veridical height between adult males and females. As a result, we do expect a meaningful effect for apparent gender on the apparent heights of adults. For these reasons, we prefer the model with the interaction despite the only middling support provided by our cross-validation model comparison. 
+In our situation we would rather explain as much as possible using fixed as opposed to random effects. In addition, the interactions 'makes sense' given our domain knowledge. What we mean by the is that we know that the difference in veridical height between boys and girls 10-12 years old is inconsistent and may be about zero on average. So, we should not be too surprised if the effect for apparent gender on apparent height is smaller for children. However, there is a larger and more consistent difference in average veridical height between adult males and females. As a result, we do expect a meaningful effect for apparent gender on the apparent heights of adults. For these reasons, it would be surprising if there were *not* an interaction, and we prefer the model with the interaction despite the only middling support provided by our cross-validation model comparison. 
 
 ## Answering our research questions
 
-The discussion below will involve our model which includes an intercept (`model_intercept`). Our results indicate that the average apparent height across all speaker groups (i.e. the intercept) was 160 cm (s.d. = 1.1, 95% C.I = [157.8, 162.1]). We also found an average effect of 10.1 cm for apparent speaker age (s.d. = 1.1, 95% C.I = [7.9, 12.3]) and -2.7 cm for apparent speaker gender (s.d. = 0.6, 95% C.I = [-3.9, -1.6]). In addition, we found an interaction between the effects of apparent gender and apparent gender on apparent heights (mean = -1.4, s.d. = 0.4, 95% C.I = [-2.1, -0.7]). The result of these effects are that adults were perceived as taller than children and males were perceived as taller than males. However, the difference in apparent height due to gender was larger for adults than for children (or the effect for age was larger for males than for females). Figure \@ref(fig:F711) presents the model fixed effect other than the intercept (which is too large to plot in this range). 
+The results (based on `model_interaction`) indicate that the average apparent height across all speaker groups (i.e. the intercept) was 160 cm (s.d. = 1.1, 95% C.I = [157.8, 162.1]). We also found an average effect of 10.1 cm for apparent speaker age (s.d. = 1.1, 95% C.I = [7.9, 12.3]) and -2.7 cm for apparent speaker gender (s.d. = 0.6, 95% C.I = [-3.9, -1.6]). In addition, we found an interaction between the effects of apparent gender and apparent gender on apparent heights (mean = -1.4, s.d. = 0.4, 95% C.I = [-2.1, -0.7]). The result of these effects are that adults were perceived as taller than children and males were perceived as taller than males. However, the difference in apparent height due to gender was larger for adults than for children (and the effect for age was larger for males than for females). Figure \@ref(fig:F711) presents the model fixed effects other than the intercept (whose value is too large to plot in this range). 
 
-The fixed effects all have 95% credible intervals that do not overlap with zero. By convention, this has historically been thought of as indicating that the effect is 'real'. In contrast, when the 95% (or some other) credible interval of an effect overlaps with zero, researchers will often conclude that this effect is not 'real', i.e. that it is equal to zero. Gelman (cite) notes that effects are rarely exactly equal to zero, and that an inability to conclusively distinguish the value of an effect from zero is not the same thing as thinking that the most probable value of an effect is exactly zero. As a result, rather than focusing on whether any given interval crosses zero or not, Gelman (cite) recommends thinking about data analysis in terms of avoiding **type S** and **type M** errors. Type S (sign) errors occur when you think an effect is negative but its actually positive (or vice versa). A type M (magnitude) error is when you think an effect is large but its actually small (or vice versa). Focusing on type M and S errors rather than whether an interval crosses zero forces researchers to focus on the magnitude of the predictor, its practical importance, and the uncertainty involved in the estimate. That being said, if a parameter has a 'large' magnitude (in the context of the dependent variable) and a 'small' amount of uncertainty (relative to the magnitude), this predictor is likely to be important for understanding the dependent variable in the context of your model.  
+The fixed effects all have 95% credible intervals that do not overlap with zero. By convention, this has historically been thought of as indicating that the effect is 'real', as in not equal to zero. In contrast, when the 95% (or some other) credible interval of an effect overlaps with zero, researchers will often conclude that this effect is not 'real', i.e. that it is exactly equal to zero. Gelman (cite) notes that effects are rarely exactly equal to zero, and that an inability to conclusively distinguish the value of an effect from zero is not the same thing as thinking that the most probable value of an effect is exactly zero. As a result, rather than focusing on whether any given interval crosses zero or not, Gelman (cite) recommends thinking about data analysis in terms of avoiding **type S** and **type M** errors. Type S (sign) errors occur when you think an effect is negative but its actually positive (or vice versa). A type M (magnitude) error is when you think an effect is large but its actually small (or vice versa). Focusing on type M and S errors rather than whether an interval crosses zero forces researchers to focus on the magnitude of the predictor, its practical importance, and the uncertainty involved in the estimate. That being said, if a parameter has a 'large' magnitude (in the context of the dependent variable) and a 'small' amount of uncertainty (relative to the magnitude), this predictor is likely to be important for understanding the dependent variable in the context of your model.  
 
 ```{r F711, fig.height=3,fig.width=8,fig.cap="."}
 
@@ -815,45 +823,53 @@ The fixed effects all have 95% credible intervals that do not overlap with zero.
 ### Figure 7.10
 ##############################################################################
 
-par (mfrow = c(1,2), mar = c(4,4,1,1))
-layout (mat = t(c(1,2)), widths= c(.4,.6))
-brmplot (fixef(model_interaction)[-1,])
-brmplot (pairwise_diffs,labels = c("b-g","b-w","b-m","g-w","g-m","w-m"))
-
-
-```
-
-Figure \@ref(fig:F711) also presents the difference between all four apparent speaker groups (boys, girls, women, and men). The difference between group means is calculated by extracting the samples from the group means we reconstructed in section 7.X (`means_pred_interaction`). The result of this is a matrix with four columns, each representing a group effect. The individual posterior samples differ along rows. To find the difference between group means between each pairs of groups, we subtract the columns representing the group effects and inspect the distribution of the differences. This process is shown below and the distribution of pairwise group differences in presented in figure \@ref(fig:F711).
-
-```{r}
 C = attributes(means_pred_interaction)$samples
 
 pairwise_diffs = cbind(C[,1]-C[,2],C[,1]-C[,3],C[,1]-C[,4],
                        C[,2]-C[,3],C[,2]-C[,4],C[,3]-C[,4])
 
 pairwise_diffs_summary = posterior_summary(pairwise_diffs)
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+layout (mat = t(c(1,2)), widths= c(.4,.6))
+brmplot (fixef(model_interaction)[-1,])
+brmplot (pairwise_diffs_summary,labels = c("b-g","b-w","b-m","g-w","g-m","w-m"))
 ```
 
-We can think about these differences in the context of our type M and S errors. All of the group differences (save for boy-girl) have values of about 10 cm or greater, which is a substantial difference in human height. In addition, the credible intervals around these differences are small relative to their magnitudes. From this we can conclude that these differences are unlikely to *really* by the opposite sign (a type S error). In addition, since the group differences (save for boy-girl) are mostly large and the credible intervals do not go anywhere near zero, these differences seem unlikely to actually be some small and insignificant value near zero (a type S error). Ok, so what about the boy-girl difference? We present this difference in more detail below.    
+Figure \@ref(fig:F711) also presents the pairwise difference between all four apparent speaker groups (boys, girls, women, and men). The difference between group means is calculated by extracting the samples from the group means we reconstructed in section 7.X (`means_pred_interaction`). The result of this is a matrix with four columns, each representing a group effect, with individual posterior samples differing along rows. To find the difference between group means between each pairs of groups, we subtract the columns representing the group effects and inspect the distribution of the differences. This process is shown below and the distribution of pairwise group differences in presented in figure \@ref(fig:F711).
+
+
+```{r}
+C = attributes(means_pred_interaction)$samples
+
+pairwise_diffs = cbind("b-g"=C[,1]-C[,2],"b-w"=C[,1]-C[,3],"b-m"=C[,1]-C[,4],
+                       "g-w"=C[,2]-C[,3],"g-m"=C[,2]-C[,4],"w-m"=C[,3]-C[,4])
+
+pairwise_diffs_summary = posterior_summary(pairwise_diffs)
+```
+
+We can think about these differences in the context of our type M and S errors. All of the group differences (save for boy-girl) have values of about 10 cm (or more), which is a meaningful (and noticeable) difference in human height. In addition, the credible intervals around these differences are small relative to their magnitudes. From this we can conclude that these differences are unlikely to *really* by the opposite sign (a type S error). In addition, since the group differences (save for boy-girl) are mostly large and the credible intervals do not go anywhere near zero, these differences seem unlikely to actually be some small and insignificant value near zero (a type S error). Ok, so what about the boy-girl difference? We present different ways to think about this difference below.    
 
 ```{r, collapse = TRUE}
 # summary 
 pairwise_diffs_summary[1,]
 
-# some relevant quantiles, 2.5%, 25%, 50%, 75%, 97.5%
+# some relevant quantiles, 5%, 25%, 50%, 75%, 95%
 quantile (pairwise_diffs[,1], probs = c(0.05,.25,.5,.75,0.95))
 
 # percent greater than zero
 mean (pairwise_diffs[,1] > 0)
 ```
 
-Here we see a situation where the 95% credible interval overlaps with zero. Does this mean there is no difference between the groups, i.e. $\mu_{boy}=\mu_{girl}$? Not exactly. It means there is a 0.95 probability that the parameter falls within this interval given your data and the structure of your model. We might have chosen a 90% credible interval and said the parameter has a 0.9 probability of falling between  probability of 0.5 of falling between 0.043 and 5.04. We might also consider the fact that under replication, or given a slightly different parametrization of the model, the credible interval around the difference might be slightly different. For example consider a replication of our experiment that found an mean and 95% credible interval of 2.97 and [0.02, 5.94] respectively, rather than our values of 2.57 and [-0.38, 5.54]. Would such a difference constitute a successful replication or an opposite finding? If we focus on whether intervals cross zero to decide if they are 'real', we might decide that these experiments do not agree: We found no difference in our experiment but the replication did find a difference. In contrast, if we focus on the sign and magnitude of the effect and the uncertainty around the estimate, the two experiments paint largely the same difference and suggest a smallish positive difference between groups with a relatively large amount of uncertainty in the estimate. Finally, we might consider how likely the difference is to really be negative when we think its positive. We can see that only 4.6% (`1-0.95375`) of the distribution is negative suggesting that the difference is unlikely to be negative. So, even if we do think it may be a small value it seems more likely to be a small *positive* value than a small *negative* value. 
+Here we see a situation where the 95% credible interval overlaps with zero. Does this mean there is no difference between the groups, i.e. $\mu_{boy}=\mu_{girl}$? Not exactly. It means there is a 0.95 probability that the parameter falls within this interval given your data and the structure of your model. We might have chosen a 90% credible interval and said the parameter has a 0.9 probability of falling between 0.043 and 5.04. We might also consider the fact that under replication, or given a slightly different parametrization of the model, the credible interval around the difference might be slightly different. For example consider a replication of our experiment that found an mean and 95% credible interval of 2.97 and [0.02, 5.94] respectively, rather than our values of 2.57 and [-0.38, 5.54]. This would be an interval of the same width shifted over by only 0.4 cm, a miniscule amount. Would such a difference constitute a successful replication or an opposite finding? If we focus on whether intervals cross zero to decide if they are 'real', we might decide that these experiments do not agree: We found no difference in our first experiment but the replication did find a difference. In contrast, if we focus on the sign and magnitude of the effect and the uncertainty around the estimate, the two experiments paint largely the same picture and suggest a smallish positive difference between groups with a relatively large amount of uncertainty in the estimate. Finally, we might consider how likely the difference is to really be negative when we think its positive. We can see that only 4.6% (`1-0.95375`) of the distribution is negative suggesting that the difference is unlikely to be negative. So, even if we do think it may be a small value it seems more likely to be a small *positive* value than a small *negative* value. 
 
-We might wonder, under what conditions can we accept that an effect or group difference is actually equal to zero. If the 95% (or some other high number) credible interval is relatively narrow and centered around zero, it may very well be zero. It may also be a small number that has no practical effect on your dependent variable so that it doesn't really matter even if its not exactly equal to $0.0000000...$. In either case, a coefficient with a narrow interval (roughly) centered at zero may not have an important role in the way you interpret your model in order to tell the 'story' of your data. In our case, we will conclude that this difference is likely to be 'real' and likely reflect stereotypes that male speakers are generally taller than female speakers, whether or not this is actually true for speakers of this age. We might also suggest that if we want to know more about the precise value of this difference, future research might investigate this question with a larger number of speakers, listeners, or repetitions. By increasing the sample size, researchers would narrow the parameter likelihoods (diuscussed in section 2.X) thereby narrowing their posterior credible intervals (given new data thats roughly the same as the data we have). 
+We might wonder, under what conditions can we accept that an effect or group difference is actually equal to zero. If the 95% (or some other high number) credible interval is relatively narrow and (more or less) centered around zero, the parameter value may very well be zero. It may also be a small number that has no practical effect on your dependent variable so that it doesn't really matter even if its not exactly equal to $0.0000000...$. In either case, a coefficient with a narrow interval (roughly) centered at zero may not have an important role in the way you interpret your model in order to tell the 'story' of your data. However, it is *extremely* important to keep in mind that under a different parametrization of your model, or given a slightly different experimental design, it is possible that the parameter may exhibit a clearly non-zero value. 
+
+In our case, we will conclude that this difference in apparent height between boys and girls is likely to be 'real' and likely reflect stereotypes that male speakers are generally taller than female speakers, whether or not this is actually true for speakers of this age. We might also suggest that if we want to know more about the precise value of this difference, future research might investigate this question with a larger number of speakers, listeners, or repetitions. By increasing the sample size, researchers would narrow the parameter likelihoods (diuscussed in section 2.X) thereby narrowing their posterior credible intervals (given new data thats roughly the same as the data we have). 
 
 ## Frequentist corner
 
-### Bayesian multilevel modesl vs. lmer
+### Bayesian multilevel models vs. lmer
 
 This is going to be a short one. The main shortcoming when it comes to `lmer` and fitting ANOVA-type models, is that there is no easy way to compare group effects within the model. For example, we can fit the model below which encodes the difference between each group mean and the overall mean.
 

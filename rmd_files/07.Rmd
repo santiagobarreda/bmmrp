@@ -190,9 +190,7 @@ points (means - mean(means), pch=4,lwd=2, col=cols[1:4],cex=3)
 brmplot (comparisons, col=cols[5:6])
 ```
 
-## Investigating many factors simultaneously: Analysis of Variance
-
-**ANOVA** (the *AN*alysis *O*f *VA*riance) is a set of models and methods and methods used to summarize and 'decompose' larger models into their constituent parts. When used to refer to specific statistical tests, ANOVA is one of the oldest statistical approaches still in use today. However, we will not be discussing 'traditional' ANOVA here. Instead, we will be focusing on the 'modern' use of ANOVA, focusing on the principles of breaking down large problems into independent sources of variation.  Here, we will present a general introduction into how ANOVA principles can be applied to modern Bayesian multilevel models. For a more in-depth treatment please see gelman (cite anova).
+## Investigating multiple factors simultaneously
 
 Our model above had a single factor with four groups/levels. Another way to look at it is that the model predicted variation along a single **dimension**, that is a single piece of information that can be used to distinguish our groups. However, we can categorize people (or observations) along multiple dimensions simultaneously. So, a speaker may be an adult *and* female, and not just adult *or* female. This is because adultness and gender are independent characteristics (dimensions) and the value of one does not determine the value of the other. In our height experiment we effectively asked listeners to make two binary classifications: Is the listener an adult or a child? Is the listener female or male? This means we think of our four groups as varying along two dimensions, each represented by a different factor. However, although we know this our model doesn't, it think we just have four groups that have no logical internal distinctions. Crossing factors results in $n_A \times n_B$ individual groups for two factors ($A$ and $B$) with $n_A$ and $n_B$ number of levels each. Since we have two factors with two levels each, crossing age and gender results in four unique groups: Boys, girls, men, and women. 
 
@@ -253,7 +251,7 @@ $$
 \end{equation}
 $$
 
-The above is what can be referred to as an 'ANOVA-like' decomposition. ANOVA 'decomposes' the variance in your model by breaking it up into parts and assigning them to different sources. We have actually been doing this form the start by making more and more complicated models. Recall that our very first approach (in chapter 3) to understanding variation in apparent height treated all variation as error, and so did not 'decompose' anything. In chapter 4 we added between-listener and speaker variation to the model, and in chapter 5 we added apparent age. Now we include apparent age and gender, listener specific effects and intercepts, and speaker specific intercepts. There is a fixed amount of variation in our dependent variable. Every tiny bit of variance that these added components explain takes away from the error variance, and potentially also from the other components that had previously been in the model. As our models get more complicated, it becomes necessary to have a systematic approach to considering, and comparing, all of the sources of variation in our data, and ANOVA can provide such a framework. Our updated model description is provided in \@ref(eq:74). 
+The above can be thought of as a 'decomposition' of the variance in your model by breaking it up into parts and assigning them to different sources. We have actually been doing this form the start by making more and more complicated models. Recall that our very first approach (in chapter 3) to understanding variation in apparent height treated all variation as error, and so did not 'decompose' anything. In chapter 4 we added between-listener and speaker variation to the model, and in chapter 5 we added apparent age. Now we include apparent age and gender, listener specific effects and intercepts, and speaker specific intercepts. There is a fixed amount of variation in our dependent variable. Every tiny bit of variance that these added components explain takes away from the error variance, and potentially also from the other components that had previously been in the model. Our updated model description is provided in \@ref(eq:74). 
 
 $$
 \begin{equation}
@@ -508,7 +506,7 @@ As noted in the last chapter, you cannot estimate interactions of factors are no
 
 ### Description of our model
 
-[@@ SB - address why we always include random effects, talk about how we will mention it later in anova chapter and refer to increased interval in chapter 6 and not including is potentially misleading.]
+[@@ SB - address why we always include random effects? talk about how we will mention it later in anova chapter and refer to increased interval in chapter 6 and not including is potentially misleading.]
 
 Luckily, the model presented above (`model_both`) requires only a slight tweak to include a term representing the interaction in our data. There are two ways to include interactions in R model formulas, either:
 
@@ -871,7 +869,7 @@ In our case, we will conclude that this difference in apparent height between bo
 
 ### Bayesian multilevel models vs. lmer
 
-This is going to be a short one. The main shortcoming when it comes to `lmer` and fitting ANOVA-type models, is that there is no easy way to compare group effects within the model. For example, we can fit the model below which encodes the difference between each group mean and the overall mean.
+This is going to be a short one. The main shortcoming when it comes to usin `lmer` to fit models including factors with many levels is that there is no easy way to compare group effects within the model. For example, we can fit the model below which encodes the difference between each group mean and the overall mean.
 
 ```{r, collapse = TRUE}
 lmer_four_groups = lme4::lmer (height ~ C + (C|L) + (1|S), data = height_exp)

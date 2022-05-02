@@ -43,14 +43,14 @@ Smaller things tend vibrate at higher rates than larger things. This holds for v
 ### Figure 1.1
 ################################################################################
 
-data(height_data, package="bmmb")
+data(height_exp_old, package="bmmb")
 
 par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
 
-plot (height_data$age[height_data$gender=="f"],height_data$height[height_data$gender=="f"],
+plot (height_exp_old$age[height_exp_old$gender=="f"],height_exp_old$height[height_exp_old$gender=="f"],
       pch=16,col=2,lwd=2,cex=1.5, ylim = c(80,190),type='b', xlab="Age (years)",
       ylab = "Height (cm)",xlim=c(0,21),cex.axis=1.3,cex.lab=1.3)
-lines (height_data$age[height_data$gender=="m"],height_data$height[height_data$gender=="m"],
+lines (height_exp_old$age[height_exp_old$gender=="m"],height_exp_old$height[height_exp_old$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
@@ -119,26 +119,26 @@ The data associated with this experiment is available in the `bmmb` package (dis
 
 ```{r, collapse = TRUE, messages=FALSE,warning=FALSE}
 library ("bmmb")
-data (height_exp)
+data (height_exp_old)
 ```
 
-The code above loads our data and places it into our workspace in an object called `height_exp`. Below we use the `head` function see the first six lines of the data for the experiment. Our data is in *long* format so each row is a different individual observation and each column is a different piece of information regarding that observation. Each individual trial (a single row) represents an individual listener's response to a single stimulus word played to them. So, we know that this data frame has 4170 rows to represent the 4170 observations in our data. 
+The code above loads our data and places it into our workspace in an object called `height_exp_old`. Below we use the `head` function see the first six lines of the data for the experiment. Our data is in *long* format so each row is a different individual observation and each column is a different piece of information regarding that observation. Each individual trial (a single row) represents an individual listener's response to a single stimulus word played to them. So, we know that this data frame has 4170 rows to represent the 4170 observations in our data. 
 
 ```{r, collapse = TRUE}
 # see first 6 rows
-head (height_exp)
+head (height_exp_old)
 ```
 
 If this were data that you collected and wanted to analyze, you would likely have it somewhere on your hard drive in a csv file, or some equivalent data file. If you were to open this data in Excel (or a similar software) you would see your data arranged in rows and columns. Below we write our data out as a csv file so that we can have a look at it outside of R. 
 
 ```{r, collapse = TRUE, eval = FALSE}
-write.csv (height_exp, "height_exp.csv", row.names = FALSE)
+write.csv (height_exp_old, "height_exp_old.csv", row.names = FALSE)
 ```
 
 We can get more information about our data using the `str` function, which tells us that our data is stored in a `data frame`. A **data frame** is a collection of vectors that can be of different types, but which must be of the same length. A **vector** is a collection of elements of the same kind. Below, we see that the `str` function tells us about the vectors comprised by our data frame. 
 
 ```{r, collapse = TRUE}
-str (height_exp)
+str (height_exp_old)
 ```
 
 We see three kinds of vectors in our data: `int` indicating that the vector contains integers, `num` indicating that the vector contains floating point numbers (i.e. numbers that can have decimal points), and `chr` indicating that the vector contains elements made up of characters (i.e. letters or words), or numbers being treated as if they were letters (i.e. as symbols with no numeric value). For example our data contains a column called `height` that contains the numeric values 122, 132, 129, 156, 141, and so on. The information represented in each column is:
@@ -167,48 +167,48 @@ We see three kinds of vectors in our data: `int` indicating that the vector cont
 
 We can access the individual vectors that make up our data frame in many ways. One way is to add a `$` after the name of our data frame, and then write the name of the vector after. This is shown below for our vector of heights. 
 ```{r, collapse = TRUE, eval = FALSE}
-height_exp$height
+height_exp_old$height
 ```
 
 Calling the command above will write out the entire vector to your screen, all 2780 observations of height responses that make up our data. Using the `head` function will show you the first six elements of an object, and you can get specific elements of the vector using brackets as shown below. 
 
 ```{r, collapse = TRUE}
 # show the first six
-head (height_exp$height)
+head (height_exp_old$height)
 
 # show the first element
-height_exp$height[1]
+height_exp_old$height[1]
 
 # show elements 2 to 6
-height_exp$height[2:6]
+height_exp_old$height[2:6]
 ```
 
 Below, we use two sets of brackets to retrieve the height vector using its position in the data frame (first example), or its name (second example). 
 
 ```{r, collapse = TRUE}
-head( height_exp[[3]] )
+head( height_exp_old[[3]] )
 
-head( height_exp[["height"]] )
+head( height_exp_old[["height"]] )
 ```
 
 We can also retrieve the height vector by using a single set of parentheses as shown below. This method relies on treating the data frame as a matrix whose elements are arranged on a grid. Each element of the grid can then be accessed by providing x and y grid coordinates in single brackets as in `[x,y]`. Below we retrieve the entire third column by specifying a column number (or name) but leaving the row number unspecified.  
 
 ```{r, collapse = TRUE}
-head( height_exp[,3] )
+head( height_exp_old[,3] )
 
-head( height_exp[,"height"] )
+head( height_exp_old[,"height"] )
 ```
 
 Below we use the same method to recover the entire first row of the data frame, and then the second element of the first row (or, from another perspective, the first element of the second column).
 
 ```{r, collapse = TRUE}
-height_exp[1,]
-height_exp[1,2]
+height_exp_old[1,]
+height_exp_old[1,2]
 ```
 
 ## Variables
 
-Each of the columns in the `height_exp` data frame can be thought of as a different variable. **Variables** are placeholders for some value, whether we know it or not. For example I can say "my weight is $x$ pounds", or "this data represents a response provided by experimental subject $x$". In our data, our variables take on different values from trial to trial, and the values of these variables tell us about the different outcomes and conditions associated with the trial. In this section we are going to discuss different aspects of variables, especially as they pertain to the analysis of experimental data. 
+Each of the columns in the `height_exp_old` data frame can be thought of as a different variable. **Variables** are placeholders for some value, whether we know it or not. For example I can say "my weight is $x$ pounds", or "this data represents a response provided by experimental subject $x$". In our data, our variables take on different values from trial to trial, and the values of these variables tell us about the different outcomes and conditions associated with the trial. In this section we are going to discuss different aspects of variables, especially as they pertain to the analysis of experimental data. 
 
 ### Populations and samples
 
@@ -229,7 +229,7 @@ Dependent variables can often be **random**, which means their values are not kn
 
 Variables that help predict the response (dependent) variables and are sometimes referred to as independent variables because their values are not considered to depend on those of the other predictors. More specifically, we can say the values of our independent variables are not assumed to depend on the values of the other variables in our experiment within the context of our experiment, or in a manner that directly relates to the relevant research questions. 
 
-Our experiment has two response variables: the apparent height (`height`) reported for each trial, and the apparent speaker category (`C`) reported for each trial. Our experiment also involves several variables that could be used to understand our responses (i.e. every other variable in the data). Whether a variable is dependent or independent depends on the research question and on the structure of the model more than on some inherent property of variables and data. For example, the data in `height_exp` could be used to understand variation in voice pitch (`f0`) across speakers groups. In this case `f0` would be the dependent variable and the veridical speaker category (`C_v`) would be the independent variable. Another researcher may chose to model how perceived height varies as a function of f0 and speaker group. In this case `height` would be the dependent variable and `f0` and `C_v` would be the independent variables.
+Our experiment has two response variables: the apparent height (`height`) reported for each trial, and the apparent speaker category (`C`) reported for each trial. Our experiment also involves several variables that could be used to understand our responses (i.e. every other variable in the data). Whether a variable is dependent or independent depends on the research question and on the structure of the model more than on some inherent property of variables and data. For example, the data in `height_exp_old` could be used to understand variation in voice pitch (`f0`) across speakers groups. In this case `f0` would be the dependent variable and the veridical speaker category (`C_v`) would be the independent variable. Another researcher may chose to model how perceived height varies as a function of f0 and speaker group. In this case `height` would be the dependent variable and `f0` and `C_v` would be the independent variables.
 
 
 ### Categorical variables and 'factors' {#c1-categorical}
@@ -240,40 +240,40 @@ A `factor` is actually a data type in R. It's very similar to a vector of words 
 
 ```{r, collapse = TRUE}
 # see the first 6 observations
-head (height_exp$C_v)   
+head (height_exp_old$C_v)   
 
 # class starts as a character vector
-class (height_exp$C_v)   
+class (height_exp_old$C_v)   
 
 # no numerical values, you will see NAs
-head (as.numeric (height_exp$C_v)) 
+head (as.numeric (height_exp_old$C_v)) 
 
 # we can see the number of unique groups
-unique (height_exp$C_v)  
+unique (height_exp_old$C_v)  
 ```
 
 We can turn the character vector `C_v` into a factor vector `C_v_f`. The benefit of this is that these nominal labels now have associated numerical values. Many R functions turn your nominal (non-numeric) predictors into factors, and doing this yourself gives you control over how this will be handled. 
 
 ```{r, collapse = TRUE}
 # we can turn it into a factor in R
-height_exp$C_v_f = factor(height_exp$C_v) 
+height_exp_old$C_v_f = factor(height_exp_old$C_v) 
 
 # now it has official levels
-levels(height_exp$C_v_f)  
+levels(height_exp_old$C_v_f)  
 
 # now each level has numerical values
-table (height_exp$C_v_f, as.numeric (height_exp$C_v_f))  
+table (height_exp_old$C_v_f, as.numeric (height_exp_old$C_v_f))  
 ```
 
 By default, factor levels are ordered alphabetically. You can control this behavior by re-ordering the factor levels as below:
 
 ```{r, collapse = TRUE}
-height_exp$C_v_f = factor (height_exp$C_v, levels = c('w','m','g','b'))
+height_exp_old$C_v_f = factor (height_exp_old$C_v, levels = c('w','m','g','b'))
 
-levels (height_exp$height_exp)
+levels (height_exp_old$height_exp_old)
 
 # note that 'm' is now the second category
-table (height_exp$C_v_f, as.numeric (height_exp$C_v_f))  
+table (height_exp_old$C_v_f, as.numeric (height_exp_old$C_v_f))  
 ```
 
 Although our factors seem to have an 'order' this is only because items can only be discussed and presented one at a time, and so there must be some order in our nominal variables at some level of organization. For example, when presenting effects and plotting figures, you literally do have to decide to show one effect first and another second. However, the ordering of factors is **exchangeable** meaning it does not in any way affect our analysis. For example, the listeners and speakers in our experiment received unique numbers. However, listener 1 is not the listener who 'most' has the quality of listener, and speaker 8 is not twice the speaker that speaker 4 is. In other words, although we must commit to some order in our factors in order to organize our data, this ordering is arbitrary and not meaningful. 
@@ -346,7 +346,7 @@ sum (c(1,2,3,4,5,6,7,8,9,10) <= 3)
 There is one other very important use for vectors of logical values, and this is to extract subsets of your data that meet certain conditions. Below we create a vector of logical values that indicate whether the f0 for a trial is below 175 Hz or not. We can see that this vector has 4170 elements, one for every row in our data, and that 1290 trials satisfied our condition. This is nothing more than a bigger version of the same process we just carried out above with our `logical_vector`.
 
 ```{r, collapse = TRUE}
-f0_idx = height_exp$f0 < 175
+f0_idx = height_exp_old$f0 < 175
 str (f0_idx)
 sum (f0_idx)
 ```
@@ -354,7 +354,7 @@ sum (f0_idx)
 Recall that we can access individual rows of our data frames by placing this information before a comma, inside brackets following the name of the data frame (as seen below). When we use a logical vector in this way, the effect is to include every row that equals `TRUE` and to omit every row that equals `FALSE` in the vector. Below we use our `f0_idx` vector to create a new data frame called `low_f0` containing only productions with f0 below 175 Hz. 
 
 ```{r, collapse = TRUE}
-low_f0 = height_exp[f0_idx,]
+low_f0 = height_exp_old[f0_idx,]
 str(low_f0)
 max(low_f0$f0)
 ```
@@ -362,7 +362,7 @@ max(low_f0$f0)
 We can use the `!` operator, which basically means 'not' to flip each `TRUE` to `FALSE` (and vice versa). When `f0_idx` is flipped to select a subset of a data frame, the result is to select those rows where speaker f0 is *above* 175 Hz. 
 
 ```{r, collapse = TRUE}
-high_f0 = height_exp[!f0_idx,]
+high_f0 = height_exp_old[!f0_idx,]
 str(high_f0)
 min(high_f0$f0)
 ```
@@ -378,19 +378,19 @@ One of the most useful functions for understanding the distribution of categoric
 We can use this approach to confirm basic expectations about our data, and to rule out problems with the design of the experiment. This is always a good idea since mistakes happen, and sometimes only get noticed when attempting to process the data. For example, if any of the levels below appeared more than or fewer than 278 times, we would have a problem. 
 
 ```{r, collapse = TRUE}
-table (height_exp$L)
+table (height_exp_old$L)
 ```
 
 We can also provide two (or more) factors at a time and the `table` function will return counts for every combination of factor levels. The table below reflects the fact that each listener heard 54 boys, 38 girls, 90 men, and 96 women, for a total of 278 total responses. When you provide multiple factors to `table`, it will vary the first factor along the rows of the table and the second factor along the columns of the table. If a third factor is provided, it makes a different table for factors one and two, for each level of factor three. More and more factors can be provided to the function, but these tables before harder and harder to work with.     
 
 ```{r, collapse = TRUE}
-table (height_exp$C_v, height_exp$L)
+table (height_exp_old$C_v, height_exp_old$L)
 ```
 
 Below we see that unlike our veridical categories, the distribution of *apparent* speaker categories varies across listeners. This is because the equal distribution of speakers for each listener is an aspect of the experimental design. However, how listeners interpreted each voice, whether they though it sounded like a boy or girl for example, may vary across individual listeners. 
 
 ```{r, collapse = TRUE}
-table (height_exp$C, height_exp$L)
+table (height_exp_old$C, height_exp_old$L)
 ```
 
 We can visualize relationships between categorical variables using a mosaic plot. In figure \@ref(fig:F12) we mosaic plots representing the two tables shown immediately above. Mosaic plots use rectangles of different sizes to reflect the relative frequencies of different combinations of categorical variables. For example, in the left mosaic plot we see that the size of the rectangle for each category is identical across listeners. This tells us these variables do not affect each other: changing the listener does not affect the distribution of veridical speaker class in any way. In contrast, the distribution of apparent speaker class is affected by the listener and this is shown in the right plot where columns differ randomly from each other.    
@@ -402,16 +402,16 @@ We can visualize relationships between categorical variables using a mosaic plot
 ################################################################################
 
 par (mfrow = c(1,2), mar=c(4,4,1,1))
-plot (t(table (height_exp$C_v, height_exp$L)), main = '',xlab='Listener', 
+plot (t(table (height_exp_old$C_v, height_exp_old$L)), main = '',xlab='Listener', 
       col = c(deepgreen,lavender,coral,teal),ylab = 'Veridical Speaker Class')
-plot(t(table (height_exp$C, height_exp$L)), main = '',xlab='Listener', 
+plot(t(table (height_exp_old$C, height_exp_old$L)), main = '',xlab='Listener', 
      col = c(deepgreen,lavender,coral,teal),ylab = 'Apparent Speaker Class')
 ```
 
 Below we make a three-dimensional table, and inspect the table and each dimension. Notice that to index the table along the third dimension we need to add two commas inside the brackets. 
 
 ```{r, eval = FALSE,collapse=TRUE}
-tmp_tab = table (height_exp$C, height_exp$L, height_exp$R)
+tmp_tab = table (height_exp_old$C, height_exp_old$L, height_exp_old$R)
 tmp_tab
 tmp_tab[,,1]
 tmp_tab[,,2]
@@ -425,7 +425,7 @@ When we plot the relationship between apparent speaker class, listener, and reso
 ### Figure 1.3
 ################################################################################
 
-tmp_tab = table (height_exp$C, height_exp$L, height_exp$R)
+tmp_tab = table (height_exp_old$C, height_exp_old$L, height_exp_old$R)
 
 par (mfrow = c(1,2), mar=c(4,4,1,1))
 plot (t(tmp_tab[,,1]), main = 'Actual',xlab='Listener', 
@@ -439,13 +439,13 @@ plot(t(tmp_tab[,,2]), main = 'Big',xlab='Listener',
 Using R, we can easily find useful information about any quantitative variable. Below, we calculate the sample mean, the number of observations, the sample standard deviation, and some important quantiles for our speaker height judgments. The **quantiles** of a set of values such that a given percentage of observations fall above and below the value. Quantiles are found by ordering the observations and selecting the observation that is greater than $x\%$ of the sampled values and less than ($(100-x)\%$) of the sampled values. For example, the 50% quantile, also called the **median**, is the value such that 50% of the distribution is below it and 50% is above it, and the 25% quantile (the *first quartile*) is the value such that 25% of the distribution is below it and 75% is above it. 
 ```{r, collapse = TRUE}
 # calculate the mean
-mean (height_exp$height)
+mean (height_exp_old$height)
 
 # find the number of observations
-length (height_exp$height)
+length (height_exp_old$height)
 
 # find quantiles
-quantile (height_exp$height)
+quantile (height_exp_old$height)
 ```
 
 We can use this information to make some basic, and potentially useful statements about our data. The mean and median are 162.8 and 164.8 cm respectively, and height values range from 106.7 to 198.1 cm. However, there are not many observations at the extremes, and 50% of values are between 154.9 and 173.5 cm. We know this because these are the values of the first and third **quartiles**, the 25% quantiles that divide our distribution into four equal parts. Since $75-25=50$, we know that 50% of the distribution of observations must fall inside of these boundaries. 
@@ -459,7 +459,7 @@ The bottom row presents what is knows as a **histogram** of the same data. The h
 ### Figure 1.4
 ################################################################################
 
-mens_height = height_exp$height[height_exp$C_v=='m']
+mens_height = height_exp_old$height[height_exp_old$C_v=='m']
 
 set.seed(7)
 par (mfcol = c(3,2), mar = c(0.5,4,0.5,1), oma = c(4,0,2,0))
@@ -472,11 +472,11 @@ hist (mens_height,main="", col = teal, xlim = c(100, 210),breaks=40,cex.lab=1.3,
 mtext (side =1, outer = FALSE, text = "Height (cm)", line = 3)
 box()
 
-plot (height_exp$height, jitter (rep(1,length(height_exp$height))), xlim = c(100, 210), ylim = c(.95,1.05),
+plot (height_exp_old$height, jitter (rep(1,length(height_exp_old$height))), xlim = c(100, 210), ylim = c(.95,1.05),
       yaxt='n',ylab='', pch = 16, col = yellow, xaxt='n')
 mtext (side =3, outer = FALSE, text = "All apparent heights", line = 1)
-boxplot (height_exp$height, horizontal = TRUE, ylim = c(100, 210), col = coral,xaxt='n')
-hist (height_exp$height,main="", col = teal, xlim = c(100, 210),breaks=40,cex.lab=1.3,
+boxplot (height_exp_old$height, horizontal = TRUE, ylim = c(100, 210), col = coral,xaxt='n')
+hist (height_exp_old$height,main="", col = teal, xlim = c(100, 210),breaks=40,cex.lab=1.3,
       cex.axis=1.3,xlab = "")
 mtext (side =1, outer = FALSE, text = "Height (cm)", line = 3)
 
@@ -491,7 +491,7 @@ box()
 ### Figure 1.5
 ################################################################################
 
-agg_data = aggregate (height~f0+vtl+dur, data = height_exp, FUN=mean)
+agg_data = aggregate (height~f0+vtl+dur, data = height_exp_old, FUN=mean)
 
 pairs (agg_data, col = lavender,pch=16)
 
@@ -516,11 +516,11 @@ To make a set of boxplots for the variable `y`. The function call above will cre
 ################################################################################
 
 par (mfrow = c(1,3), mar = c(3,4,1,1))
-boxplot (f0 ~ C_v, data = height_exp, col = cols[1:4],cex.lab=1.3,cex.axis=1.3,
+boxplot (f0 ~ C_v, data = height_exp_old, col = cols[1:4],cex.lab=1.3,cex.axis=1.3,
          xlab="",ylab="f0 (Hz)")
-boxplot (vtl ~ C_v, data = height_exp, col = cols[5:8],cex.lab=1.3,cex.axis=1.3,
+boxplot (vtl ~ C_v, data = height_exp_old, col = cols[5:8],cex.lab=1.3,cex.axis=1.3,
          xlab="",ylab="Vocal-tract Length (cm)")
-boxplot (dur ~ C_v, data = height_exp, col = cols[1:4],cex.lab=1.3,cex.axis=1.3,
+boxplot (dur ~ C_v, data = height_exp_old, col = cols[1:4],cex.lab=1.3,cex.axis=1.3,
          xlab="",ylab="Duration (ms)")
 ```
 
@@ -528,7 +528,7 @@ Another way to think of the relationships between our categorical and quantitati
 
 ```{r F17, fig.height = 3, fig.width = 8, fig.cap='Speakers plotted according to their fundamental frequency (f0) and vocal-tract length. Letters indicate if speaker is a boy (b), girl (g), man (m), or woman (w).', echo = FALSE}
 
-agg_data = aggregate (cbind(f0,vtl,dur,height)~C_v+S, data = height_exp, FUN=mean)
+agg_data = aggregate (cbind(f0,vtl,dur,height)~C_v+S, data = height_exp_old, FUN=mean)
 
 
 par (mfrow = c(1,1), mar = c(4,4,1,1))

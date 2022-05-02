@@ -20,13 +20,6 @@ Below we load the data and add a column (`A`) that indicates the apparent age of
 library (brms)
 library (bmmb)
 data (height_exp)
-tmp = as.numeric(height_exp$L) * 0 
-count=1
-for (i in c(15,2,1,14,3,13,4,12,5,6,11,10,8,7,9)){
-  tmp[as.numeric(height_exp$L)==i] = count 
-  count = count + 1
-}
-height_exp$L = tmp
 
 notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
 notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
@@ -37,14 +30,14 @@ We recreate figure \ref(fig:F59) as figure \ref(fig:F61) below to show the distr
 ```{r F61, fig.height = 3.5, fig.width=8, fig.cap = "(left) Distribution of apparent heights according to apparent age group. (rght) Same as left panel but presented individually for each listener. In each case, the first box of each color (the upper box) indicates responses for speakers judged to be adults. The horizontal lines running through the figures represent the grand mean (black), the adult mean (blue), and the child mean (green).", echo = FALSE}
 
 ################################################################################
-### Figure 5.9
+### Figure 6.1
 ################################################################################
 
 par (mfrow = c(1,2), mar = c(4.1,.1,.5,.1),oma = c(0,4,0,.50)); layout (mat = t(c(1,2)), widths = c(.2,.8))
 
 boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="")
 mtext (side=1, "Apparent Age Group", line=3)
-abline (h = c(155.3,155.3+8.8,155.3-8.8), lwd = c(3,2,2), col = c(1,4,4))
+abline (h = c(155.3,155.3+8.8,155.3-8.8), lwd = c(3,2,2), col = c(1,4,3))
 boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="",add=TRUE)
 
 mtext (side = 2, outer = FALSE, "Height (cm)", line = 2.75)
@@ -74,7 +67,7 @@ listener_age_effects
 
 Figure \ref(fig:F62) presents several ways to consider this information. In the left panel we see that the distance between the top and bottom lines, i.e. the effect for apparent age, varies from listener to listener. This listener-specific variation in the age effect is evidence of an interaction between listener and age in our data. In other words, to accurately predict the effect of age you need to know the listener. The first panel also highlights the fact that interactions are always invertible: The listener-specific age effects are also, necessarily, age-specific listener effects. What we mean by this is that if the difference between the line for any given listener can vary arbitrarily, then necessarily, for each age level we also need an unpredictable average value for each listener. 
 
-```{r F62, fig.height = 3, fig.width=8, fig.cap = " (left) Average height reported by each listener for apparent adults and children. Horizontal lines indicated the grand mean (solid) and the adult (upper dotted) and child means (lower dotted). (middle) The listener-dependent age effects, the difference between the adult and child means reported by each listener. The horizontal line indicates the average differences between listeners. (right) Arrows represent the magnitude of listener-specific deviations from the overall average difference across all listeners (horizontal line).", echo = FALSE}
+```{r F62, fig.height = 3, fig.width=8, fig.cap = "(left) Average height reported by each listener for apparent adults and children. Horizontal lines indicated the grand mean (solid) and the adult (upper dotted) and child means (lower dotted). (middle) Listener-dependent age effects, the difference between the adult and child means reported by each listener. The horizontal line indicates the average differences across all listeners. (right) Arrows represent the magnitude of listener-specific deviations from the overall average difference across all listeners (horizontal line).", echo = FALSE}
 
 ################################################################################
 ### Figure 6.2
@@ -173,7 +166,7 @@ listener_means = tapply (notmen$height, notmen[,"L"], mean)
 
 In figure \@ref(fig:F63) we plot these against the listener-dependent age effects on apparent height (`listener_age_effects`), calculated above. In the rightmost panel we see that these two variables seem to have a negative relationship such that smaller values of average heights tend to be associated with larger age effects. This is important because, if this is true, it suggests that we are unlikely to observe listeners who reported tall speakers on average *and* had large age effects on height (or vice versa). This is because as seen in figure \@ref(fig:F63), speakers who reported tall speakers on average exhibited small age effects.
 
-```{r F63, fig.height = 3, fig.width=8, fig.cap = "(left) Average overall reported height by each listener. (middle) The magnituve of the age effect for each listener. (right) Listener averages plotted against listener age effects.", echo = FALSE}
+```{r F63, fig.height = 3, fig.width=8, fig.cap = "(left) Average reported height by each listener. (middle) The magnituve of the age effect for each listener. (right) Listener averages reported height plotted against listener age effects.", echo = FALSE}
 
 ################################################################################
 ### Figure 6.3
@@ -270,7 +263,7 @@ multivariate_normal
 
 The dimensions of the multivariate normal can have arbitrarily different means and standard deviations, but their marginal distributions will always be a (univariate) normal. However, the dimensions are not always totally independent, as they are for our small sample above. In figure \@ref(fig:F64) we plot samples from three different bivariate normal distributions, one variable presented in each row. The variables in all three rows have the same means and standard deviations used to make our small sample above (i.e. the reflect the listener means and standard deviations). However, the variables presented in the rows differ in terms of the correlation between the two dimensions. We can use the simulated variables presented in figure \@ref(fig:F64) to imagine possible relationships between listener means and age effects across some large sample of listeners. In the absence of any correlation between variables (top row), a plot of this distribution will resemble a circle in 2 dimensions (if the standard deviations are equal). When there is a correlation between the two dimensions, the distribution starts looking more and more like a straight diagonal line. When there is a negative correlation, the line points down (left to right) rather than up. Note the the marginal (independent) distributions of the variables (the left and middle columns) don't change as the correlation changes. The correlation is a reflection of the *joint* variation in the two variables and will not necessarily be evident in the marginal distributions of each variable. 
 
-```{r F64, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and slope coefficients from distributions with a mean of 0 and a standard deviation of 1. The correlation of the variables is 0 (top), 0.5 (middle) and 0.9 (bottom). The left column presents both variables together, the middle column presents intercepts and the right column presents slopes. ", cache = TRUE, echo = FALSE}
+```{r F64, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and A1 coefficients from distributions with a means and standard deviations based on our listener data. The correlation of the variables is 0 (top), 0.5 (middle) and -0.85 (bottom). The left column presents both variables together, the middle column presents intercepts and the right column presents A1 effects.", cache = TRUE, echo = FALSE}
 
 ################################################################################
 ### Figure 6.4
@@ -280,35 +273,36 @@ The dimensions of the multivariate normal can have arbitrarily different means a
 #sd (listener_means)
 #mean (listener_age_effects)
 #sd (listener_age_effects)
-
+set.seed(.1)
 par (mfrow = c(3,3), mar = c(4,4,3,1))
 
 ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,0,0,4.3^2),2,2))
 hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(130,175))
-hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,25))
 plot (ranefs, pch=16,col=4,xlim=c(130,180),ylim=c(-10,27),xlab='Intercept',
       ylab='A1')
 phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3)
 grid()
 
-ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,5,5,4.3^2),2,2))
+ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,10.5,10.5,4.3^2),2,2))
 hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(130,175))
-hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,25))
 plot (ranefs, pch=16,col=4,xlim=c(130,180),ylim=c(-10,27),xlab='Intercept',
       ylab='A1')
 phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3, xlim = c(145,175))
 grid()
 
-ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,-14.8,-14.8,4.3^2),2,2))
+ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,-17.8,-17.8,4.3^2),2,2))
 hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(130,175))
-hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,20))
+hist (ranefs[,2],main='',col=4,xlab='A1',freq = FALSE,breaks=40, xlim = c(-5,25))
 plot (ranefs, pch=16,col=4,xlim=c(130,180),ylim=c(-10,27),xlab='Intercept',
       ylab='A1')
 phonTools::sdellipse (ranefs,add = TRUE, lwd=2,col=2,stdev =3, xlim = c(145,175))
 grid()
+
 ```
 
-Understanding the correlation between dimensions is important because it helps you understand which combinations of parameter values are more or less likely. When our dimensions are uncorrelated it is difficult to make useful predictions from one dimension to the other. For example, in the top row we see that an age effect (`A1`) of 0 is about as likely as one of 20 for a mean height of 140 cm. As a result, knowing that the speaker mean is 140 cm does nor provide you much information about whether the age effect is likely to be large or small. However, when the dimensions *are* correlated we can use this to make better predictions using our data. For example, in the bottom row we see a negative correlation between our dimensions. As a result an average height of 140 cm is very likely when age effects are 20 cm, but *extremely* unlikely to be seen with an age effect of zero. So, in this case, knowing the speaker mean would actually help you narrow down the range of plausible listener effects. For this reason, when there is more than one random effect is estimated for each grouping factor, these are usually treated as a *multivariate normal* variable rather than as a set of independent normal distributions.  
+Understanding the correlation between dimensions is important because it helps you understand which combinations of parameter values are more or less likely. When our dimensions are uncorrelated it is difficult to make useful predictions from one dimension to the other. For example, in the top row we see that an age effect (`A1`) of 0 is about as likely as one of 20 for a mean height of 140 cm. As a result, knowing that the speaker mean is 140 cm does nor provide you much information about whether the age effect is likely to be large or small. However, when the dimensions *are* correlated we can use this to make better predictions using our data. For example, in the bottom row we see a negative correlation between our dimensions. As a result an average height of 140 cm is very likely when age effects are 20 cm, but *extremely* unlikely to be seen with an age effect of zero. So, in this case knowing the speaker mean would actually help you narrow down the range of plausible listener effects. For this reason, when there is more than one random effect is estimated for each grouping factor, these are usually treated as a *multivariate normal* variable rather than as a set of independent normal distributions.  
 
 ### Specifying priors for a multivariate normal distribution
 
@@ -447,9 +441,9 @@ We can load the sum-coded, t distributed model we fit in the last chapter. This 
 model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
 ```
 
-Despite clear the similarities between the models, there are some changes to the credible intervals around the parameters that are shared across both models (presented in figure \@ref(fig:F65)). It's always risky to make up explanations for things after the fact (post hoc), but we can try to think about why these changes may have occurred. The change in the interval around the intercept is very small, and likely reflects our (slightly) better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are now acknowledging between-listener variation in the `A1` parameter, which our previous model ignored (or treated as zero). Our model predicts a standard deviation of 4.2 cm in this effects between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can be. The standard deviation of our listener intercepts appears to decrease slightly at the inclusion of random effects for age. This is likely because what previously seemed like variation in listener averages may have actually been variation in listener age effects. The separation of this into two separate predictors may lead to the magnitude of variation in one being diminished. Finally, the decrease in the error standard deviation is due to the inclusion of the listener random effects for `A1`, and the fact that included listener-dependent values for `A1` helped explain our variable. The error is just what the model can't explain, so as our models explain more, our error tends to get smaller. 
+Despite clear the similarities between the models, there are some changes to the credible intervals around the parameters that are shared across both models (presented in figure \@ref(fig:F65)). It's always risky to make up explanations for things after the fact (**post hoc**), but we can try to think about why these changes may have occurred. The change in the interval around the intercept is very small, and likely reflects our (slightly) better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are now acknowledging between-listener variation in the `A1` parameter, which our previous model ignored (or treated as zero). Our model predicts a standard deviation of 4.2 cm in this effects between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can/should be. The standard deviation of our listener intercepts appears to decrease slightly at the inclusion of random effects for age. This is likely because what previously seemed like variation in listener averages may have actually been variation in listener age effects. The separation of this into two separate predictors may lead to the magnitude of variation in one being diminished. Finally, the decrease in the error standard deviation is due to the inclusion of the listener random effects for `A1`, and the fact that included listener-dependent values for `A1` helped explain our variable. The error is just what the model can't explain, so as our models explain more, our error tends to get smaller. 
 
-```{r F65, fig.height = 3, fig.width = 8, fig.cap="--", cache = TRUE, echo = FALSE}
+```{r F65, fig.height = 3, fig.width = 8, fig.cap="A comparison of estimates of the same parameters across our models: Without listener-dependent effects for apparent age (blue), and with listener-dependent age effects (red). The listener-dependent effects fit with partial pooling are often referred to as 'random slopes'.", cache = TRUE, echo = FALSE}
 ################################################################################
 ### Figure 6.5
 ################################################################################
@@ -460,15 +454,15 @@ comparison = rbind (brms::fixef(model_sum_coding_t),
                     varcorr_information$L$sd[1,],
                     varcorr_information$residual__$sd)
 
-par (mfrow = c(1,4), mar = c(4,4,3,1))
+par (mfrow = c(1,4), mar = c(2,4,3,1))
 bmmb::brmplot (comparison[c(1,5),], ylim = c(152,159),main="Intercept", 
-               xlim = c(.75,2.25), col = c(4,2))
+               xlim = c(.75,2.25), col = c(4,2), labels = "")
 bmmb::brmplot(comparison[c(2,6),], ylim = c(6,11),main="A1", 
-              xlim = c(.75,2.25), col = c(4,2))
+              xlim = c(.75,2.25), col = c(4,2), labels = "")
 bmmb::brmplot(comparison[c(3,7),], ylim = c(2,8),main="Lsd", 
-              xlim = c(.75,2.25), col = c(4,2))
+              xlim = c(.75,2.25), col = c(4,2), labels = "")
 bmmb::brmplot(comparison[c(4,8),], ylim = c(4,9.5),main="sigma", 
-              xlim = c(.75,2.25), col = c(4,2))
+              xlim = c(.75,2.25), col = c(4,2), labels = "")
 ```
 
 
@@ -564,7 +558,7 @@ $$
 
 In the formulas above we replace $p(\tilde{y}_i | \theta)$ with $\mathrm{N}(y_i | \mu, \sigma)$ because the simulations generate normally-distributed data. Our simulations result in three sets of $\mathrm{lpd}$ and three sets of $\mathrm{elpd}$, a pair of each for each of the models above. The average of each of these six sets of values is presented in figure X. Since logarithmic values closer to zero are closer to one, *more negative* log-likelihood values indicate a *less likely* outcome. We can see that the $\mathrm{lpd}$ improves as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the data generating process or to the dependent variable. Why does this happen? One way to think about it is that the tallest person in California *and* Arizona will be *at least* as tall as the tallest person in Arizona. By increasing the number of ways it can explain your data, you more complex model will do *at least as well* as the model with fewer possible explanations. However, although the extra parameters increase the $\mathrm{lpd}$, they actually *decrease values* of $\mathrm{elpd}$, indicating a worse out of sample fit. Why? Because since the extra predictors included in our model in no way relate to our data, the 'answers' they provide can only be due to overfitting, the learning of characteristics that are specific to the in-sample data rather than consistent properties of the out-of-sample data. 
 
-```{r F66, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = TRUE, echo = FALSE}
+```{r F66, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of predictors in the model.", cache = TRUE, echo = FALSE}
 ################################################################################
 ### Figure 6.6
 ################################################################################
@@ -620,11 +614,11 @@ $$
 \end{equation}
 $$
 
-You may have noticed that our penalization does not exactly recreate the line reflecting $\mathrm{elpd}$ but rather results in a line parallel to it. We can never know what the real difference is between $\mathrm{lpd}$ and $\mathrm{elpd}$, the solid red and black lines in figure \@ref(fig:F66), because we can never know the true properties of out-of-sample data. However, penalization allows us to estimate a line parallel to $\mathrm{elpd}$ (broken red line in figure \@ref(fig:F66)) and base our inference based on this line. 
+You may have noticed that our penalization does not exactly recreate the line reflecting $\mathrm{elpd}$ but rather results in a line parallel to it. We can never know what the real difference is between $\mathrm{lpd}$ and $\mathrm{elpd}$, the solid red and black lines in figure \@ref(fig:F66), because we can never know the 'true' properties of out-of-sample data. Despite this, penalization allows us to estimate a line parallel to $\mathrm{elpd}$ (broken red line in figure \@ref(fig:F66)) and base our inference based on this line. 
 
 In this very simple example we are discussing here we are setting $\mathrm{p}=k$, where $k$ is the number of parameters estimated by the model. If we set $\mathrm{p}=k$ and carry out the operation in \@ref(eq:65) using the values in figure \@ref(fig:F66), we would arrived at values of $\mathrm{elpd}$ of -70.7 ($-69.7 - 1$) and -71.7 ($-68.7-3$) for the least and most complex models. Based on these estimates of $\widehat{\mathrm{elpd}}$, we expect that the model with the worst $\mathrm{lpd}$ actually has the best  $\mathrm{elpd}$. In fact, we know that in this case the 'best' model corresponds exactly to the true data generating process. However, penalization will not always result in the highest values of $\widehat{\mathrm{elpd}}$ for the simplest model. In figure \@ref(fig:F67) we simulate new fake data, except now we include $x_2$ in the 'real' underlying data generating process (i.e., `y = x1 + x2 + rnorm (n, 0, 1)`). As a result, for this data we actually *do* need both $x_1$ and $x_2$ in the model. As seen below, penalization does not obscure the benefit of adding $x_2$ to our model when it is warranted. This is because the relatively small penalty associated with the increased model complexity does not overwhelm the large benefit due to the inclusion of a predictor that is actually related to our dependent variable. 
 
-```{r F67, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations abovem modified to also include the second predictor in the data generating process. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = TRUE, echo = FALSE}
+```{r F67, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above, modified to also include the second predictor in the data generating process. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = TRUE, echo = FALSE}
 ################################################################################
 ### Figure 6.7
 ################################################################################

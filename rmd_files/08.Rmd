@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
 ```
 # Varying variances, more about priors, and prior predictive checks
 
-So far our models have been a bit 'traditional' in one important way: They have featured a single error term ($\sigma$) for all conditions. This means that $\sigma$ is the same for all speakers, listeners, and conditions in our experiment. However, we might imagine a situation where one listener's responses are more widely distributed than another, resulting in a situation where $\sigma_{[n_1]} \neq \sigma_{[n_2]}$ for two listeners $n1$ and $n2$. In this situation, we may not want to use a single value of $\sigma$ for all listeners and may instead prefer to use a different value for each listener, e.g. $\sigma_{[i]}$ for listener $i$. Our models have also assumed that each batch of our 'random effects' (i.e. predictors fit with partial pooling) has a single standard deviation for each estimated parameter. For example, our models have usually included a predictor for speaker-specific intercepts estimated  based on a single standard deviation $\sigma_S$. We might wonder if, for example, height judgments for boys and girls tend to exhibit wider variation than those of adults. To do this, we need to fit a model with a different standard deviation for each category of speaker in our model, i.e. $\sigma_{S_b}, \sigma_{S_g}, \sigma_{S_m}$, and  $\sigma_{S_w}$ for boys, girls, men, and women respectively rather than just $\sigma_S$ for all speakers. This would allow situations where, for example, the standard deviation of speaker intercepts is smaller for girls category than women so that $\sigma_{S_g} \neq \sigma_{S_w}$. In this chapter we're going to discuss models that allow for more variation in their $\sigma$ parameters. In addition, we're going to go into more detail about setting priors for our models and the use of prior predictive checks. 
+So far our models have been a bit 'traditional' in one important way: They have featured a single error term ($\sigma$) for all conditions. This means that $\sigma$ is the same for all speakers, listeners, and conditions in our experiment. However, we might imagine a situation where one listener's responses are more widely distributed than another, resulting in a situation where $\sigma_{[n_1]} \neq \sigma_{[n_2]}$ for two listeners $n1$ and $n2$. In this situation, we may not want to use a single value of $\sigma$ for all listeners and may instead prefer to use a different value for each listener, e.g. $\sigma_{[i]}$ for listener $i$. In this chapter we're going to discuss models that allow for more variation in their $\sigma$ parameters. In addition, we're going to go into more detail about setting priors for our models and the use of prior predictive checks. 
 
 ## Data and Research questions
 
@@ -671,7 +671,7 @@ sigmas = short_hypothesis(model_A_L_sigma, "sigma_Intercept = 0",
                           scope = "coef",group="L")
 ```
 
-```{r F85, fig.height = 3, fig.width = 8, fig.cap="(left) Values of $L_{\sigma}$, listener-dependent variations from the `sigma` intercept (expressed as a logarithm). (right) Listener-specific sigma parameters. The result of $\exp(\mathrm{Intercept}_{\sigma} + L_{\sigma[i]})$ for listener $i$. We exponentiate the value in the plot so it reflects `sigma` rather than `log(sigma)`.", cache = FALSE, echo = FALSE}
+```{r F85, fig.height = 3, fig.width = 8, fig.cap="(left) Values of $L_{\\sigma}$, listener-dependent variations from the `sigma` intercept (expressed as a logarithm). (right) Listener-specific sigma parameters. The result of $\\exp(\\mathrm{Intercept}_{\\sigma} + L_{\\sigma[i]})$ for listener $i$. We exponentiate the value in the plot so it reflects `sigma` rather than `log(sigma)`.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 8.5
@@ -709,52 +709,38 @@ The research questions we posed above were:
   
   Q2) Does our error standard deviation vary as a function of listener?
 
-  Q3) Do our speaker random effects exhibit category-specific standard deviations? 
-
 Based on the information we've already provided, we can answer these questions: Yes, yes, and yes. We think these results are reasonable based on what we know about the heights of adults and children and about the average speaker's average knowledge of the heights of adults and children. For example, we did think it was reasonable to expect that listener's height judgments would be more variable for children than for adults. We think most people have a good handle on how tall adults tend to be. Does the average person know how tall 10-12 year-old children tend to be? We don't think so. In addition, 10-12 year old can show a lot of variation in height based on differences in growth rates, which might also lead people to provide more variable estimates for the height of children. We think it also 'makes' sense that different listeners could be more or less systematic (i.e. predictable) than others, for many reasons. As for the final question, based on our discussion so far we also think its reasonable that the average rated heights for different children vary more with respect to those of adults.      
 
-We're going to add another, more meta, question: Which should we report? As a first attempt, we can approach this from the perspective that the best model is the 'real' model. We can calculate elpd, for our newest model:
+We're going to add another, more meta, question: Which should we report? We can approach this from the perspective that the best model according to $\mathrm{empld}$ is the 'real' model. Based on the comparison of $\mathrm{empld}$  above, it seems that the last model we fit (`model_A_L_sigma`) is the 'best' model. Does this mean it is the 'real' model? And does it mean that this is the one we ought to report? The short answers to these questions are no and no. The fit between a model and data can't 'prove' that the model represents the 'real' relationship underlying the data. The reason for this is that there are potentially a large number of other, slightly different, models that provide just as good a fit to the data, or perhaps a better one. If the best model is the real one, how can you ever know you have the best model? Further, even if you did somehow find the best model for the data you have, how could you guarantee that it will also be the best model for the data you don't have? It's impossible to know if some new data might come along that will not fit your model as well as one of the other model, making the 'best' model contingent on the data you have seen so far.  
 
-```{r}
-model_het_group = add_criterion(model_het_group, "loo")
-```
+Ok so we can't prove that our best model is the real one, fine. But its still the best one we have. Do we necessarily need to report the 'best' model? This sort of reasoning can lead to serious problems because there is almost always a better 'truer' model out there, and we often don't try to find it. For example, many people would never think to fit a heteroscedastic model and so would not even worry about reporting it. Does the existence of a hypothetical better model mean that the model they report is invalid? We don't think so. If it doesn't, then why should this be the case for the researcher that *did* think to try the heteroscedastic model? In general, we can imagine that 10 people might approach any given research question in 10 different ways, a concept sometimes referred to as researcher degrees of freedom (cite). Slight differences in model structure and data processing results in slight differences in model outputs, resulting in a sort of 'distribution' for any given result. How can a fixed underlying reality result in a distribution or results? When they are all slightly wrong. 
 
-And compare it to the others, suggesting that that our most complicated is the 'best' one. Does this mean it is the real model? And does it mean that this is the one we ought to report? The short answers to these questions are no and no. 
+Rather than think of our models as representations of *reality*, we can think of them as mathematical implementations of our research questions. The model we report should include the information and structure that we think are necessary to represent and investigate our research questions. Using a different model can result in different results given the same data, but asking a different question can also lead to different results given then same data. When interpreting a statistical analysis, it is very useful to keep in mind that results are contingent on:
 
-```{r}
-loo_compare (model_interaction, model_A_sigma, model_A_L_sigma, model_het_group)
-```
-
-First, it is basically impossible to establish that a model is correct using only the model, and may be impossible in general depending on your perspective. The model is not reality and should not be confused with reality. This is a very important point! The fit between a model and data can't 'prove' that the model represents the 'real' relationship underlying the data. The reason for this is that there are potentially a large number of other, slightly different, models that provide just as good a fit to the data, or perhaps a better one. If the best model is the real one, how can you ever know you have the best model? Further, it's impossible to know if some new data might come along that will not fit your model as well as one of the other model, making the 'best' model contingent on the data you have seen so far.  
-
-Do we necessarily need to report the 'best' model? This sort of reasoning can lead to serious problems because there is almost always a better 'truer' model out there, and we often don't try to find it. For example, many people would never think to fit a heteroscedastic model and so would not even worry about reporting it. Does the existence of a hypothetical better model mean that the model they report is invalid? We don't think so. If it doesn't, then why should this be the case for the researcher that *did* think to try the heteroscedastic model? In general, we can imagine that 10 people might approach any given research question in 10 different ways, a concept known as researcher degrees of freedom (cite). This would cause slight differences in their results, resulting in a sort of 'distribution' for any given result. How can a fixed underlying reality result in a distribution or results? When they are all slightly wrong! 
-
-Rather than think of our models as representations of *reality*, we can think of them as mathematical implementations of your research questions. Your model should include the information and structure that you think are necessary to represent and investigate your questions. Using a different model can result in different results given the same data, but asking a different question can also lead to different results given then same data. It is very useful to say "given the data and model structure" when describing a statistical analysis. This phrase is helpful because it highlights the fact that your results are contingent on:
-
-  1) The data you collected. Given other data you may have come to other conclusions.
+  1) The data you collected. Given other data you may have come to different conclusions.
   
-  2) The model you chose. Given another model you may have come to other conclusions.
+  2) The model you chose. Given another model you may have come to different conclusions.
   
-So which model should we report? One way to think about our models is that they provide different *information* about our data. If we are primarily interested in the fixed effects then maybe you are not interested in this additional information. However, if we want to know about differences in error variation or about between-category differences in the speaker-dependent intercepts, then we need one of the more complicated models. If the models differ primarily in the information they offer, its worth considering how the differing model structures might affect the information they share in common. Figure \@ref(fig:F88) compares the fixed effects, random effects, and predicted values made by three models: `model_interaction`, `model_A_L_sigma`, and `model_het_group`. 
+So which model should we report? One way to think about our models is that they provide different *information* about our data. If we are primarily interested in the fixed effects then maybe we are not interested in this additional information. However, if we want to know about differences in error variation then we need one of the more complicated models. It's also worth considering how the differing model structures might affect the information they share in common, in this case the model 'fixed effects'. Figure \@ref(fig:F88) compares the fixed effects, random effects, and predicted values made by three models: `model_interaction`, `model_A_sigma`, and `model_A_L_sigma`. 
 
 ```{r, include = FALSE, cache = TRUE}
 ranefs1 = ranef (model_interaction)
-ranefs2 = ranef (model_A_L_sigma)
-ranefs3 = ranef (model_het_group)
+ranefs2 = ranef (model_A_sigma)
+ranefs3 = ranef (model_A_L_sigma)
 
 fixefs1 = fixef (model_interaction)
-fixefs2 = fixef (model_A_L_sigma)
-fixefs3 = fixef (model_het_group)
+fixefs2 = fixef (model_A_sigma)
+fixefs3 = fixef (model_A_L_sigma)
 
 yhat1 = predict (model_interaction)
-yhat2 = predict (model_A_L_sigma)
-yhat3 = predict (model_het_group)
+yhat2 = predict (model_A_sigma)
+yhat3 = predict (model_A_L_sigma)
 
 fixefs1[1,c(1,3,4)] = fixefs1[1,c(1,3,4)] - 159
 fixefs2[1,c(1,3,4)] = fixefs2[1,c(1,3,4)] - 159
 fixefs3[1,c(1,3,4)] = fixefs3[1,c(1,3,4)] - 159
 ```
-```{r F88, fig.height = 4, fig.width = 8, fig.cap="--", cache = FALSE, echo = FALSE}
+```{r F88, fig.height = 4, fig.width = 8, fig.cap="(left) Comparison of fixed effect estimates and 95% credible intervals for three models. We subtracted 159 from the model intercept so that it would fit on the same scale as the other parameters. (right) Plots showing comparisons of parameter estimates for pairs of the same models presented in the left plot. Each row compares a different pair od models and each column presents a different set of parameters. The columns represent all listener random effects (left), all speaker random effects (middle), and the predictions made by each model (right).", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 8.8
@@ -769,7 +755,7 @@ brmplot (fixefs2[c(1,3,4,5),], add=TRUE, nudge=0, col=cols[3],labels = "")
 brmplot (fixefs3[c(1,3,4,5),], add=TRUE, nudge=0.1, col=cols[4],labels = "")
 
 axis (side=1,at=1:4,c("Int.","A1","G1","A1:G1"),cex.axis=1.3)
-legend (2,6,legend = c("M1:model_interaction", "M2:model_A_L_sigma", "M3:model_het_group"), 
+legend (2,6,legend = c("M1:model_interaction", "M2:model_A_sigma", "M3:model_A_L_sigma"), 
         col = cols[2:5], pch=16,pt.cex=1.3, bty = "n")
 mtext (side=3,outer=FALSE, "Fixed Effects",cex=.9)
 
@@ -779,7 +765,7 @@ plot (ranefs1$L[,1,], ranefs2$L[,1,1:4],pch=16,col=4,
       xlim=c(-10,10),ylim=c(-10,10),cex=1.25,lwd=2,xlab="",ylab="")
 abline (0,1,col=2,lwd=1,lty=2)
 mtext (side=3,outer=FALSE, "Listener Effects",cex=.9)
-text (0,-5,"M1,M2",pos=4)
+text (-2,-6,"x=M1,y=M2",pos=4)
 plot (ranefs1$S[,1,], ranefs2$S[,1,], pch=16,col=4,
       xlim=c(-11,5),ylim=c(-11,5),cex=1.25,lwd=2,xlab="",ylab="")
 abline (0,1,col=2,lwd=1,lty=2)
@@ -792,7 +778,7 @@ mtext (side=3,outer=FALSE, "Predictions",cex=.9)
 plot (ranefs1$L[,1,], ranefs3$L[,1,1:4], pch=16,col=4,
       xlim=c(-10,10),ylim=c(-10,10),cex=1.25,lwd=2,xlab="",ylab="")
 abline (0,1,col=2,lwd=1,lty=2)
-text (0,-5,"M1,M3",pos=4)
+text (-2,-6,"x=M1,y=M3",pos=4)
 plot (ranefs1$S[,1,], ranefs3$S[,1,], pch=16,col=4,
       xlim=c(-11,5),ylim=c(-11,5),cex=1.25,lwd=2,xlab="",ylab="")
 abline (0,1,col=2,lwd=1,lty=2)
@@ -803,7 +789,7 @@ abline (0,1,col=2,lwd=1,lty=2)
 plot (ranefs2$L[,1,1:4], ranefs3$L[,1,1:4], pch=16,col=4,
       xlim=c(-10,10),ylim=c(-10,10),cex=1.25,lwd=2,xlab="",ylab="")
 abline (0,1,col=2,lwd=1,lty=2)
-text (0,-5,"M2,M3",pos=4)
+text (-2,-6,"x=M2,y=M3",pos=4)
 plot (ranefs2$S[,1,], ranefs3$S[,1,], pch=16,col=4,
       xlim=c(-11,5),ylim=c(-11,5),cex=1.25,lwd=2,xlab="",ylab="")
 abline (0,1,col=2,lwd=1,lty=2)
@@ -813,7 +799,7 @@ abline (0,1,col=2,lwd=1,lty=2)
 
 ```
 
-We can see that the differences in the fixed effects are so small as to be basically meaningless. The three models also provide nearly identical listener 'random effects' and predicted values. Based on this, if we care primarily about the fixed effects and understanding apparent height judgments, any of the three models will work equally well. Where the models differ is in their estimates of the speaker effects. This is not surprising in the case of `model_het_group` since this model specifically featured multiple speaker standard deviation terms. However, the inclusion of heteroscedasticity (`model_A_L_sigma`) also affects the speaker effects relative to the homoscedastic model (`model_interaction`). If we were specifically interested in these effects then we would need to take the time to understand the source, and meaning, of these differences. Of course, the experiment we ran was not designed to investigate speaker differences, so it does not make much sense to delve to far into it in our analysis. Our experiment was designed to investigate the perception of apparent height and the role of speaker age and gender in these judgments. From this perspective, it seems that either of the three models is suitable. 
+We can see that the differences in the fixed effects are so small as to be largely meaningless. The three models also provide nearly identical listener 'random effects' and predicted values. Based on this, if we care primarily about the fixed effects and understanding apparent height judgments, any of the three models will work equally well. Where the models differ is in their estimates of the speaker effects. The inclusion of heteroscedasticity seems to reduce the magnitude of the speaker effects relative to the homoscedastic model (`model_interaction`). If we were specifically interested in these effects then we would need to take the time to understand the source, and meaning, of these differences. Of course, the experiment we ran was not designed to investigate speaker differences, so it does not make much sense to delve to far into it in our analysis. Our experiment was designed to investigate the perception of apparent height and the role of speaker age and gender in these judgments. From this perspective, it seems that either of the three models is suitable. 
 
 
 

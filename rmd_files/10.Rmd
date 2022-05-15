@@ -4,7 +4,6 @@ knitr::opts_chunk$set(
   dpi = 300, dev = "jpeg", collapse=TRUE
 )
 ```
-
 # Logistic regression and signal detection theory models
 
 In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. We will focus on dichotomous (i.e. binary) outcomes for now, though the ideas presented will be extended to the modeling of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial data (unordered categories such as English, French and Spanish) in later chapters. 
@@ -135,7 +134,7 @@ So, when we have a binary outcome variable and are talking about individual tria
 
 ## Generalizing our linear models
 
-Figure \@ref(fig:F101) shows the probability of observing a classification of 'adult' (i.e., 'man' or 'woman') for each speaker as a function of their VTL. Clearly, the perception of femaleness is related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer vocal tracts and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs as female. Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(\eq:102) and in the right plot of figure \@ref(fig:F101). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that an effect causes an increase in probability of 0.2. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
+Figure \@ref(fig:F101) shows the probability of observing a classification of 'adult' (i.e., 'man' or 'woman') for each speaker as a function of their VTL. Clearly, the perception of femaleness is related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer vocal tracts and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs as female. Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:102) and in the right plot of figure \@ref(fig:F101). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that an effect causes an increase in probability of 0.2. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
 
 ### Link functions and the generalized linear model
 
@@ -153,7 +152,7 @@ $$
 \begin{equation}
 \begin{split}
 \mathrm{height}_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{error}) \\
-\mu_{[i]} = \theta_{[i]} \\
+\mu_{[i]} = f(\theta_{[i]}) \\
 \theta_{[i]}  = a_{[i]} + b_{[i]} \times \mathrm{vtl}_{[i]}  \\ 
 ...
 \end{split}
@@ -167,7 +166,7 @@ $$
 \begin{equation}
 \begin{split}
 F_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
-p_{[i]} = \theta_{[i]} \\
+p_{[i]} = logistic (\theta_{[i]}) \\
 \theta_{[i]}  = a_{[i]} + b_{[i]} * \mathrm{x}_{[i]}  \\ 
 \end{split}
 (\#eq:104)
@@ -210,8 +209,10 @@ Our logistic regression models are going to predict *logits*. Our lines will des
 The **logistic link function** looks like below, for values of $z$ ranging continuously from positive to negative infinity, where $e$ is the mathematical constant used for natural logarithms.
 
 $$
-f(z) = \frac{1}{1 + e^{-z}}
+\begin{equation}
+logistic(z) = f(z) = \frac{1}{1 + e^{-z}}
 (\#eq:105)
+\end{equation}
 $$
 
 
@@ -224,22 +225,28 @@ ztop = function (z) 1 / (1 + exp(-z))
 
 The function may look complicated but its a bit simpler when you remember than any number raised to the power of zero is 1. So $e^0=1$, meaning that when $z=0$, 
 $$
+\begin{equation}
 \frac{1}{1 + e^{0}}=\frac{1}{1 + 1}=0.5
 (\#eq:106)
+\end{equation}
 $$
 
 When $z$ is a positive value, $e^{-z}$ will be a fraction between 0 and 1, for example if $z=3$ then $e^{-z}=e^{-(3)}=0.05$. This means that when $z<0$, we expect probabilities between 0.5 and 1, as in:
 
 $$
+\begin{equation}
 \frac{1}{1 + e^{-3}}=\frac{1}{1 + 0.05}=0.95
 (\#eq:107)
+\end{equation}
 $$
 
 On the other hand, when $z$ is negative, $e^{-z}$ will be a positive number greater than 1, as in $e^{-z}=e^{-(-3)}=e^{3}=20.1$. Thus, for negative values of $z$ we expect probabilities between 0 and 0.5 as in:
 
 $$
+\begin{equation}
 \frac{1}{1 + e^{3}}=\frac{1}{1 + 20.1}=0.05
 (\#eq:108)
+\end{equation}
 $$
 
 In Figure \@ref(fig:F102) we draw a line with a slope of one and an intercept of 0 (i.e., y = x). We can imagine that this line defines expected changes in *logits* as a function of some predictor x. For example, where we might directly model change in perceived height (in inches) as a function of continuous variation in f0, we model the change in the *logit* of the probability of observing an adult response, as a function of f0. In the middle panel, we've applied the logistic function to the line, resulting in a **sigmoid curve**. If we apply the logit function to this sigmoid curve, the result is a line again. We can see that the logit and sigmoid functions/transformations are just in the inverse of each other. They can be applied to data to go back and forth between a probability or logit interpretation. 
@@ -274,7 +281,7 @@ $$
 \begin{split}
 adult \sim \mathrm{Bernoulli}(p) \\
 p = \mathrm{logistic} (z) \\
-z  = a + b * \mathrm{x}  \\ 
+z  = a + b * \mathrm{x}  
 \end{split}
 (\#eq:109)
 \end{equation}
@@ -283,22 +290,28 @@ $$
 Keep in mind that we could put the prediction equation directly inside the logistic function:
 
 $$
+\begin{equation}
 p = \frac{1}{1 + e^{-(a + b*x)}}
 (\#eq:1010)
+\end{equation}
 $$
 
 And even put the output of that inside the Bernoulli distribution directly.
 
 $$
-adult \sim \mathrm{Bernoulli}(\frac{1}{1 + e^{-(a + b*x)}}) \\
+\begin{equation}
+adult \sim \mathrm{Bernoulli}(\frac{1}{1 + e^{-(a + b*x)}}) 
 (\#eq:1011)
+\end{equation}
 $$
 
 When you look at it this way, it shows that our link function really does *link* our prediction equation (a + b*x) and our data distribution (Bernoulli). The fomulation above is reminiscent of this formulation of our model for normally distributed data:
 
 $$
-pheight \sim \mathrm{Normal}(a + b*x, \sigma) \\
+\begin{equation}
+pheight \sim \mathrm{Normal}(a + b*x, \sigma) 
 (\#eq:1012)
+\end{equation}
 $$
 
 

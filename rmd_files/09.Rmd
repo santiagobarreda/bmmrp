@@ -4,18 +4,15 @@ knitr::opts_chunk$set(
   dpi = 300, dev = "jpeg", collapse=TRUE
 )
 ```
-
 # Continuous predictors and their interactions with factors
 
-Last chapter we talked about comparing many groups, and including interactions in our models. So far we have only discussed models that include categorical predictors (factors), meaning predictors that split up our observations into discrete groups/categories. In this chapter we're going to talk about including quantitative, numerical predictors in our models. We're going to focus on the interpretation of model coefficients and what these mean for the geometry of the lines we make. The geometric interpretations of different model structures are not specifically "Bayesian". In fact, the concepts presented below are shared by any approach to linear regression. 
+Last chapter we talked about comparing many groups and including interactions in our models. So far we've only discussed models that include categorical predictors (factors), meaning predictors that split up our observations into discrete groups/categories. In this chapter we're going to talk about including quantitative, numerical predictors in our models that can predict variation along straight lines. A **linear relationship** between two variables $x$ and $y$ suggests that a scatter plot of the two variables should resemble a straight line. In this chapter, we're going to discuss models that allow us to explore the linear relationships between our dependent variables and our predictors. We're going to focus on the interpretation of model coefficients and what these mean for the geometry of the lines we make. The geometric interpretations of different model structures is not specifically "Bayesian". In fact, the concepts presented below are shared by any approach to linear regression. 
 
 ## Data and research questions 
 
-We're going to start by focusing on the geometry of different model structures. To do this we're going to ignore the fact that we have repeated measures data and just fit a big pooled model like we did in chapter 3. This will not lead to a reliable model because it ignores all the correlations in our data, and treats all our observations as independent when they are not. However, this will allow us to start with simple models before fitting more realistic (and correct) models later in the chapter. 
+We're going to start by focusing on the geometry of different model structures. To do this we're going to ignore the fact that we have repeated measures data and just fit a big complete pooling model like we did in chapter 3. This will not lead to a reliable model because it ignores all the correlations in our data, and treats all our observations as independent when they are not. However, this approach will allow us to begin with simple models before fitting more realistic (and complex) models later in the chapter. 
 
-To fit a model with a quantitative dependent variable and a single quantitative independent variable you need these variables in a data frame. This means you need a data frame with at least two columns, both of which R thinks of as numerical variables. [@@ Revisit chapter one discussion on continuous predictors and whether something is really continuous]
-
-We are going to keep working with our experimental data and we are going to focus on our ability to predict apparent height given speaker VTL. In our `height_exp` data frame the columns we are interested in are `height` and `vtl`. We load this data and the R packages we need below. 
+To fit a model with a quantitative dependent variable and a single quantitative independent variable you need these variables in a data frame. This means you need a data frame with at least two columns, both of which R thinks of as numerical variables (see section \@ref(c1-quantitative) for a discussion of quantitative variables). We're going to keep working with our experimental data (described in section \@ref(c1-design)), and we're going to focus on our ability to predict apparent height given speaker VTL. In our `height_exp` data frame the columns we're interested in are `height` and `vtl`. We load this data and the R packages we need below, keeping only the actual (unmodified) resonance. 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -25,9 +22,9 @@ options (contrasts = c('contr.sum','contr.sum'))
 height_exp = height_exp[height_exp$R=='a',]
 ```
 
-We are going to keep our research questions simple:
+We're going to keep our research questions simple:
 
-  Q1) Is there a linear relationship between speaker VTL and apparent height?
+  Q1) Is there a linear relationship between speaker VTL and apparent height? If so what are the slope(s) and intercept(s) of the line(s) relating these two variables?
 
   Q2) Can we predict expected apparent height responses given only knowledge of speaker VTL?
 
@@ -35,30 +32,22 @@ For the first time, we need to answer our questions using a regression model tha
 
 ## Modeling variation along lines
 
-Recall (from high school) that the equation for a line is the following:
+The equation for a line is presented in \@ref(eq:91). This equation tells us that $x$ and $y$ enter into what's called a linear relationship. The parameters of a line are called its **slope** ($m$) and **intercept** ($b$). Equation \@ref(eq:91) indicates that $x$ can be transformed into $y$ by multiplying it times the slope and then adding the intercept to the product. The slope parameter indicates how much of a change you expect in your $y$ variable for a *1 unit change* in your $x$ variable. Obviously, this means that the slope depends on the units of measurement of $x$. In general, dividing a predictor $x$ by $z$ will increase the slope of $x$ by a factor of $z$. For example, imagine measuring the slope of a long hill with a constant rise. The amount of rise measured in one meter will necessarily be 1/1000 as large as the rise measured in one kilometer. 
 
 $$
 \begin{equation}
 y = m \times x + b  
-(\#eq:81)
-\end{equation}
-$$
-
-This equation tells us that $x$ and $y$ enter into what is called a **linear relationship**. A linear relationship between two variables $x$ and $y$ suggests that when a scatter plot is made of the two variables the plot should resemble a straight line. Looking at \@ref(eq:81) we can also see that a linear relationship between $x$ and $y$ means that we can transform $x$ into $y$ by multiplying $x$ by some number ($m$) and then adding another number ($b$) to the product. The parameters of a line are called its **slope** and **intercept**. The slope ($m$) represents how much of a change you expect in your $y$ variable for a *1 unit change* in your x variable. Obviously, this means that the slope depends on the units of measurement of your $x$ variable. In general, dividing your $x$ predictor by $z$ will increase your slopes by a factor of $z$. For example, imagine measuring the slope of a long hill with a constant rise. The amount of rise measured in one meter will necessarily be 1/1000 as large as the rise measured in one kilometer. We can use the following line equation, which just changes the name of the parameters, replaces $y$ with $\mu$, and rearranges the terms on the right hand side. Equation \@ref(eq:82) now resembles a regression prediction equation where $\mu$ is the expected value of the dependent variable you are predicting using the independent variable $x$.
-
-$$
-\begin{equation}
 \mu = Intercept + slope \times x 
-(\#eq:82)
+(\#eq:91)
 \end{equation}
 $$
 
-Our models have so far featured only categorical predictors, things like speaker category, gender, and age group. Although it might be strange to think of it this way, our regression models have been making lines this whole time, however, they are lines with slopes of 0 along all possible x axis variables. What this means is, that for any x-axis variable you may select, variation along the x axis **has no effect** on variation along the y axis (according to our model). Figure \@ref(fig:F91) shows an example of what we mean by this. In figure \@ref(fig:F91) we plot the average perceived height for each token plotted against the speaker's estimates vocal-tract length as estimated from their speech acoustics. It is hypothesized that listeners use information from speech acoustics to estimate the speaker's vocal-tract length, and then use this information to estimate the speaker's height. For more information on this please see Appendix X. The scatter plot below plots the dependent variable (apparent height, the thing we are interested in) along the y axis (this is done by convention) and the independent variable (the thing doing the explaining) along the x-axis.
+Our models so far have only featured categorical predictors, things like speaker category, gender, and age group. Although it might be strange to think of it this way, our regression models have been making lines this whole time, however, they are lines with slopes of 0 for all possible x axis variables. This means that, for any x-axis variable you may select, variation along the x axis *has no effect* on variation along the y axis (according to our model). For example, in figure \@ref(fig:F91) we plot the average perceived height for each token plotted against the speaker's vocal-tract length as estimated from their speech acoustics. It is hypothesized that listeners use information from speech acoustics to estimate the speaker's vocal-tract length, and then use this information to estimate the speaker's height. For more information on this please see chapter X. The scatter plot below plots the dependent variable (apparent height, the thing we are interested in) along the y axis (this is done by convention) and the independent variable (the thing doing the explaining) along the x-axis. The points in figure \@ref(fig:F91) are clearly arranged around a line, suggesting a (more or less) linear relationship between vocal tract length and apparent height (as expected). 
 
-```{r F91, fig.height = 3, fig.width = 8, fig.cap = "(left) f0 plotted against perceived height for each token. Horizontal line is the mean of the group means. (middle) -- . (right) .", echo = FALSE}
+```{r F91, fig.height = 3, fig.width = 8, fig.cap = "(left) Average apparent height plotted against speaker vocal-tract length (VTL) for each token. Horizontal line is at the mean of the observations. (middle) The same points as generated by a normal distribution that slides along a horizontal line with a slope of 0 along the vtl axis. (right) The same points as generated by a normal distribution that slides along a line with a non-zero slope.", echo = FALSE}
 
 ################################################################################
-### Figure 8.1
+### Figure 9.1
 ################################################################################
 
 library (bmmb)
@@ -119,28 +108,36 @@ for (i in seq(11.25,16,1.25)){
 }
 ```
 
-The points in figure \@ref(fig:F91) are clearly arranged around a line, suggesting a linear relationship between vocal tract length and apparent height. The left plot in figure \@ref(fig:F92) shows the line corresponding to an 'intercept only model' like the one we fit in chapter 3. This model was called an intercept only model because it features an intercept but no slope. This is equivalent to setting the intercept to the overall grand mean and setting the slope for VTL to zero as seen in \@ref(eq:83). When we model apparent height along line parallel to the VTL dimension, this means our model thinks apparent height is *independent* of VTL. This is because VTL can vary from positive to negative infinity and we don't apparent height to change (since the line is flat). The same statement could be made for any other $x$ variable we choose because our model does not include slopes for those variables. So, in models like these you can make a bunch of horizontal lines, but you only ever change their intercepts. 
+We can use update the equation in \@ref(eq:91) as in \@ref(eq:92), which changes the name of the parameters, replaces $y$ with $\mu$, and rearranges the terms on the right hand side. Equation \@ref(eq:92) now resembles a regression prediction equation where $\mu$ is the expected value of the dependent variable you are predicting using the independent variable $x$.
 
+$$
+\begin{equation}
+\mu = Intercept + slope \times x 
+(\#eq:92)
+\end{equation}
+$$
+
+The left plot in figure \@ref(fig:F91) shows the line corresponding to an 'intercept only model' like the one we fit in chapter 3. This model was called an intercept only model because it features an intercept but no slope. This is exactly equivalent to setting the intercept of our line to the mean of all the data points (163 cm) and setting the slope of the line along VTL to zero, as seen in \@ref(eq:93). When we model apparent height along line parallel to the VTL dimension, this means our model thinks apparent height is *independent* of VTL. This is because VTL can vary from positive to negative infinity and we don't expect apparent height to change (since the line is flat). The same statement could be made for any other $x$ variable we choose because our model does not include slopes for those variables. So, in models like these you can make a horizontal line, but you only ever change its intercept. We can see a visual representation of an intercept only model (for normally-distributed data) in the middle panel of figure \@ref(fig:F91). This model can be thought of as a normal distribution sliding along a horizontal line, generating numbers as it slides. The mean of this data does not vary based on the value of speaker VTL and so is *independent* of it. The standard deviation of this distribution ($\sigma$) does not not change as a function of perceived height so the 'width' of the data is stable across values of $x$. 
 
 $$
 \begin{equation}
 \begin{split}
-a = Intercept = 159, \; b = slope = 0 \\
-\mu = Intercept + slope \times VTL \\
-(\#eq:83)
+a = Intercept = 163, \; b = slope = 0 \\
+\mu = Intercept + slope \times VTL 
+(\#eq:93)
 \end{split}
 \end{equation}
 $$
 
-In the middle panel of figure \@ref(fig:F91) we have a visual representation of an intercept only model. This model can be thought of as a normal distribution sliding along a horizontal line, generating numbers as it slides. The mean of this data does not vary based on the values of VTL height, and so is *independent* of them. The standard deviation of this distribution ($\sigma$) does not not change as a function of perceived height so its 'width' is stable. Ok, so what if we *do* want to think about variation in apparent height as a function of variation in VTL. In Figure \@ref(fig:F92) we can see what this might look like. We can imagine that the mean of the normal distribution generating apparent height values *does* change as a function of the value of VTL. This would mean that the expected apparent height varies *conditionally* on VTL. We can also assume that the expected value of apparent height varies along straight lines given variation in VTL. If we do this, then this model can be thought of as consisting of a normal distribution sliding along a *diagonal* line, generating numbers as it slides. A model like this is presented on the right in Figure \@ref(fig:F91). In this model, the y axis value of the line at a given x axis location represents our expected value for apparent height ($\mu$). The actual value of observations would then vary around this expected value in a normal distribution with a mean of 0 and a standard deviation equal to $\sigma$.
+So what if we *do* want to think about variation in apparent height as a function of variation in VTL. In this case, the mean of the normal distribution generating apparent height values changes *conditionally* along straight lines as a function of the value of VTL. This model can be thought of as a normal distribution sliding along a *diagonal* line, generating numbers as it slides. In the right plot of figure \@ref(fig:F91) we can see what this might look like. In this model, the y axis value of the line at a given x axis location represents our expected value for our dependent variable ($\mu$). The actual value of observations would then vary around this expected value in a normally distributed manner with a mean of 0 and a standard deviation equal to $\sigma$.
 
 ### Description of the model
 
-Just as we did in chapter 3, we are going to begin with 'incorrect' models that ignore the fact that we have repeated measures data. We do this so that we can focus on the geometry of our models and on understanding their basic designs before moving onto more complicated models. We can use the `brm` function to find the intercept and slope of a line through the points in our two-dimensional space (represented in the scatter plot). Our model formula will look like this:
+Just as we did in chapter 3, we're going to begin with 'incorrect' models that ignore the fact that we have repeated measures data. We do this so that we can focus on the geometry of our models and on understanding their basic designs before moving onto more complicated models. We can use the `brm` function to find estimates of the intercept and slope of a line through the points in our two-dimensional space (represented in the scatter plot). Our model formula will look like this:
 
 `height ~ vtl`
 
-Which tells `brms` to predict `height` based on the values of `vtl` and an intercept which is implicit in the model formula. If the variable on the right hand side of the `~` is numeric, `brm` will treat it as a quantitative predictor and assume a linear relationship between your dependent and independent variables. The structure of a regression model with a single continuous predictor (a 'bivariate' regression) is shown in \@ref(eq:84). The first line says that we have a normally-distributed variable with an unknown mean that varies from trial to trial ($\mu_{[i]}$). The second line tells us that variation in the mean parameter is along a line with an intercept equal to $Intercept$ and a slope of $VTL$ along the x axis. We name the slope term ($VTL$) after the quantitative predictor it is associated with ($\mathrm{vtl}$) because this is what R will do. Note that the predicted value ($\mu_{[i]}$) and the predictor variable ($\mathrm{vtl}_{[i]}$) receive subscripts, as these change from trial to trial. However, the slope and intercept **do not** receive subscripts because these do not vary in this model. This model contains a single intercept and a single slope (i.e. it represents a single line) for *every* observation. Also note that we're simply treating the slope and intercept as 'fixed' effects and specifying prior distributions.
+Which tells `brms` to predict `height` based on the values of `vtl` and an intercept which is implicit in the model formula. If the variable on the right hand side of the `~` is numeric, `brm` will treat it as a quantitative predictor and assume a linear relationship between your dependent and independent variables. The structure of a regression model with a single continuous predictor (a **bivariate**, two-variable, regression) is shown in \@ref(eq:94). The first line says that we have a normally-distributed variable with an unknown mean that varies from trial to trial ($\mu_{[i]}$). The second line tells us that variation in the mean parameter is along a line with an intercept equal to $Intercept$ and a slope of $VTL$ along the x axis. We name the slope term ($VTL$) after the quantitative predictor it is associated with ($\mathrm{vtl}$) because this is what R will do. Note that the predicted value ($\mu_{[i]}$) and the predictor variable ($\mathrm{vtl}_{[i]}$) receive subscripts, as these change from trial to trial. However, the slope and intercept *do not* receive subscripts because these do not vary in this model. This model contains a single intercept and a single slope (i.e. it represents a single line) for *every* observation. Also note that we're simply treating the slope and intercept as 'fixed' effects and specifying all aspects of their prior distributions.
 
 
 $$
@@ -149,65 +146,65 @@ $$
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mu_{[i]} = \mathrm{Intercept} + VTL \times \mathrm{vtl}_{[i]}  \\ \\
 \textrm{Priors:} \\
-Intercept \sim t(3, 175, 100) \\
-VTL \sim t(3, 0, 10) \\
-\sigma \sim t(3, 0, 12) \\
-\\
+Intercept \sim t(3, 160, 12) \\
+VTL \sim t(3, 0, 12) \\
+\sigma \sim t(3, 0, 12)
 \end{split}
-(\#eq:84)
+(\#eq:94)
 \end{equation}
 $$
 
-Here's two other ways to think about this model. First, we can think of it as making a line and then we add noise to it. Each of our observed values is just a line (representing systematic variation) plus a random draw from an error distribution ($\mathcal{N}(0,\sigma_{error})$) as in \@ref(eq:85). We did something like this in section 2.X.
+Here's two other ways to think about this model. First, we can think of it as making a line and then adding noise to it, as in \@ref(eq:95). From this perspective, each of our observed values is the sum a line (representing systematic variation) plus a random draw from an error distribution ($\mathcal{N}(0,\sigma_{error})$) . We did something like this in section 2.X.
 
 $$
 \begin{equation}
-height_{[i]} = Intercept + VTL * \mathrm{vtl_{[i]}} + \mathrm{N}(0,\sigma)
-(\#eq:85)
+height_{[i]} = Intercept + VTL \times \mathrm{vtl_{[i]}} + \mathrm{N}(0,\sigma)
+(\#eq:95)
 \end{equation}
 $$
 
-Alternatively, we could place the formula for the line *inside* the normal distribution function. There's no particular reason to do this, but it's helpful to see it and realize that it will result in the same output as \@ref(eq:85). In equation \@ref(eq:86), we're saying: the data is generated according to a normal distribution whose mean varies along a line, and we expect the variation around this line to have a standard deviation equal to $\sigma_{error}$. 
+Alternatively, we could place the formula for the line *inside* the normal distribution function, as in \@ref(eq:96). There's no particular reason to do this, but it's helpful to see it and realize that it will result in the same output as \@ref(eq:95). In equation \@ref(eq:96) we're saying: The data is generated according to a normal distribution whose mean varies along a line, and we expect the variation around this line to have a standard deviation equal to $\sigma$. 
 
 $$
 \begin{equation}
-\mathrm{N}(Intercept + VTL * \mathrm{vtl_{[i]}},\, \sigma)  \\
-(\#eq:86)
+\mathrm{N} (Intercept + VTL \times \mathrm{vtl_{[i]}},\, \sigma)
+(\#eq:96)
 \end{equation}
 $$
 
-How does our model find the 'best' intercept and slope values given the data? Regression models focus on finding estimates of these parameters that the smallest values of $\sigma$. Traditional regression models focus only on this, which is why these models are referred to as **ordinary least-squares** regression, because they finds the solution that results in the 'least squares' (i.e., the smallest $(\sigma)^2$) possible given the data. In a multilevel model, the estimation of the 'best' slopes and intercepts for our lines can be substantially more complicated than in least-squares regression. However, in general the lines estimated by our regression models will still tend to minimize the value of $\sigma$, given our data and model structure. 
-
-There is one more thing to discuss before fitting our model, and that is the utility of *centering* continuous predictors, as discussed in section X. When you carry out a regression with a single quantitative predictor, the intercept is the value of your dependent variable ($y$) when your predictor ($x$) is equal to 0. We don't actually care what the expected apparent height is when VTL is equal to zero because a VTL of zero centimeters is not possible and does not exist. In the left panel of figure \@ref(fig:F82) we see the intercept of a line going through our observations (at about 50 cm). This tells us that a speaker with a VTL of 0 cm is expected to sound about 50 cm tall. Of course, as noted earlier this is not very useful information. We can get more useful intercept values by simply centering our predictor variable(s). Centering a variable means subtracting the mean value from all observations, as seen below.
+How does our model find the 'best' intercept and slope values given the data? Regression models generally try to find estimates of these parameters that result in the smallest values of $\sigma$. Traditional regression models focus *only* on this, which is why these models are referred to as **ordinary least-squares** regression, because they finds the solution that results in the 'least squares' (i.e., the smallest $(\sigma)^2$) possible given the data. In a multilevel model, the estimation of the 'best' slopes and intercepts for our lines can be substantially more complicated than in least-squares regression. However, the same general principle applies to the lines estimated by our multilevel regression models: In general, they will tend to find parameter estimates that minimize $\sigma$, given our data and model structure. 
+  There's one more thing to discuss before fitting our model, and that is the utility of *centering* continuous predictors (discussed in section X). When you carry out a regression with a single quantitative predictor, the intercept is the value of your dependent variable ($y$) when your predictor ($x$) is equal to 0. We don't actually care what the expected apparent height is when VTL is equal to zero because a VTL of zero centimeters is not possible and does not exist. In the left panel of figure \@ref(fig:F92) we see the intercept of a line going through our observations (at about 50 cm). This tells us that a speaker with a VTL of 0 cm is expected to sound about 50 cm tall. Of course, as noted earlier this is not very useful information. We can get more useful intercept values by simply centering our predictor variable(s). Centering a variable means subtracting the mean value from all observations, as seen below.
 
 ```{r}
 height_exp$vtl_original = height_exp$vtl
-
 height_exp$vtl = height_exp$vtl - mean(height_exp$vtl)
 ```
 
-When you subtract the sample mean from a set of numbers, the sample mean for those numbers will now be zero. When this is done, each observation will now represent a deviation from 0 and the sum (and mean) of all the observations will equal zero. Since the intercept of the line is the value of the $y$ variable when the $x$ variable is equal to zero, centering our predictor makes the intercept equal to the value of $y$ when $x$ is equal to its mean (now zero). Centering predictor variables affects the intercept of the model but does does not affect the slope or any other aspect of the model. For example, in the middle and left plots in figure \@ref(fig:F82) we see that centering has changed the x-axis and made our intercept equal to our data mean, but has not otherwise affected the plot. Thus, centering is basically like choosing the 'coding' (e.g., sum coding vs. treatment coding) for lines, it affects how the information is represented in the model but not the information itself. As a result, centering can be tremendously useful in yielding more interpretable intercept estimates, and we will be centering our continuous predictors unless there is a compelling reason to not do so. In your own work, the decision whether to center or not should be based on the information you hope to get out of your model (e.g. is 0 meaningful for your predictors?), just like the decision of which coding system to use for nominal variables.
+When you subtract the sample mean from a set of numbers, the sample mean for those numbers will now be zero. When this is done, each observation will now represent a deviation from 0 and the sum (and mean) of all the observations will equal zero. Since the intercept of the line is the value of the $y$ variable when the $x$ variable is equal to zero, centering our predictor makes the intercept equal to the value of $y$ when $x$ is equal to its mean (now zero). Centering predictor variables affects the intercept of the model but does does not affect the slope or any other aspect of the model. For example, in the middle and left plots in figure \@ref(fig:F92) we see that centering has changed the x-axis and made our intercept equal to our data mean, but has not otherwise affected the plot. Thus, centering is basically like choosing the 'coding' (e.g., sum coding vs. treatment coding) for lines: It affects how the information is represented in the model but not the information itself. As a result, centering can be tremendously useful in yielding more interpretable intercept estimates, and we will be centering our continuous predictors unless there is a compelling reason to not do so. In your own work, the decision whether to center or not should be based on the information you hope to get out of your model (e.g. is 0 meaningful for your predictors?), just like the decision of which coding system to use for nominal variables.
 
-```{r F92, fig.height = 3, fig.width = 8, fig.cap = "(left) f0 plotted against perceived height for each token. Horizontal line is the mean of the group means. (middle) -- . (right) .", echo = FALSE}
+```{r F92, fig.height = 3, fig.width = 8, fig.cap = "(left) Individual apparent height judgments plotted against speaker vocal-tract length (VTL). (middle) -- . (right) .", echo = FALSE}
 
 ################################################################################
-### Figure 8.2
+### Figure 9.2
 ################################################################################
+
+vtlo = height_exp$vtl
+vtl = height_exp$vtl - mean(height_exp$vtl)
 
 #single_line_model_coefficients = fixef (single_line_model)[,1]
 
-cffs = lm(height~vtl_original, data = height_exp)$coefficients
+cffs = lm(height~vtlo, data = height_exp)$coefficients
 
 par (mfrow = c(1,3), mar = c(4,2,1,1), oma = c(2,3,0,0))
 
-plot (height ~ vtl_original, data = height_exp, pch=16,col=4,xlim = c(-3,20),
+plot (height ~ vtlo, data = height_exp, pch=16,col=4,xlim = c(-3,20),
       ylim=c(40,200), xlab="VTL (cm)",cex.lab=1.3);
 abline (cffs,col=2,lwd=3); 
 abline (h=mean(height_exp$height), v=0, lty=3)
 mtext (side=2, text="Apparent Height (cm)", line = 3)
 
-cffs = lm(height~vtl_original, data = height_exp)$coefficients
-plot (height ~ vtl_original, data = height_exp, pch=16,col=4,xlim = c(10,17),
+cffs = lm(height~vtlo, data = height_exp)$coefficients
+plot (height ~ vtlo, data = height_exp, pch=16,col=4,xlim = c(10,17),
       ylim=c(100,200), xlab="VTL (cm)",cex.lab=1.3);
 abline (cffs,col=2,lwd=3); 
 abline (h=mean(height_exp$height), v=0, lty=3)
@@ -219,14 +216,11 @@ plot (height ~ vtl_c, data = height_exp, pch=16,col=4,xlim = c(-3.5,3.5),
       ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3);
 abline (cffs,col=2,lwd=3); 
 abline (h=mean(height_exp$height), v=0, lty=3)
-
-
-
 ```
 
 ### Fitting an interpreting the model
 
-We can use the `brm` function to find the intercept and slope of the 'best' line through the points in our two-dimensional space (represented in the scatter plot).   
+We can use the `brm` function to find the intercept and slope of the 'best' line through the points in our scatter plot in figure \@ref(fig:F92).   
 
 ```{r, eval = FALSE}
 options (contrasts = c("contr.sum","cont.sum"))
@@ -234,79 +228,80 @@ set.seed (1)
 model_single_line =
   brm (height ~ vtl, data = height_exp, chains=1, cores=1,  warmup=1000, iter = 6000,
        prior = c(set_prior("student_t(3, 160, 12)", class = "Intercept"),
-                 set_prior("student_t(3, 10, 12)", class = "b"),
+                 set_prior("student_t(3, 0, 12)", class = "b"),
                  set_prior("student_t(3, 0, 12)", class = "sigma")))
-# save model
-# saveRDS (model_single_line, '9_model_single_line.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model_single_line, '../models/9_model_single_line.RDS')
 model_single_line = readRDS ('../models/9_model_single_line.RDS')
 ```
 
 The model print statement should be mostly familiar by now. Our model contains only population-level ('fixed') effects: an `Intercept`, indicating the intercept of our line, and `vtl` indicating the slope of VTL along the apparent height axis. In addition, we get an estimate of the error (`sigma`, $\sigma$) around our line.  
 
 ```{r, collapse = TRUE}
-model_single_line
+bmmb::short_summary (model_single_line)
 ```    
 
-We can see that the line predicting perceived height as a function of f0 has an intercept of 160 cm and a slope for the `vtl` predictor of 8.6. Let's discuss the intercept first. Recall that for a bivariate regression (like ours) the intercept is the value of the dependent variable when the independent variable is equal to zero. Since we are using a centered predictor, in our model `vtl` is equal to zero when it is equal to its mean. This means that when VTL equals 13.4 (`mean(height_exp$vtl_original)`), we expect apparent height to equal 160.1 cm. The model *thinks* the mean of `vtl` is 0, but we *know* it is 13.4 cm, and the centering of the predictor does not affect our ability to interpret it such. The slope of the `vtl` predictor is 8.6, meaning that for every 1 cm increase in vocal-tract length we expect an *increase* of 8.6 cm in apparent height. The slope is a *weight* that allows the line to accurately fit the points. In the absence of a slope, regression models would only work if there was a 1 to 1 relationship between the $x$ (dependent) and $y$ (independent) variables. This would mean that for every 1 cm change in VTL we would see a 1 cm change in apparent height. What are the odds that the things we measure will be in a 1 to 1 relationship with all of our predictors? Very small. Instead, the slope coefficient in regression models allows a single unit change in the predictor to be associated with different units of change in the variable you are trying to understand. 
+We can see that the line predicting apparent height as a function of speaker VTL has an intercept of 160 cm and a slope for the `vtl` predictor of 8.6. Let's discuss the intercept first. Recall that for a bivariate regression (like ours) the intercept is the value of the dependent variable when the independent variable is equal to zero. Since we are using a centered predictor, when the mean of our `vtl` predictors is equal to zero, it is *really* (secretly) equal to its *true* mean of 13.4 cm (`mean(height_exp$vtl_original)`). This means that when a speaker's VTL equals 13.4 cm, we expect apparent height to equal 160.1 cm. The model *thinks* the mean of `vtl` is 0, but we *know* it is 13.4 cm, and the centering of the predictor does not affect our ability to interpret it such. 
+  The slope of the `vtl` predictor is 8.6, meaning that for every 1 cm increase in vocal-tract length we expect an *increase* of 8.6 cm in apparent height. The slope is a *weight* that allows the line to accurately fit the points. In the absence of a slope, regression models would only work if there was a 1 to 1 relationship between the $x$ and $y$ variable. This would mean that for every 1 cm change in VTL we would need to see a 1 cm change in apparent height. What are the odds that the things we measure will be in a 1 to 1 relationship with all of our predictors? Very small. Instead, the slope coefficient in regression models allows a single unit change in the predictor to be associated with different units of change in the variable you are trying to understand. 
+  Figure \@ref(fig:F93) shows our observations compared to the line estimated using our model ($height = Intercept + VTL \times \mathrm{vtl} = 160.1 + 8.6 \times \mathrm{vtl}$). One obvious problem with using a single line is that the residuals (as reflected by variation about our line) are much larger for smaller (negative) values of VTL than they are for larger values. Since our model has a single, fixed $\sigma$ for all values of VTL (10.8), it cannot possibly account for this sort of variation. So what might cause this lack of fit? One possible explanation is that rather than varying around one single line, we might actually observations around *four* separate lines, one for each group. We will consider this possibility in the following section.
 
-Figure \@ref(fig:F83) shows our observations compared to the line estimated using our model ($height = Intercept + VTL \times \mathrm{vtl} = 160.1 + 8.6 \times \mathrm{vtl}$). One obvious problem with using a single line is that the residuals (as reflected by variation about our line) are much larger for smaller (negative) values of VTL than they are for larger values. Since our model has a single, fixed $\sigma$ for all values of VTL (10.8), it cannot possibly account for this sort of variation. So what might cause this lack of fit? One possible explanation is that rather than varying around one single line, we might actually observations around *four* separate lines, one for each group. We will consider this possibility in the following section.
-
-```{r F93, fig.height = 3.5, fig.width = 8, fig.cap = "(left) f0 plotted against perceived height for each token. Horizontal line is the mean of the group means. (middle) -- . (right) .", echo = FALSE}
+```{r F93, fig.height = 3, fig.width = 8, fig.cap = "(left) Apparent speaker height plotted against speaker VTL for each token. Horizontal line is the mean of the group means. (middle) -- . (right) .", echo = FALSE}
 
 ################################################################################
-### Figure 8.3
+### Figure 9.3
 ################################################################################
 
 #single_line_model_coefficients = fixef (single_line_model)[,1]
 
 cffs_one = lm(height~vtl, data = height_exp)$coefficients
-cols_use = cols[factor(height_exp$C)]
+cols_use = cols[as.numeric(factor(height_exp$C))+1]
 
 par (mfrow = c(1,3), mar = c(1,.1,1,.5), oma = c(3,4,0,0))
 
 height_exp$vtl_c = height_exp$vtl - mean(height_exp$vtl)
 
-plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-3.5,3.5),
-      ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3);
+plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-2.5,3),
+      ylim=c(105,195), xlab="Centered VTL (cm)",cex.lab=1.3);
 grid()
 abline (cffs_one[1],cffs_one[2],col=4,lwd=3); 
 mtext (side = 2, 'Apparent Height (cm)', line = 2.75)
 mtext (side = 1, 'Centered VTL (cm)', outer = TRUE, line = 1.75)
 
+legend (1,140,legend=c("b","g","m","w"),col=cols[2:5],pch=16,bty='n',
+        cex=1.3,pt.cex=1.5)
 
 cffs = lm(height~C, data = height_exp)$coefficients
 cffs = c(cffs, -sum(cffs[2:4]))
 
-plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-3.5,3.5),
-      ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n');
+plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-2.5,3),
+      ylim=c(105,195), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n');
 grid()
 abline (cffs[1],0,col=4,lwd=3); 
-abline (cffs[1]+cffs[2],0,col=cols[1],lwd=4); 
-abline (cffs[1]+cffs[3],0,col=cols[2],lwd=4); 
-abline (cffs[1]+cffs[4],0,col=cols[3],lwd=4); 
-abline (cffs[1]+cffs[5],0,col=cols[4],lwd=4); 
+abline (cffs[1]+cffs[2],0,col=cols[2],lwd=4); 
+abline (cffs[1]+cffs[3],0,col=cols[3],lwd=4); 
+abline (cffs[1]+cffs[4],0,col=cols[4],lwd=4); 
+abline (cffs[1]+cffs[5],0,col=cols[5],lwd=4); 
 
 
-cffs = lm(height~vtl+C, data = height_exp)$coefficients
+cffs = lm(height~vtl_c+C, data = height_exp)$coefficients
 cffs = c(cffs, -sum(cffs[3:5]))
 
-plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-3.5,3.5),
-      ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n');
+plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-2.5,3),
+      ylim=c(105,195), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n');
 grid()
 abline (cffs[1],cffs[2],col=4,lwd=3,lty=1); 
-abline (cffs[1]+cffs[3],cffs[2],col=cols[1],lwd=4); 
-abline (cffs[1]+cffs[4],cffs[2],col=cols[2],lwd=4); 
-abline (cffs[1]+cffs[5],cffs[2],col=cols[3],lwd=4); 
-abline (cffs[1]+cffs[6],cffs[2],col=cols[4],lwd=4); 
+abline (cffs[1]+cffs[3],cffs[2],col=cols[2],lwd=4); 
+abline (cffs[1]+cffs[4],cffs[2],col=cols[3],lwd=4); 
+abline (cffs[1]+cffs[5],cffs[2],col=cols[4],lwd=4); 
+abline (cffs[1]+cffs[6],cffs[2],col=cols[5],lwd=4); 
 
 ```
 
 
 ## Models with group-dependent intercepts, but shared slopes
 
-In the previous section we focused on models that imposed a single line for all groups as in the left plot in figure \@ref(fig:F93). In chapter 7, we fit a model (`model_four_froups`) that had a different intercept for each apparent speaker category but, effectively, a slope of 0 for `vtl` for all groups. This model structure is illustrated in the middle plot of figure \@ref(fig:F83). Here, we're going to consider models that allow for differing intercepts between groups, but are still constrained to have the same slope. This model structure is illustrated in the right plot in figure \@ref(fig:F83). 
+In the previous section we focused on models that imposed a single line for all groups as in the left plot in figure \@ref(fig:F93). In chapter 7, we fit a model (`model_four_froups`) that had a different intercept for each apparent speaker category but, effectively, a slope of 0 for `vtl` for all groups. This model structure is illustrated in the middle plot of figure \@ref(fig:F93). Here, we're going to consider models that allow for differing intercepts between groups, but are still constrained to have the same slope. This model structure is illustrated in the right plot in figure \@ref(fig:F93). 
 
 We allow for category-dependent intercepts for our lines by by including our predictor specifying apparent speaker category (`C`) in our model formula:
 
@@ -316,7 +311,7 @@ The model above says: "model apparent height as a function of VTL, allowing for 
 
 ### Description of the model
 
-The model formula above corresponds to the model presented in \@ref(eq:87). Th prediction equation is just like that of our previous model save for the addition of the $C_{[\mathrm{C_{[i]}}]}$ term. It is also very similar to the fixed effects structure of the four group model we fit in the previous chapter save for the addition of the $VTL \times \mathrm{vtl}_{[i]} $ term. 
+The model formula above corresponds to the model presented in \@ref(eq:97). Th prediction equation is just like that of our previous model save for the addition of the $C_{[\mathrm{C_{[i]}}]}$ term. It is also very similar to the fixed effects structure of the four group model we fit in the previous chapter save for the addition of the $VTL \times \mathrm{vtl}_{[i]} $ term. 
 
 $$
 \begin{equation}
@@ -328,13 +323,12 @@ Intercept \sim t(3, 175, 100) \\
 VTL \sim t(3, 0, 10) \\
 C_{[\bullet]} \sim N(0,12) \\
 \sigma \sim t(3, 0, 12) \\
-\\
 \end{split}
-(\#eq:87)
+(\#eq:97)
 \end{equation}
 $$
 
-Here's another way to think about this model and why it allows for category-dependent intercepts but not slopes. In our model, the $C$ coefficients do not get multiplied by the `vtl` dependent variable in our prediction equation. As a result, our model above the slope is entirely determined by the $VTL$ coefficient. We can present an alternate parametrization of our model that is no way affects any of our results but better conveys the organization of parameters into those affecting the slope and those affecting the intercept. The model in \@ref(eq:88) specifies our lines in terms of $a$ and $b$ parameters that vary from trial to trial. The trial-specific intercept ($a$) is equal to the overall intercept, and the category predictor for that trial. Although it may be strange to think of it this way, in a sense our model intercept is the main effect for intercept, or the 'intercept intercept'. By this we mean that this is the reference value we use for the intercept of our line. The $C$ coefficients therefore represent the interaction of our intercept and category, that is category-dependent variation for our intercept. The slope terms does not actually vary from trial to trial in practice, since it simply equals our $VTL$ slope parameter. This single parameter can be thought of as the 'intercept' of our $VTL$ slope, a concept that will be expanded on when we include category-dependent slopes in our model a little later in this chapter. 
+Here's another way to think about this model and why it allows for category-dependent intercepts but not slopes. In our model, the $C$ coefficients do not get multiplied by the `vtl` dependent variable in our prediction equation. As a result, our model above the slope is entirely determined by the $VTL$ coefficient. We can present an alternate parametrization of our model that is no way affects any of our results but better conveys the organization of parameters into those affecting the slope and those affecting the intercept. The model in \@ref(eq:98) specifies our lines in terms of $a$ and $b$ parameters that vary from trial to trial. The trial-specific intercept ($a$) is equal to the overall intercept, and the category predictor for that trial. Although it may be strange to think of it this way, in a sense our model intercept is the main effect for intercept, or the 'intercept intercept'. By this we mean that this is the reference value we use for the intercept of our line. The $C$ coefficients therefore represent the interaction of our intercept and category, that is category-dependent variation for our intercept. The slope terms does not actually vary from trial to trial in practice, since it simply equals our $VTL$ slope parameter. This single parameter can be thought of as the 'intercept' of our $VTL$ slope, a concept that will be expanded on when we include category-dependent slopes in our model a little later in this chapter. 
 
 $$
 \begin{equation}
@@ -347,9 +341,9 @@ b_{[i]} = VTL \\ \\
 Intercept \sim t(3, 175, 100) \\
 VTL \sim t(3, 0, 10) \\
 C_{[\bullet]} \sim N(0,12) \\
-\sigma \sim t(3, 0, 12) \\
+\sigma \sim t(3, 0, 12) 
 \end{split}
-(\#eq:88)
+(\#eq:98)
 \end{equation}
 $$
 
@@ -359,11 +353,6 @@ We fit a model that contains the category predictor and also includes our contin
 
 ```{r, eval = FALSE}
 # Fit the model yourself, or
-# download pre-fit model from: 
-# github.com/santiagobarreda/stats-class/tree/master/models
-# and load after placing in working directory
-# single_line_model = readRDS ('5_group_single_slope_model.RDS')
-
 set.seed (1)
 model_many_intercept_one_slope =
   brm (height ~ C + vtl, 
@@ -371,16 +360,14 @@ model_many_intercept_one_slope =
        prior = c(set_prior("student_t(3, 160, 12)", class = "Intercept"),
                  set_prior("student_t(3, 0, 12)", class = "b"),
                  set_prior("student_t(3, 0, 12)", class = "sigma")))
-# save model
-# saveRDS (model_many_intercept_one_slope, '9_model_many_intercept_one_slope.RDS')
-
 ```
 ```{r, include = FALSE}
+# saveRDS (model_many_intercept_one_slope, '9_model_many_intercept_one_slope.RDS')
 model_many_intercept_one_slope = 
   readRDS ('../models/9_model_many_intercept_one_slope.RDS')
 ```
 
-For the sake of comparison, we will also fit a model with only group predictors and no continuous predictor (`vtl`). As noted above, this is effectively a model with a bunch of horizontal lines (slope = 0), one for each group (seen in the middle plot of \@ref(fig:F93)), and presented in \@ref(eq:89). 
+For the sake of comparison, we will also fit a model with only group predictors and no continuous predictor (`vtl`). As noted above, this is effectively a model with a bunch of horizontal lines (slope = 0), one for each group (seen in the middle plot of \@ref(fig:F93)), and presented in \@ref(eq:99). 
 
 $$
 \begin{equation}
@@ -390,7 +377,7 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 a_{[i]} = Intercept + C_{[\mathrm{C}_{[i]}]} \\
 b_{[i]} = 0 \\
 \end{split}
-(\#eq:89)
+(\#eq:99)
 \end{equation}
 $$
 
@@ -398,11 +385,6 @@ This model is actually just like the model we fit in chapter 7 called `model_fou
 
 ```{r, eval = FALSE}
 # Fit the model yourself, or
-# download pre-fit model from: 
-# github.com/santiagobarreda/stats-class/tree/master/models
-# and load after placing in working directory
-# single_line_model = readRDS ('5_group_intercepts_model.RDS')
-
 set.seed (1)
 model_many_intercept_no_slope =
  brm (height ~ C, 
@@ -410,10 +392,9 @@ model_many_intercept_no_slope =
        prior = c(set_prior("student_t(3, 160, 12)", class = "Intercept"),
                  set_prior("student_t(3, 0, 12)", class = "b"),
                  set_prior("student_t(3, 0, 12)", class = "sigma")))
-# save model
-# saveRDS (model_many_intercept_no_slope, '9_model_many_intercept_no_slope.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model_many_intercept_no_slope, '9_model_many_intercept_no_slope.RDS')
 model_many_intercept_no_slope = readRDS ('../models/9_model_many_intercept_no_slope.RDS')
 ```
 
@@ -478,7 +459,7 @@ group_single_slope_effects = bmmb::short_hypothesis (
 group_single_slope_effects
 ```
 
-We can use the `brmplot` function to visually inspect the differences between the group effects across the models in figure \@ref(fig:F84). The other two panels in the plot present the parallel lines implied by the group effects (ignoring the slopes) for the model with no slope and the model with a shared slope respectively. We see that the groups effects are smaller when the continuous predictor is included. This is visually apparent in the tighter clustering of the lines in the right panel of Figure \@ref(fig:F94). By the way, since the group effects change the spacing of the lines for each group, in the absence of group effects we would just see four overlapping lines and our model would be just like `model_single_line` we fit above.
+We can use the `brmplot` function to visually inspect the differences between the group effects across the models in figure \@ref(fig:F94). The other two panels in the plot present the parallel lines implied by the group effects (ignoring the slopes) for the model with no slope and the model with a shared slope respectively. We see that the groups effects are smaller when the continuous predictor is included. This is visually apparent in the tighter clustering of the lines in the right panel of Figure \@ref(fig:F94). By the way, since the group effects change the spacing of the lines for each group, in the absence of group effects we would just see four overlapping lines and our model would be just like `model_single_line` we fit above.
 
 ```{r F94, fig.width = 8, fig.height = 3.5, echo = FALSE, fig.cap =" (left) Comparison of estimated group effects for the model without (blue) and with (red) the perceived height predictor. (middle) Line intercepts reflect the blue coefficients in the left panel (without perceived height). (right) the red coefficients in the left panel (with perceived height). Lines correspond to boys (yellow), girls (green), men (red), and women (blue)."}
 
@@ -523,7 +504,7 @@ abline (cffs[5],0,col=cols[4],lwd=4);
 abline (cffs[6],0,col=cols[5],lwd=4); 
 ```
 
-Our comparison of the group effects across the two models tells us that the difference in line intercepts is much smaller for adults when we include `vtl` as a predictor. We can see why this is the case in figure \@ref(fig:F83). When `vtl` is not included as a predictor, the difference in apparent height between adult males and female can only be represented by a difference in line intercepts. In contrast, when we *do* include `vtl` as a predictor the difference between apparent heights between apparent men and women can potentially be explained by the difference in `vtl` between these categories of speakers. The fact that the lines representing men and women in our model have the same intercept indicates that *given a fixed value of `vtl`*, we expected adult males and females to be about the same apparent height. This does not mean that men and women have the same apparent height in our data, we know that they do not. Instead, it suggests that the difference in apparent height may be due to differences in average `vtl` between the groups. Adult males tend to be perceived as taller than adult females because these speakers tend to have higher values of `vtl`, and this tends to be associated with larger apparent height judgments. However, the similarity of the intercept effects for men and women *does* suggest that men and women of approximately the same value of `vtl` will tend to have about the same apparent height. 
+Our comparison of the group effects across the two models tells us that the difference in line intercepts is much smaller for adults when we include `vtl` as a predictor. We can see why this is the case in figure \@ref(fig:F93). When `vtl` is not included as a predictor, the difference in apparent height between adult males and female can only be represented by a difference in line intercepts. In contrast, when we *do* include `vtl` as a predictor the difference between apparent heights between apparent men and women can potentially be explained by the difference in `vtl` between these categories of speakers. The fact that the lines representing men and women in our model have the same intercept indicates that *given a fixed value of `vtl`*, we expected adult males and females to be about the same apparent height. This does not mean that men and women have the same apparent height in our data, we know that they do not. Instead, it suggests that the difference in apparent height may be due to differences in average `vtl` between the groups. Adult males tend to be perceived as taller than adult females because these speakers tend to have higher values of `vtl`, and this tends to be associated with larger apparent height judgments. However, the similarity of the intercept effects for men and women *does* suggest that men and women of approximately the same value of `vtl` will tend to have about the same apparent height. 
 
 ## Models with group-dependent slopes and intercepts
 
@@ -535,18 +516,22 @@ The model above says: "model apparent height as a function of `vtl`, allowing fo
 
 ### Description of the model
 
-In \@ref(eq:811) we present an 'expanded' version of our prediction equation in a format similar to that presented above. Note that each term that relates to the slope ($pheight, pheight \colon group$) is independently multiplied with our predictor ($x_{[i]}$). 
+In \@ref(eq:911) we present an 'expanded' version of our prediction equation in a format similar to that presented above. Note that each term that relates to the slope ($pheight, pheight \colon group$) is independently multiplied with our predictor ($x_{[i]}$). 
 
 $$
+\begin{equation}
 \mu_{[i]} = Intercept + C_{[\mathrm{C}_{[i]}]} + VTL \times \mathrm{vtl}_{[i]} + VTL \colon C_{[\mathrm{C}_{[i]}]} \times \mathrm{vtl}_{[i]}
-(\#eq:810)
+(\#eq:910)
+\end{equation}
 $$
 
-The equation above says that our expected value for a given trial $i$ is equal to the intercept ($Intercept$), the category predictor ($C_{[\mathrm{C}_{[i]}]}$), the product of `vtl` and the slope coefficient ($VTL \times \mathrm{vtl}_{[i]}$), and the product of `vtl` and the interaction of the slope coefficient with group (($VTL \colon C_{[\mathrm{group}_{[i]}]} \times x_{[i]}$)). We can group intercept and slope terms in parenthesis, as in \@ref(eq:811).
+The equation above says that our expected value for a given trial $i$ is equal to the intercept ($Intercept$), the category predictor ($C_{[\mathrm{C}_{[i]}]}$), the product of `vtl` and the slope coefficient ($VTL \times \mathrm{vtl}_{[i]}$), and the product of `vtl` and the interaction of the slope coefficient with group (($VTL \colon C_{[\mathrm{group}_{[i]}]} \times x_{[i]}$)). We can group intercept and slope terms in parenthesis, as in \@ref(eq:911).
 
 $$
+\begin{equation}
 \mu_{[i]} = (Intercept + C_{[\mathrm{C}_{[i]}]}) + (VTL \times \mathrm{vtl}_{[i]} + VTL \colon C_{[\mathrm{C}_{[i]}]} \times \mathrm{vtl}_{[i]})
-(\#eq:811)
+(\#eq:911)
+\end{equation}
 $$
 
 We can take this one step further and break up our prediction equation into three separate equations: One for the intercept, one for the slope, and one for our dependent variable.
@@ -558,11 +543,11 @@ $$
 a_{[i]} = Intercept + C_{[\mathrm{C}_{[i]}]} \\
 b_{[i]} = VTL + VTL \colon C_{[\mathrm{C}_{[i]}]}) 
 \end{split}
-(\#eq:812)
+(\#eq:912)
 \end{equation}
 $$
 
-The three equations in \@ref(eq:812) say:
+The three equations in \@ref(eq:912) say:
 
   * Our expected apparent height varies according to trial-dependent intercept and `vtl` slope parameters. 
   
@@ -583,7 +568,7 @@ VTL \sim t(3, 0, 10) \\
 C_{[\bullet]} \sim t(3, 0, 10) \\ 
 VTL\colon C_{[\bullet]} \sim t(3, 0, 10) \\ 
 \end{split}
-(\#eq:813)
+(\#eq:913)
 \end{equation}
 $$
 
@@ -602,7 +587,7 @@ VTL \sim t(3, 0, 10) \\
 C_{[\bullet]} \sim t(3, 0, 10) \\ 
 VTL\colon C_{[\bullet]} \sim t(3, 0, 10) \\ 
 \end{split}
-(\#eq:814)
+(\#eq:914)
 \end{equation}
 $$
 
@@ -801,7 +786,7 @@ The model formula we are actually going to use is seen below:
 
 This model says "Apparent height is expected to vary along lines as a function of the VTL of the speaker. We expect listener-dependent variation in the intercepts and slopes of these lines and speaker dependent variation in the intercept of these lines". We do we include speaker-dependent intercepts but not speaker-dependent slopes. Every listener heard every speaker, meaning their responses are associated with a range of `vtl` values. In contrast, each speaker only had a single `vtl` value. This means it is impossible to calculate a slope for a single point: There are an infinite number of lines that pass through any single point. For this reason, it is impossible to calculate speaker-dependent slopes for our lines, and the inclusion of a term like `(vtl|S)` would likely cause problems for our model fit. 
 
-The formal specification of our model is presented in \@ref(eq:815). This is very similar to the one in \@ref(eq:814), the main difference being that our model now recognizes the repeated-measures nature of our data and estimates several of our predictors using adaptive partial pooling. The prior structure of our model should be familiar by this point, so we just want to focus a bit on the first few lines of the model. These lines say "apparent height varies according to a t distribution with an unknown expected value ($\mu$), scale and nu parameter. The expected value varies from trial to trial according to a line with an unknown intercept ($a$) and slope ($b$) with respect to the `vtl` dimension. The value of the intercept for a given trial is equal to the sum of the model intercept, and listener and speaker-dependent deviations from this intercept. The slope is equal to the slope 'main effect' and a listener-dependent deviation from this".   
+The formal specification of our model is presented in \@ref(eq:915). This is very similar to the one in \@ref(eq:914), the main difference being that our model now recognizes the repeated-measures nature of our data and estimates several of our predictors using adaptive partial pooling. The prior structure of our model should be familiar by this point, so we just want to focus a bit on the first few lines of the model. These lines say "apparent height varies according to a t distribution with an unknown expected value ($\mu$), scale and nu parameter. The expected value varies from trial to trial according to a line with an unknown intercept ($a$) and slope ($b$) with respect to the `vtl` dimension. The value of the intercept for a given trial is equal to the sum of the model intercept, and listener and speaker-dependent deviations from this intercept. The slope is equal to the slope 'main effect' and a listener-dependent deviation from this".   
 
 $$
 \begin{equation}
@@ -813,7 +798,6 @@ b_{[i]} = VTL + VTL \colon L_{[L_{[i]}]}  \\ \\
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim t(3,0,\sigma_S) \\
 \begin{bmatrix} L_{[\bullet]} \\ VTL \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\ \\
-\\
 \mathrm{Intercept} \sim t(3,156,12) \\
 VTL \sim t(3,0,12) \\
 \sigma_L, \sigma_{VTL \colon L}, \sigma_S \sim t(3,0,12) \\
@@ -821,7 +805,7 @@ VTL \sim t(3,0,12) \\
 \nu \sim gamma(2, 0.1) \\ 
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
-(\#eq:815)
+(\#eq:915)
 \end{equation}
 $$
 
@@ -881,14 +865,14 @@ listener_effects = short_hypothesis(
 
 If you inspect the output of the function you will see the familiar four-column matrix indicating parameter estimates, standard deviations and 95% credible intervals. This matrix will have 30 rows representing our 15 intercept and slope random effects. The output of this function is organized so that your grouping variable varies within parameters, which are presented one at a time. Since we asked for intercepts and slopes for each level of listener (`L`), this means that the first 15 parameters represent the intercept effects for listeners one through 15, and rows 16 through 30 represent the slope effects for listeners one through 15. This information is available inside your hypothesis object and can be accessed by asking for the `hypothesis` attribute:
 
-```{r}
-attr(listener_effects, "hypothesis")
+```{r, eval = FALSE, TRUE}
+attr(listener_effects, "hypothesis")[1:4]
 ```
 
 And the `group` attribute:
 
-```{r}
-attr(listener_effects, "group")
+```{r, eval = FALSE, TRUE}
+attr(listener_effects, "group"[1:4])
 ```
 
 As can be seen above, this tells you which hypothesis is being asked in each row, and which level of your grouping variable this corresponds to. So, for example, the third row in `listener_effects`, i.e. `listener_effects[3,]` presents information about $L_{[3]}$ and the 18th row (`listener_effects[18,]`) contains information about $VTL \colon L_{[3]}$. For example, we can see below that listener 3 had an intercept -3.4 cm lower than average and a slope that was 3.5 cm greater than average. 
@@ -911,7 +895,7 @@ We can again inspect these values for listener three and see that the intercept 
 listener_coefficients[c(3,18),]
 ```
 
-In figure \@ref(fig:F87) we see the distribution of apparent height as a function of speaker VTL individually for each listener. Clearly, there is a general tendency shared by all listeners: Each listener-dependent line is reasonably similar to the line drawn using the 'main effects' intercept and slope terms (the broken line on the figure). Although there is general agreement between listeners, there is also noticeable variation in responses between listener that can be caputred by our 'random slopes' model. 
+In figure \@ref(fig:F97) we see the distribution of apparent height as a function of speaker VTL individually for each listener. Clearly, there is a general tendency shared by all listeners: Each listener-dependent line is reasonably similar to the line drawn using the 'main effects' intercept and slope terms (the broken line on the figure). Although there is general agreement between listeners, there is also noticeable variation in responses between listener that can be caputred by our 'random slopes' model. 
 
 
 ```{r F97, fig.width = 8, fig.height = 6, fig.cap="Each plot shows responses from a single subject.", echo = FALSE, cache=TRUE}
@@ -960,7 +944,7 @@ height ~ vtl + A + G + A:G + vtl:A + vtl:G + vtl:A:G +
         (vtl + A + G + A:G + vtl:A + vtl:G + vtl:A:G|L) + (1|S)
 ```
 
-Recall that anything interacting with a continuous predictor affects the slope of that predictor and anything *not* interacting with any continuous predictor affects the slope. So, we see that there is a symmetry to our design in that we are estimating the effect for `A`, `G`, and `A:G` for both our intercept and `vtl` slope. We also see above that we are estimating listener-dependent effects for all the fixed effects in our model, but only speaker-dependent intercepts. Our formal model specification is given in \@ref(eq:816), though we omit many of the priors are as they have not changed, are taking up increasingly large amounts of space, and are specified when we fit our model below. 
+Recall that anything interacting with a continuous predictor affects the slope of that predictor and anything *not* interacting with any continuous predictor affects the slope. So, we see that there is a symmetry to our design in that we are estimating the effect for `A`, `G`, and `A:G` for both our intercept and `vtl` slope. We also see above that we are estimating listener-dependent effects for all the fixed effects in our model, but only speaker-dependent intercepts. Our formal model specification is given in \@ref(eq:916), though we omit many of the priors are as they have not changed, are taking up increasingly large amounts of space, and are specified when we fit our model below. 
 
 $$
 \begin{equation}
@@ -977,7 +961,7 @@ VTL \colon A \colon L_{[L_{[i]}]} \\ VTL \colon G \colon L_{[L_{[i]}]} \\ VTL \c
 
 \mathrm{and \; more} \ldots
 \end{split}
-(\#eq:816)
+(\#eq:916)
 \end{equation}
 $$
 
@@ -1074,7 +1058,7 @@ random_slopes_complex_hypothesis_listener = bmmb::short_hypothesis (
   scope = "coef",group="L")
 ```
 
-Listener-dependent, group-specific lines are presented in figure \@ref(fig:F87). Two things are clear. First, there is substantial variation in lines for different categories. Second, there is substantial variation in the lines representing each category for the different speakers. In both cases, this suggests that this model is preferable to `model_random_slopes_simple` since that model included only a single intercept and $VTL$ slope for each listener. 
+Listener-dependent, group-specific lines are presented in figure \@ref(fig:F97). Two things are clear. First, there is substantial variation in lines for different categories. Second, there is substantial variation in the lines representing each category for the different speakers. In both cases, this suggests that this model is preferable to `model_random_slopes_simple` since that model included only a single intercept and $VTL$ slope for each listener. 
 
 ```{r F910, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject.", echo = FALSE, cache=TRUE}
 
@@ -1192,20 +1176,6 @@ bmmb::brmplot (simple_effects[5:8,], las = 2,cex.lab=1.3,cex.axis=1.3,
 As seen in figure \@ref(fig:F910), the simple effects consist of the differences between groups along one dimension *within* a specific dimension of the other variable. For example the first simple effect shown in the second plot in figure \@ref(fig:F98) shows the simple effect for age when apparent speaker gender is female. In our model, this is the difference in group intercepts between women and girls. The second simple effect for age when apparent speaker gender is male, the difference in group intercepts between men and boys. Based on our simple effects we can say that the effect for speaker age is large, and somewhat greater for male than female speakers. Based on the simple effects for gender within levels of age we can say the perceived femaleness is associated with shorter apparent speakers for adults, but no consistent difference for children. We can use this same approach to discuss the simple effects for VTL slope (fourth plot in figure \@ref(fig:F98)). The only simple effect that has a value that seems reliably different from zero is the difference between women and girls, indicating that the effect for VTL was substantially smaller for women than for girls. 
 
 Overall our results indicate that apparent age had a larger effect on average responses (intercepts) than apparent gender. In addition, VTL effects were larger for younger speakers, and in particular for girls. An effect like this has been reported in Barreda (2017), and has been interpreted in the following way. Girls can have a very wide range of heights since they include speakers at a wide range of development, from about 1 meter to taller than the height of the average adult female (cite). As a result for girls VTL differences will can to a wide range of apparent heights resulting in a large slope. In contrast, there is a much more narrow range of plausible heights for adult female speakers (details). As a result, the slope relating VTL to apparent height will necessarily be smaller. The logic is a bit circular, if the listener really thought the speaker was very small they would not identify them as an adult female, and as a result identifications of speakers as adult females go hand in hand with identifications of speakers of a certain range of heights.  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

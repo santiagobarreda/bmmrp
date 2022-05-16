@@ -11,8 +11,7 @@ Last chapter we talked about comparing many groups and including interactions in
 ## Data and research questions 
 
 We're going to start by focusing on the geometry of different model structures. To do this we're going to ignore the fact that we have repeated measures data and just fit a big complete pooling model like we did in chapter 3. This will not lead to a reliable model because it ignores all the correlations in our data, and treats all our observations as independent when they are not. However, this approach will allow us to begin with simple models before fitting more realistic (and complex) models later in the chapter. 
-
-To fit a model with a quantitative dependent variable and a single quantitative independent variable you need these variables in a data frame. This means you need a data frame with at least two columns, both of which R thinks of as numerical variables (see section \@ref(c1-quantitative) for a discussion of quantitative variables). We're going to keep working with our experimental data (described in section \@ref(c1-design)), and we're going to focus on our ability to predict apparent height given speaker VTL. In our `height_exp` data frame the columns we're interested in are `height` and `vtl`. We load this data and the R packages we need below, keeping only the actual (unmodified) resonance. 
+  To fit a model with a quantitative dependent variable and a single quantitative independent variable you need these variables in a data frame. This means you need a data frame with at least two columns, both of which R thinks of as numerical variables (see section \@ref(c1-quantitative) for a discussion of quantitative variables). We're going to keep working with our experimental data (described in section \@ref(c1-design)), and we're going to focus on our ability to predict apparent height given speaker VTL. In our `height_exp` data frame the columns we're interested in are `height` and `vtl`. We load this data and the R packages we need below, keeping only the actual (unmodified) resonance. 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -182,7 +181,7 @@ height_exp$vtl = height_exp$vtl - mean(height_exp$vtl)
 
 When you subtract the sample mean from a set of numbers, the sample mean for those numbers will now be zero. When this is done, each observation will now represent a deviation from 0 and the sum (and mean) of all the observations will equal zero. Since the intercept of the line is the value of the $y$ variable when the $x$ variable is equal to zero, centering our predictor makes the intercept equal to the value of $y$ when $x$ is equal to its mean (now zero). Centering predictor variables affects the intercept of the model but does does not affect the slope or any other aspect of the model. For example, in the middle and left plots in figure \@ref(fig:F92) we see that centering has changed the x-axis and made our intercept equal to our data mean, but has not otherwise affected the plot. Thus, centering is basically like choosing the 'coding' (e.g., sum coding vs. treatment coding) for lines: It affects how the information is represented in the model but not the information itself. As a result, centering can be tremendously useful in yielding more interpretable intercept estimates, and we will be centering our continuous predictors unless there is a compelling reason to not do so. In your own work, the decision whether to center or not should be based on the information you hope to get out of your model (e.g. is 0 meaningful for your predictors?), just like the decision of which coding system to use for nominal variables.
 
-```{r F92, fig.height = 3, fig.width = 8, fig.cap = "(left) Individual apparent height judgments plotted against speaker vocal-tract length (VTL). (middle) -- . (right) .", echo = FALSE}
+```{r F92, fig.height = 3, fig.width = 8, fig.cap = "(left) Individual apparent height judgments plotted against speaker vocal-tract length (VTL). The horizontal line represents the mean of the points and the vertical line represents the y intercept. (middle) The same points as in the left plot, but focused on the region containing the observations. (right) The same points as in the middle, but plotted according to centered VTL. The horizontal line represents the mean of the points and the vertical line represents the y intercept.", echo = FALSE}
 
 ################################################################################
 ### Figure 9.2
@@ -231,6 +230,10 @@ model_single_line =
                  set_prior("student_t(3, 0, 12)", class = "b"),
                  set_prior("student_t(3, 0, 12)", class = "sigma")))
 ```
+```{r, include = TRUE, eval = FALSE}
+# Or download it from the GitHub page:
+model_single_line = bmmb::get_model ('9_model_single_line.RDS')
+```
 ```{r, include = FALSE}
 # saveRDS (model_single_line, '../models/9_model_single_line.RDS')
 model_single_line = readRDS ('../models/9_model_single_line.RDS')
@@ -244,9 +247,9 @@ bmmb::short_summary (model_single_line)
 
 We can see that the line predicting apparent height as a function of speaker VTL has an intercept of 160 cm and a slope for the `vtl` predictor of 8.6. Let's discuss the intercept first. Recall that for a bivariate regression (like ours) the intercept is the value of the dependent variable when the independent variable is equal to zero. Since we are using a centered predictor, when the mean of our `vtl` predictors is equal to zero, it is *really* (secretly) equal to its *true* mean of 13.4 cm (`mean(height_exp$vtl_original)`). This means that when a speaker's VTL equals 13.4 cm, we expect apparent height to equal 160.1 cm. The model *thinks* the mean of `vtl` is 0, but we *know* it is 13.4 cm, and the centering of the predictor does not affect our ability to interpret it such. 
   The slope of the `vtl` predictor is 8.6, meaning that for every 1 cm increase in vocal-tract length we expect an *increase* of 8.6 cm in apparent height. The slope is a *weight* that allows the line to accurately fit the points. In the absence of a slope, regression models would only work if there was a 1 to 1 relationship between the $x$ and $y$ variable. This would mean that for every 1 cm change in VTL we would need to see a 1 cm change in apparent height. What are the odds that the things we measure will be in a 1 to 1 relationship with all of our predictors? Very small. Instead, the slope coefficient in regression models allows a single unit change in the predictor to be associated with different units of change in the variable you are trying to understand. 
-  Figure \@ref(fig:F93) shows our observations compared to the line estimated using our model ($height = Intercept + VTL \times \mathrm{vtl} = 160.1 + 8.6 \times \mathrm{vtl}$). One obvious problem with using a single line is that the residuals (as reflected by variation about our line) are much larger for smaller (negative) values of VTL than they are for larger values. Since our model has a single, fixed $\sigma$ for all values of VTL (10.8), it cannot possibly account for this sort of variation. So what might cause this lack of fit? One possible explanation is that rather than varying around one single line, we might actually observations around *four* separate lines, one for each group. We will consider this possibility in the following section.
-
-```{r F93, fig.height = 3, fig.width = 8, fig.cap = "(left) Apparent speaker height plotted against speaker VTL for each token. Horizontal line is the mean of the group means. (middle) -- . (right) .", echo = FALSE}
+  Figure \@ref(fig:F93) shows our observations compared to the line estimated using our model ($height = Intercept + VTL \times \mathrm{vtl} = 160.1 + 8.6 \times \mathrm{vtl}$). What does this line mean? It means that *if* mean apparent height is linearly related to speaker VTL *and* the data is normally distributed around this mean with a fixed $sigma$ *and* the rest of the details of our model are also true, *then* our best guess for the line relating VTL to the $\mu$ of apparent height has an intercept of 160.1 cm and a slope of 8.6 cm per 1 cm in VTL. Since we know that our assumptions are probably only approximately true, this means that we should treat our model parameters as (at best) an approximation of the underlying relationships we're trying to understand. 
+  
+```{r F93, fig.height = 3, fig.width = 8, fig.cap = "(left) Apparent speaker height plotted against speaker VTL for each data point. The horizontal line represents the average apparent height for all points. Point colors represent boys (b), girls (g), men (m), and women (w). (middle) The same points as in the left plot. The horizontal lines represent speaker category means, all constrained to have a slope of 0. (right) The same points as in the left plot. The horizontal lines represent speaker category means, all constrained to have the same (possibly non-zero) slope.", echo = FALSE}
 
 ################################################################################
 ### Figure 9.3
@@ -254,7 +257,7 @@ We can see that the line predicting apparent height as a function of speaker VTL
 
 #single_line_model_coefficients = fixef (single_line_model)[,1]
 
-cffs_one = lm(height~vtl, data = height_exp)$coefficients
+cffs_one = lm(height~vtl_c, data = height_exp)$coefficients
 cols_use = cols[as.numeric(factor(height_exp$C))+1]
 
 par (mfrow = c(1,3), mar = c(1,.1,1,.5), oma = c(3,4,0,0))
@@ -298,20 +301,20 @@ abline (cffs[1]+cffs[6],cffs[2],col=cols[5],lwd=4);
 
 ```
 
+One problem with using a single line is that the residuals (as reflected by variation about our line) are much larger for smaller (negative) values of VTL than they are for larger values. Since our model has a single, fixed $\sigma$ for all values of VTL (10.8), it cannot possibly account for this sort of variation. One possible explanation for this lack of fit is that rather than varying around one single line, our data might be thought of as *four* separate lines, one for each group. We will consider this possibility in the following section.
 
 ## Models with group-dependent intercepts, but shared slopes
 
-In the previous section we focused on models that imposed a single line for all groups as in the left plot in figure \@ref(fig:F93). In chapter 7, we fit a model (`model_four_froups`) that had a different intercept for each apparent speaker category but, effectively, a slope of 0 for `vtl` for all groups. This model structure is illustrated in the middle plot of figure \@ref(fig:F93). Here, we're going to consider models that allow for differing intercepts between groups, but are still constrained to have the same slope. This model structure is illustrated in the right plot in figure \@ref(fig:F93). 
-
-We allow for category-dependent intercepts for our lines by by including our predictor specifying apparent speaker category (`C`) in our model formula:
+In chapter 7 we fit a model (`model_four_froups`) that had a different intercept for each apparent speaker category. This model can be thought of as representing each speaker category with a different line. Each category-specific line had its own intercept value. However, since this model did not include VTL as a predictor, each line effectively had a slope of 0 for VTL. In this section we're going to consider models that allow for differing intercepts between groups, but are constrained to have the same slope. This model structure is illustrated in the middle plot in figure \@ref(fig:F93), for the case when there is no continuous predictor (or its slope is zero), and in the right plot in figure \@ref(fig:F93), for the case where the slope for the predictor is non-zero.  
+  We allow for category-dependent intercepts for our lines by by including our predictor specifying apparent speaker category (`C`) in our model formula:
 
 `height ~ C + vtl`
 
-The model above says: "model apparent height as a function of VTL, allowing for group-specific variation in the intercept". Note that our model does *not* include the interaction between `C` and `vtl`. The `C` and `vtl` terms in our formula represent *main effects*, overall, marginal effects. Since our model does not include the interaction between `C` and `vtl`, `vtl:C`, we are not in a position to discuss the slope of `vtl` *conditional* on `C`. We will discuss models that include these terms in the following section. 
+The model above says: "model apparent height as a function of VTL, allowing for group-specific variation in the intercept". Note that our model does *not* include the interaction between `C` and `vtl`. The `C` and `vtl` terms in our formula represent *main effects*, overall, marginal effects. So, our model can tell us about the overall slope for VTL. Since our model does not include the interaction between `C` and `vtl`, `vtl:C`, we are not in a position to discuss the slope of `vtl` *conditional* on `C`. In other words, our model can't tell us about how the VTL slope variaes across the levels of `C`. We will discuss models that include these terms in the following section. 
 
 ### Description of the model
 
-The model formula above corresponds to the model presented in \@ref(eq:97). Th prediction equation is just like that of our previous model save for the addition of the $C_{[\mathrm{C_{[i]}}]}$ term. It is also very similar to the fixed effects structure of the four group model we fit in the previous chapter save for the addition of the $VTL \times \mathrm{vtl}_{[i]} $ term. 
+The model formula above corresponds to the model described in \@ref(eq:97). The prediction equation is just like that of our previous model save for the addition of the $C_{[\mathrm{C_{[i]}}]}$ term. It is also very similar to the fixed effects structure of the four group model we fit in the previous chapter, save for the addition of the $VTL \times \mathrm{vtl}_{[i]} $ term. 
 
 $$
 \begin{equation}
@@ -319,16 +322,17 @@ $$
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mu_{[i]} = \mathrm{Intercept} + C_{[\mathrm{C}_{[i]}]} + VTL \times \mathrm{vtl}_{[i]}  \\ \\
 \textrm{Priors:} \\
-Intercept \sim t(3, 175, 100) \\
-VTL \sim t(3, 0, 10) \\
+Intercept \sim t(3, 160, 12) \\
+VTL \sim t(3, 0, 12) \\
 C_{[\bullet]} \sim N(0,12) \\
-\sigma \sim t(3, 0, 12) \\
+\sigma \sim t(3, 0, 12) 
 \end{split}
 (\#eq:97)
 \end{equation}
 $$
 
-Here's another way to think about this model and why it allows for category-dependent intercepts but not slopes. In our model, the $C$ coefficients do not get multiplied by the `vtl` dependent variable in our prediction equation. As a result, our model above the slope is entirely determined by the $VTL$ coefficient. We can present an alternate parametrization of our model that is no way affects any of our results but better conveys the organization of parameters into those affecting the slope and those affecting the intercept. The model in \@ref(eq:98) specifies our lines in terms of $a$ and $b$ parameters that vary from trial to trial. The trial-specific intercept ($a$) is equal to the overall intercept, and the category predictor for that trial. Although it may be strange to think of it this way, in a sense our model intercept is the main effect for intercept, or the 'intercept intercept'. By this we mean that this is the reference value we use for the intercept of our line. The $C$ coefficients therefore represent the interaction of our intercept and category, that is category-dependent variation for our intercept. The slope terms does not actually vary from trial to trial in practice, since it simply equals our $VTL$ slope parameter. This single parameter can be thought of as the 'intercept' of our $VTL$ slope, a concept that will be expanded on when we include category-dependent slopes in our model a little later in this chapter. 
+Here's a way to think about why this model allows for category-dependent intercepts but not slopes. In our model, the $C$ coefficients do not get multiplied by the `vtl` dependent variable in our prediction equation. As a result, in our model above the slope is entirely determined by the $VTL$ coefficient. We can present an alternate parametrization of our model that is no way affects any of our results but better conveys the organization of parameters into those affecting the slope and those affecting the intercept. The model in \@ref(eq:98) specifies our lines in terms of $a$ and $b$ parameters that vary from trial to trial. The trial-specific intercept ($a$) is equal to the overall intercept (`Intercept`), and the category predictor for that trial ($C_{[\mathrm{C}_{[i]}]}$). Although it may be strange to think of it this way, in a sense our model intercept is the main effect for intercept, or the 'intercept intercept'. By this we mean that this is the reference value we use for the intercept of our line. The $C$ coefficients therefore represent the interaction of our intercept and category, that is *category-dependent* variation for our intercept. 
+  Unlike our intercept, the slope term does not actually vary from trial to trial i practice, since it simply equals our $VTL$ slope parameter for every trial. This single parameter can be thought of as the 'intercept' or main effect for our $VTL$ slope, a concept that will be expanded on when we include category-dependent slopes in our model a little later in this chapter. 
 
 $$
 \begin{equation}
@@ -338,8 +342,8 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 a_{[i]} = Intercept + C_{[\mathrm{C}_{[i]}]} \\
 b_{[i]} = VTL \\ \\
 \textrm{Priors:} \\
-Intercept \sim t(3, 175, 100) \\
-VTL \sim t(3, 0, 10) \\
+Intercept \sim t(3, 160, 12) \\
+VTL \sim t(3, 0, 12) \\
 C_{[\bullet]} \sim N(0,12) \\
 \sigma \sim t(3, 0, 12) 
 \end{split}
@@ -349,7 +353,7 @@ $$
 
 ### Fitting and interpreting the model
 
-We fit a model that contains the category predictor and also includes our continuous predictor, but not the interaction between the two (the model in the right plot of \@ref(fig:F93)):
+We fit a model that contains the category predictor, and our continuous predictor, but not the interaction between the two. This is the model presented in the right plot of \@ref(fig:F93).
 
 ```{r, eval = FALSE}
 # Fit the model yourself, or
@@ -361,13 +365,17 @@ model_many_intercept_one_slope =
                  set_prior("student_t(3, 0, 12)", class = "b"),
                  set_prior("student_t(3, 0, 12)", class = "sigma")))
 ```
+```{r, include = TRUE, eval = FALSE}
+# Or download it from the GitHub page:
+model_many_intercept_one_slope = bmmb::get_model ('9_model_many_intercept_one_slope.RDS')
+```
 ```{r, include = FALSE}
 # saveRDS (model_many_intercept_one_slope, '9_model_many_intercept_one_slope.RDS')
 model_many_intercept_one_slope = 
   readRDS ('../models/9_model_many_intercept_one_slope.RDS')
 ```
 
-For the sake of comparison, we will also fit a model with only group predictors and no continuous predictor (`vtl`). As noted above, this is effectively a model with a bunch of horizontal lines (slope = 0), one for each group (seen in the middle plot of \@ref(fig:F93)), and presented in \@ref(eq:99). 
+For the sake of comparison, we also fit a model with speaker category predictors and no continuous predictor (`vtl`). As noted above, this is effectively a model with a bunch of horizontal lines, one for each group. This sort of model is seen in the middle plot of \@ref(fig:F93), and presented in \@ref(eq:99). 
 
 $$
 \begin{equation}
@@ -375,7 +383,7 @@ $$
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mu_{[i]} = a_{[i]} + b_{[i]} \times \mathrm{vtl}_{[i]}  \\ 
 a_{[i]} = Intercept + C_{[\mathrm{C}_{[i]}]} \\
-b_{[i]} = 0 \\
+b_{[i]} = 0
 \end{split}
 (\#eq:99)
 \end{equation}
@@ -393,14 +401,18 @@ model_many_intercept_no_slope =
                  set_prior("student_t(3, 0, 12)", class = "b"),
                  set_prior("student_t(3, 0, 12)", class = "sigma")))
 ```
+```{r, include = TRUE, eval = FALSE}
+# Or download it from the GitHub page:
+model_many_intercept_no_slope = bmmb::get_model ('9_model_many_intercept_no_slope.RDS')
+```
 ```{r, include = FALSE}
 # saveRDS (model_many_intercept_no_slope, '9_model_many_intercept_no_slope.RDS')
 model_many_intercept_no_slope = readRDS ('../models/9_model_many_intercept_no_slope.RDS')
 ```
 
-It's useful to think about the geometry of our models because pictures are often much easier to interpret than coefficient values. The coefficient values in your model have a one-to-one relationship with a set of lines that make up a plot. Seeing (or imagining) what the picture might look like can go a long way towards understanding the meaning of your model parameters. Below we recover the overall intercept and the intercept for each group from our `model_many_intercept_no_slope`. Since this model contains no slope terms these values represent the intercepts of horizontal lines, one for each group (and overall). Since the lines all have the same slope (0), the lines will necessarily be parallel with respect to the x axis.
+It's useful to think about the geometry of our models because pictures are often much easier to interpret than coefficient values. The coefficient values in your model have a one-to-one relationship with a set of lines that make up a plot. Seeing (or imagining) what the picture might look like can go a long way towards understanding the meaning of your model parameters. Below we recover the overall intercept and the intercept for each group from our `model_many_intercept_no_slope`. These are the parameters specifying the lines for the middle plot in figure \@ref(fig:93). Since this model contains no slope terms these values represent the intercepts of horizontal lines, one for each group (and overall). Since the lines all have the same slope (0), the lines will necessarily be parallel with respect to the VTL axis.
 
-```{r, cache = TRUE, collapse = TRUE}
+```{r, cache = TRUE, collapse = TRUE, echo = TRUE}
 many_intercept_no_slope_hypothesis = bmmb::short_hypothesis (
   model_many_intercept_no_slope,
   hypothesis = 
@@ -413,9 +425,9 @@ many_intercept_no_slope_hypothesis = bmmb::short_hypothesis (
 many_intercept_no_slope_hypothesis
 ```
 
-We can then recover the intercepts for each group from our `model_many_intercept_one_slope`. Again, we do this by adding each group effect to the overall Intercept. Unlike our previous model, this model *does* have a slope. This slope is shared by all of our group lines meaning these differ in their intercepts but not their slopes. 
+Below we recover the intercepts for each group from our `model_many_intercept_one_slope`. These parameters specify the lines for the right plot in figure \@ref(fig:93). Like our previous model, this model has a different intercept for each line. Unlike our previous model, this model *does* have a slope, one shared by all of our groups. However, both of these models are still only capable of representing parallel lines for our four speaker groups.  
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, echo = TRUE}
 many_intercept_one_slope_hypothesis = bmmb::short_hypothesis (
   model_many_intercept_one_slope,
   hypothesis = 
@@ -429,13 +441,11 @@ many_intercept_one_slope_hypothesis = bmmb::short_hypothesis (
 many_intercept_one_slope_hypothesis
 ```
 
-The lines reconstructed in the two examples above correspond to those presented in the middle and right panels of figure \@ref(fig:F93). In each case, the models result in four parallel lines, one for each group. Of course, one of these models represents parallel lines with a slope of zero along the `vtl` axis, while the other represents parallel lines with a slope of 4.6 along the same axis.  
-
 ### Interpreting group effects in the presence of shared (non-zero) slopes
 
-The $C$ coefficients reflect group-dependent differences in the *intercept* of the model. We know that the intercept of a line is equal to the value of the line when the x-axis variable is equal to zero. When we only have `C` in the model, the $C$ coefficients reflect differences between group means and the intercept (the overall grand mean). Since the lines being represented have a slope of zero, their intercepts equal the value of the lines *for all values of `vtl`*. This is because the lines do not change in any way based on the value of `vtl` so that the value of the line where $vtl=0$ equal the value of the line for all other values of `vtl`. However, the inclusion of continuous predictors means that the group effects can no longer be interpreted in this way. When you include a continuous predictor the group effects *still* represent differences in the line intercepts for each group. However, since lines may have non-zero slopes, the intercepts of these lines may no longer correspond to their respective group means. Instead, the $C$ coefficients reflect the spacing of the parallel lines reflecting the groups *when `vtl` is exactly equal to zero*. Of course, since these lines are parallel, the spacing between the lines where $vtl=0$ is also the spacing between the lines when $vtl$ is equal to any other value. So, when lines share a slope group effects change the spacing between parallel lines and this is true whether the shared slope is zero or some non-zero value. 
-
-We're going to compare the estimated group effects provided by the two models presented above (`model_many_intercept_no_slope`, and `model_many_intercept_many_slope`). Although in both models the group effects reflect the spacing between parallel lines, the inclusion of a slope has clearly had an effect on these spaces. Below, we use the `short_hypothesis` function to get the group effects according to each model.
+The $C$ model parameters reflect group-dependent differences in the *intercept* of the model. We know that the intercept of a line is equal to the value of the line when the x-axis variable is equal to zero. When we only have `C` in the model, the $C$ coefficients reflect differences between group means and the intercept (the overall grand mean). Since the lines being represented all have a slope of zero, their intercepts equal the value of the lines *for all values of VTL*. This is because the lines do not change in any way based on the value of VTL so that the value of the line where $VTL=0$ equal the value of the line for all other values of VTL. 
+  When you include a continuous predictor the group effects *still* represent differences in the line intercepts for each group. However, since lines may have non-zero slopes, the intercepts of these lines may no longer correspond to their respective group means. Instead, the $C$ coefficients reflect the spacing of the parallel lines reflecting the groups *when VTL is exactly equal to zero*. Of course, since these lines are parallel, the spacing between the lines where $VTL=0$ is also the spacing between the lines when VTL is equal to any other value. So, when lines share a slope group effects change the spacing between parallel lines and this is true whether the shared slope is zero or some non-zero value. 
+  We're going to compare the estimated group effects provided by the two models presented above (`model_many_intercept_no_slope`, and `model_many_intercept_many_slope`). Although in both models the group effects reflect the spacing between parallel lines, the inclusion of a slope has clearly had an effect on these spaces. Below, we use the `short_hypothesis` function to get the group effects according to each model.
 
 ```{r, cache = TRUE, collapse = TRUE}
 group_no_slope_effects = bmmb::short_hypothesis (
@@ -461,29 +471,32 @@ group_single_slope_effects
 
 We can use the `brmplot` function to visually inspect the differences between the group effects across the models in figure \@ref(fig:F94). The other two panels in the plot present the parallel lines implied by the group effects (ignoring the slopes) for the model with no slope and the model with a shared slope respectively. We see that the groups effects are smaller when the continuous predictor is included. This is visually apparent in the tighter clustering of the lines in the right panel of Figure \@ref(fig:F94). By the way, since the group effects change the spacing of the lines for each group, in the absence of group effects we would just see four overlapping lines and our model would be just like `model_single_line` we fit above.
 
-```{r F94, fig.width = 8, fig.height = 3.5, echo = FALSE, fig.cap =" (left) Comparison of estimated group effects for the model without (blue) and with (red) the perceived height predictor. (middle) Line intercepts reflect the blue coefficients in the left panel (without perceived height). (right) the red coefficients in the left panel (with perceived height). Lines correspond to boys (yellow), girls (green), men (red), and women (blue)."}
+```{r F94, fig.width = 8, fig.height = 3, echo = FALSE, fig.cap =" (left) Comparison of estimated group effects for the model without (triangles) and with (circles) the quantitative VTL predictor. (middle) Line intercepts reflect the triangle coefficients in the left panel (without perceived height).                       (right) the red coefficients in the left panel (with perceived height). Lines correspond to boys (yellow), girls (green), men (red), and women (blue)."}
 
 ################################################################################
-### Figure 8.4
+### Figure 9.4
 ################################################################################
 
-
+vtl_c = height_exp$vtl - mean (height_exp$vtl) 
 cffs_one = lm(height~vtl, data = height_exp)$coefficients
 cols_use = cols[as.numeric(factor(height_exp$C))+1]
 
-par (mfrow = c(1,3), mar = c(1,.1,1,.5), oma = c(3,4,0,0))
+par (mfrow = c(1,3), mar = c(4,.1,1,.5), oma = c(0,4,0,0))
 
-brmplot (group_no_slope_effects, col = cols[2:5], ylim = c(-20,20),cex=2,pch=17,
-         labels = c("boys","girls","men","women"),ylab="f0 Effect (Hz)", nudge = -.1)
+brmplot (group_no_slope_effects, col = cols[2:5], ylim = c(-15,18),cex=2,pch=17,
+         labels = c("boys","girls","men","women"),ylab="f0 Effect (Hz)", 
+         nudge = -.1, xlim = c(.75,4.25),cex.lab=1.3,cex.axis=1.3)
 brmplot (group_single_slope_effects, add = TRUE, col = cols[2:5],
          labels="", nudge = .1, cex=2)
 abline (h=0,lty=1); 
+mtext (side=2,"Centimeters", outer = TRUE, line = 2.5)
 
 cffs = lm(height~C, data = height_exp)$coefficients
 cffs = c(cffs, -sum(cffs[2:4]))
 
-plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-3.5,3.5),
-      ylim=c(-20,20), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n',type='n');
+plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,
+      ylim=c(-15,18), xlab="Centered VTL (cm)",cex.axis=1.3,
+      cex.lab=1.3,yaxt='n',type='n', xlim = c(-3,3));
 grid()
 abline (h=0,lty=1); 
 abline (cffs[2],0,col=cols[2],lwd=4); 
@@ -494,8 +507,9 @@ abline (cffs[5],0,col=cols[5],lwd=4);
 cffs = lm(height~vtl+C, data = height_exp)$coefficients
 cffs = c(cffs, -sum(cffs[3:5]))
 
-plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-3.5,3.5),
-      ylim=c(-20,20), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n');
+plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,
+      ylim=c(-15,18), xlab="Centered VTL (cm)",cex.axis=1.3,
+      cex.lab=1.3,yaxt='n', xlim = c(-3,3));
 grid()
 abline (h=0,lty=1); 
 abline (cffs[3],0,col=cols[2],lwd=4); 
@@ -504,19 +518,20 @@ abline (cffs[5],0,col=cols[4],lwd=4);
 abline (cffs[6],0,col=cols[5],lwd=4); 
 ```
 
-Our comparison of the group effects across the two models tells us that the difference in line intercepts is much smaller for adults when we include `vtl` as a predictor. We can see why this is the case in figure \@ref(fig:F93). When `vtl` is not included as a predictor, the difference in apparent height between adult males and female can only be represented by a difference in line intercepts. In contrast, when we *do* include `vtl` as a predictor the difference between apparent heights between apparent men and women can potentially be explained by the difference in `vtl` between these categories of speakers. The fact that the lines representing men and women in our model have the same intercept indicates that *given a fixed value of `vtl`*, we expected adult males and females to be about the same apparent height. This does not mean that men and women have the same apparent height in our data, we know that they do not. Instead, it suggests that the difference in apparent height may be due to differences in average `vtl` between the groups. Adult males tend to be perceived as taller than adult females because these speakers tend to have higher values of `vtl`, and this tends to be associated with larger apparent height judgments. However, the similarity of the intercept effects for men and women *does* suggest that men and women of approximately the same value of `vtl` will tend to have about the same apparent height. 
+Our comparison of the group effects across the two models tells us that the difference in line intercepts is much smaller for adults when we include VTL as a predictor. We can see why this is the case in figure \@ref(fig:F93). When VTL is not included as a predictor, the difference in apparent height between adult males and female can only be represented by a difference in line intercepts. In contrast, when we *do* include VTL as a predictor the difference in apparent height between groups can potentially be explained by the average difference in VTL between these categories of speakers. The fact that the lines representing men and women in our model have the same intercept indicates that *given a fixed value of VTL*, we expected adult males and females to be about the same apparent height. This does not mean that men and women have the same apparent height in our data, we know that they do not. Instead, it suggests that the difference in apparent height may be due to differences in average VTL between the groups. Adult males tend to be perceived as taller than adult females because these speakers tend to have higher values of VTL (as measured from speech acoustics), and this tends to be associated with larger apparent height judgments. However, the similarity of the intercept effects for men and women *does* suggest that men and women of approximately the same value of VTL will tend to have about the same apparent height, or at least that our model thinks this is the case. 
 
 ## Models with group-dependent slopes and intercepts
 
-If we want to include different slopes, in addition to intercepts, for each group, we must consider the *conditional* effect of `vtl` given speaker category. To do this, we need to include the interaction between group and perceived height in our model as in the formula below:
+If we want to include different slopes, in addition to intercepts, for each group, we must consider the *conditional* effect of VTL given speaker category. To do this, we need to include the interaction between group and perceived height in our model using either of the two formulas below:
 
-`height ~ C * vtl`, or `height ~ C + vtl + vtl:C`
+`height ~ C * vtl`
+`height ~ C + vtl + vtl:C`
 
-The model above says: "model apparent height as a function of `vtl`, allowing for category-dependent variation in intercepts and the effect for `vtl`".
+In either case, the model above says: "model apparent height as a function of VTL (`vtl`), allowing for category-dependent variation in intercepts (`C`) and the effect of VTL (`vtl:C`)".
 
 ### Description of the model
 
-In \@ref(eq:911) we present an 'expanded' version of our prediction equation in a format similar to that presented above. Note that each term that relates to the slope ($pheight, pheight \colon group$) is independently multiplied with our predictor ($x_{[i]}$). 
+In \@ref(eq:910) we present a the "expanded" version of our prediction equation where each term that relates to the slope (i.e., $VTL, VTL \colon C$) is independently multiplied with our predictor ($\mathrm{vtl}_{[i]}$). 
 
 $$
 \begin{equation}
@@ -525,7 +540,7 @@ $$
 \end{equation}
 $$
 
-The equation above says that our expected value for a given trial $i$ is equal to the intercept ($Intercept$), the category predictor ($C_{[\mathrm{C}_{[i]}]}$), the product of `vtl` and the slope coefficient ($VTL \times \mathrm{vtl}_{[i]}$), and the product of `vtl` and the interaction of the slope coefficient with group (($VTL \colon C_{[\mathrm{group}_{[i]}]} \times x_{[i]}$)). We can group intercept and slope terms in parenthesis, as in \@ref(eq:911).
+The equation above says that our expected value for a given trial $i$ is equal to the intercept ($Intercept$), the category predictor ($C_{[\mathrm{C}_{[i]}]}$), the product of VTL and the slope coefficient ($VTL \times \mathrm{vtl}_{[i]}$), and the product of VTL and the interaction of the slope coefficient with group (($VTL \colon C_{[\mathrm{group}_{[i]}]} \times x_{[i]}$)). We can group terms affecting lines intercepts and terms affecting line slopes intercept in parenthesis, as in \@ref(eq:911).
 
 $$
 \begin{equation}
@@ -534,7 +549,16 @@ $$
 \end{equation}
 $$
 
-We can take this one step further and break up our prediction equation into three separate equations: One for the intercept, one for the slope, and one for our dependent variable.
+We can factor our the predictor from the second parenthesis as in \@ref(eq:912).
+
+$$
+\begin{equation}
+\mu_{[i]} = (Intercept + C_{[\mathrm{C}_{[i]}]}) + (VTL + VTL \colon C_{[\mathrm{C}_{[i]}]} ) \times \mathrm{vtl}_{[i]}
+(\#eq:912)
+\end{equation}
+$$
+
+At this point, we can break up our prediction equation into three elements: One for our expected value, one for the intercept, and one for the slope. We replace the terms on the right hand side in \@ref(eq:912) with $a$ and $b$ and define each on its own line in \@ref(eq:913). 
 
 $$
 \begin{equation}
@@ -543,19 +567,19 @@ $$
 a_{[i]} = Intercept + C_{[\mathrm{C}_{[i]}]} \\
 b_{[i]} = VTL + VTL \colon C_{[\mathrm{C}_{[i]}]}) 
 \end{split}
-(\#eq:912)
+(\#eq:913)
 \end{equation}
 $$
 
-The three equations in \@ref(eq:912) say:
+The three equations in \@ref(eq:913) say:
 
-  * Our expected apparent height varies according to trial-dependent intercept and `vtl` slope parameters. 
+  * Our expected apparent height ($\mu$) varies according to trial-dependent intercept ($a$) and VTL slope ($b$) parameters. 
   
   * The intercept expected on a given trial is equal to the $Intercept$ (the intercept main effect) and the $C$ predictor (effectively, the $Intercept:C$ interaction). 
   
-  * The slope expected on a given trial is equal to the $VTL$ predictor (effectively, the slope 'main effect') and the $vtl:C$ interaction.  
+  * The slope expected on a given trial is equal to the $VTL$ predictor (effectively, the slope 'main effect') and the $VTL \colon C$ interaction.  
   
-As our models get more and more complicated, it can help to organize them in this manner. By considering all of our predictors as either 'main effects' or 'interaction' terms for different predictor variables in our data, we can organize the consideration of how different predictors are expected to relate to outcomes. For example, the representation above makes it clear that the $VTL \colon C$ predictor can affect the *slopes* of our lines, but has no mechanism by which to affect our line *intercepts*. Below, we compare a model specification that puts all our predictors directly in the prediction equation:
+As our models get more and more complicated, it can help to organize them in this manner. By considering all of our predictors as either 'main effects' or 'interaction' terms for different predictors in our data, we can organize our understanding of how different parameters are expected to relate to outcomes. For example, the representation above makes it clear that the $VTL \colon C$ predictor can affect the *slopes* of our lines, but has no mechanism by which to affect our line *intercepts*. Below, we compare a model specification that puts all our predictors directly in the prediction equation:
 
 $$
 \begin{equation}
@@ -563,10 +587,10 @@ $$
 y_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{error}) \\
 \mu_{[i]} = (Intercept + C_{[\mathrm{C}_{[i]}]}) + (VTL \times \mathrm{vtl}_{[i]} + VTL \colon C_{[\mathrm{C}_{[i]}]} \times \mathrm{vtl}_{[i]}) \\ \\
 \textrm{Priors:} \\
-Intercept \sim t(3, 160, 10) \\
-VTL \sim t(3, 0, 10) \\ 
-C_{[\bullet]} \sim t(3, 0, 10) \\ 
-VTL\colon C_{[\bullet]} \sim t(3, 0, 10) \\ 
+Intercept \sim t(3, 160, 12) \\
+VTL \sim t(3, 0, 12) \\ 
+C_{[\bullet]} \sim t(3, 0, 12) \\ 
+VTL\colon C_{[\bullet]} \sim t(3, 0, 12) \\ 
 \end{split}
 (\#eq:913)
 \end{equation}
@@ -582,16 +606,16 @@ y_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{error}) \\
 a_{[i]} = Intercept + C_{[\mathrm{C}_{[i]}]} \\
 b_{[i]} = VTL + VTL \colon C_{[\mathrm{C}_{[i]}]}) \\\\
 \textrm{Priors:} \\
-Intercept \sim t(3, 160, 10) \\
-VTL \sim t(3, 0, 10) \\ 
-C_{[\bullet]} \sim t(3, 0, 10) \\ 
-VTL\colon C_{[\bullet]} \sim t(3, 0, 10) \\ 
+Intercept \sim t(3, 160, 12) \\
+VTL \sim t(3, 0, 12) \\ 
+C_{[\bullet]} \sim t(3, 0, 12) \\ 
+VTL\colon C_{[\bullet]} \sim t(3, 0, 12) \\ 
 \end{split}
 (\#eq:914)
 \end{equation}
 $$
 
-However, it is important to keep in mind these models are equivalent, our models can be presented in either format, and that one can easily be turned into the other.
+However, it's important to keep in mind these models are equivalent. Our models can be presented in either format, and that one can easily be turned into the other.
 
 ### Fitting and intertpreting the model
 
@@ -607,11 +631,13 @@ model_multi_slope =
        prior = c(set_prior("student_t(3, 160, 12)", class = "Intercept"),
                  set_prior("student_t(3, 0, 12)", class = "b"),
                  set_prior("student_t(3, 0, 12)", class = "sigma")))
-# save model
-# saveRDS (model_multi_slope, '9_model_multi_slope.RDS')
-
+```
+```{r, include = TRUE, eval = FALSE}
+# Or download it from the GitHub page:
+model_multi_slope = bmmb::get_model ('9_model_multi_slope.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model_multi_slope, '../models/9_model_multi_slope.RDS')
 model_multi_slope = readRDS ('../models/9_model_multi_slope.RDS')
 ```
 
@@ -624,7 +650,7 @@ brms::fixef (model_multi_slope)
 
 We can recover the overall (main effects) intercept and slope directly from the model estimates. We can get the group-specific intercept and slopes by adding the 'main effects' and specific interactions. The first four values below are intercepts, and the next four are slopes. 
 
-```{r, cache = TRUE, collapse = TRUE}
+```{r, cache = TRUE, collapse = TRUE, echo = FALSE}
 multi_slope_hypothesis = bmmb::short_hypothesis (
   model_multi_slope,
   hypothesis = 
@@ -639,49 +665,51 @@ multi_slope_hypothesis = bmmb::short_hypothesis (
       "vtl + C3:vtl = 0", # group 3 slope      
       # group 4 slope
       "vtl + -(C1:vtl+C2:vtl+C3:vtl) = 0"))
-```
-```{r, collapse = TRUE}
+
 multi_slope_hypothesis
 ```
 
+These coefficients are used to make the line in the right plot of figure \@ref(fig:F95). 
 
-These coefficients are presented in figure \@ref(fig:F95). There appear to be gender-specific patterns in the intercept and slope coefficients between our groups. This pattern is evident when we use the line coefficients to draw each group-dependent line in the panel on the right. 
-
-
-```{r F95, fig.width = 8, fig.height = 3.5, echo = FALSE, fig.cap = "(left) Group-specific intercepts. (middle) Group-specific slopes. (right) Lines for each group: boys (yellow), girls (green), men (red), and women (blue)."}
+```{r F95, fig.width = 8, fig.height = 3, echo = FALSE, fig.cap = "(left) Group-specific intercepts. (middle) Group-specific VTL slopes. (right) Lines for each speaker group based on the slopes and intercepts in the left and middle plots. Group colors match the other panerls."}
 
 ################################################################################
-### Figure 8.5
+### Figure 9.5
 ################################################################################
 
 labs = c("boys","girls","men","women")
 
-par (mfrow = c(1,3), mar = c(4,4,1,1))
+par (mfrow = c(1,3), mar = c(4,2,1,1), oma = c(0,2,0,0))
 
-brmplot(multi_slope_hypothesis[2:5,],labels = labs, cex=2,
-        col = cols[c(2:5)], xlim = c(.75,4.25), ylim = c(145,175))
+brmplot(multi_slope_hypothesis[2:5,],labels = labs, cex=2,cex.lab=1.3,cex.axis=1.3,
+        col = cols[c(2:5)], xlim = c(.75,4.25), ylim = c(148,173))
 abline (h = 0)
 
-brmplot(multi_slope_hypothesis[7:10,],labels = labs,cex=2,
-        col = cols[c(2:5)], xlim = c(.75,4.25), ylim = c(-2,10))
+brmplot(multi_slope_hypothesis[7:10,],labels = labs,cex=2,cex.lab=1.3,cex.axis=1.3,
+        col = cols[c(2:5)], xlim = c(.75,4.25), ylim = c(-1,9.5))
 abline (h = 0, lty = 3)
 
+mtext (side = 2, outer = TRUE, line = 2.5, text = "")
 
 multi_slope_coefficients = multi_slope_hypothesis[,1]
 
-plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-3.5,3.5),
-      ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n');
+plot (height ~ vtl_c, data = height_exp, pch=16,col=cols_use,xlim = c(-2.5,3),
+      ylim=c(100,200), ylab="",xlab="Centered VTL (cm)",cex.lab=1.3,cex.axis=1.3);
 grid ()
-for (i in 1:4) 
+for (i in 1:4) {
   abline (multi_slope_coefficients[i+1], 
+          multi_slope_coefficients[i+6], col="grey10", lwd=6)
+    abline (multi_slope_coefficients[i+1], 
           multi_slope_coefficients[i+6], col=cols[c(2,3,4,5)][i], lwd=4)
+}
+
 abline (multi_slope_coefficients[1], 
-        multi_slope_coefficients[6], lwd=3, lty=3)
+        multi_slope_coefficients[6], lwd=2, lty=2)
 ```
 
-In figure \@ref(fig:F96), we can see the incremental complexity of the models we have considered and how this complexity requires that our models have more and more coefficients. However, in this case the complexity seems justified and reveals group-specific relationships between `vtl` and perceived height in our data.
+In figure \@ref(fig:F96), we can see the incremental complexity of the models we have considered so far, and how this complexity requires that our models have more and more coefficients (four, five and eight respectively). However, in this case the complexity seems justified and reveals group-specific relationships between VTL and apparent height in our data.
 
-```{r F96, fig.height = 3.5, fig.width = 8, fig.cap = "(left) f0 plotted against perceived height for each token. Horizontal line is the mean of the group means. (middle) -- . (right) .", echo = FALSE}
+```{r F96, fig.height = 3, fig.width = 8, fig.cap = "(left) f0 plotted against perceived height for each token. Horizontal line is the mean of the group means. (middle) -- . (right) .", echo = FALSE}
 
 ################################################################################
 ### Figure 8.6
@@ -699,7 +727,7 @@ cffs = c(cffs, -sum(cffs[2:4]))
 plot (height ~ vtl, data = height_exp, pch=16,col=cols_use,xlim = c(-2.8,3),
       ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3, cex=.5);
 grid()
-abline (cffs[1],0,col=4,lwd=6); 
+abline (cffs[1],0,col=1,lwd=2,lty=2); 
 abline (cffs[1]+cffs[2],0,col=cols[2],lwd=6); 
 abline (cffs[1]+cffs[3],0,col=cols[3],lwd=6); 
 abline (cffs[1]+cffs[4],0,col=cols[4],lwd=6); 
@@ -713,7 +741,7 @@ cffs = c(cffs, -sum(cffs[3:5]))
 plot (height ~ vtl, data = height_exp, pch=16,col=cols_use,xlim = c(-2.8,3),
       ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n', cex=.5);
 grid ()
-abline (cffs[1],cffs[2],col=4,lwd=6); 
+abline (cffs[1],cffs[2],col=1,lwd=2,lty=2); 
 abline (cffs[1]+cffs[3],cffs[2],col=cols[2],lwd=6); 
 abline (cffs[1]+cffs[4],cffs[2],col=cols[3],lwd=6); 
 abline (cffs[1]+cffs[5],cffs[2],col=cols[4],lwd=6); 
@@ -727,7 +755,7 @@ cffs = c(cffs, -sum(cffs[3:5]), -sum(cffs[6:8]))
 plot (height ~ vtl, data = height_exp, pch=16,col=cols_use,xlim = c(-2.8,3),
       ylim=c(100,200), xlab="Centered VTL (cm)",cex.lab=1.3,yaxt='n', cex=.5);
 grid ()
-abline (cffs[1],cffs[2],col=4,lwd=6); 
+abline (cffs[1],cffs[2],col=1,lwd=2,lty=2); 
 abline (cffs[1]+cffs[3],cffs[2]+cffs[6],col=cols[2],lwd=6); 
 abline (cffs[1]+cffs[4],cffs[2]+cffs[7],col=cols[3],lwd=6); 
 abline (cffs[1]+cffs[5],cffs[2]+cffs[8],col=cols[4],lwd=6); 
@@ -957,8 +985,7 @@ b_{[i]} = VTL + VTL \colon A + VTL \colon G + VTL \colon A \colon G + VTL \colon
 S_{[\bullet]} \sim t(3,0,\sigma_S) \\
 \begin{bmatrix} A \colon L_{[L_{[i]}]} \\ G \colon L_{[L_{[i]}]} \\ A \colon G \colon L_{[L_{[i]}]} \\ L_{[L_{[i]}]} \\
 VTL \colon A \colon L_{[L_{[i]}]} \\ VTL \colon G \colon L_{[L_{[i]}]} \\ VTL \colon A \colon G \colon L_{[L_{[i]}]} \\ VTL \colon L_{[L_{[i]}]}
-\end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\
-
+\end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\\\
 \mathrm{and \; more} \ldots
 \end{split}
 (\#eq:916)
@@ -987,14 +1014,13 @@ options (contrasts = c('contr.sum','contr.sum'))
 model_random_slopes_complex =  
   brms::brm (height ~ vtl*A*G + (vtl*A*G|L) + (1|S), data = height_exp, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
-##  saveRDS (model_random_slopes_complex, '../models/9_model_random_slopes_complex.RDS')
-
 ```
 ```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 model_random_slopes_complex = bmmb::get_model ('9_model_random_slopes_complex.RDS')
 ```
 ```{r, include = FALSE}
+##  saveRDS (model_random_slopes_complex, '../models/9_model_random_slopes_complex.RDS')
 model_random_slopes_complex = readRDS ('../models/9_model_random_slopes_complex.RDS')
 ```
 

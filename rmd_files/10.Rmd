@@ -32,11 +32,16 @@ Unlike quantitative variables, **dichotomous** variables can only take on only o
 ### Figure 10.1
 ################################################################################
 
+
 library (bmmb)
 data (height_exp)
 options (contrasts = c('contr.sum','contr.sum'))
 height_exp = height_exp[height_exp$R=='a',]
 data (cols)
+
+tab = table (height_exp$S, height_exp$C)
+mod_cat = apply (tab, 1,which.max)
+
 
 height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
 
@@ -46,38 +51,38 @@ aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v,
 par (mfrow = c(2,2), mar = c(2,4,1,1), oma = c(3,1,0,0))
 
 plot (aggd$vtl, aggd$height, cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
-      xlim=c(-3,3),  pch=1,lwd=2,ylim = c(130,185),xlab = "",
+      xlim=c(-3,3),  pch=16,lwd=2,ylim = c(130,185),xlab = "",
       ylab="Height (inches)",cex.lab=1.3,cex.axis=1.3)
 grid()
 abline (lm(aggd$height~aggd$vtl)$coefficients, lwd=2)
-points (aggd$vtl, aggd$height, cex =2, pch=1,lwd=2,
+points (aggd$vtl, aggd$height, cex =2, pch=16,lwd=2,
       col = cols[c(4,6)][aggd$group])
 
 legend (.8,165, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = cols[2:5], bty='n',pch=1,pt.cex=2)
+        col = cols[2:5], bty='n',pch=16,pt.cex=2)
 
 plot (height_exp$vtl, height_exp$G=='f', cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
-      xlim=c(-3,3),  pch=1,lwd=2,ylim = c(-.1,1.1),xlab = "",
+      xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-.1,1.1),xlab = "",
       ylab="P(G  = 'f')",cex.lab=1.3,cex.axis=1.3)
 grid()
 abline (lm(aggd[,5]~aggd$vtl)$coefficients, lwd=2)
-points (aggd$vtl, aggd[,5], cex =2, pch=1,lwd=2,
+points (aggd$vtl, aggd[,5], cex =2, pch=16,lwd=2,
       col = cols[c(4,6)][aggd$group])
 
 plot (aggd$vtl, aggd[,5], cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
-      xlim=c(-3,3),  pch=1,lwd=2,ylim = c(-.1,1.1),xlab = "",
+      xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-.1,1.1),xlab = "",
       ylab="P(G  = 'f')",cex.lab=1.3,cex.axis=1.3)
 grid()
 abline (lm(aggd[,5]~aggd$vtl)$coefficients, lwd=2)
-points (aggd$vtl, aggd[,5], cex =2, pch=1,lwd=2,
+points (aggd$vtl, aggd[,5], cex =2, pch=16,lwd=2,
       col = cols[c(4,6)][aggd$group])
 
-plot (aggd$vtl, ptoz(aggd[,5]), cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
-      xlim=c(-3,3),  pch=1,lwd=2,ylim = c(-6.1,6.1),xlab = "",
+plot (aggd$vtl, logit(aggd[,5]), cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
+      xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-6.1,6.1),xlab = "",
       ylab="Logit (P(G  = 'f'))",cex.lab=1.3,cex.axis=1.3)
 grid()
-abline (lm(ptoz(aggd[,5])~aggd$vtl)$coefficients, lwd=2)
-points (aggd$vtl, ptoz(aggd[,5]), cex =2, pch=1,lwd=2,
+abline (lm(logit(aggd[,5])~aggd$vtl)$coefficients, lwd=2)
+points (aggd$vtl, logit(aggd[,5]), cex =2, pch=16,lwd=2,
       col = cols[c(4,6)][aggd$group])
 
 mtext (side=1,text="Centered VTL (cm)", outer = TRUE, line = 1.5)
@@ -192,13 +197,13 @@ $$
 
 We introduce the symbol $z$ to exrpesss
 
-The `bmmb` package contains a function that calculates logits from probabilities (`ptoz`). We can see how this function works below, and see that it takes the second approach to calculate logits. 
+The `bmmb` package contains a function that calculates logits from probabilities (`logit`). We can see how this function works below, and see that it takes the second approach to calculate logits. 
 
 ```{r}
-bmmb::ptoz
+bmmb::logit
 ```
 
-Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `ptoz` function sets extreme (but manageable) values for probabilities of 0 and 1. Our logistic regression models are going to express expected values in *logits*. Our lines will describe continuous changes in logits as a function of our predictors, and our intercepts will describe shifts on the values of logits across different categories. 
+Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. Our logistic regression models are going to express expected values in *logits*. Our lines will describe continuous changes in logits as a function of our predictors, and our intercepts will describe shifts on the values of logits across different categories. 
   
 ### The logistic link function
 
@@ -254,11 +259,11 @@ plot (x,y, type = 'l',lwd=2, col=deepgreen, xlim=c(-7,7), main = "y = x",
       xlab = "Predictor", ylab = "Logits")
 abline (h=0,v=seq(-8,8,2),lty=3)
 
-plot (x,ztop (y), type = 'l',lwd=2, col=darkorange, xlim=c(-7,7), 
+plot (x,antilogit (y), type = 'l',lwd=2, col=darkorange, xlim=c(-7,7), 
       main = "y = logistic ( x )", xlab = "Predictor", ylab="Probability")
 abline (h=c(0,1,.5),v=seq(-8,8,2),lty=3)
 
-plot (x,ptoz(ztop (y)), type = 'l',lwd=2, col=lavender, xlim=c(-7,7), 
+plot (x,logit(antilogit (y)), type = 'l',lwd=2, col=lavender, xlim=c(-7,7), 
       main = "y = logit ( logistic ( x ) )", xlab = "Predictor", ylab="Logits")
 abline (h=0,v=seq(-8,8,2),lty=3)
 ```
@@ -314,23 +319,23 @@ y = x
 par (mfrow = c(1,2), mar=c(4,4,1,1))
 plot (x,y, type = 'l',lwd=3, col=deepgreen, xlim=c(-3,3),xlab="Predictor (x)",
       ylab = "Logits (log (p) - log(1-p))")
-abline (h=ptoz(seq(0.1,0.9,.1)),v=c(-9:9),lty=3)
+abline (h=logit(seq(0.1,0.9,.1)),v=c(-9:9),lty=3)
 abline (h = 0, lwd=2)
 
-plot (x,ztop (y), type = 'l',lwd=3, col=darkorange, xlim=c(-3,3),
+plot (x,antilogit (y), type = 'l',lwd=3, col=darkorange, xlim=c(-3,3),
       xlab="Predictor (x)",ylab="Probability")
 abline (h=seq(0,1,.1),v=(-9:9),lty=3)
 abline (h = 0.5, lwd=2)
 
 ```
 
-[@@ SB - change ptoz and ztop to logit and antilogit throughout]
+[@@ SB - change logit and antilogit to logit and antilogit throughout]
 
-We can check what the logit values are for a set of probabilities using the `ptoz` function. The top row below contains a sequence of probabilities and the bottom row shows equivalent logits. Notice that the difference between 0.5 and 0.6 is 0.4 logits, but the difference between 0.7 and 0.9 is about 0.8 logits. Meanwhile the difference between 0.9 and 1 is infinity.
+We can check what the logit values are for a set of probabilities using the `logit` function. The top row below contains a sequence of probabilities and the bottom row shows equivalent logits. Notice that the difference between 0.5 and 0.6 is 0.4 logits, but the difference between 0.7 and 0.9 is about 0.8 logits. Meanwhile the difference between 0.9 and 1 is infinity.
 
 ```{r, collapse = TRUE}
 rbind ( (seq (0.1,.9,.1)), 
-        round ( ptoz (seq (0.1,0.9,.1)) , 3) )
+        round ( logit (seq (0.1,0.9,.1)) , 3) )
 ```
 
 We can think about the cause of this behavior by returning to our basketball free throw analogy. Imagine that you keep track of you free throw practice in basketball. You sink 500/1000 free throws, giving you a 0.5 probability of success. Now imagine you take a further 100 and sink them all. Now your probability of success is 600/1100, meaning your amazing streak has increased your probability to 0.54. However, suppose that you had been a 900/1000 shooter, with a probability of 0.9. If you had the same streak of 100 baskets, you would only have increased your probability to 90.1 (1000/1100). 
@@ -363,7 +368,6 @@ options (contrasts = c('contr.sum','contr.sum'))
 
 data (height_exp)
 height_exp = height_exp[height_exp$R=='a',]
-height_exp$G_v = height_exp$F_v ## FIX THIS!!
 ```
 
 We create a variable called `F`, which will be our dependent variable. This variable equals 1 when listeners indicated hearing a female speaker and 0 when listeners indicated a male speaker. We'll predict this using a single quantitative predictor, speaker VTL, which we also center below. 
@@ -400,7 +404,7 @@ prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
                  set_prior("lkj_corr_cholesky (2)", class = "cor"))
 ```
 
-You'll notice that we're using priors with a standard deviation of 3 across the board. This is because logit values of 3, 6, and 9 correspond to probabilities of 0.9526, 0.9975, and 0.9999 (`ztop(c(3,6,9))`) respectively. So, a prior with a standard deviation of 3 suggests we expect group differences, or a one-unit change in VTL, have the potential to change probabilities from 50% to 95% (a difference of 3 logits), and conceivably a complete flip in probabilities from 0.0025 (-6 logits) to 0.9975 (6 logits), a difference of 12 logits. 
+You'll notice that we're using priors with a standard deviation of 3 across the board. This is because logit values of 3, 6, and 9 correspond to probabilities of 0.9526, 0.9975, and 0.9999 (`antilogit(c(3,6,9))`) respectively. So, a prior with a standard deviation of 3 suggests we expect group differences, or a one-unit change in VTL, have the potential to change probabilities from 50% to 95% (a difference of 3 logits), and conceivably a complete flip in probabilities from 0.0025 (-6 logits) to 0.9975 (6 logits), a difference of 12 logits. 
   We think it's plausible that apparent age may, for example, change an expected probability from 50% to 95%. In terms of continuous predictors like VTL, the important thing to keep in mind is that the slope estimated for a predictor depends on the unit of measurement. For example, below we see the average VTL in centimeters for each speaker category. We can see that the average difference between men and women is about 2 cm. If we assume that people at the averages are classified correctly more often than not, this means that the logit of the probability of observing a female response for adult at 15 cm may be about -3, and the logit of the same at 13 cm may be about 3. Thus, we might expect a slope of about 3 logits per 1 cm change in VTL with respect to the perception of female speakers. 
 
 ```{r}
@@ -486,12 +490,14 @@ gender_vtl_hypothesis
 
 These parameters can be used to plot lines predicting the logit of the probability of a female response given speaker VTL. The left plot of figure \@ref(fig:F104) presents the overall 'main effects' line and the age-dependent lines, compared to our data. We can see that our age-dependent lines follow the data much better than the single average line does. In the right plot of \@ref(fig:F104) we see what happens when we apply the logistic transform on the lines (and points) in the left plot of the figure. The result is a set of sigmoid curves representing expected variation in the $p$ parameter of a Bernoulli distribution as a function of speaker VTL. These curves are a better fit for our probabilities than the lines we originally used in figure \@ref(fig:F101), and also do not ever result in values below zero or above 1. 
 
-```{r F104, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Line indicating linear relationship between f0 and the logit of the probability of an adult response. (middle) Same as the left but only males are plotted. (middle) Same as the middle but only females are plotted.", echo = FALSE, cache = TRUE}
+```{r F104, fig.width = 8, fig.height = 3, fig.cap = "(left) Line indicating linear relationship between f0 and the logit of the probability of an adult response. (middle) Same as the left but only males are plotted. (middle) Same as the middle but only females are plotted.", echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 10.4
 ################################################################################
 
+tab = table (height_exp$S, height_exp$C)
+mod_cat = apply (tab, 1,which.max)
 
 aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
                       data = height_exp, FUN = mean)
@@ -499,13 +505,13 @@ aggd$C_v = factor(aggd$C_v)
 
 cffs = gender_vtl_hypothesis[,1]
 
-par (mfrow = c(1,2), mar = c(4,4,1,1))
+par (mfrow = c(1,2), mar = c(3,4,1,1))
 
-plot (aggd$vtl, ptoz(aggd[,5]), cex =2, ylim = c(-5,5),xlab="",
-      ylab = "Logit (P(F==1))", col = cols[c(2:5)][aggd$C_v],pch=16,
+plot (aggd$vtl, logit(aggd[,5]), cex =2, ylim = c(-5,5),xlab="",
+      ylab = "Logit (P(F==1))", col = cols[c(2:5)][mod_cat],pch=16,
       lwd=2, xlim =range (height_exp$vtl))
 abline (h=0,lty=3)
-
+grid()
 curve ( (cffs[1] + cffs[4]*x), xlim =range (height_exp$vtl), add = TRUE, 
         col = 1, lwd=4)
 curve ( (cffs[3] + cffs[6]*x), xlim =range (height_exp$vtl), add = TRUE, 
@@ -517,15 +523,16 @@ legend (0.8,4.5, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
         col = cols[2:5], bty='n',pch=16,pt.cex=1.5)
 
 plot (aggd$vtl, (aggd[,5]), cex =2, ylim = c(0,1),xlab="",
-      ylab = "P(F==1)", col = cols[c(2:5)][aggd$C_v],
+      ylab = "P(F==1)", col = cols[c(2:5)][mod_cat],
       pch=16,lwd=2, xlim =range (height_exp$vtl))
+grid()
 abline (h=.50,lty=3)
 
-curve ( ztop(cffs[1] + cffs[4]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( antilogit(cffs[1] + cffs[4]*x), xlim =range (height_exp$vtl), add = TRUE, 
         col = 1, lwd=4)
-curve ( ztop(cffs[3] + cffs[6]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( antilogit(cffs[3] + cffs[6]*x), xlim =range (height_exp$vtl), add = TRUE, 
         col = coral, lwd=4, lty=3)
-curve ( ztop(cffs[2] + cffs[5]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( antilogit(cffs[2] + cffs[5]*x), xlim =range (height_exp$vtl), add = TRUE, 
         col = teal, lwd=4, lty=3)
 
 legend (-2,-1, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
@@ -542,7 +549,7 @@ We can now consider the values of our fixed effect parameters:
 fixef (model_gender_vtl)
 ```
 
-The most important thing to remember when interpreting the coefficients of a logistic model is that positive coefficients push us towards a 1 response ('female'), while negative values push us towards a 0 response ('male'). A predicted value of exactly 0 means the outcome is 50/50. The model intercept is the value of the line when $VTL = 0$. Since we centered our VTL predictor, our positive intercept suggests a speaker with an average VTL (13.4 cm) was more likely to be classified as female (with a probability of 0.67 (`ztop(0.71)`). The effect for perceived adultness (`A1`) is positive, indicating that a speaker with an average VTL is more likely to be identified as a woman when the speaker is also thought to be an adult. The negative effect for VTL tells us that as VTL increases, we are *less* likely to observe a 'female' response and *more* likely to observe a 'male' response. The interaction between VTL and age is negative, meaning this slope is even more negative when the speaker is thought to be an adult. This is evident in figure \@ref(fig:F104) where the line for apparent adults has a much steeper slope then the line for apparent children. In addition, the magnitude of the slope increases/decreases by nearly 50% since the VTL parameter is -3.4 and the interaction is -1.6 (1.6/3.4=0.47).
+The most important thing to remember when interpreting the coefficients of a logistic model is that positive coefficients push us towards a 1 response ('female'), while negative values push us towards a 0 response ('male'). A predicted value of exactly 0 means the outcome is 50/50. The model intercept is the value of the line when $VTL = 0$. Since we centered our VTL predictor, our positive intercept suggests a speaker with an average VTL (13.4 cm) was more likely to be classified as female (with a probability of 0.67 (`antilogit(0.71)`). The effect for perceived adultness (`A1`) is positive, indicating that a speaker with an average VTL is more likely to be identified as a woman when the speaker is also thought to be an adult. The negative effect for VTL tells us that as VTL increases, we are *less* likely to observe a 'female' response and *more* likely to observe a 'male' response. The interaction between VTL and age is negative, meaning this slope is even more negative when the speaker is thought to be an adult. This is evident in figure \@ref(fig:F104) where the line for apparent adults has a much steeper slope then the line for apparent children. In addition, the magnitude of the slope increases/decreases by nearly 50% since the VTL parameter is -3.4 and the interaction is -1.6 (1.6/3.4=0.47).
   We can interpret our model entirely in the logit space, focusing on the geometry of our models and interpreting our intercept and lope terms just as we did above and in the previous chapter. However, if we want to think of our model parameters in terms of probabilities (rather than logits), we need to combine parameter values first, and then carry out the logistic function on the logit values. It is absolutely essential that the operations be done in this order because the logistic function is not an **additive** function. A function, $f()$, is additive if the following property holds:
 
 $$
@@ -556,20 +563,20 @@ This means that adding two things and putting them into the function provides th
 
 ```{r}
 # model intercept
-ztop (0.71)
+antilogit (0.71)
 
 # model A1, adultness, term
-ztop (2.25)
+antilogit (2.25)
 ```
 
 The intercept reflects the logit of the probability of a female response, overall, when VTL was 0. As a result, the value of 0.74 does can be interpreted in isolation. We know `A1` reflects the difference, in logits, between perceiving a female speaker at 0 VTL overall, compared to when listeners indicated hearing an adults (or a child). But what does 0.9 represent? Nothing useful, actually. In order to turn the logit value of `A1` into a probability it first needs to be combined with the intercept as a logit, and *then* converted to a probability.  
 
 ```{r}
 # intercept + adult (bad)
-ztop (0.71) + ztop (2.25)
+antilogit (0.71) + antilogit (2.25)
 
 # intercept + adult (good)
-ztop (0.71 + 2.25)
+antilogit (0.71 + 2.25)
 ```
 
 As seen above, converting to a probability and then combining can lead to strange outcomes: 1.57 is not even a valid probability. When we combine first and then convert, we see that the result is a reasonable probability that matches what we see in figure \@ref(fig:F104). The same reasoning applies to the interpretation of logistic slopes. Our slope tells us that for every unit change in VTL we expect a 3.4 logit increase/decrease in our expected values. When it comes to probabilities, this increase/decrease can only be interpreted relative to the baseline. For example, the difference from 0 to 3.4 logits results in a change from 0.5 to 0.968 in probability, but the increase from 3.4 to 6.8 logits only results in an increase of probabilities from 0.968 to 0.999. As a result, when considering the effect of slopes in a logistic model in terms of probabilities, it is necessary to combine the necessary parameters first as logits, and then transform these into probabilities. 
@@ -656,6 +663,9 @@ These boundaries are presented with our data in figure \@ref(fig:F105). The righ
 ### Figure 10.5
 ################################################################################
 
+tab = table (height_exp$S, height_exp$C)
+mod_cat = apply (tab, 1,which.max)
+
 muvtl = round (mean(height_exp$vtl_original),1)
 
 aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
@@ -667,8 +677,8 @@ cffs = gender_vtl_hypothesis[,1]
 par (mfrow = c(1,2), mar = c(4.1,4.1,1,1))
 layout (mat = matrix(c(1,2,1,3,1,4,1,5),4,2,byrow=TRUE))
 
-plot (aggd$vtl, ptoz(aggd[,5]), cex =1, ylim = c(-5,5),xlab="",
-      ylab = "Logit (P(F==1))", col = cols[c(2:5)][aggd$C_v],pch=16,
+plot (aggd$vtl, logit(aggd[,5]), cex =2, ylim = c(-5,5),xlab="",
+      ylab = "Logit (P(F==1))", col = cols[c(2:5)][mod_cat],pch=16,
       lwd=2, xlim =range (height_exp$vtl),cex.lab = 1.3,cex.axis=1.3,
       xaxt = 'n')
 axis (at = -2:2, labels = (-2:2) + muvtl, 
@@ -722,50 +732,61 @@ We can answer our research questions based on our models above. Speaker VTL is n
 
 ## Measuring sensitivity and bias
 
-In our last model we considered the probability that a listener would respond female, under certain conditions. What it didn't really tell us much about was the extent to which listeners were able to correctly distinguish male and female voices. To do that, we have to carry out an analysis using principles developed in signal detection theory. Whole books can (and have) been written on this topic, and we are only going to deal with it superficially here. Our intention is to show how *sensitivity* and *bias* (to be discussed momentarily) can be estimated using logistic regression, and how signal detection theory models can be implemented a logistic regression model much like the one fit above. The implementation used here is described in DeCarlo (1998, cite), and a thorough introduction to detection theory more general can be found in (macmillan and creelman). 
-  Imagine we want to know how well listeners can identify cases when the speaker is a female. To do this we might just calculate the percent of trials in which s speaker *was* female and was also identified as being female. Imagine a listener identifies 100% of female speakers as female, seemingly showing perfect categorization of female speakers. However, we come to find out that they also identified 100% of male speakers as female. Clearly, we need a measure that considers but the ability to detect female speakers when they *are* there, but also to know when a female speaker is *not* speaking. So, we see that actually detecting the presence of a signal means accurately detecting its presence *and* their absence. 
-  First, we need to define some terminology. Consider the general case that the listener is trying to identify some signal (characteristic, or whatever), and the signal is either present or it is not. In our case, the listener is trying to identify the female gender of the speaker. We define the **hit rate** ($H$) as the probability that a listener will say the signal is present when it is, and the **false alarm rate** ($FA$) as the probability that the listener will identify the signal as being present when it is not. For our data, we define a hit rate as a trial where the speaker was a female and the listener indicated hearing a female, and a false alarm as trial where the speaker was a male and listeners indicated hearing a female.  
+Our last model modeled the probability that a listener would respond female, under certain conditions. What it didn't really tell us much about was the extent to which listeners were able to correctly distinguish male and female voices. To do that, we have to carry out an analysis using principles developed in signal detection theory. Whole books can (and have) been written on this topic, and we are only going to deal with it very superficially here. Our intention is to show how *sensitivity* and *bias* (to be discussed momentarily) can be estimated with signal detection theory models implemented using logistic regression. The implementation used here is described in DeCarlo (1998, cite), and a thorough introduction to detection theory more can be found in (cite macmillan and creelman). 
+  Imagine we want to know how well listeners can identify cases when the speaker is a female. To do this we might just calculate the percent of trials in which a speaker was female and was also identified as being female. However, imagine a listener identifies 100% of speakers as female, both male and female speakers. If we only measure accuracy on female speaker trials this speaker would appear to perform perfectly. However, obvisouly, if they also think 100% of male speakers sound female then they show no ability to distinguish male and female speakers. Clearly, we need a measure that considers the ability to detect female speakers when they *are* there, but also to know when a female speaker is *not* speaking. So, we see that actually detecting the presence of a signal means accurately detecting its presence *and* their absence. 
+  First, we need to define some terminology. Consider the general case that the listener is trying to identify some signal or characteristic (e.g., femaleness), and the signal is either present or it is not. In our case, the listener is trying to identify the female gender of the speaker. We define the **hit rate** ($H$) as the probability that a listener will say the speaker is female when it is, and the **false alarm rate** ($FA$) as the probability that the listener will identify the speaker as female when it was not. We present this below for our data where $F$ (`F`) is our vector indicating whether the listener indicated hearing a male (0) or female speaker (1), and $F_v$ is a vector (`G_v`) that indicates whether the speaker's veridical gender was male (`m`) or female (`f`).      
 
 $$
 \begin{equation}
 \begin{split}
-H = P(F=1 | F_v=f) \\
-FA = P(F=1 | F_v=m)
+H = P(F=1 | G_v= \mathrm{f} \,) \\
+FA = P(F=1 | G_v= \mathrm{m} \, )
 \end{split}
-(\#eq:1015)
-\end{equation}
-$$
-
-**Sensitivity** is defined as the difference between a listeners hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no discrimination at all: They perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are also identifying 90% of people as men. 
-  There are potentially many ways to measure sensitivity. For example, we could just subtract the hit rate form the false alarm rate. This is not the best idea for all the reasons outlined above with respect to the superiority of logits for measuring variation in probabilities. One of the most common measures of sensitivity is $d'$ ('d-prime') which is calculated as in \@ref(eq:1016). 
-
-$$
-\begin{equation}
-d' = z(H) - z(FA)
 (\#eq:1016)
 \end{equation}
 $$
 
-Where $z()$ represents a function that converts a proportion to a z-score. Models estimating $d'$ can be implemented with Probit regression. Probit models are basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function rather than the logistic link function. Probit models are straightforward to implement but will not be discussed here. The reason for this is that the logit function effectively performs the same function as the $z()$ function, meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate. 
+We also calculate the overall hit and false alarm rates for our data with the code below:
+
+```{r, collapse = TRUE}
+H = mean(height_exp$F[height_exp$G_v == "f"])
+H 
+
+FA = mean(height_exp$F[height_exp$G_v == "m"])
+FA
+```
+
+**Sensitivity** is defined as the difference between a listeners hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no discrimination at all: They perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are identifying 90% of *people*, including men, as women. 
+  There are potentially many ways to measure sensitivity. For example, we could just subtract the hit rate form the false alarm rate. This is not the best idea for all the same reasons that we do not base our linear models based on probabilities. One of the most common measures of sensitivity is $d'$ ('d-prime') which is calculated as in \@ref(eq:1017). 
 
 $$
 \begin{equation}
-d = logit(H) - logit(FA)
+d' = z(H) - z(FA)
 (\#eq:1017)
 \end{equation}
 $$
 
-In all of the examples we've given so far, hit rates and false alarm rates have been balanced around probabilities of 0.5. This is equivalent to balancing out around values of 0 logits. When hits and false alarms balance out, this means that errors were equally likely to occur on both male and female speaker rounds. For example, a hit rate of 0.9 means listeners made a mistake on 10% of female trials, and a false alarm rate of 0.1 indicates the same thing for male trials. 
-  What if they didn't balance out? Imagine a situation where a litstener identifies 100% of females as female (hit rate = 1) and 50% of men as females (false alarm rate = 0.5). This seems to suggest that they make no mistakes on female trials but are only performing at chance for male trials. How would this be possible? In order to do well on female trials they need to know the speaker is a female, but if they know the speaker is female they know its not male and so they should perform well on the male trials. Rather than indicating differential performance on differing categories, a lack of balance across hits and false alarms indicates **response bias**, the tendency to select one category more than another. In this case, the listener shows not increased performance on female trials, but rather a bias towards identifying speakers as female. A common way to measure bias is using what is called a **criterion** defined as the negative of the average of the transformed hit and false alarm rates. Since we are logits we call this $c'$ to distinguish it from the $c$ measured using a probit model (DeCarlo 1998? cite). 
+Where $z()$ represents a function that converts a proportion to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression. Probit models are basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function rather than the logistic link function. Probit models are straightforward to implement but will not be discussed here. The reason for this is that the logistic function effectively performs the same function as the $z()$ function above, meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:1018). 
 
 $$
 \begin{equation}
-c' = -\frac{1}{2} \, [logit(H) - logit(FA)]
+d = \mathrm{logit}(H) - \mathrm{logit}(FA)
+(\#eq:1018)
+\end{equation}
+$$
+
+In all of the examples we've given so far, hit rates and false alarm rates have been balanced around probabilities of 0.5. This is equivalent to balancing out around values of 0 logits. When hits and false alarms balance out like this, this means that errors were equally likely to occur on both male and female speaker rounds. For example, a hit rate of 0.9 means listeners made a mistake on 10% of female trials, and a false alarm rate of 0.1 indicates the same thing for male trials. 
+  What if they don't balance out? Imagine a situation where a listener identifies 100% of females as female (hit rate = 1) and 50% of men as females (false alarm rate = 0.5). This seems to suggest that they make no mistakes on female trials but are only performing at chance for male trials. How would this be possible? In order to do well on female trials they need to know the speaker is a female, but if they know the speaker is female they know its not male and so they should perform well on the male trials. Rather than indicating differential performance for the two categories, a lack of balance across hits and false alarms indicates **response bias**, the tendency to select one category more than another. In this case, the listener would show not an increased performance for female trials, but rather a bias towards identifying speakers as female. A common way to measure bias is using what is called a **criterion** defined as the negative of the average of the transformed hit and false alarm rates. Since we are using logits we call this $c'$ to distinguish it from the $c$ criterion measured using a probit model (DeCarlo 1998? cite). 
+
+$$
+\begin{equation}
+c' = -\frac{1}{2} \, [logit(H) + logit(FA)]
 (\#eq:1017)
 \end{equation}
 $$
 
-For historical reasons, in a signal detection theory framework a negative criterion (negative bias) is associated with more positive responses and a positive criterion (positive bias) is associated with more negative responses. Note however that the calculation of $c'$ in \@ref(eq:1017) includes negating the sum of the logit of the hits and false alarm rates. As a result, this definition of bias involves a double negative which unnecessarily complicates things for many purposes: A higher average hit/false alarm rate it *negatively* related to the criterion, which is itself *negatively* related to outcomes. We think it is important to be aware of this convention but do not necessarily feel bound to follow it. We're going to divert from detection theory somewhat and simply define a bias measure, $b$, as the negative of the criterion, as seen in \@ref(eq:1018). When defined in this way we see that increasing values of $b$ simply reflect the tendency for both hits and false alarm rates to increase while negative bias reflects the tendency of both hits and false alarm rates to decrease. For our data, a positive bias would indicate an increased tendency to identify speakers as female (since this was the variable coded with a 1 in our data) while a negative bias would indicate an increased probability of a male response.   
+For historical reasons, in signal detection theory a negative criterion (negative bias) is associated with more positive responses and a positive criterion (positive bias) is associated with more negative responses. Note however that the calculation of $c'$ in \@ref(eq:1017) includes negating the mean of the logit of hits and false alarm rates. As a result, this definition of bias involves a double negative which unnecessarily complicates things for many purposes: A higher average hit/false alarm rate it *negatively* related to the criterion, which is itself *negatively* related to outcomes. We think it is important to be aware of this convention but do not necessarily feel bound to follow it. We're going to divert from detection theory somewhat and simply define a bias measure $b$ as the negative of the criterion, as seen in \@ref(eq:1018). 
+
 $$
 \begin{equation}
 b = -c' = \frac{1}{2} \, [logit(H) - logit(FA)]
@@ -773,7 +794,8 @@ b = -c' = \frac{1}{2} \, [logit(H) - logit(FA)]
 \end{equation}
 $$
 
-As an example, let's consider the detection of femaleness in our speaker's voices. Below we divide our data into trials involving (actual) children and trials involving (actual) adult speakers.
+When defined in this way we see that increasing values of $b$ simply reflect the tendency for both hits and false alarm rates to increase, while negative bias reflects the tendency of both hits and false alarm rates to decrease. For our data, a positive bias would indicate an increased tendency to identify speakers as female (since this was the variable coded with a 1) while a negative bias would indicate an increased probability of a male response. 
+  As an example, let's consider the detection of femaleness in our speaker's voices. We're going to consider how sensitivity and bias varies according to the veridical (not apparent) age of the speakers. Below we divide our data into trials involving (veridical) children and trials involving (veridical) adult speakers.
 
 ```{r}
 adults = height_exp[height_exp$A_v == "a",]
@@ -783,29 +805,19 @@ children = height_exp[height_exp$A_v == "c",]
 We can find the hit and false alarm rates by finding the average of our `F` variable independently for veridical males and female speakers. We see these values below for adults, children, and overall.  
 
 ```{r, collapse = TRUE}
+# hit and false alarm rate, overall
 tapply (height_exp$F, height_exp$G_v, mean)
+
+# hit and false alarm rate, for adult
 tapply (adults$F, adults$G_v, mean)
+
+# hit and false alarm rate, for children
 tapply (children$F, children$G_v, mean)
 ```
 
-```{r, collapse = TRUE}
-p1 = ptoz (tapply (height_exp$F, height_exp$G_v, mean))
-p2 = ptoz (tapply (adults$F, adults$G_v, mean))
-p3 = ptoz (tapply (children$F, children$G_v, mean))
+Figure \@ref(fig:F106) presents these probabilities, in addition to their logit values. Overall we see a balanced case with hits and false alarms equally spaced around 0 logits, representing the zero bias case. When it comes to adults, the false alarm rate is lower than the hit rate is high, resulting in a negative value of $b$. This means that listeners were more likely to respond male than female for adult speakers. We also see that hits and false alarm rates are more separated for adults, indicating a higher value of $d$ (i.e. sensitivity). For children, we see largely the opposite pattern: Hits were more likely than false alarms, indicating a positive bias (and more female responses). In addition, the distance between hits and false alarm rates was much smaller than for adults indicating a substantially reduced sensitivity. 
 
-abs(diff(p1))
-mean (p1)
-
-abs(diff(p2))
-mean (p2)
-
-abs(diff(p3))
-mean (p3)
-```
-
-Figure \@ref(fig:F106) presents these probabilities in addition to their logit values. We can see that overall we see a balanced case with hits and false alarms equally spaced around 0 logits. This represents the zero bias case since the hit and false alarm rates balance out. When it comes to adults, the false alarm rate is lower than the hit rate is high. This results in $b$ having a negative value indicating that listeners were more likely to respond male than female for adults. We also see that hits and false alarm rates are more separated for adults, indicating a higher value of $d$. For children we see largely the opposite pattern hits were more likely than false alarms, indicating a positive bias. In addition, the distance between hits and false alarm rates was much smaller than for adults indicating a substantially reduced sensitivity. 
-
-```{r F106, fig.width = 8, fig.height = 3.5, fig.cap = "", echo = FALSE}
+```{r F106, fig.width = 8, fig.height = 3, fig.cap = "--", echo = FALSE}
 
 ################################################################################
 ### Figure 10.6
@@ -831,9 +843,9 @@ points (c(3,3), p3, col=c(3,2), pch=16,cex=1.5)
 abline (h = 0.5)
 axis (side=1,at=1:3, labels=c("All","Adults","Chidren"))
 
-p1 = bmmb::ptoz (tapply (height_exp$F, height_exp$G_v, mean))
-p2 = bmmb::ptoz (tapply (adults$F, adults$G_v, mean))
-p3 = bmmb::ptoz (tapply (children$F, children$G_v, mean))
+p1 = bmmb::logit (tapply (height_exp$F, height_exp$G_v, mean))
+p2 = bmmb::logit (tapply (adults$F, adults$G_v, mean))
+p3 = bmmb::logit (tapply (children$F, children$G_v, mean))
 
 plot (c(1,1), p1, type = 'b', pch=16, xlim = c(1,3), ylim = c(-4,2.5),
       ylab= "logit (P(F==1))", col=c(1,1),xaxt='n',xlab='')
@@ -850,7 +862,8 @@ axis (side=1,at=1:3, labels=c("All","Adults","Chidren"))
 abline (h = 0)
 ```
 
-Consider the information presented for 'All' in the left plot of figure \@ref(fig:F106). This is basically a two-group model exactly like those described in chapter 5. In chapter 5 we estimated the effect of apparent adultness on apparent height. In the model we had two 'groups' of data: Trials where a listener indicated hearing an adult and trials where listeners indicated hearing a child. Our model predicted the expected value of apparent height given an apparent adult or child speaker. Since we used sum coding the intercept in our model was the average of the two group means and the effect for age was equal to 1/2 the distance between the group means. Here, we have two groups: Trials where the speaker was *actually* a female and trials where it was not. Our model predicts the logit of the probability of a female response given an actual female or male speaker. In other words, our groups are the hit rate (P(1|actual female)) and the false alarm rate (P(1|actual male)). If we use sum coding the intercept in our model is the average of the two group means and so is a measure of *bias* (it is equal to $b$ and $-c'$). The effect for our group predictor, in this case veridical gender, will equal 1/2 the distance between the hit and false alarm rates. This means that our predictor in this case will equal $d/2$, meaning that the slope for veridical gender is related to *sensitivity*.
+When considered as in the right plot of figure \@ref(fig:F106), the estimation of hit and false alarm rates is very similar to the two-group models described in chapter 5. In chapter 5 we estimated the effect of apparent adultness on apparent height. In that model we had two 'groups' of data: Trials where a listener indicated hearing an adult and trials where listeners indicated hearing a child. Our model predicted apparent height given the apparent age of the speaker. Since we used sum coding, the intercept in our model was the average of the two group means and the effect for age was equal to 1/2 the distance between the group means. 
+  Here, we have two groups: Trials where the speaker was *actually* a female and trials where it was not. Our model predicts the logit of the probability of a female response given the veridical gender of the speaker. The probability of a female response when the speaker is actually female corresponds to the hit rate, i.e. $P(F=1 | G_v= \mathrm{f} \,)$, as in \@ref(eq:1016). Conversely, since the probability of a female response when the speaker is actually male corresponds to the false alarm rate, that means that the group associated with actual male speakers represents our false alarm rate (i.e. $P(F=1 | G_v= \mathrm{f} \,)$, as in \@ref(eq:1016)). Since we are using sum coding, the intercept in our model is the average of the two group means and so is a measure of *bias* (since it is equal to $b$ and $-c'$, see \@ref(eq:1017) and \@ref(eq:1018)). The effect for our group predictor, in this case the group separation based on veridical gender, will equal 1/2 the distance between the hit and false alarm rates. This means that our predictor in this case will equal $d/2$, meaning that the slope for veridical gender is related to *sensitivity*.
 
 ### Data and research questions
 
@@ -870,10 +883,9 @@ height_exp$vtl_original = height_exp$vtl
 height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
 ```
 
-We've talked about the `secret` variables implicit in our categorical variables a couple of times (section X, X). When you have a categorical predictor with only two levels, we know that one of the levels cannot be estimated because it is the negative of the other coefficients. Numerically, this is represented by a vector that equals 1 for one group (the estimated parameter) and -1 for the other group. Below we add a variable representing veridical speaker gender with values of 1 (for female) and -1 (for male). The reason we do this 'by hand' rather than as we've usually done it is that we need for the category coded with a 1 (the estimated category) to be the same category coded with a 1 in the dependent variable. Creating a vector that we know equals 1 for a specific category and -1 for the other is the simplest way to be sure of this. 
+We've talked about the 'secret' variables implicit in the use of categorical variables a couple of times (section X, X). When you have a categorical predictor with only two levels, we know that one of the levels cannot be estimated because it is the negative of the other coefficients. Numerically, this is represented by a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below we add a variable representing veridical speaker femaleness with values of 1 (for female) and -1 (for male). The reason we do this 'by hand' rather than as we've usually done it is that we need for the category coded with a 1 in our predictor (the estimated category) to be the same category coded with a 1 in the dependent variable. Creating a vector that we know equals 1 for a specific category and -1 for the other is the simplest way to be sure of this.
 
 ```{r, warning=FALSE, message=FALSE}
-colnames (height_exp)[12] = "G_v"
 height_exp$F_v = ifelse (height_exp$G_v=="f", 1,-1)
 ```
 
@@ -889,11 +901,20 @@ Our model formula should minimally be:
 
 `F ~ F_v + (F_v|L) + (1|S)`
 
-Which predicts the response (female = 1, male = 0) as a function of the actual speaker gender (female = 1, male = -1). For this model the intercept would reflect response bias and the `F_v` parameter would reflect sensitivity. The model formula we're actually going to use is:
+Which predicts the response (female = 1, male = 0) as a function of the actual speaker gender (female = 1, male = -1). For this model, the intercept would reflect response bias and the `F_v` parameter would reflect sensitivity. The model formula we're actually going to use is:
 
-`F ~ F_v + A_v + F_v:A_v + (F_v+A_v+F_v:A_v|L) + (1|S)`
+`F ~ F_v * A_v + (F_v*A_v|L) + (1|S)`
 
-Where `A_v` represents veridical adultness. All predictors in this model that do not interact with or otherwise involve `F_v`, represent bias. Thus, the model intercept represents overall bias and the `A_v` term reflects change in bias as a function of the adultness of the speaker. All model parameters that *do* interact with or involve `F_v` reflect sensitivity. So, `F_v` represents overall sensitivity and `F_v:A_v` represents variation in sensitivity dependent on veridical age. Our full model specification is:
+Where `A_v` represents veridical adultness. All predictors in this model that do not interact with or otherwise involve `F_v`, represent bias terms. Thus, the model intercept represents overall bias and the `A_v` term reflects change in bias as a function of the veridical adultness of the speaker. All model parameters that *do* interact with or involve `F_v` reflect sensitivity. So, `F_v` represents overall sensitivity and the `F_v:A_v` interaction represents variation in sensitivity dependent on veridical age. We are going to keep using the same priors we fit for our last logistic model:
+
+```{r, eval = FALSE}
+prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
+                 set_prior("student_t(3, 0, 3)", class = "b"),
+                 set_prior("student_t(3, 0, 3)", class = "sd"),
+                 set_prior("lkj_corr_cholesky (2)", class = "cor"))
+```
+
+Our full model specification is:
 
 $$
 \begin{equation}
@@ -939,26 +960,26 @@ model_gender_dt = bmmb::get_model ('10_model_gender_dt.RDS')
 model_gender_dt = readRDS ('../models/10_model_gender_dt_Av.RDS')
 ```
 
-We are mainly interested in the fied effects and combinations of these:
+We are mainly interested in the fixed effects and combinations of these:
 
 ```{r}
 fixef (model_gender_dt)
 ```
 
-We can recover group specific sensitivity and bias estimates by finding the age-specific intercept terms and double the age-specific `F_v` effects, as seen below. 
+We can find the age-specific intercept terms, representing the bias, and double the age-specific `F_v` effects, representing sensitivity, as seen below. 
 
 ```{r, cache = TRUE, collapse = TRUE}
 gender_dt_hypothesis = bmmb::short_hypothesis (
   model_gender_dt,
-  hypothesis = c("Intercept = 0", # overall intercept
-                 "Intercept + A_v1 = 0",
-                 "Intercept - A_v1 = 0",
-                 "2*(F_v) = 0",
-                 "2*(F_v + F_v:A_v1) = 0",
-                 "2*(F_v - F_v:A_v1) = 0"))
+  hypothesis = c("Intercept = 0",           # overall bias
+                 "Intercept + A_v1 = 0",    # adult bias
+                 "Intercept - A_v1 = 0",    # child bias
+                 "2*(F_v) = 0",             # overall sensitivity
+                 "2*(F_v + F_v:A_v1) = 0",  # adult sensitivity
+                 "2*(F_v - F_v:A_v1) = 0")) # child sensitivity
 ```
 
-We can plot these biases and sensitivities as in figure \@ref(fig:F107) below. We also include the listener-dependent biases in the adult and child condition. Since we have covered how to easily recover these previously (in sections X and X) we only provide a single example here.
+We plot these biases and sensitivities as in figure \@ref(fig:F107) below. We also include the listener-dependent biases in the adult and child condition. Since we've covered how to easily recover these previously (in sections X and X) we only provide a single example below.
 
 ```{r, eval = FALSE}
 biases_adult = bmmb::short_hypothesis (
@@ -1009,8 +1030,8 @@ legend (5, 10, legend =c("Sensitivity", "Bias"), pch=16,lwd=2,
 
 ## Answering our research questions
 
-The following verbal description of the results in figure \@ref(fig:F107) are based on the parameters reconstructed in `gender_dt_hypothesis`. In addition, we used the `forpaper` function, like this `forpaper(gender_dt_hypothesis)` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output. Our model suggests there is a bias towards male responses for adults (mean = -1.04, s.d. = 0.29, 95% C.I = [-1.66, -0.5]), and perhaps a slight bias towards female responses for children (mean = 0.4, s.d. = 0.32, 95% C.I = [-0.24, 1.02]). Speaker femaleness appeared to be discriminable for adults and for children, although sensitivity was substantially larger for adults than for children. We can also say that all listeners were able to discriminate adult male and female speakers, and most (but not all) were able to do this for children. 
-  We can understand this behavior by considering the distribution of an acoustic variable like VTL across these four groups, presented in the figure below. We know that VTL correlates strongly with speaker height (cite Turner et al.) so that we expect boys, girls, men, and women to be arranged along VTL based on the average height differences between our speakers. In Figure X we see that boys and girls have shorter VTLs and are also bunched closer together. Women and men have longer vocal tracts and are also more separated. If we assume that the distribution of VTL in the larger population is similar to this, and that listeners have information something like this in their brains (somehow), then this would explain the pattern of sensitivity seen above. Imagine a random woman or man chosen at random along the VTL line (but within their respective distribution). Since the distributions do not overlap much, speaker gender is easy to identify from VTL. For example, a value of 15 cm is typical for an adult male but extremely unlikely for an adult female, and hence the speaker is likely to be a man. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm is more likely to be a boy, but it is still a very plausible candidate to be a girl. If boys and girls show this sort of overlap along important acoustic dimensions for gender discrimination, then we would expect lower sensitivity for children just like what we saw below. 
+The following verbal description of the results in figure \@ref(fig:F107) are based on the parameters reconstructed in `gender_dt_hypothesis`. In addition, we used the `forpaper` function, like this `forpaper(gender_dt_hypothesis)` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output. Our model suggests there is a bias towards male responses for adults (mean = -1.04, s.d. = 0.29, 95% C.I = [-1.66, -0.5]), and perhaps a slight bias towards female responses for children (mean = 0.4, s.d. = 0.32, 95% C.I = [-0.24, 1.02]). Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children. 
+  We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:108)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:108). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
 
 ```{r F108, fig.width = 8, fig.height = 3.25, fig.cap = "", echo = FALSE}
 
@@ -1018,27 +1039,24 @@ The following verbal description of the results in figure \@ref(fig:F107) are ba
 ### Figure 10.8
 ################################################################################
 
-par (mar = c(4,4,1,1))
+par (mfrow = c(1,1), mar = c(4,4,1,1))
 
 plot (density (height_exp$vtl_original[height_exp$C_v=="b"]), xlim = c(10.5,16.5),
-      ylim = c(0,1.3),lwd=2,col=cols[2],main="")
-lines (density (height_exp$vtl_original[height_exp$C_v=="g"]),
+      ylim = c(0,1.3),lwd=2,col=cols[2],main="",xlab="Vocal-Tract Length (cm)")
+polygon (density (height_exp$vtl_original[height_exp$C_v=="b"]),
+       lwd=2,col=cols[2])
+polygon (density (height_exp$vtl_original[height_exp$C_v=="g"]),
        lwd=2,col=cols[3])
-lines (density (height_exp$vtl_original[height_exp$C_v=="m"]),
-       lwd=2,col=cols[4])
-lines (density (height_exp$vtl_original[height_exp$C_v=="w"]),
+polygon (density (height_exp$vtl_original[height_exp$C_v=="w"]),
        lwd=2,col=cols[5])
+polygon (density (height_exp$vtl_original[height_exp$C_v=="m"]),
+       lwd=2,col=cols[4])
 
 ```
 
-We can also potentially explain the changes in response bias that we see above. Below we see a table showing speaker categorizations for adults when the speaker was actually a woman or a man. We see that men are rarely confused with girls or women (22 out of 675 trials, 3.2%). This is likely because adult males tend to have substantially longer VTLs than women or girls. In contrast, women are confused with males in 13% of cases, and specifically confused with boys in 11% of cases. As can be seen in the figure above, the VTLs of women and boys overlap somewhat making a confusion in this direction more likely. So, in this case, it seems that the bias towards male responses for adults may result from the easy identification of adult male voices in contrast with the potential confusability between adult women and younger males.
+We can also potentially explain the changes in response bias that we saw in our results. Below we see a table showing speaker categorizations for adult males and females. We see that men are rarely confused with girls or women (22 out of 675 trials, 3.2%). In contrast, women are confused with males in 13% of cases, and specifically confused with boys in 11% of cases. This is likely because adult males tend to have substantially longer VTLs than women and girls, but the VTLs of adult females and younger boys overlap somewhat. So, it seems that the bias towards male responses for adults may result from the easy identification of adult male voices, and the potential confusability between adult women and younger males.
 
 ```{r}
 table (adults$C_v, adults$C)
 ```
-
-
-
-
-
 

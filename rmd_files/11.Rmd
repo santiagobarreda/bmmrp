@@ -1,5 +1,5 @@
 \newpage
-```{r}
+```{r, include = FALSE}
 knitr::opts_chunk$set(
   dpi = 300, dev = "jpeg", collapse=TRUE
 )
@@ -19,7 +19,6 @@ In this chapter we're going to cover a Bayesian approach to working with large m
   * What will the model structure be? 
   * What would different results 'mean'? How will this manifest in my regression model?
   * What kind of results am I expecting? 
-  
   
 ## Models with multiple continuous predictors
 
@@ -63,17 +62,16 @@ It may be easier to see what we mean by considering figure \@ref(fig:11_2), whic
 ################################################################################
 ### Figure 11.2
 ################################################################################
-library (scatterplot3d)
 agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::height_exp_old, FUN=mean)
 
 par (mfrow = c(1,2), mar = c(0,1,0,2), oma = c(0,0,0,0))
 
 tmp = agg_data[,c(2,1,4)]
-s3d = scatterplot3d (tmp, color = bmmb::cols[2:5][factor(agg_data[,3])],
+s3d = scatterplot3d::scatterplot3d (tmp, color = bmmb::cols[2:5][factor(agg_data[,3])],
                      pch=16, angle = 55,type = "p",ylim=c(90,310), cex.symbols=rev(ptcex)*.9)
 my.lm <- lm(height ~ f0+vtl, data = agg_data)
 
-s3d = scatterplot3d (agg_data[,-3], color = bmmb::cols[2:5][factor(agg_data[,3])],
+s3d = scatterplot3d::scatterplot3d (agg_data[,-3], color = bmmb::cols[2:5][factor(agg_data[,3])],
                      pch=16, angle = 55,type = "p",xlim=c(90,310), cex.symbols=rev(ptcex)*.9)
 my.lm <- lm(height ~ f0+vtl, data = agg_data)
 #s3d$plane3d(my.lm, col = 2)
@@ -85,7 +83,7 @@ When we have two quantitative predictors, our models predict values along **plan
 $$
 \begin{equation}
 z =  \mathrm{a} + \mathrm{b} \times x + \mathrm{c} \times y 
-(\#eq:11_1)
+(\#eq:11.1)
 \end{equation}
 $$
 
@@ -99,7 +97,7 @@ Imagine you are standing on a flat cement plaza (a plane). There is a design def
 $$
 \begin{equation}
 z =  x \times y 
-(\#eq:11_2)
+(\#eq:11.2)
 \end{equation}
 $$
 
@@ -120,19 +118,19 @@ x <- y <- seq(-1, 1, length= 12)
 par (mfrow = c(3,3), mar = c(1,1,0,0), oma = c(0,0,0,0))
 
 z <- outer(x, y, f1)
-persp(x, y, z, col = cols[2],theta = 0,zlim = c(-3,3))
-persp(x, y, z, col = cols[2],theta = -90,zlim = c(-3,3))
-persp(x, y, z, col = cols[2],theta = 45,zlim = c(-3,3))
+persp(x, y, z, col = bmmb::cols[2],theta = 0,zlim = c(-3,3))
+persp(x, y, z, col = bmmb::cols[2],theta = -90,zlim = c(-3,3))
+persp(x, y, z, col = bmmb::cols[2],theta = 45,zlim = c(-3,3))
 
 z <- outer(x, y, f2)
-persp(x, y, z, col = cols[3],theta = 0,zlim = c(-3,3))
-persp(x, y, z, col = cols[3],theta = -90,zlim = c(-3,3))
-persp(x, y, z, col = cols[3],theta = 45,zlim = c(-3,3))
+persp(x, y, z, col = bmmb::cols[3],theta = 0,zlim = c(-3,3))
+persp(x, y, z, col = bmmb::cols[3],theta = -90,zlim = c(-3,3))
+persp(x, y, z, col = bmmb::cols[3],theta = 45,zlim = c(-3,3))
 
 z <- outer(x, y, f3)
-persp(x, y, z, col = cols[4],theta = 0,zlim = c(-3,5))
-persp(x, y, z, col = cols[4],theta = -90,zlim = c(-3,5))
-persp(x, y, z, col = cols[4],theta = 45,zlim = c(-3,5))
+persp(x, y, z, col = bmmb::cols[4],theta = 0,zlim = c(-3,5))
+persp(x, y, z, col = bmmb::cols[4],theta = -90,zlim = c(-3,5))
+persp(x, y, z, col = bmmb::cols[4],theta = 45,zlim = c(-3,5))
 
 ```
 
@@ -140,8 +138,8 @@ We can combine a plane and a saddle shape, as in the bottom row of figure \@ref(
 
 $$
 \begin{equation}
-z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{c} \times xy)
-(\#eq:11_3)
+z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times xy)
+(\#eq:11.3)
 \end{equation}
 $$
 
@@ -181,11 +179,22 @@ height_exp$f0 = height_exp$f0 - mean(height_exp$f0)
 height_exp$f0 = height_exp$f0 / 100
 ```
 
+We're not going to have well-defined research questions this time. Instead, we have a sort of vague one that we will try to deal with:
+
+Q1) What do we do with all these parameters? How do we know what to focus on and where to begin?
+
 ### Description of the model
 
+We're going to begin with a models that includes all possible interactions between our predictors, and also includes listener-dependent versions of all of our 'fixed' effects predictors. Models of this sort are sometimes referred to as **maximal** models because they include all predictors, interactions, and 'random effects' supported by the data. Our model formula is:
 
-```{r}
-height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)
+`height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`
+
+We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is way too long at this point.
+
+
+```
+height ~ Intercept + vtl + f0 + A + G + A1:G1 + vtl:f0 + vtl:A1 + vtl:G1 + f0:A1 + 
+         f0:G1 + vtl:f0:A1 + vtl:f0:G1 + vtl:A1:G1 + f0:A1:G1 + vtl:f0:A1:G1
 ```
 
 
@@ -193,20 +202,25 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
-\mu_{[i]} = a_{[i]} +  b_{[i]} \times \mathrm{vtl}_{[i]} + c_{[i]} \times \mathrm{f0}_{[i]} \\
-a_{[i]} = \mathrm{Intercept} +  A + G + A \colon G + A \colon L_{[L_{[i]}]} + G \colon L_{[L_{[i]}]} + A \colon G \colon L_{[L_{[i]}]} + L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
-b_{[i]} = VTL + VTL \colon A + VTL \colon G + VTL \colon A \colon G + VTL \colon A \colon L_{[L_{[i]}]} + VTL \colon G \colon L_{[L_{[i]}]} + VTL \colon A \colon G \colon L_{[L_{[i]}]} + VTL \colon L_{[L_{[i]}]}  \\ 
-c_{[i]} = f0 + VTL \colon A + f0 \colon G + f0 \colon A \colon G + f0 \colon A \colon L_{[L_{[i]}]} + f0 \colon G \colon L_{[L_{[i]}]} + f0 \colon A \colon G \colon L_{[L_{[i]}]} + f0 \colon L_{[L_{[i]}]}  \\ \\
-\mathrm{Priors:} \\ 
-S_{[\bullet]} \sim t(3,0,\sigma_S) \\
-\begin{bmatrix} A \colon L_{[L_{[i]}]} \\ G \colon L_{[L_{[i]}]} \\ A \colon G \colon L_{[L_{[i]}]} \\ L_{[L_{[i]}]} \\
-VTL \colon A \colon L_{[L_{[i]}]} \\ VTL \colon G \colon L_{[L_{[i]}]} \\ VTL \colon A \colon G \colon L_{[L_{[i]}]} \\ VTL \colon L_{[L_{[i]}]}
-\end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\\\
+\mu_{[i]} = a_{[i]} +  b_{[i]} \times \mathrm{vtl}_{[i]} + c_{[i]} \times \mathrm{f0}_{[i]} + d_{[i]} \times \mathrm{f0}_{[i]} \times \mathrm{vtl}_{[i]} \\ \\
 \mathrm{and \; more} \ldots
 \end{split}
-(\#eq:11_1)
+(\#eq:11.4)
 \end{equation}
 $$
+
+ - anova-like decomposition. 
+ - same along each dimension
+
+```
+a = Intercept + A         + G         + A1:G1 
+b = vtl       + vtl:A1    + vtl:G1    + vtl:A1:G1
+c = f0        + f0:A1     + f0:G1     + f0:A1:G1
+d = vtl:f0    + vtl:f0:A1 + vtl:f0:G1 + vtl:f0:A1:G1
+```
+
+
+
 
 ### Fitting the model
 
@@ -222,28 +236,28 @@ priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
            brms::set_prior("gamma(2, 0.1)", class = "nu"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
 
-model_height_vtl_f0_int =  
+model_height_vtl_f0 =  
   brms::brm (height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S), data = height_exp, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
-model_height_vtl_f0_int = bmmb::get_model ('11_model_height_vtl_f0_int.RDS')
+model_height_vtl_f0 = bmmb::get_model ('11_model_height_vtl_f0.RDS')
 ```
 ```{r, include = FALSE, eval = FALSE}
-# saveRDS (model_height_vtl_f0_int, '../models/11_model_height_vtl_f0_int.RDS')
-model_height_vtl_f0_int = readRDS ('../models/11_model_height_vtl_f0_int.RDS')
+# saveRDS (model_height_vtl_f0, '../models/11_model_height_vtl_f0.RDS')
+model_height_vtl_f0 = readRDS ('../models/11_model_height_vtl_f0.RDS')
 ```
 
 We're going to leave a discussion of the properties of the model to the next section where we present some advantages of working with Bayesian models over some more 'traditional' approaches. 
 
-### Some advantages of Bayesian multilevel models
+### Advantages of Bayesian multilevel models for large models
 
 At this point we have enough model components to build very large and complicated models, like the one we fit above. Traditionally, models with many predictors have presented three general problems. First, a model with 'too many' predictors may return spurious values for the 'extra' predictors. Sometimes these spurious values are difficult to distinguish from the 'real' parameters, leading to incorrect conclusions. Second, the model may not be able to fit/converge on a solutions, meaning you can't get the model coefficients. Regardless of the approach to parameter estimation, more-complicated models make it more and more difficult for any estimation to 'find' the optimal parameter values given the data. Third, it can be difficult to interpret a model with *hundreds* (or thousands) of parameters. This becomes especially problematic when considered together with problem (1), that some of these values may simply represent noise. In this section we're going to discuss how working with multilevel Bayesian models can naturally help us with problems (1) and (2) above. In the following section we will discuss how our models can also help us resolve the third problem above.  
   The Bayesian models fit by `brms` have three properties that help resolve the first two problems above. First, the use of prior probabilities and shrinkage, when properly applied, tend to 'pull' weakly-supported parameter values closer to the group mean (or to zero). This can help reduce many of the problems associated with models with large numbers of parameters (cite). Second, the fact that confidence intervals are provided for all parameters helps distinguish random variation from variation that is likely to consistently vary from zero. Third, the fact that our models do not try to find *the* best solution, but simply sample the posterior distribution, relieves much of the pressure associated with finding *the* best solution for models with large numbers of parameters. 
   To this point we have not discussed the `lmer` function very much, apart from in 'Frequentist corner' at the end of some chapters. The `lmer` function (linear mixed-effects regression) is an extremely popular and extremely useful function. In general, `lmer` and an equivalent model specified in `brms` should provide reasonably similar answers when fitting the same models. However, there are some important differences between the two approaches. First, rather than provide a samples of value for each parameter, `lmer` returns *point estimates* representing the *best* values of parameters. This can cause a problem when parameters are bounded, or grow without bound. For example, standard deviation parameters (e.g., $\sigma$) cannot be 0 or negative, but sometimes they are very, very small. So, when `lmer` tries to find the 'best' value, it can get closer, and closer, and closer to zero, leading to problems involving calculations with very small values (e.g., as $x$ approaches $0$, $1/x$ approaches $\infty$). In contrast, Bayesian models don't try to find the single 'best' value but instead collect a series of samples. As a result, the models are less likely to encounter problems when they try to estimate values that are very close to boundaries (they just 'bounce' of the boundary as they randomly walk!). A second difference between the `lmer` estimation method and that of our Bayesian multilevel models is that `lmer` doesn't use prior probabilities to estimate any of it's parameters. This can cause some problems when estimating a large number of parameters without enough data. In contrast, `brms` applies 'shrinkage' to all its parameters (at least in principle), which can help avoid some of the problems encountered by `lmer`. 
   We're going to compare the output of `lmer` and `brms` for the model we fit above. Just to be clear, our intention in comparing `lmer` and `brms` is not to compare different statistical *philosophies* or epistemological claims. Our aim is much, much more modest than that. We simply wish to compare `brms`, an approach that 1) uses priors, 2) provides confidence intervals, and 3) estimates based on posterior samples, to one that does not (`lmer`). 
-  Below we fit a model equivalent to `model_height_vtl_f0_int` using `lmer`.
+  Below we fit a model equivalent to `model_height_vtl_f0` using `lmer`.
 
 ```{r, eval = FALSE}
 lme_model_height_vtl_f0 =
@@ -274,7 +288,7 @@ pts = fixef (lme_model_height_vtl_f0)[-1]
 err_bars = summary (lme_model_height_vtl_f0)$coefficients[-1,2]
 
 par (mfrow = c(1,1), mar = c(6,4,1,1))
-bmmb::brmplot (fixef (model_height_vtl_f0_int)[-1,], ylim = c(-7,10),las=2)
+bmmb::brmplot (fixef (model_height_vtl_f0)[-1,], ylim = c(-7,10),las=2)
 points ((1:15)+.2, pts, cex=1.5,lwd=2,col=2,pch=16)
 segments((1:15)+.2, pts-2*err_bars,(1:15)+.2, pts+2*err_bars,lwd=2,col=2)
 
@@ -297,7 +311,7 @@ Which warns us that some of the variance components we are trying to estimate ar
 Ssd = attr(VarCorr(lme_model_height_vtl_f0)[[1]],'stddev')
 Lsd = attr(VarCorr(lme_model_height_vtl_f0)[[2]],'stddev')
 lmer_vars = c(Lsd, Ssd, sigma(lme_model_height_vtl_f0))
-vars_final = bmmb::getsds(model_height_vtl_f0_int)
+vars_final = bmmb::getsds(model_height_vtl_f0)
 
 layout (m=1:3, heights = c(.4,.3,.3))
 par (mar = c(7,4,.5,1))
@@ -308,13 +322,13 @@ points (lmer_vars, cex=2,lwd=2,col=4,pch=4)
 pts = ranef(lme_model_height_vtl_f0)$L[,4]
 
 par (mar = c(.5,4,.5,1))
-bmmb::brmplot (ranef(model_height_vtl_f0_int)$L[,,4],labels="", col = 2)
+bmmb::brmplot (ranef(model_height_vtl_f0)$L[,,4],labels="", col = 2)
 points ((1:15), pts, cex=2,lwd=2,col=4,pch=4)
 
 
 corrs_lme = attr(VarCorr(lme_model_height_vtl_f0)$L,"correlation")
 corrs_lme = corrs_lme[lower.tri (corrs_lme)]
-corrs_brms = bmmb::getcorrs(model_height_vtl_f0_int, "L")
+corrs_brms = bmmb::getcorrs(model_height_vtl_f0, "L")
 
 bmmb::brmplot (corrs_brms, ylim = c(-.97,.97), las = 2, labels = "",line=FALSE,col=2)
 abline (h=0)
@@ -345,13 +359,12 @@ The information we considered in the previous section can be used to considered 
 
 par (mfrow = c(1,1), mar = c(4,4,1,1))
 
-brmplot (ranef (model_height_vtl_f0_int)$L[,,"Intercept"], col = bmmb::cols[9])
-brmplot (ranef (model_height_vtl_f0_int)$L[,,"vtl:G1"], add = TRUE, 
+brmplot (ranef (model_height_vtl_f0)$L[,,"Intercept"], col = bmmb::cols[9], 
+         line=TRUE)
+brmplot (ranef (model_height_vtl_f0)$L[,,"vtl:G1"], add = TRUE, 
          nudge = 0.1, labels = "", col = bmmb::cols[14],pch=17)
 ```
   
-
-
 Gelman and Hill distinguish between two types of standard deviations for a 'random' effect with $J$ levels (p. 459) (emphasis ours):
 
 > "• The **superpopulation** standard deviation , which represents the variation among the modeled probability distribution from which the were drawn, is relevant for determining the uncertainty about the value of a new group not in the original set of J." 
@@ -379,28 +392,28 @@ We could potentially add a fifth step: 5) refit reduced model if some components
 The superpopulation standard deviation is our model's estimate of the standard deviations of different batches of parameters. We can extract the superpopulation standard deviations using the `VarCorr` function. This function returns all sort of information about the variance anf correlation parameters estimated by our model. In the second line below we specify that we only want information related to the standard deviation (`"sd"`) of our listener effects (`"L"`).
 
 ```{r, cache = TRUE, collapse = TRUE, eval = FALSE}
-brms::VarCorr(model_height_vtl_f0_int)
+brms::VarCorr(model_height_vtl_f0)
 
-brms::VarCorr(model_height_vtl_f0_int)[["L"]][["sd"]]
+brms::VarCorr(model_height_vtl_f0)[["L"]][["sd"]]
 ```
 
 We can also get information regarding our error standard deviation using `Varcorr` as seen below:
 
 ```{r, cache = TRUE, collapse = TRUE}
-brms::VarCorr(model_height_vtl_f0_int)$residual$sd
+brms::VarCorr(model_height_vtl_f0)$residual$sd
 ```
 
 The `bmmb` package contains a function called `getsds` that collects estimates of all standard deviations estimated by the model, including the error:
 
 ```{r}
-getsds (model_height_vtl_f0_int)
+getsds (model_height_vtl_f0)
 ```
 
 Getting the finite-sample standard deviations is a bit trickier. To calculate the standard deviations of different batches of parameters you need to calculate the standard deviation for each batch, *for each sample*. This means you end up with as many samples of the finite-sample standard deviation based on each set of posterior samples. The code below shows how to calculate the finite-population standard deviations for item based on the random effects parameter estimates. 
 
 ```{r, cache = TRUE, collapse = TRUE, eval = FALSE}
 # extract matrix representing all random effects from our model
-listener_intercepts = ranef(model_height_vtl_f0_int, summary = FALSE)[["L"]][,,"Intercept"]
+listener_intercepts = ranef(model_height_vtl_f0, summary = FALSE)[["L"]][,,"Intercept"]
 
 # the output is a 3d matrix. dimensions are:
 str (listener_intercepts)
@@ -444,8 +457,8 @@ row.names(sigma_finite) = 'sigma'
 The `bmmb` package contains a function called `banova` that can get the finite-sample or superpopulation standard deviations for you. The output is a single dataframe that contains a summary of the standard deviations for fixed and random effects, and the error term if the model contains one. Below we use the function to get both kinds of standard deviation, compared in 
 
 ```{r, cache = TRUE, include = FALSE}
-banova_height_vtl_f0_finite = banova (model_height_vtl_f0_int, superpopulation = FALSE)
-banova_height_vtl_f0_super = banova (model_height_vtl_f0_int, superpopulation = TRUE)
+banova_height_vtl_f0_finite = banova (model_height_vtl_f0, superpopulation = FALSE)
+banova_height_vtl_f0_super = banova (model_height_vtl_f0, superpopulation = TRUE)
 ```
 
 The output of the `banova` function can be used to make a Bayesian ANOVA plot of our model. If we were to do this right after fitting the model, we would have a pretty good idea of what matters and what doesn't in our data. 
@@ -457,11 +470,11 @@ The output of the `banova` function can be used to make a Bayesian ANOVA plot of
 ################################################################################
 
 par (mar = c(.125,4,.125,.125), mfrow = c(2,1), oma = c(6.5,0,1,0))
-banovaplot (banova_height_vtl_f0_1[-2,], las = 2,line=FALSE,labels = "",
+banovaplot (banova_height_vtl_f0_finite[-2,], las = 2,line=FALSE,labels = "",
             yaxs="i", ylim = c(0,10))
 abline (h=0)
 box()
-banovaplot (banova_height_vtl_f0_2[-2,], las = 2, line=FALSE,yaxs="i",
+banovaplot (banova_height_vtl_f0_super[-2,], las = 2, line=FALSE,yaxs="i",
             ylim = c(0,10))
 abline (h=0)
 box()
@@ -472,52 +485,23 @@ The process Gelman proposes is potentially more complicated that what I'm doing 
 
 ### Fitting and comparing the reduced model
 
-The most complicated possible answer to this question is that **everything** matters. You have unpredictable variation across all groups, meaning you need all eight fixed parameters (i.e., Int., S, P, C, SP, SC, PC, SPC) to distinguish the groups. Furthermore, the way that these main effects and interactions affect reaction times also varies *unpredictably* from subject to subject. And on top of all that, these effects also vary substantially and unpredictably from item to item. 
+Our initial model formula was:
 
-`height ~ f0 + vtl + A*G + vtl:A1`
+`height ~ f0*vtl*A*G + (f0*vtl*A*G|L) + (f0*vtl*A*G|S)`
 
-
-
-
-```
-height ~ vtl + f0 + A + G + A1:G1 + vtl:f0 + vtl:A1 + 
-         vtl:G1 + f0:A1 + f0:G1 + vtl:f0:A1 + vtl:f0:G1 + 
-         vtl:A1:G1 + f0:A1:G1 + vtl:f0:A1:G1
-```
-
-
-
-The statement above represents what's sometimes called the *maximal* model, the model containing all possible random slopes and intercepts. The *maximal* model for this experiment is:
+Which expands to:
 
 ```
-RTtrunc ~  1 + vtl + f0 + C + SP + SC + PC + SPC + 
-         ( 1 + S + P + C + SP + SC + PC + SPC | subj) + 
-         ( 1 + S + P + C + SP + SC + PC + SPC | item)
+height ~ vtl + f0 + A + G + A1:G1 + vtl:f0 + vtl:A1 + vtl:G1 + f0:A1 + f0:G1 + 
+         vtl:f0:A1 + vtl:f0:G1 + vtl:A1:G1 + f0:A1:G1 + vtl:f0:A1:G1 + 
+         (vtl + f0 + A + G + A1:G1 + vtl:f0 + vtl:A1 + vtl:G1 + f0:A1 + f0:G1 + 
+         vtl:f0:A1 + vtl:f0:G1 + vtl:A1:G1 + f0:A1:G1 + vtl:f0:A1:G1|L) + (1|S)
 ```
+Because we include all interactions and listener 'random effects' of these, we're basically saying that we think its possible for every predictor to affect every other predictor, and for all of this to vary in a listener-dependent manner. We might instead consider the following model formula which includes only those effects we (arbitrarily) deemed 'large enough' based on figures above. 
 
-This model estimates speaker and item-dependent effects for all predictors, basically a *lot* of `effect:subject` and `effect:item` interactions. We could compare this to a 'minimal' model so small it fits on one line:
+`height ~ f0 + vtl + A*G + vtl:A1 + (f0 + vtl + A*G + vtl:A1|L) + (1|S)`
 
-```
-RTtrunc ~  1 + S + P + C + SP + SC + PC + SPC + ( 1 | subj) + ( 1 | item)
-```
-
-This model does not contain *any* random effects other than intercepts. This means this model acts as if we do not have any systematic/substantial variation in our predictors by item or subject (random or otherwise). We could take this even further and make the model like this:
-
-```
-RTtrunc ~  1 + S + P + C + ( 1 | subj) + ( 1 | item)
-```
-
-Which basically says we expect only main effects and no interactions. We may know instinctively that it's a bad idea to start with the last model above. If you assume almost nothing matters how can you find out if it does? But is the opposite necessary, it is necessary to always use the maximal model?
-
-There are at least two reasons why people may not use the maximal model as their final model:
-
-  1) It may not be practical. These models can take a long time to fit since they are complicated. For example, since the random effects are treated as draws from a multivariate normal distribution (as discussed in chapter 6), we need to calculate correlations between all dimensions. This means calculating 8 standard deviations and 28 (!) correlations for the random slopes for subject, and then doing the same for the random slopes for item. When many of these standard deviations or correlations are near zero and/or there is not very much data, `lmer` can have problems converging on a solution. 
-  
-  2) It may not be necessary. If some predictors really have no effect on our outcomes, and especially when these interfere with our ability to fit or interpret our models, it may not be necessary to leave them in the model. 
-  
-
-
-We fit a reduced model based on 
+Since these are the predictors that varied most betwee listeners and also affected our dependent variable the most, in some situations we may be justified in fitting a 'final' model that includes only the important components. We fit the reduced model below:
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -545,40 +529,62 @@ model_height_vtl_f0_reduced = bmmb::get_model ('11_model_height_vtl_f0_reduced.R
 model_height_vtl_f0_reduced = readRDS ('../models/11_model_height_vtl_f0_reduced.RDS')
 ```
 
-We see that the fixed effects shared in common are very similar. 
+We can see that the fixed effects shared in common are very similar, as are the estimates of the random effects for the listener-dependent parameters.  
 
-```{r}
-brmplot (fixef (model_height_vtl_f0_int)[-1,], ylim = c(-6,10))
-brmplot (xs = c(2,1,3,4,10,6),fixef (model_height_vtl_f0_reduced)[-1,],
+```{r F11_8, fig.height = 3, fig.width = 8, fig.cap='(left) . (right) .', echo = FALSE}
+
+################################################################################
+### Figure 11.8
+################################################################################
+
+sds_reduced = getsds(model_height_vtl_f0_reduced)
+sds = getsds(model_height_vtl_f0)
+use = rownames(sds) %in% rownames(sds_reduced)
+sds = sds[use,]
+
+par (mfrow = c(1,2), mar = c(4,4,1,1))
+layout (m = t(c(1,2)),widths = c(.55,.45))
+brmplot (fixef (model_height_vtl_f0)[c(2,3,4,5,7,11),], ylim = c(-6,10),las=2,
+         ylab = "Centimeters")
+brmplot (fixef (model_height_vtl_f0_reduced)[c(3,2,4,5,7,6),],
          add = TRUE, nudge = 0.2, col = 2,labels = "")
 abline (h=0)
+
+brmplot (sds, las = 2, ylab = "Centimeters")
+brmplot (sds_reduced, add = TRUE, col = 2, nudge = .2, labels = "")
 
 ```
 
 We use cross-validation to compare the expected model out-of-sample prediction: 
 
-```{r}
-model_height_vtl_f0_int = add_criterion (model_height_vtl_f0_int, "loo")
+```{r, cache = TRUE}
+model_height_vtl_f0 = add_criterion (model_height_vtl_f0, "loo")
 model_height_vtl_f0_reduced = add_criterion (model_height_vtl_f0_reduced, "loo")
 ```
 
-And see that the reduced model is worse at predicting our data, but that the differences is only about 1.5 standard errors, making the difference not very reliable. 
+And see that the reduced model has a lower $\mathrm{elpd}$, but that the differences is only about 1.5 standard errors, making it not very reliable. 
 
 ```{r}
-loo_compare (model_height_vtl_f0_int,model_height_vtl_f0_reduced) 
+loo_compare (model_height_vtl_f0,model_height_vtl_f0_reduced) 
 ```
 
-All of this suggests that a researcher would be justified in fitting and interpreting the reduced model for their research. However, we are inclined to agree with Gelman and colleagues that there is value in fitting a model that includes all of the realistic variation that may be included in our data, and that is supportable by our data. This means fitting and reporting the larger model. As we have seen, the 'extra' predictors do not seem to affect the parameters we do care about very much. In addition, where they are slightly different it is impossible to 'prove' which values are closer to the 'truth' based only on the performance of the models. In addition, being able to say "these parameters are near zero/show no between-listener variation" is useful information that we lose when we rely only on the reduced model. Of course, we could say something like "we fit a larger model that showed all these effects are zero but we are not presenting it here". However, if we do want to say something like this it may make sense to present the full model to the reader so that they may make their own conclusions and use the information as they see fit. 
+We can also consider the variance explained ($R^2$) by each model:
 
+```{r}
+bmmb::r2_bayes(model_height_vtl_f0)
+bmmb::r2_bayes(model_height_vtl_f0_reduced)
+```
+
+And see that all of the extra complexity included in our full model gains us less than 1% additional variance explained. All of this suggests that a researcher would be justified in fitting and interpreting the reduced model for their research. However, we are inclined to agree with Gelman and colleagues that there is value in fitting a model that includes all of the realistic variation that may be included in our data, and that is supportable by our data. This means fitting and reporting the larger model. As we have seen, the 'extra' predictors do not seem to affect the parameters we do care about very much. In addition, where they are slightly different it is impossible to 'prove' which values are closer to the 'truth' based only on the performance of the models. In addition, being able to say "these parameters are near zero/show no between-listener variation" is useful information that we lose when we rely only on the reduced model. Of course, we could say something like "we fit a larger model that showed all these effects are zero but we are not presenting it here". However, if we do want to say something like this it may make sense to present the full model to the reader so that they may make their own conclusions and use the information as they see fit. 
 
 ## Fitting a multivariate logistic regression model
 
-We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of BANOVA outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we will be fitting. A logistic regression model with two continuous predictors specifies planes along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1). When the value on the surface of these planes is negative, the model predicts a response of 0, and when the value of the plane is positive the model predicts a 1. We can imagine the plane such that $z=0$ representing a probability of 0.5. The planes represented by our models will intersect with these planes, forming a line at this intersection. Since these lines represent a division of our planes into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the lines formed by the intersection of these planes represent the *category boundary* as defined by our model. When we want to know the probability expected for any given x and y axis location, we can transform the value on the plane using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:11_8). Although these surfaces are are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. 
+We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of BANOVA outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we will be fitting. A logistic regression model with two continuous predictors specifies planes along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1). When the value on the surface of these planes is negative, the model predicts a response of 0, and when the value of the plane is positive the model predicts a 1. We can imagine the plane such that $z=0$ representing a probability of 0.5. The planes represented by our models will intersect with these planes, forming a line at this intersection. Since these lines represent a division of our planes into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the lines formed by the intersection of these planes represent the *category boundary* as defined by our model. When we want to know the probability expected for any given x and y axis location, we can transform the value on the plane using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:11_9). Although these surfaces are are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. 
 
-```{r F11_8, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE}
+```{r F11_9, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE}
 
 ################################################################################
-### Figure 11.8
+### Figure 11.9
 ################################################################################
 
 f1 = function (a,b,c) a * 1 + b *1  
@@ -598,12 +604,12 @@ persp(x, y, ztop(z), col = cols[4],theta = 45,zlim = c(-0,1))
 
 ```
 
-When our models include interactions between quantitative predictors (i.e. terms representing their cross-products), our predicted values no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model. Since these shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:11_9)). The intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. We will return to this issue when we consider the territorial maps implied by our models later on. 
+When our models include interactions between quantitative predictors (i.e. terms representing their cross-products), our predicted values no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model. Since these shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:11_10)). The intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. We will return to this issue when we consider the territorial maps implied by our models later on. 
 
-```{r F11_9, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE}
+```{r F11_10, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE}
 
 ################################################################################
-### Figure 11.9
+### Figure 11.10
 ################################################################################
 
 f1 = function (a,b,c) a * 1 + b *1 + a*b*1  
@@ -637,7 +643,7 @@ data (height_exp)
 height_exp = height_exp[height_exp$R=='a',]
 ```
 
-Below we add our dependent variable `F`. This variable
+Below we add our dependent variable `F`. This variable equals 1 when the listener indicated hearing a female speaker and 0 when the listener indicated hearing a male speaker. As with our previous model we center our quantitative variables and divide f0 by 100 to make the expected regression coefficient more similar in magnitude
 
 ```{r}
 # our dependent variable
@@ -651,7 +657,7 @@ height_exp$f0 = height_exp$f0 - mean(height_exp$f0)
 height_exp$f0 = height_exp$f0 / 100
 ```
 
-Our research questions are?
+Our research questions are:
 
 Q1) Do listeners use VTL, f0, and the interaction between them to determine speaker gender?
 
@@ -663,7 +669,7 @@ Our model formula is very much like the one we used for our first model in this 
 
 `F ~ vtl*f0*A + (vtl*f0*A|L) + (1|S)`
 
-We will use the same priors we have been using for our logistic models. We will omit our model specification since it is quite large and very similar to the one above for `model_height_vtl_f0` and those presented in chapter 10. 
+We'll use the same priors we used for our logistic models last chapter. Since we scaled f0 so that a change of 1 corresponds to 100 Hz, this value represents about half the difference between adult males and females. For this reason, we think it's reasonable to use a prior of the same magnitude as we used for our VTL parameter. We will omit our model specification since it is quite large and very similar to the one above for `model_height_vtl_f0` and those presented in chapter 10. 
 
 ### Fitting and the model and applying a Bayesian ANOVA
 
@@ -685,43 +691,86 @@ model_gender_vtl_f0 =
 model_gender_vtl_f0 = bmmb::get_model ('11_model_gender_vtl_f0.RDS')
 ```
 ```{r, include = FALSE, eval = FALSE}
-# saveRDS (model_gender_vtl_f0, '../models/11_model_gender_vtl_f0_2.RDS')
-model_gender_vtl_f0 = readRDS ('../models/11_model_gender_vtl_f0_2.RDS')
+# saveRDS (model_gender_vtl_f0, '../models/11_model_gender_vtl_f0.RDS')
+model_gender_vtl_f0 = readRDS ('../models/11_model_gender_vtl_f0.RDS')
 ```
 
-We can consider the model fixed effects using `brmplot` in figure \@ref(fig:11_10)., and beside that we plot 
-
+We can consider the model fixed effects using `brmplot` in figure \@ref(fig:11_10)., and beside that we make a BANOVA plot that compares the fixed effects, the finite-sample standard deviations for 'batches' our random effects parameters, and the residual error.
 
 ```{r, include = FALSE}
 banova_gender_vtl_f0 = bmmb::banova (model_gender_vtl_f0)
 ```
 
-```{r F11_10, fig.height = 3, fig.width = 8, fig.cap='--', echo = FALSE}
+```{r F11_11, fig.height = 3, fig.width = 8, fig.cap='--', echo = FALSE}
+
 par ( mfrow = c(1,2), mar = c(5.5,3,1,1))
 layout (m= t(c(1,2)), widths = c(.4,.6))
 bmmb::brmplot (fixef(model_gender_vtl_f0), line = TRUE, las = 2)
 banovaplot (banova_gender_vtl_f0, line = TRUE, las = 2)
 ```
 
+In figure above we see a relatively complex model, with an important role for both f0 and VTL. We also so that unlike for our model predicting apparent height above, this model features a prominent f0 by VTL interaction (`vtl:f0`), and an interaction between this and apparent age (`vtl:f0:A1`). 
+
+- go over results, convert predicted logits to percents
+- some examples of simple effects and hypothesis function. 
 
 
-```{r}
-samples = fixef (model_gender_vtl_f0, summary = FALSE)
-```
+### Categorization in two dimensions
+
+To find the intersection of the surfaces defined by our models and the plane at $z=0$, we can use some basic algebra. We take the equation defining the general shape:
+
+$$
+\begin{equation}
+z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times xy)
+(\#eq:11_5)
+\end{equation}
+$$
+
+To find the equation for a line
+
+
+
+$$
+\begin{equation}
+\begin{split}
+0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (0 \times xy) \\
+y =  (-\mathrm{b} \times x - \mathrm{a}) /  (\mathrm{c} \times y) + (0 \times xy)
+\end{split}
+(\#eq:11_5)
+\end{equation}
+$$
+
+
+$$
+\begin{equation}
+\begin{split}
+0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (d \times xy) \\
+y =  (-\mathrm{b} \times x - \mathrm{a}) / (d \times x + c)
+\end{split}
+(\#eq:11_5)
+\end{equation}
+$$
+
 
 Then we can divide the column representing the overall intercept by the column representing the overall slope. The result is a vector of individual samples from the posterior distribution of the $x$ intercept of the line, i.e. the category boundary along the VTL dimension. We refer to specific columns by using the same names seen in the print statement for the fixed effects. Note that to find the $x$ intercept for the adult and child lines we combine parameters in the same way as when we found the age-dependent lines above.  
 
 ```{r, collapse = TRUE}
+# get fixed effect parameters
+samples = fixef (model_gender_vtl_f0, summary = FALSE)
+
+# get a,b,c,d coefficients for overall surface
 a_all = mean (samples[,"Intercept"])
 b_all = mean (samples[,"vtl"])
 c_all = mean (samples[,"f0"])
 d_all = mean (samples[,"vtl:f0"])
 
+# get a,b,c,d coefficients for adult surface
 a_adult = mean (samples[,"Intercept"] + samples[,"A1"])
 b_adult = mean (samples[,"vtl"] + samples[,"vtl:A1"])
 c_adult = mean (samples[,"f0"] + samples[,"f0:A1"])
 d_adult = mean (samples[,"vtl:f0"] + samples[,"vtl:f0:A1"])
 
+# get a,b,c,d coefficients for child surface
 a_child = mean (samples[,"Intercept"] - samples[,"A1"])
 b_child = mean (samples[,"vtl"] - samples[,"vtl:A1"])
 c_child = mean (samples[,"f0"] - samples[,"f0:A1"])
@@ -729,10 +778,10 @@ d_child = mean (samples[,"vtl:f0"] - samples[,"vtl:f0:A1"])
 ```
 
 
-```{r F91, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
+```{r F11_12, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
 
 ################################################################################
-### Figure 9.1
+### Figure 11.12
 ################################################################################
 
 # y = (-b*x - a - z) / (dx+c)
@@ -750,7 +799,7 @@ aggd$C[aggd[,4]<= 0.5 & aggd[,5]>= 0.5] = "g"
 aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
 #table(aggd$C)
 
-par (mfrow = c(1,2), mar = c(4,2,1,1), oma = c(1,4,0,0))
+par (mfrow = c(1,3), mar = c(4,2,1,1), oma = c(1,4,0,0))
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = cols[c(2:5)][factor(aggd$C)], 
       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",
@@ -776,15 +825,10 @@ curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE)
 
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = cols[c(2:5)][factor(aggd$C)], 
-      pch=16,lwd=2, xlab = "",xlim = c(-4,4),ylim = c(-2,2),
-      ylab="Height (inches)")
+      pch=16,lwd=2, xlab = "",ylab="Height (inches)")
 grid()
 points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
       col = cols[c(2:5)][factor(aggd$C)])
-
-legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = cols[2:5], bty='n',pch=16,pt.cex=1.5)
-
 
 #curve ((-b_all*x - a_all) / (c_all), from = -3, to = 3, add = TRUE)
 curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -6, to = -.53, add = TRUE)
@@ -798,42 +842,38 @@ curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, to
 curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -6, to = -c_child/d_child, add = TRUE)
 curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to = 6, add = TRUE)
 
+plot (aggd$vtl,aggd$f0, cex =1.2, col = cols[c(2:5)][factor(aggd$C)], 
+      pch=16,lwd=2, xlab = "",xlim = c(-4,4),ylim = c(-2,2),
+      ylab="Height (inches)")
+grid()
+points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+      col = cols[c(2:5)][factor(aggd$C)])
+
+#curve ((-b_all*x - a_all) / (c_all), from = -3, to = 3, add = TRUE)
+curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -6, to = -.53, add = TRUE)
+curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -.52, to = 6, add = TRUE)
+
+#curve ((-b_adult*x - a_adult)/ (c_adult), from = -3, to = 3, add = TRUE)
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, to = -c_adult/d_adult, add = TRUE)
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, to = 6, add = TRUE)
+
+#curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE)
+curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -6, to = -c_child/d_child, add = TRUE)
+curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to = 6, add = TRUE)
 
 ```
 
+does this matter? yes and no. does it matter that the earth is not round but our maps mostly act like it is? its flat enough in the area that we are using our map for, and so we can act like its flat. what do we want to do with our model? inspect only the region of the boundary where we have data? Or leally understand whats going ion in general even in area where we dont hae data but are fairly likely e know whats going on. 
 
 
 
 
 ```{r, eval = FALSE}
-qq = banova (model_gender_vtl_f0, superpopulation = TRUE)
-
-```
-
-```{r, eval = FALSE}
-par (mar = c(8,4,1,1))
-banovaplot (qq, las = 2)
-```
-
-
-
-a= 0.61
-b= -2.59
-c= 2.00
-
--a/b*x - c/b
-
-
-### Categorization in two dimensions
-
-
-
-```{r, eval = FALSE}
-model_height_vtl_f0_int = add_criterion(model_height_vtl_f0_int,"loo")
+model_height_vtl_f0 = add_criterion(model_height_vtl_f0,"loo")
 model_height_vtl_f0 = add_criterion(model_height_vtl_f0,"loo")
 model_random_slopes_complex = add_criterion(model_random_slopes_complex,"loo")
 
-loo_compare (model_height_vtl_f0, model_height_vtl_f0_int,model_random_slopes_complex)
+loo_compare (model_height_vtl_f0, model_height_vtl_f0,model_random_slopes_complex)
 
 ```
 
@@ -849,7 +889,7 @@ model_random_slopes_complex = readRDS ('../models/9_model_random_slopes_complex.
 
 
 ```{r, eval = FALSE}
-qq = banova (model_height_vtl_f0_int, superpopulation = TRUE)
+qq = banova (model_height_vtl_f0, superpopulation = TRUE)
 
 ```
 

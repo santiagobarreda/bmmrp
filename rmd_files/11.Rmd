@@ -189,38 +189,36 @@ We're going to begin with a models that includes all possible interactions betwe
 
 `height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`
 
-We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is way too long at this point.
-
+We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is way too long at this point. However, we can talk about all of our model coefficients and what they mean for our model. And below is an 'expanded' version of our model that spell out all of the included parameters.
 
 ```
-height ~ Intercept + vtl + f0 + A + G + A1:G1 + vtl:f0 + vtl:A1 + vtl:G1 + f0:A1 + 
-         f0:G1 + vtl:f0:A1 + vtl:f0:G1 + vtl:A1:G1 + f0:A1:G1 + vtl:f0:A1:G1
+height ~ Intercept + vtl + f0 + A + G + A:G1 + vtl:f0 + vtl:A + vtl:G1 + f0:A + 
+         f0:G1 + vtl:f0:A + vtl:f0:G1 + vtl:A:G1 + f0:A:G1 + vtl:f0:A:G1
 ```
 
+We can group these parameters together based on the way they affect the surfaces [@@ - SB - shapes? whats the general term I should be using here?] represented by our model: Intercept parameters (`a`), VTL slope parameters (`b`), f0 parameters (`c`), and VTL:f0 interaction parameters (`d`).
+
+```
+a = Intercept + A        + G        + A:G 
+b = vtl       + vtl:A    + vtl:G    + vtl:A:G
+c = f0        + f0:A     + f0:G     + f0:A:G
+d = vtl:f0    + vtl:f0:A + vtl:f0:G + vtl:f0:A:G
+```
+
+We said we weren't going to provide a formal definition of this model,but if we had the first few lines might have looked something like this: 
 
 $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
-\mu_{[i]} = a_{[i]} +  b_{[i]} \times \mathrm{vtl}_{[i]} + c_{[i]} \times \mathrm{f0}_{[i]} + d_{[i]} \times \mathrm{f0}_{[i]} \times \mathrm{vtl}_{[i]} \\ \\
+\mu_{[i]} = a_{[i]} +  (b_{[i]} \times \mathrm{vtl}_{[i]}) + (c_{[i]} \times \mathrm{f0}_{[i]}) + (d_{[i]} \times \mathrm{f0}_{[i]} \times \mathrm{vtl}_{[i]}) \\ \\
 \mathrm{and \; more} \ldots
 \end{split}
 (\#eq:11.4)
 \end{equation}
 $$
 
- - anova-like decomposition. 
- - same along each dimension
-
-```
-a = Intercept + A         + G         + A1:G1 
-b = vtl       + vtl:A1    + vtl:G1    + vtl:A1:G1
-c = f0        + f0:A1     + f0:G1     + f0:A1:G1
-d = vtl:f0    + vtl:f0:A1 + vtl:f0:G1 + vtl:f0:A1:G1
-```
-
-
-
+And the lines below that would have described $a$, $b$, $c$, and $d$ as the sum of the model. Notice that there is a symmetry to the parameters for each 'dimension' in our model. Each one contains a 'main effect' term (`Intercept,A, G, A:G`), an interaction with apparent age (`A, vtl:A, f0:A, vtl:f0:A`), an interaction with apparent gender (`G, vtl:G, f0:G, vtl:f0:G`), and an interaction with apparent age *and* gender (`A:G, vtl:A:G, f0:A:G, vtl:f0:A:G`). 
 
 ### Fitting the model
 
@@ -240,11 +238,11 @@ model_height_vtl_f0 =
   brms::brm (height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S), data = height_exp, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 model_height_vtl_f0 = bmmb::get_model ('11_model_height_vtl_f0.RDS')
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = FALSE, eval = TRUE}
 # saveRDS (model_height_vtl_f0, '../models/11_model_height_vtl_f0.RDS')
 model_height_vtl_f0 = readRDS ('../models/11_model_height_vtl_f0.RDS')
 ```
@@ -265,11 +263,11 @@ lme_model_height_vtl_f0 =
               data=height_exp,verbose = TRUE,
               control=lme4::lmerControl(optCtrl=list(maxfun=20000),optimizer="bobyqa"))
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 lme_model_height_vtl_f0 = bmmb::get_model ('11_lme_model_height_vtl_f0.RDS')
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = FALSE, eval = TRUE}
 #saveRDS (lme_model_height_vtl_f0, '11_lme_model_height_vtl_f0.RDS')
 lme_model_height_vtl_f0 = readRDS ('../models/11_lme_model_height_vtl_f0.RDS')
 ```
@@ -343,6 +341,9 @@ In the bottom panel of figure \@ref(fig:F11_5) we compare the correlations for t
 
 The information we considered in the previous section can be used to considered which predictors, or groups of predictors, might be important in our models. This approach becomes increasingly more useful as our models increase in complexity and end up with dozens or hundreds of parameters. This approach is presented is presented by Gelman and colleagues in Gelman anova paper, Gelman and hill chapter 22, and Gelman et al BDA3 chapter. 
   The analysis of variance (ANOVA) is a set of modeling techniques meant to help understands the components and sources of variation in a dependent variables. We're not going to talk about a 'traditional' ANOVA in any detail here, as it would involve the introduction of a *parallel universe* of statistical concepts and jargon that has not been discussed in this book. There are many excellent treatments on the subject including myers and well and cite others. That being said, at its core ANOVA consists of thinking of variation in the dependent variable as the sum of variation of a set of **components of variation** related to the predictors in our model. For example, we can think of the total variation in apparent height judgments as related to variation according to apparent age, listener-dependent intercepts, and so on, until we get to all the variance we *can't* explain, and we just call that the *error* ($\sigma$). 
+  
+  - what we did above was an anova-like decomposition. 
+  
   A 'traditional' ANOVA tries to **decompose** variation into independent components so that it can relate combinations of these as ratios in order to carry out different statistical tests. That approach is fundamentally different to the sorts of things we have been doing with our multilevel models. However, the general approach of decomposing variation in our dependent variable into separate components is very useful, especially for larger models. Here's what Gelman and Hill have to say about the analysis of variance in the context of multilevel models:
 
 > "When moving to multilevel modeling, the key idea we want to take from the analysis of variance is the estimation of the importance of different batches of predictors (“components of variation” in ANOVA terminology). As usual, we focus on estimation rather than testing: instead of testing the null hypothesis that a variance component is zero, we estimate the standard deviation of the corresponding batch of coefficients. If this standard deviation is estimated to be small, then the source of variation is minor—we do not worry about whether it is exactly zero. In the social science and public health examples that we focus on, it can be a useful research goal to identify important sources of variation, but it is rare that anything is truly zero." (p. 490)
@@ -405,9 +406,11 @@ brms::VarCorr(model_height_vtl_f0)$residual$sd
 
 The `bmmb` package contains a function called `getsds` that collects estimates of all standard deviations estimated by the model, including the error:
 
+
 ```{r}
 getsds (model_height_vtl_f0)
 ```
+
 
 Getting the finite-sample standard deviations is a bit trickier. To calculate the standard deviations of different batches of parameters you need to calculate the standard deviation for each batch, *for each sample*. This means you end up with as many samples of the finite-sample standard deviation based on each set of posterior samples. The code below shows how to calculate the finite-population standard deviations for item based on the random effects parameter estimates. 
 
@@ -489,19 +492,11 @@ Our initial model formula was:
 
 `height ~ f0*vtl*A*G + (f0*vtl*A*G|L) + (f0*vtl*A*G|S)`
 
-Which expands to:
-
-```
-height ~ vtl + f0 + A + G + A1:G1 + vtl:f0 + vtl:A1 + vtl:G1 + f0:A1 + f0:G1 + 
-         vtl:f0:A1 + vtl:f0:G1 + vtl:A1:G1 + f0:A1:G1 + vtl:f0:A1:G1 + 
-         (vtl + f0 + A + G + A1:G1 + vtl:f0 + vtl:A1 + vtl:G1 + f0:A1 + f0:G1 + 
-         vtl:f0:A1 + vtl:f0:G1 + vtl:A1:G1 + f0:A1:G1 + vtl:f0:A1:G1|L) + (1|S)
-```
 Because we include all interactions and listener 'random effects' of these, we're basically saying that we think its possible for every predictor to affect every other predictor, and for all of this to vary in a listener-dependent manner. We might instead consider the following model formula which includes only those effects we (arbitrarily) deemed 'large enough' based on figures above. 
 
 `height ~ f0 + vtl + A*G + vtl:A1 + (f0 + vtl + A*G + vtl:A1|L) + (1|S)`
 
-Since these are the predictors that varied most betwee listeners and also affected our dependent variable the most, in some situations we may be justified in fitting a 'final' model that includes only the important components. We fit the reduced model below:
+Since these are the predictors that varied most between listeners and also affected our dependent variable the most, in some situations we may be justified in fitting a 'final' model that includes only the important components. We fit the reduced model below:
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -520,11 +515,11 @@ model_height_vtl_f0_reduced =
              data = height_exp, chains = 4, cores = 4, warmup = 1000, 
              iter = 5000, thin = 4, prior = priors, family = "student")
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 model_height_vtl_f0_reduced = bmmb::get_model ('11_model_height_vtl_f0_reduced.RDS')
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = FALSE, eval = TRUE}
 # saveRDS (model_height_vtl_f0_reduced, '../models/11_model_height_vtl_f0_reduced.RDS')
 model_height_vtl_f0_reduced = readRDS ('../models/11_model_height_vtl_f0_reduced.RDS')
 ```
@@ -593,14 +588,14 @@ x <- y <- seq(-3, 3, length= 12)
 par (mfrow = c(2,3), mar = c(1,1,0,0), oma = c(0,0,0,0))
 
 z <- outer(x, y, f1)
-persp(x, y, z, col = cols[3],theta = 0,zlim = c(-6.5,6.5))
-persp(x, y, z, col = cols[3],theta = -90,zlim = c(-6.5,6.5))
-persp(x, y, z, col = cols[3],theta = 45,zlim = c(-6.5,6.5))
+persp(x, y, z, col = bmmb::cols[3],theta = 0,zlim = c(-6.5,6.5))
+persp(x, y, z, col = bmmb::cols[3],theta = -90,zlim = c(-6.5,6.5))
+persp(x, y, z, col = bmmb::cols[3],theta = 45,zlim = c(-6.5,6.5))
 
 z <- outer(x, y, f1)
-persp(x, y, ztop(z), col = cols[4],theta = 0,zlim = c(0,1))
-persp(x, y, ztop(z), col = cols[4],theta = -90,zlim = c(0,1))
-persp(x, y, ztop(z), col = cols[4],theta = 45,zlim = c(-0,1))
+persp(x, y, ztop(z), col = bmmb::cols[4],theta = 0,zlim = c(0,1))
+persp(x, y, ztop(z), col = bmmb::cols[4],theta = -90,zlim = c(0,1))
+persp(x, y, ztop(z), col = bmmb::cols[4],theta = 45,zlim = c(-0,1))
 
 ```
 
@@ -619,14 +614,14 @@ x <- y <- seq(-3, 3, length= 12)
 par (mfrow = c(2,3), mar = c(1,1,0,0), oma = c(0,0,0,0))
 
 z <- outer(x, y, f1)
-persp(x, y, z, col = cols[5],theta = 0,zlim = c(-9.5,15.5))
-persp(x, y, z, col = cols[5],theta = -90,zlim = c(-9.5,15.5))
-persp(x, y, z, col = cols[5],theta = 45,zlim = c(-9.5,15.5))
+persp(x, y, z, col = bmmb::cols[5],theta = 0,zlim = c(-9.5,15.5))
+persp(x, y, z, col = bmmb::cols[5],theta = -90,zlim = c(-9.5,15.5))
+persp(x, y, z, col = bmmb::cols[5],theta = 45,zlim = c(-9.5,15.5))
 
 z <- outer(x, y, f1)
-persp(x, y, ztop(z), col = cols[6],theta = 0,zlim = c(0,1))
-persp(x, y, ztop(z), col = cols[6],theta = -90,zlim = c(0,1))
-persp(x, y, ztop(z), col = cols[6],theta = 45,zlim = c(-0,1))
+persp(x, y, ztop(z), col = bmmb::cols[6],theta = 0,zlim = c(0,1))
+persp(x, y, ztop(z), col = bmmb::cols[6],theta = -90,zlim = c(0,1))
+persp(x, y, ztop(z), col = bmmb::cols[6],theta = 45,zlim = c(-0,1))
 
 ```
 
@@ -676,6 +671,9 @@ We'll use the same priors we used for our logistic models last chapter. Since we
 Below we fit our model:
 
 ```{r, eval = FALSE}
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_vtl_f0 =
   brm (F ~ vtl*f0*A + (vtl*f0*A|L) + (1|S), data=height_exp, 
@@ -686,11 +684,11 @@ model_gender_vtl_f0 =
                  set_prior("student_t(3, 0, 3)", class = "sd"),
                  set_prior("lkj_corr_cholesky (2)", class = "cor")))
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 model_gender_vtl_f0 = bmmb::get_model ('11_model_gender_vtl_f0.RDS')
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = FALSE, eval = TRUE}
 # saveRDS (model_gender_vtl_f0, '../models/11_model_gender_vtl_f0.RDS')
 model_gender_vtl_f0 = readRDS ('../models/11_model_gender_vtl_f0.RDS')
 ```
@@ -703,13 +701,17 @@ banova_gender_vtl_f0 = bmmb::banova (model_gender_vtl_f0)
 
 ```{r F11_11, fig.height = 3, fig.width = 8, fig.cap='--', echo = FALSE}
 
+################################################################################
+### Figure 11.11
+################################################################################
+
 par ( mfrow = c(1,2), mar = c(5.5,3,1,1))
-layout (m= t(c(1,2)), widths = c(.4,.6))
-bmmb::brmplot (fixef(model_gender_vtl_f0), line = TRUE, las = 2)
-banovaplot (banova_gender_vtl_f0, line = TRUE, las = 2)
+layout (mat= t(c(1,2)), widths = c(.4,.6))
+bmmb::brmplot (brms::fixef(model_gender_vtl_f0), line = TRUE, las = 2)
+bmmb::banovaplot (banova_gender_vtl_f0, line = TRUE, las = 2)
 ```
 
-In figure above we see a relatively complex model, with an important role for both f0 and VTL. We also so that unlike for our model predicting apparent height above, this model features a prominent f0 by VTL interaction (`vtl:f0`), and an interaction between this and apparent age (`vtl:f0:A1`). 
+In the figure above we see a relatively complex model, with an important role for both f0 and VTL. We also so that unlike for our model predicting apparent height above, this model features a prominent f0 by VTL interaction (`vtl:f0`), and an interaction between this and apparent age (`vtl:f0:A1`). 
 
 - go over results, convert predicted logits to percents
 - some examples of simple effects and hypothesis function. 
@@ -726,20 +728,19 @@ z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \t
 \end{equation}
 $$
 
-To find the equation for a line
-
-
+First, we consider the intersection of the plane at $z=0$ and a plane defined by our model. To do this we set both $z=0$ and $d=0$, and solve for $y$ as shown below. 
 
 $$
 \begin{equation}
 \begin{split}
 0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (0 \times xy) \\
-y =  (-\mathrm{b} \times x - \mathrm{a}) /  (\mathrm{c} \times y) + (0 \times xy)
+y =  -(\mathrm{b} \times x - \mathrm{a}) / \mathrm{c}
 \end{split}
 (\#eq:11_5)
 \end{equation}
 $$
 
+Second, we consider the intersection of the plane at $z=0$ and the saddle shape defined by our model. To do this we set only $z=0$, and solve for $y$ again as shown below. 
 
 $$
 \begin{equation}
@@ -751,12 +752,11 @@ y =  (-\mathrm{b} \times x - \mathrm{a}) / (d \times x + c)
 \end{equation}
 $$
 
-
-Then we can divide the column representing the overall intercept by the column representing the overall slope. The result is a vector of individual samples from the posterior distribution of the $x$ intercept of the line, i.e. the category boundary along the VTL dimension. We refer to specific columns by using the same names seen in the print statement for the fixed effects. Note that to find the $x$ intercept for the adult and child lines we combine parameters in the same way as when we found the age-dependent lines above.  
+Below we get the samples for our fixed effects parameters from our model and add up the appropriate parameters to calculate our $a, b, c$ and $d$ parameters for all speakers, for apparent adults, and for apparent children. In each case, we combine the necessary parameters first and then find the average across the samples of the parameter. 
 
 ```{r, collapse = TRUE}
 # get fixed effect parameters
-samples = fixef (model_gender_vtl_f0, summary = FALSE)
+samples = brms::fixef (model_gender_vtl_f0, summary = FALSE)
 
 # get a,b,c,d coefficients for overall surface
 a_all = mean (samples[,"Intercept"])
@@ -777,6 +777,7 @@ c_child = mean (samples[,"f0"] - samples[,"f0:A1"])
 d_child = mean (samples[,"vtl:f0"] - samples[,"vtl:f0:A1"])
 ```
 
+We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our linear (equation X) and hyperbolic (equation X) boundaries in the left and middle panels of figure below. You may notice small lines in the top left corner of the middle plot below. We can see what these are when we 'zoom out' in the right plot of the figure. As a result of these 'double' shapes we get two sections in our space associated with male speakers, one in the bottom right associated with lower frequencies, and one in the top right associated with higher frequencies. 
 
 ```{r F11_12, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
 
@@ -799,128 +800,308 @@ aggd$C[aggd[,4]<= 0.5 & aggd[,5]>= 0.5] = "g"
 aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
 #table(aggd$C)
 
-par (mfrow = c(1,3), mar = c(4,2,1,1), oma = c(1,4,0,0))
+tab = table (height_exp$S, height_exp$C)
+mod_cat = apply (tab, 1,which.max)
 
-plot (aggd$vtl,aggd$f0, cex =1.2, col = cols[c(2:5)][factor(aggd$C)], 
-      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",
-      ylab="Height (inches)")
-grid()
-points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
-      col = cols[c(2:5)][factor(aggd$C)])
+par (mfrow = c(1,2), mar = c(4,2,1,1), oma = c(1,4,0,0))
 
-legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = cols[2:5], bty='n',pch=16,pt.cex=1.5)
-
-curve ((-b_all*x - a_all) / (c_all), from = -3, to = 3, add = TRUE)
-#curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -3, to = -.53, add = TRUE)
-#curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -.52, to = 4, add = TRUE)
-
-curve ((-b_adult*x - a_adult)/ (c_adult), from = -3, to = 3, add = TRUE)
-#curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -3, to = -.53, add = TRUE)
-#curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -.52, to = 4, add = TRUE)
-
-curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE)
-#curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -3, to = -.53, add = TRUE)
-#curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -.52, to = 4, add = TRUE)
-
-
-plot (aggd$vtl,aggd$f0, cex =1.2, col = cols[c(2:5)][factor(aggd$C)], 
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       pch=16,lwd=2, xlab = "",ylab="Height (inches)")
 grid()
 points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
-      col = cols[c(2:5)][factor(aggd$C)])
+      col = bmmb::cols[c(2:5)][factor(aggd$C)])
 
-#curve ((-b_all*x - a_all) / (c_all), from = -3, to = 3, add = TRUE)
-curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -6, to = -.53, add = TRUE)
-curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -.52, to = 6, add = TRUE)
+curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -6, to = -.53, add = TRUE,lwd=2,col=bmmb::cols[7])
+curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -.52, to = 6, add = TRUE,lwd=2,col=bmmb::cols[7])
 
-#curve ((-b_adult*x - a_adult)/ (c_adult), from = -3, to = 3, add = TRUE)
-curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, to = -c_adult/d_adult, add = TRUE)
-curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, to = 6, add = TRUE)
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, to = -c_adult/d_adult, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[10])
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, to = 6, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[10])
 
-#curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE)
-curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -6, to = -c_child/d_child, add = TRUE)
-curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to = 6, add = TRUE)
+curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -6, to = -c_child/d_child, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[8])
+curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to = 6, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[8])
 
-plot (aggd$vtl,aggd$f0, cex =1.2, col = cols[c(2:5)][factor(aggd$C)], 
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       pch=16,lwd=2, xlab = "",xlim = c(-4,4),ylim = c(-2,2),
       ylab="Height (inches)")
 grid()
 points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
-      col = cols[c(2:5)][factor(aggd$C)])
+      col = bmmb::cols[c(2:5)][factor(aggd$C)])
 
-#curve ((-b_all*x - a_all) / (c_all), from = -3, to = 3, add = TRUE)
-curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -6, to = -.53, add = TRUE)
-curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -.52, to = 6, add = TRUE)
+curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -6, to = -.53, add = TRUE,lwd=2,col=bmmb::cols[7])
+curve ((-b_all*x - a_all) / (d_all*x+c_all), from = -.52, to = 6, add = TRUE,lwd=2,col=bmmb::cols[7])
 
-#curve ((-b_adult*x - a_adult)/ (c_adult), from = -3, to = 3, add = TRUE)
-curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, to = -c_adult/d_adult, add = TRUE)
-curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, to = 6, add = TRUE)
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, to = -c_adult/d_adult, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[10])
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, to = 6, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[10])
 
-#curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE)
-curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -6, to = -c_child/d_child, add = TRUE)
-curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to = 6, add = TRUE)
+curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -6, to = -c_child/d_child, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[8])
+curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to = 6, add = TRUE,
+       lwd=2, lty=2,col=bmmb::cols[8])
 
 ```
 
-does this matter? yes and no. does it matter that the earth is not round but our maps mostly act like it is? its flat enough in the area that we are using our map for, and so we can act like its flat. what do we want to do with our model? inspect only the region of the boundary where we have data? Or leally understand whats going ion in general even in area where we dont hae data but are fairly likely e know whats going on. 
+The high-frequency region suggests that speakers with a very high f0 and a very short VTL are likely to be identified as females. Note that we don't have any speakers in this region and so we can only guess what listeners might have done. However, common sense suggests that for adult speakers at least, speakers with a very short VTL and a very high f0 are not very likely to be identified as male. Does this matter? Yes and no. Does it matter that the earth is not flat but our maps mostly act like it is? If it's *flat enough* in the area described by our map, then maybe not. So, we have to decide what we want to do with our model. If we only want to understand behavior at the boundary region where we mostly have a lot of data, then the high-frequency male region maybe doesn't matter. On the other hand, if we want to understand how listener might be using this acoustic information in general, we might be worried that our model represents listener behavior in the general case so that the behavior of the model should 'make sense' even for data we don't have. If this is the case then maybe we need to drop the cross-product from our model because it results in a model that can't possibly caputre what listener are doing in general. Below we fit a reduced model without the interaction between f0 and VTL. 
+
+```{r, eval = FALSE}
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+
+model_gender_vtl_f0_reduced =
+  brm (F ~ (vtl+f0)*A + ((vtl+f0)|L) + (1|S), data=height_exp, 
+       chains=4, cores=4, family="bernoulli", 
+       warmup=1000, iter = 5000, thin = 4,  
+       prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
+                 set_prior("student_t(3, 0, 3)", class = "b"),
+                 set_prior("student_t(3, 0, 3)", class = "sd"),
+                 set_prior("lkj_corr_cholesky (2)", class = "cor")))
+```
+```{r, include = FALSE, eval = FALSE}
+# Or download it from the GitHub page:
+model_gender_vtl_f0_reduced = bmmb::get_model ('11_model_gender_vtl_f0_reduced.RDS')
+```
+```{r, include = FALSE, eval = FALSE}
+# saveRDS (model_gender_vtl_f0_reduced, '../models/11_model_gender_vtl_f0_reduced.RDS')
+model_gender_vtl_f0_reduced = readRDS ('../models/11_model_gender_vtl_f0_reduced.RDS')
+```
+
+And find our $a,b,c$ and $d$ parameters for our model. There is no $d$ parameter this time since there is no cross-product term. 
+```{r, collapse = TRUE}
+# get fixed effect parameters
+samples = brms::fixef (model_gender_vtl_f0_reduced, summary = FALSE)
+
+# get a,b,c coefficients for overall plane
+a_all_reduced = mean (samples[,"Intercept"])
+b_all_reduced = mean (samples[,"vtl"])
+c_all_reduced = mean (samples[,"f0"])
+
+# get a,b,c coefficients for adult plane
+a_adult_reduced = mean (samples[,"Intercept"] + samples[,"A1"])
+b_adult_reduced = mean (samples[,"vtl"] + samples[,"vtl:A1"])
+c_adult_reduced = mean (samples[,"f0"] + samples[,"f0:A1"])
+
+# get a,b,c coefficients for child plane
+a_child_reduced = mean (samples[,"Intercept"] - samples[,"A1"])
+b_child_reduced = mean (samples[,"vtl"] - samples[,"vtl:A1"])
+c_child_reduced = mean (samples[,"f0"] - samples[,"f0:A1"])
+```
+
+We use these parameters to plot the category boundaries in our stimulus space. Figure below compares the linear boundaries implied by our reduced model to those implied by our full model, ignoring the $d$ coefficients. We can see that in the absence of the cross-product, the boundaries for children and adults differ substantially in their slope. The change in slope indicates that f0 differences matter less for children than they do for adults. We can also see that the linear boundaries do not differ much in slope for our model that *does* include a cross-product. This is likely because either the cross-product, or the interaction of this with apparent age, is able to capture whatever difference our reduced model represents with these differences in slope.  
+
+```{r F11_13, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
+
+################################################################################
+### Figure 11.13
+################################################################################
+
+
+fixef_1 = brms::fixef (model_gender_vtl_f0)
+fixef_2 = brms::fixef (model_gender_vtl_f0_reduced)
+
+# y = (-b*x - a - z) / (dx+c)
+# fixef(model_gender_vtl_f0)
+
+mu_vtl = mean (height_exp$vtl_original)
+mu_f0 = mean (height_exp$f0_original)
+
+aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
+                      data = height_exp, FUN = mean)
+aggd$C = ""
+aggd$C[aggd[,4]>= 0.5 & aggd[,5]>= 0.5] = "w"
+aggd$C[aggd[,4]>= 0.5 & aggd[,5]<= 0.5] = "m"
+aggd$C[aggd[,4]<= 0.5 & aggd[,5]>= 0.5] = "g"
+aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
+#table(aggd$C)
+
+tab = table (height_exp$S, height_exp$C)
+mod_cat = apply (tab, 1,which.max)
+
+par (mfrow = c(1,2), mar = c(4,2,1,1), oma = c(1,4,0,0))
+
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",
+      ylab="Height (inches)")
+grid()
+points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+      col = bmmb::cols[c(2:5)][aggd$C])
+
+legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
+        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
+
+curve ((-b_all_reduced*x - a_all_reduced) / (c_all_reduced), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
+curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
+curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
+
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",
+      ylab="Height (inches)")
+grid()
+points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+      col = bmmb::cols[c(2:5)][aggd$C])
+
+legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
+        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
+
+
+curve ((-b_all*x - a_all) / (c_all), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
+curve ((-b_adult*x - a_adult)/ (c_adult), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
+curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
+```
+
+We can use cross-validation to investigate whether which of our two models is preferable.  
+
+```{r, eval = FALSE}
+model_gender_vtl_f0 = brms::add_criterion(model_gender_vtl_f0,"loo")
+model_gender_vtl_f0_reduced = brms::add_criterion(model_gender_vtl_f0_reduced,"loo")
+```
+
+The comparison suggests that the model that includes the interaction does a better job of explaining our data and is also expected to better predict our-of-sample data. 
+
+- explain loo, elpd, p_loo
+
+```{r, eval = FALSE}
+brms::loo_compare (model_gender_vtl_f0, model_gender_vtl_f0_reduced)
+```
+
+However, we got the following error message we adding the `loo` criterion to our model:
+
+`Warning: Found 142 observations with a pareto_k > 0.7 in model 'model_gender_vtl_f0'. It is recommended to set 'moment_match = TRUE' in order to perform moment matching for problematic observations.`
+
+When we add the `loo` criterion to our model, `brms` (and stan) don't actually fit a new model for every left our data point. Instead, as discussed in section X ([@@ SB - find this and check out what I said]), there is a way to approximate what the model would look like had we refit it without the one data point. It does this using something called **Pareto smoother importance sampling** (PSIS). The Pareto-$\hat{k}$ statistic is a diagnostic for this method that helps you check how well the assumptions underlying the leave-one-out simulation are holding up (Vehtari, Gelman and Gabry, 2017). Basically, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential on your parameter estimates and will have a higher value of $\hat{k}$. If an observation is too unusual, then the estimate of the elpd component for that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), and values greater than 0.7 are 'bad'. In part, the reason for the vagueness in the language and boundaries between good and ok $\hat{k}$ values is that these are an *approximation*, and there are many reasons for these values to vary based on the nature of the data and the structure of the model.    
+
+Aki Vehtari (cite webpage) outlines three general situations where the Pareto $\hat{k}$ statistics can be large:
+
+1) p_loo is *much smaller* than number of parameters: The model is likely to be misspecified. 
+
+2) p_loo is *less than* the number of parameters: If the number of parameters is relatively large relative to the number of observations (e.g. p > n/5) then the model may be too flexible, or your priors may be too weak. 
+
+3) p_loo is *greater than* the number of parameters: The model is likely to be *'badly'* misspecified. There are two situations related to this. 
+  
+In each case, a posterior predictive check may help understand the issues, as can inspecting the distribution of pareto k statistics. 
+
+
+
+
+
+```{r F11_14, fig.width = 8, fig.height = 3, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
+
+################################################################################
+### Figure 11.14
+################################################################################
+
+par (mfrow = c(1,2), mar = c(1,.5,1,.5), oma = c(0,4,0,0))
+
+plot (model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k, ylab="", 
+      ylim = c(0,1.5),col=bmmb::cols[1+mod_cat],pch=16, xaxt='n')
+plot (model_gender_vtl_f0_reduced$criteria$loo$diagnostics$pareto_k, ylab="", 
+      ylim = c(0,1.5),col=bmmb::cols[1+mod_cat],pch=16, yaxt='n', xaxt='n')
+```
+
+```{r}
+preds = predict (model_gender_vtl_f0)
+preds_reduced = predict (model_gender_vtl_f0_reduced)
+```
+
+
+```{r, fig.width = 8, fig.height = 3}
+
+################################################################################
+### Figure 11.14
+################################################################################
+
+par (mfrow = c(1,2), mar = c(4,.5,1,.5), oma = c(0,4,0,0))
+plot (preds[,1], model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k,
+      col=bmmb::cols[1+mod_cat],pch=16, ylim = c(0,1.5))
+plot (preds_reduced[,1], model_gender_vtl_f0_reduced$criteria$loo$diagnostics$pareto_k,
+      col=bmmb::cols[1+mod_cat],pch=16, ylim = c(0,1.5))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+### Answering our research questions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 ```{r, eval = FALSE}
-model_height_vtl_f0 = add_criterion(model_height_vtl_f0,"loo")
-model_height_vtl_f0 = add_criterion(model_height_vtl_f0,"loo")
-model_random_slopes_complex = add_criterion(model_random_slopes_complex,"loo")
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
 
-loo_compare (model_height_vtl_f0, model_height_vtl_f0,model_random_slopes_complex)
+model_gender_vtl_f0_conservative =
+  brm (F ~ vtl*f0*A + (vtl*f0*A|L) + (1|S), data=height_exp, 
+       chains=4, cores=4, family="bernoulli", 
+       warmup=1000, iter = 5000, thin = 4,  
+       prior = c(set_prior("student_t(3, 0, 1)", class = "Intercept"),
+                 set_prior("student_t(3, 0, 1)", class = "b"),
+                 set_prior("student_t(3, 0, 1)", class = "sd"),
+                 set_prior("lkj_corr_cholesky (2)", class = "cor")))
 
 ```
-
-
 ```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
-model_random_slopes_complex = bmmb::get_model ('9_model_random_slopes_complex.RDS')
+model_gender_vtl_f0_conservative = bmmb::get_model ('11_model_gender_vtl_f0_conservative.RDS')
 ```
-```{r, include = FALSE, eval = FALSE}
-model_random_slopes_complex = readRDS ('../models/9_model_random_slopes_complex.RDS')
+```{r, include = FALSE, eval = TRUE}
+# saveRDS (model_gender_vtl_f0_conservative, '../models/11_model_gender_vtl_f0_conservative.RDS')
+model_gender_vtl_f0_conservative = readRDS ('../models/11_model_gender_vtl_f0_conservative.RDS')
 ```
-
 
 
 ```{r, eval = FALSE}
-qq = banova (model_height_vtl_f0, superpopulation = TRUE)
-
-```
-
-```{r, eval = FALSE}
-par (mar = c(8,4,1,1))
-banovaplot (qq[-2,], las = 2)
+model_gender_vtl_f0_conservative = brms::add_criterion(model_gender_vtl_f0_conservative,"loo")
 ```
 
 
 
 
-```{r, eval = FALSE}
-qq = banova (model_gender_vtl_f0, superpopulation = TRUE)
 
-```
-
-```{r, eval = FALSE}
-par (mar = c(8,4,1,1))
-banovaplot (qq, las = 2)
-```
-
-
-
-```{r, include = FALSE, eval = FALSE}
-# Or download it from the GitHub page:
-model_gender_vtl_f0_int = bmmb::get_model ('11_model_gender_vtl_f0_int.RDS')
-```
-```{r, include = FALSE, eval = FALSE}
-# saveRDS (model_gender_vtl_f0_int, '../models/11_model_gender_vtl_f0_int.RDS')
-model_gender_vtl_f0_int = readRDS ('../models/11_model_gender_vtl_f0_int.RDS')
-```
 
 
 

@@ -25,13 +25,13 @@ In this chapter we're going to cover a Bayesian approach to working with large m
 - make clear each predictor is a dimension
 - check out what Ive said about dimensions before
 
-Our regressions so far have only involved a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed shapes with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:11_1) we see the linear relationships between speaker vocal-tract length (VTL), and f0 (voice pitch), with apparent speaker height. In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, that is the prediction error, for each observation is the vertical distance between the line the observation.   
-  Rather than think of the effect of VTL and f0 on apparent height individually, we can think about apparent height, VTL, and f0 together at the same time. We can imagine that each point in figure \@ref(fig:11_1) has a specific value of f0, VTL, and apparent height. These three quantitative variables define a specific location in a 3-dimensional space. For example, consider any given location in the room you are sitting in right now. Any such location can be specified using a variable that determines is location along the width, depth, and height of the room. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:11_1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots below. The first plot show the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
+Our regressions so far have only involved a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed shapes with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL), and f0 (voice pitch), with apparent speaker height. In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, that is the prediction error, for each observation is the vertical distance between the line the observation.   
+  Rather than think of the effect of VTL and f0 on apparent height individually, we can think about apparent height, VTL, and f0 together at the same time. We can imagine that each point in figure \@ref(fig:F11-1) has a specific value of f0, VTL, and apparent height. These three quantitative variables define a specific location in a 3-dimensional space. For example, consider any given location in the room you are sitting in right now. Any such location can be specified using a variable that determines is location along the width, depth, and height of the room. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:F11-1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots below. The first plot show the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
   
-```{r F11_1, fig.height = 3, fig.width = 8, fig.cap='(left). (middle). (right).', echo = FALSE}
+```{r F11-1, fig.height = 3, fig.width = 8, fig.cap='(left). (middle). (right).', echo = FALSE, cache = TRUE}
 
 ###############################################################################
-### Figure 11.1
+### Figure 11-1
 ###############################################################################
 
 agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::height_exp_old, FUN=mean)
@@ -55,9 +55,9 @@ grid()
 
 ```
 
-It may be easier to see what we mean by considering figure \@ref(fig:11_2), which attempts to present our point in three dimensions. The left plot of figure \@ref(fig:11_2) corresponds to the left plot in figure \@ref(fig:11_1), while the right plot of figure \@ref(fig:11_2) corresponds to the middle plot in figure \@ref(fig:11_1). If we want to predict apparent height based on speaker f0 and VTL, that is basically asking: Can we predict the height of a point in our 3-dimensional space based on its x and y-axis location? 
+It may be easier to see what we mean by considering figure \@ref(fig:11.2), which attempts to present our point in three dimensions. The left plot of figure \@ref(fig:11.2) corresponds to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:11.2) corresponds to the middle plot in figure \@ref(fig:F11-1). If we want to predict apparent height based on speaker f0 and VTL, that is basically asking: Can we predict the height of a point in our 3-dimensional space based on its x and y-axis location? 
 
-```{r F11_2, fig.height = 5, fig.width = 8, fig.cap='A pairs plot of the continuous variables in our data, showing different sorts of relationships between our variables.', echo = FALSE}
+```{r F11-2, fig.height = 5, fig.width = 8, fig.cap='A pairs plot of the continuous variables in our data, showing different sorts of relationships between our variables.', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.2
@@ -77,13 +77,13 @@ my.lm <- lm(height ~ f0+vtl, data = agg_data)
 #s3d$plane3d(my.lm, col = 2)
 ```
 
-When we have two quantitative predictors, our models predict values along **planes** rather than lines. For example, imagine the points in figure \@ref(fig:11_2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the "best" position for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. A Regressions model that includes two continuous predictors tries to find the 'best' plane that passes through your points in the three-dimensional space. In general, the 'best' plane is the one that minimizes the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this is still basically what's happening.  
-  Planes are specified by three parameters, a slope for each dimensions and an intercept. In \@ref(11_1) we that the height of the plane along the $z$ axis is determined by an intercept ($a$) plus the product of the x-axis coordinate and its slope ($b$) and the product of the y-axis coordinate and its slope. When we fit a model that includes two quantitative predictors, the model represents the best planes using their $a$, $b$, and $c$ parameters. 
+When we have two quantitative predictors, our models predict values along **planes** rather than lines. For example, imagine the points in figure \@ref(fig:11.2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the "best" position for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. A Regressions model that includes two continuous predictors tries to find the 'best' plane that passes through your points in the three-dimensional space. In general, the 'best' plane is the one that minimizes the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this is still basically what's happening.  
+  Planes are specified by three parameters, a slope for each dimensions and an intercept. In \@ref(11-1) we that the height of the plane along the $z$ axis is determined by an intercept ($a$) plus the product of the x-axis coordinate and its slope ($b$) and the product of the y-axis coordinate and its slope. When we fit a model that includes two quantitative predictors, the model represents the best planes using their $a$, $b$, and $c$ parameters. 
   
 $$
 \begin{equation}
 z =  \mathrm{a} + \mathrm{b} \times x + \mathrm{c} \times y 
-(\#eq:11.1)
+(\#eq:F11-1)
 \end{equation}
 $$
 
@@ -101,9 +101,9 @@ z =  x \times y
 \end{equation}
 $$
 
-In figure \@ref(fig:11_3) we can see a comparison of a plane and two saddle shapes. In the middle left plot we can see the analogy of the plaza with the sloping floor. If we were walking "into" the plot the ground would first be sloping down left to right, but gradually changes so that it it sloping up left to right by the end of the surface. 
+In figure \@ref(fig:11.3) we can see a comparison of a plane and two saddle shapes. In the middle left plot we can see the analogy of the plaza with the sloping floor. If we were walking "into" the plot the ground would first be sloping down left to right, but gradually changes so that it it sloping up left to right by the end of the surface. 
 
-```{r F11_3, fig.height = 6, fig.width = 8, fig.cap='A pairs plot of the continuous variables in our data, showing different sorts of relationships between our variables.', echo = FALSE}
+```{r F11-3, fig.height = 6, fig.width = 8, fig.cap='A pairs plot of the continuous variables in our data, showing different sorts of relationships between our variables.', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.3
@@ -134,7 +134,7 @@ persp(x, y, z, col = bmmb::cols[4],theta = 45,zlim = c(-3,5))
 
 ```
 
-We can combine a plane and a saddle shape, as in the bottom row of figure \@ref(fig:11_3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. 
+We can combine a plane and a saddle shape, as in the bottom row of figure \@ref(fig:11.3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. 
 
 $$
 \begin{equation}
@@ -143,7 +143,7 @@ z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \t
 \end{equation}
 $$
 
-What does any of this mean for our regression models? We discussed above that models with two continuous predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by the **cross-product**, the multiple, of the two variables. So, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:11_2). When our models include effects for $x$, $y$, *and* their interactions, we are effectively modeling a surface that combined a plane and a saddle shape, as in \@ref(eq:11_3). 
+What does any of this mean for our regression models? We discussed above that models with two continuous predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by the **cross-product**, the multiple, of the two variables. So, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:11.2). When our models include effects for $x$, $y$, *and* their interactions, we are effectively modeling a surface that combined a plane and a saddle shape, as in \@ref(eq:11.3). 
 
 Interaction terms represent conditional effects, and allow for the effect of a predictor to vary according to the value of some other predictor. When it comes to quantitative predictors, if two predictors interact it means that the slope of a predictor continuously increase/decreases as a function of the value of the other predictor.
 
@@ -272,12 +272,12 @@ lme_model_height_vtl_f0 = bmmb::get_model ('11_lme_model_height_vtl_f0.RDS')
 lme_model_height_vtl_f0 = readRDS ('../models/11_lme_model_height_vtl_f0.RDS')
 ```
 
-We won't show the model print statements they are both quite large, but we compare the estimates of our fixed effects in figure \@ref(fig:F11_4). Clearly, the two approaches provide very similar for the model fixed effects. That's reassuring! If results differed dramatically for approximately the same model based on the software used, we would need to think very carefully about the causes and possible meaning of these differences.
+We won't show the model print statements they are both quite large, but we compare the estimates of our fixed effects in figure \@ref(fig:F11-4). Clearly, the two approaches provide very similar for the model fixed effects. That's reassuring! If results differed dramatically for approximately the same model based on the software used, we would need to think very carefully about the causes and possible meaning of these differences.
   Since our model has a large number of parameters we are going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height. We define meaning differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We establih this lower limit simply based off the fact that people may describe themselves as 175 cm (or 5'10.5") but rarely make distinctions smaller than that (e.g. people rarely distinguish 5'10.5" and 5'10.75"). 
   Our model suggests non-zero slopes for our plane along the VTL (mean = 3.09, s.d. = 0.63, 95% C.I = [1.84, 4.34]) and f0 dimensions (mean = -3.34, s.d. = 1.27, 95% C.I = [-5.88, -0.86]). However, the `vtl:f0` interaction does not seem to matter at all (mean = -0.72, s.d. = 0.96, 95% C.I = [-2.65, 1.17]). This means that, overall, our responses can be defined by a plane along f0 and VTL without curving the plane into a saddle shape. The `vtl:A1` interaction suggests a differing use of VTL based on apparent adultness, but there do not appear to be any other meaningful interactions between VTL, f0 and the other predictors. In terms of intercept terms (i.e. those not interacting with quantitative predictors), there is a large effect for apparent age (mean = 7.04, s.d. = 1.13, 95% C.I = [4.85, 9.28]) but no main effect for apparent gender (mean = -0.06, s.d. = 0.71, 95% C.I = [-1.43, 1.35]). However, the interaction between apparent age and apparent gender (`A1:G1`) had a 95% credible interval that did not overlap with zero and had a posterior mean value of -1.49 cm (s.d. = 0.51, 95% C.I = [-2.48, -0.44]). This indicates that although apparent gender had an average effect of about 0 cm on apparent height it may have had meaningful, but opposite, effects based on the apparent gender of the speaker. 
   In order to interpret our predictors in the presence of interactions, we need to consider the simple effects. For example, in order to consider the `vtl:A1` interaction we need to consider the simple effect of VTL for apparent children, and then for apparent adults. This is done in exactly the same manner as outlined in chapter 9 and 10 for quantitative predictors, independently for each predictor or interaction (i.e. cross-product) between predictors.  We're not going to go over the interpretation of the coefficients and the reconstruction of the simple effects here, as this has been discussed in detail elsewhere (section X). 
 
-```{r F11_4, fig.height = 3.5, fig.width = 8, fig.cap='', echo = FALSE}
+```{r F11-4, fig.height = 3.5, fig.width = 8, fig.cap='', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.4
@@ -293,14 +293,14 @@ segments((1:15)+.2, pts-2*err_bars,(1:15)+.2, pts+2*err_bars,lwd=2,col=2)
 abline (h = c(-1,1), lty = 3, col = bmmb::cols[6],lwd=2)
 ```
 
-Figure \@ref(fig:F11_5) presents some ways in which the information provided by `lmer` and `brms` differ. In the top row we see a comparison of the 'random effects' standard deviation estimates provided by our two models, and the error terms estimated by our two models. For example, the standard deviation of the listener f0 'random effect' ($\sigma_{f0 \colon L}$) represents the variation around zero of the listener-specific effects for f0 in each model. As we can see, the models provide reasonably similar standard deviation estimates for most parameters. However, note that the `brm` models provide credible intervals for all parameters, while the `lmer` models only provide point estimates for these parameters. The lack of intervals on parameter estimates makes it difficult to 'rule out' variance parameters since they will *never* equal exactly zero. So, we will always have non-zero numbers for these parameters, and 'secretly' some of these are zero or nearly zero. In addition, variance components very close to zero can cause problems when estimating our models. For example, fitting our model with `lmer` resulted in the following error: 
+Figure \@ref(fig:F11-5) presents some ways in which the information provided by `lmer` and `brms` differ. In the top row we see a comparison of the 'random effects' standard deviation estimates provided by our two models, and the error terms estimated by our two models. For example, the standard deviation of the listener f0 'random effect' ($\sigma_{f0 \colon L}$) represents the variation around zero of the listener-specific effects for f0 in each model. As we can see, the models provide reasonably similar standard deviation estimates for most parameters. However, note that the `brm` models provide credible intervals for all parameters, while the `lmer` models only provide point estimates for these parameters. The lack of intervals on parameter estimates makes it difficult to 'rule out' variance parameters since they will *never* equal exactly zero. So, we will always have non-zero numbers for these parameters, and 'secretly' some of these are zero or nearly zero. In addition, variance components very close to zero can cause problems when estimating our models. For example, fitting our model with `lmer` resulted in the following error: 
 
 `boundary (singular) fit: see help('isSingular')`
 
 Which warns us that some of the variance components we are trying to estimate are quite small. Because `bmrs` simply samples from the posterior and doesn't try to find *the* best model parameters, it does not run into these problems. In addition, we can use our credible intervals to figure out which variance components are unlikely to matter: Variance components whose credible intervals are concentrated near zero. There are several such components in the figure below. In the *best case*, many of these components reflect a tiny amount of systematic variation in our outcomes and so are unlikely to matter much. Notice that the magnitude of the standard deviations makes it difficult to predict which standard deviation parameters are distinguishable from zero. This makes the point estimates of limited utility for this purpose in the absence of intervals around our estimates.
-  In the middle panel of figure \@ref(fig:F11_5) we see a comparison of the listener-dependent `A1` 'random effects' estimated using the two approaches. Just as with the estimates of the fixed effect in In the middle panel of figure \@ref(fig:F11_4) we see a close alignment between the two. However, just as for our standard deviation terms we see that a lack of intervals around our estimates makes it difficult to compare our parameter estimates to specific values (such as zero). 
+  In the middle panel of figure \@ref(fig:F11-5) we see a comparison of the listener-dependent `A1` 'random effects' estimated using the two approaches. Just as with the estimates of the fixed effect in In the middle panel of figure \@ref(fig:F11-4) we see a close alignment between the two. However, just as for our standard deviation terms we see that a lack of intervals around our estimates makes it difficult to compare our parameter estimates to specific values (such as zero). 
 
-```{r, F11_5, fig.height = 6, fig.width = 8, fig.cap='', echo = FALSE}
+```{r, F11-5, fig.height = 6, fig.width = 8, fig.cap='', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.5
@@ -334,8 +334,8 @@ points (corrs_lme, cex=1.25,lwd=2,pch=4, col = 4)
 
 ```
 
-In the bottom panel of figure \@ref(fig:F11_5) we compare the correlations for the listener random effects. Since there were 16 listener-dependent parameters, we needed to estimate 120 unique correlations between these effects. As with our standard deviation parameters, `brms` gives us intervals while `lmer` returns point estimates. In addition, for the first time we see a substantial difference between the estimates provided by `lmer` and those provided by `brms`. This is likely a result of the fact that `lmer` does not apply something like partial pooling to its correlation estimates, either through the use of prior probabilities or other mechanisms. As a result, we see that the `lmer` estimates vary substantially around 0 while the `brms` estimates are all close to zero, and mostly have intervals that include zero. We see that in this case our Bayesian model protects us by: 1) Providing credible intervals for all parameters, letting us accept values of zero as likely, and 2) the LKJ prior we used for our random effect correlation matrices pulls weakly-supported correlations to zero, thereby protecting against spurious results. 
-  The fact that most of our correlation estimates are nearly zero not only lets us rule some out, but also focuses our attention to those correlations that deviate from this pattern. For example, the third correlation from the left in the bottom panel of figure \@ref(fig:F11_5) represents the correlation between the listener-dependent intercepts and effects for apparent age. Although its 95% credible interval includes some very small values near zero (mean = -0.38, s.d. = 0.17, 95% C.I = [-0.69, -0.01]), it seems reasonable that this correlation may in fact be negative and non-zero. In fact, we found this correlation in a previous model (section X) and also discussed why we think this correlation 'makes sense' (section X). 
+In the bottom panel of figure \@ref(fig:F11-5) we compare the correlations for the listener random effects. Since there were 16 listener-dependent parameters, we needed to estimate 120 unique correlations between these effects. As with our standard deviation parameters, `brms` gives us intervals while `lmer` returns point estimates. In addition, for the first time we see a substantial difference between the estimates provided by `lmer` and those provided by `brms`. This is likely a result of the fact that `lmer` does not apply something like partial pooling to its correlation estimates, either through the use of prior probabilities or other mechanisms. As a result, we see that the `lmer` estimates vary substantially around 0 while the `brms` estimates are all close to zero, and mostly have intervals that include zero. We see that in this case our Bayesian model protects us by: 1) Providing credible intervals for all parameters, letting us accept values of zero as likely, and 2) the LKJ prior we used for our random effect correlation matrices pulls weakly-supported correlations to zero, thereby protecting against spurious results. 
+  The fact that most of our correlation estimates are nearly zero not only lets us rule some out, but also focuses our attention to those correlations that deviate from this pattern. For example, the third correlation from the left in the bottom panel of figure \@ref(fig:F11-5) represents the correlation between the listener-dependent intercepts and effects for apparent age. Although its 95% credible interval includes some very small values near zero (mean = -0.38, s.d. = 0.17, 95% C.I = [-0.69, -0.01]), it seems reasonable that this correlation may in fact be negative and non-zero. In fact, we found this correlation in a previous model (section X) and also discussed why we think this correlation 'makes sense' (section X). 
   
 ## Bayesian Analysis of Variance
 
@@ -350,9 +350,9 @@ The information we considered in the previous section can be used to considered 
 
 > "the standard deviation of a set of coefficients gives a sense of their predictive importance in the model. An analysis-of-variance plot, which shows the relative scale of different variance components, can be a useful tool in understanding a model." (p. 492)
 
-  These standard deviations directly reflect the amount of variation in these parameters in our model. Parameters that vary a lot reflect large effects on our data. These will be represented by large standard deviations. In contrast, parameters that do not vary much will be represented by small standard deviations. These parameters do not have a large effect on our data (since they do not vary much). For example, we can see in figure \@ref(fig:F11_5) that the standard deviation of listener-dependent intercepts ($\sigma_L$) is much larger than the listener-dependent VTL by apparent gender interaction ($\sigma_{VTL \colon G \colon L}$). We can see that this directly relates to the variation of each batch of 'random effects' around zero, as shown in figure \@ref(fig:F11_6). As a result of this, we can take one look at figure \@ref(fig:F11_5) and see that although there are a large number of predictors, only a couple are having any meaningful effect on apparent height judgments. 
+  These standard deviations directly reflect the amount of variation in these parameters in our model. Parameters that vary a lot reflect large effects on our data. These will be represented by large standard deviations. In contrast, parameters that do not vary much will be represented by small standard deviations. These parameters do not have a large effect on our data (since they do not vary much). For example, we can see in figure \@ref(fig:F11-5) that the standard deviation of listener-dependent intercepts ($\sigma_L$) is much larger than the listener-dependent VTL by apparent gender interaction ($\sigma_{VTL \colon G \colon L}$). We can see that this directly relates to the variation of each batch of 'random effects' around zero, as shown in figure \@ref(fig:F11-6). As a result of this, we can take one look at figure \@ref(fig:F11-5) and see that although there are a large number of predictors, only a couple are having any meaningful effect on apparent height judgments. 
   
-```{r, F11_6, fig.height = 3, fig.width = 8, fig.cap='', echo = FALSE}
+```{r, F11-6, fig.height = 3, fig.width = 8, fig.cap='', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.6
@@ -392,7 +392,7 @@ We could potentially add a fifth step: 5) refit reduced model if some components
 
 The superpopulation standard deviation is our model's estimate of the standard deviations of different batches of parameters. We can extract the superpopulation standard deviations using the `VarCorr` function. This function returns all sort of information about the variance anf correlation parameters estimated by our model. In the second line below we specify that we only want information related to the standard deviation (`"sd"`) of our listener effects (`"L"`).
 
-```{r, cache = TRUE, collapse = TRUE, eval = FALSE}
+```{r, cache = TRUE, collapse = TRUE, eval = FALSE, cache = TRUE}
 brms::VarCorr(model_height_vtl_f0)
 
 brms::VarCorr(model_height_vtl_f0)[["L"]][["sd"]]
@@ -400,7 +400,7 @@ brms::VarCorr(model_height_vtl_f0)[["L"]][["sd"]]
 
 We can also get information regarding our error standard deviation using `Varcorr` as seen below:
 
-```{r, cache = TRUE, collapse = TRUE}
+```{r, cache = TRUE, collapse = TRUE, cache = TRUE}
 brms::VarCorr(model_height_vtl_f0)$residual$sd
 ```
 
@@ -431,7 +431,7 @@ item_ranefs_finite = posterior_summary (item_ranefs_finite)
 
 For the fixed effects, we can use the absolute value of the parameters when these are each a single 'degree of freedom' (i.e. a single parameter). The code below shows how to get the fixed effects standard deviation estimates. 
 
-```{r, cache = TRUE, collapse = TRUE, eval = FALSE}
+```{r, cache = TRUE, collapse = TRUE, eval = FALSE, cache = TRUE}
 # get individual parameter samples
 fixefs_finite = fixef(maximal_brms, summary = FALSE)
 
@@ -459,14 +459,14 @@ row.names(sigma_finite) = 'sigma'
 
 The `bmmb` package contains a function called `banova` that can get the finite-sample or superpopulation standard deviations for you. The output is a single dataframe that contains a summary of the standard deviations for fixed and random effects, and the error term if the model contains one. Below we use the function to get both kinds of standard deviation, compared in 
 
-```{r, cache = TRUE, include = FALSE}
+```{r, cache = TRUE, include = FALSE, cache = TRUE}
 banova_height_vtl_f0_finite = banova (model_height_vtl_f0, superpopulation = FALSE)
 banova_height_vtl_f0_super = banova (model_height_vtl_f0, superpopulation = TRUE)
 ```
 
 The output of the `banova` function can be used to make a Bayesian ANOVA plot of our model. If we were to do this right after fitting the model, we would have a pretty good idea of what matters and what doesn't in our data. 
 
-```{r F11_7, fig.height = 4.5, fig.width = 8, fig.cap='', echo = FALSE}
+```{r F11-7, fig.height = 4.5, fig.width = 8, fig.cap='', echo = FALSE}
 
 ################################################################################
 ### Figure 11.7
@@ -526,7 +526,7 @@ model_height_vtl_f0_reduced = readRDS ('../models/11_model_height_vtl_f0_reduced
 
 We can see that the fixed effects shared in common are very similar, as are the estimates of the random effects for the listener-dependent parameters.  
 
-```{r F11_8, fig.height = 3, fig.width = 8, fig.cap='(left) . (right) .', echo = FALSE}
+```{r F11-8, fig.height = 3, fig.width = 8, fig.cap='(left) . (right) .', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.8
@@ -574,9 +574,9 @@ And see that all of the extra complexity included in our full model gains us les
 
 ## Fitting a multivariate logistic regression model
 
-We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of BANOVA outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we will be fitting. A logistic regression model with two continuous predictors specifies planes along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1). When the value on the surface of these planes is negative, the model predicts a response of 0, and when the value of the plane is positive the model predicts a 1. We can imagine the plane such that $z=0$ representing a probability of 0.5. The planes represented by our models will intersect with these planes, forming a line at this intersection. Since these lines represent a division of our planes into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the lines formed by the intersection of these planes represent the *category boundary* as defined by our model. When we want to know the probability expected for any given x and y axis location, we can transform the value on the plane using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:11_9). Although these surfaces are are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. 
+We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of BANOVA outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we will be fitting. A logistic regression model with two continuous predictors specifies planes along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1). When the value on the surface of these planes is negative, the model predicts a response of 0, and when the value of the plane is positive the model predicts a 1. We can imagine the plane such that $z=0$ representing a probability of 0.5. The planes represented by our models will intersect with these planes, forming a line at this intersection. Since these lines represent a division of our planes into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the lines formed by the intersection of these planes represent the *category boundary* as defined by our model. When we want to know the probability expected for any given x and y axis location, we can transform the value on the plane using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:11.9). Although these surfaces are are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. 
 
-```{r F11_9, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE}
+```{r F11-9, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.9
@@ -599,12 +599,12 @@ persp(x, y, ztop(z), col = bmmb::cols[4],theta = 45,zlim = c(-0,1))
 
 ```
 
-When our models include interactions between quantitative predictors (i.e. terms representing their cross-products), our predicted values no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model. Since these shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:11_10)). The intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. We will return to this issue when we consider the territorial maps implied by our models later on. 
+When our models include interactions between quantitative predictors (i.e. terms representing their cross-products), our predicted values no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model. Since these shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). The intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. We will return to this issue when we consider the territorial maps implied by our models later on. 
 
-```{r F11_10, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE}
+```{r F11-10, fig.height = 4, fig.width = 8, fig.cap=' -- ', echo = FALSE, cache = TRUE}
 
 ################################################################################
-### Figure 11.10
+### Figure 11-10
 ################################################################################
 
 f1 = function (a,b,c) a * 1 + b *1 + a*b*1  
@@ -658,6 +658,9 @@ Q1) Do listeners use VTL, f0, and the interaction between them to determine spea
 
 Q2) Does apparent speaker age influence the use of the above mentioned acoustic cues?
 
+Q3) Is there a lot of between-speaker variation in perceptual behavior?
+
+
 ### Description of the model
 
 Our model formula is very much like the one we used for our first model in this chapter, however, since we are predicting apparent femaleness we obviously do not include apparent gender as a predictor. Our formula will be:
@@ -693,16 +696,16 @@ model_gender_vtl_f0 = bmmb::get_model ('11_model_gender_vtl_f0.RDS')
 model_gender_vtl_f0 = readRDS ('../models/11_model_gender_vtl_f0.RDS')
 ```
 
-We can consider the model fixed effects using `brmplot` in figure \@ref(fig:11_10)., and beside that we make a BANOVA plot that compares the fixed effects, the finite-sample standard deviations for 'batches' our random effects parameters, and the residual error.
+We can consider the model fixed effects using `brmplot` in figure \@ref(fig:F11-10)., and beside that we make a BANOVA plot that compares the fixed effects, the finite-sample standard deviations for 'batches' our random effects parameters, and the residual error.
 
 ```{r, include = FALSE}
 banova_gender_vtl_f0 = bmmb::banova (model_gender_vtl_f0)
 ```
 
-```{r F11_11, fig.height = 3, fig.width = 8, fig.cap='--', echo = FALSE}
+```{r F11-11, fig.height = 3, fig.width = 8, fig.cap='--', echo = FALSE, cache = TRUE}
 
 ################################################################################
-### Figure 11.11
+### Figure 11-11
 ################################################################################
 
 par ( mfrow = c(1,2), mar = c(5.5,3,1,1))
@@ -724,7 +727,7 @@ To find the intersection of the surfaces defined by our models and the plane at 
 $$
 \begin{equation}
 z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times xy)
-(\#eq:11_5)
+(\#eq:11.5)
 \end{equation}
 $$
 
@@ -736,7 +739,7 @@ $$
 0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (0 \times xy) \\
 y =  -(\mathrm{b} \times x - \mathrm{a}) / \mathrm{c}
 \end{split}
-(\#eq:11_5)
+(\#eq:11.5)
 \end{equation}
 $$
 
@@ -748,7 +751,7 @@ $$
 0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (d \times xy) \\
 y =  (-\mathrm{b} \times x - \mathrm{a}) / (d \times x + c)
 \end{split}
-(\#eq:11_5)
+(\#eq:11.5)
 \end{equation}
 $$
 
@@ -779,10 +782,10 @@ d_child = mean (samples[,"vtl:f0"] - samples[,"vtl:f0:A1"])
 
 We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our linear (equation X) and hyperbolic (equation X) boundaries in the left and middle panels of figure below. You may notice small lines in the top left corner of the middle plot below. We can see what these are when we 'zoom out' in the right plot of the figure. As a result of these 'double' shapes we get two sections in our space associated with male speakers, one in the bottom right associated with lower frequencies, and one in the top right associated with higher frequencies. 
 
-```{r F11_12, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
+```{r F11-12, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, cache = TRUE}
 
 ################################################################################
-### Figure 11.12
+### Figure 11-12
 ################################################################################
 
 # y = (-b*x - a - z) / (dx+c)
@@ -803,7 +806,7 @@ aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
 tab = table (height_exp$S, height_exp$C)
 mod_cat = apply (tab, 1,which.max)
 
-par (mfrow = c(1,2), mar = c(4,2,1,1), oma = c(1,4,0,0))
+par (mfrow = c(1,2), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       pch=16,lwd=2, xlab = "",ylab="Height (inches)")
@@ -825,7 +828,7 @@ curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to
        lwd=2, lty=2,col=bmmb::cols[8])
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
-      pch=16,lwd=2, xlab = "",xlim = c(-4,4),ylim = c(-2,2),
+      pch=16,lwd=2, xlab = "",xlim = c(-4,4),ylim = c(-2,2),yaxt='n',
       ylab="Height (inches)")
 grid()
 points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
@@ -846,7 +849,7 @@ curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to
 
 ```
 
-The high-frequency region suggests that speakers with a very high f0 and a very short VTL are likely to be identified as females. Note that we don't have any speakers in this region and so we can only guess what listeners might have done. However, common sense suggests that for adult speakers at least, speakers with a very short VTL and a very high f0 are not very likely to be identified as male. Does this matter? Yes and no. Does it matter that the earth is not flat but our maps mostly act like it is? If it's *flat enough* in the area described by our map, then maybe not. So, we have to decide what we want to do with our model. If we only want to understand behavior at the boundary region where we mostly have a lot of data, then the high-frequency male region maybe doesn't matter. On the other hand, if we want to understand how listener might be using this acoustic information in general, we might be worried that our model represents listener behavior in the general case so that the behavior of the model should 'make sense' even for data we don't have. If this is the case then maybe we need to drop the cross-product from our model because it results in a model that can't possibly caputre what listener are doing in general. Below we fit a reduced model without the interaction between f0 and VTL. 
+The high-frequency region suggests that speakers with a very high f0 and a very short VTL are likely to be identified as females. Note that we don't have any speakers in this region and so we can only guess what listeners might have done. However, common sense suggests that for adult speakers at least, speakers with a very short VTL and a very high f0 are not very likely to be identified as male. Does this matter? Yes and no. Does it matter that the earth is not flat but our maps mostly act like it is? If it's *flat enough* in the area described by our map, then maybe not. So, we have to decide what we want to do with our model. If we only want to understand behavior at the boundary region where we mostly have a lot of data, then the high-frequency male region maybe doesn't matter. On the other hand, if we want to understand how listener might be using this acoustic information in general, we might be worried that our model represents listener behavior in the general case so that the behavior of the model should 'make sense' even for data we don't have. If this is the case then maybe we need to drop the cross-product from our model because it results in a model that can't possibly capture what listener are doing in general. Below we fit a reduced model without the interaction between f0 and VTL. 
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -866,7 +869,7 @@ model_gender_vtl_f0_reduced =
 # Or download it from the GitHub page:
 model_gender_vtl_f0_reduced = bmmb::get_model ('11_model_gender_vtl_f0_reduced.RDS')
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = FALSE, eval = TRUE}
 # saveRDS (model_gender_vtl_f0_reduced, '../models/11_model_gender_vtl_f0_reduced.RDS')
 model_gender_vtl_f0_reduced = readRDS ('../models/11_model_gender_vtl_f0_reduced.RDS')
 ```
@@ -894,10 +897,10 @@ c_child_reduced = mean (samples[,"f0"] - samples[,"f0:A1"])
 
 We use these parameters to plot the category boundaries in our stimulus space. Figure below compares the linear boundaries implied by our reduced model to those implied by our full model, ignoring the $d$ coefficients. We can see that in the absence of the cross-product, the boundaries for children and adults differ substantially in their slope. The change in slope indicates that f0 differences matter less for children than they do for adults. We can also see that the linear boundaries do not differ much in slope for our model that *does* include a cross-product. This is likely because either the cross-product, or the interaction of this with apparent age, is able to capture whatever difference our reduced model represents with these differences in slope.  
 
-```{r F11_13, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
+```{r F11-13, fig.width = 8, fig.height = 3, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, cache = TRUE}
 
 ################################################################################
-### Figure 11.13
+### Figure 11-13
 ################################################################################
 
 
@@ -922,7 +925,7 @@ aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
 tab = table (height_exp$S, height_exp$C)
 mod_cat = apply (tab, 1,which.max)
 
-par (mfrow = c(1,2), mar = c(4,2,1,1), oma = c(1,4,0,0))
+par (mfrow = c(1,2), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",
@@ -939,7 +942,7 @@ curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), from = -3, to 
 curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
-      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",
+      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
       ylab="Height (inches)")
 grid()
 points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
@@ -954,9 +957,11 @@ curve ((-b_adult*x - a_adult)/ (c_adult), from = -3, to = 3, add = TRUE,lwd=2, l
 curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
 ```
 
+### Model selection and misspecification
+
 We can use cross-validation to investigate whether which of our two models is preferable.  
 
-```{r, eval = FALSE}
+```{r, eval = TRUE, cache = TRUE}
 model_gender_vtl_f0 = brms::add_criterion(model_gender_vtl_f0,"loo")
 model_gender_vtl_f0_reduced = brms::add_criterion(model_gender_vtl_f0_reduced,"loo")
 ```
@@ -965,7 +970,7 @@ The comparison suggests that the model that includes the interaction does a bett
 
 - explain loo, elpd, p_loo
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 brms::loo_compare (model_gender_vtl_f0, model_gender_vtl_f0_reduced)
 ```
 
@@ -973,9 +978,8 @@ However, we got the following error message we adding the `loo` criterion to our
 
 `Warning: Found 142 observations with a pareto_k > 0.7 in model 'model_gender_vtl_f0'. It is recommended to set 'moment_match = TRUE' in order to perform moment matching for problematic observations.`
 
-When we add the `loo` criterion to our model, `brms` (and stan) don't actually fit a new model for every left our data point. Instead, as discussed in section X ([@@ SB - find this and check out what I said]), there is a way to approximate what the model would look like had we refit it without the one data point. It does this using something called **Pareto smoother importance sampling** (PSIS). The Pareto-$\hat{k}$ statistic is a diagnostic for this method that helps you check how well the assumptions underlying the leave-one-out simulation are holding up (Vehtari, Gelman and Gabry, 2017). Basically, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential on your parameter estimates and will have a higher value of $\hat{k}$. If an observation is too unusual, then the estimate of the elpd component for that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), and values greater than 0.7 are 'bad'. In part, the reason for the vagueness in the language and boundaries between good and ok $\hat{k}$ values is that these are an *approximation*, and there are many reasons for these values to vary based on the nature of the data and the structure of the model.    
-
-Aki Vehtari (cite webpage) outlines three general situations where the Pareto $\hat{k}$ statistics can be large:
+When we add the `loo` criterion to our model, `brms` (and stan) don't actually fit a new model for every left our data point. Instead, as discussed in section X ([@@ SB - find this and check out what I said]), there is a way to approximate what the model would look like had we refit it without the one data point. It does this using something called **Pareto smoother importance sampling** (PSIS). The Pareto-$\hat{k}$ statistic is a diagnostic for this method that helps you check how well the assumptions underlying the leave-one-out simulation are holding up (Vehtari, Gelman and Gabry, 2017). Basically, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential on your parameter estimates and will have a higher value of $\hat{k}$. If an observation is too unusual, then the estimate of the elpd component for that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), and values greater than 0.7 are 'bad'. In part, the reason for the vagueness in the language and boundaries between good and ok $\hat{k}$ values is that these are an *approximation*, and there are many reasons for these values to vary based on the nature of the data and the structure of the model.   
+  Aki Vehtari (cite webpage) outlines three general situations where the Pareto $\hat{k}$ statistics can be large:
 
 1) p_loo is *much smaller* than number of parameters: The model is likely to be misspecified. 
 
@@ -983,120 +987,194 @@ Aki Vehtari (cite webpage) outlines three general situations where the Pareto $\
 
 3) p_loo is *greater than* the number of parameters: The model is likely to be *'badly'* misspecified. There are two situations related to this. 
   
-In each case, a posterior predictive check may help understand the issues, as can inspecting the distribution of pareto k statistics. 
+In each case, a posterior predictive check may help understand the issues, as can inspecting the distribution of Pareto $\hat{k}$ statistics.
 
+```{r}
+# number of estimated parameters
+ncol (bmmb::get_samples(model_gender_vtl_f0))
 
+# number of observations
+nrow (model_gender_vtl_f0$data)
 
+# information related to loo creiterion
+model_gender_vtl_f0$criteria$loo$estimates
+```
 
+Based on the information above, we believe that we fall into the second case. Our `p_loo` is only about 40% as large as our number of parameters. Although we do have more than 5 times as many observations (2085) as estimated parameters (306), the ratio of 6.81 is not much greater than 5. In addition, we think there is a possibility that the model is **misspecified**. We have said repeatedly that no model can really be 'proven' to be the 'rel' model, and even that it's not totally clear what it would mean for a formalism like regression to represent the 'real' process underlying our observations. Given this, it seems that every model is 'misspecified' to some extent, making the critique of one specific model model as being misspecified somewhat odd. We can say that in this context, misspecification refers to a difference between your model and reality that causes noticeable 'misbehavior' in your model. What might this misbehavior look like? We think a good example of this is in our hyperbolic category boundaries seen in figure above. We noted at the time that these boundaries defied all logic and were unlikely to represent listener behavior. In other words, the model did not correctly reflect the underlying process we are trying to understand: Listener judgments of apparent gender based on speech acoustics and apparent speaker age.
 
-```{r F11_14, fig.width = 8, fig.height = 3, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, eval = FALSE}
+First, we get the Pareto $\hat{k}$ estimates for our initial model:
+
+```{r, cache = TRUE}
+pareto_k = model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k
+```
+
+We plot these below, and compare them to the same values for our reduced model. When plotting these, we noted that there was a pattern across listeners such that $\hat{k}$ values were highest for adult male speakers.  
+
+```{r F11-14, fig.width = 8, fig.height = 3, fig.cap = "(left) --. (right) --.", echo = FALSE, cache = TRUE}
 
 ################################################################################
-### Figure 11.14
+### Figure 11-14
 ################################################################################
+point_col = tapply (height_exp$C_v, height_exp$S,findmode)
+point_col = as.numeric(factor(point_col))
 
 par (mfrow = c(1,2), mar = c(1,.5,1,.5), oma = c(0,4,0,0))
 
 plot (model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k, ylab="", 
-      ylim = c(0,1.5),col=bmmb::cols[1+mod_cat],pch=16, xaxt='n')
+      ylim = c(0,1.5),col=bmmb::cols[1+point_col],pch=16, xaxt='n')
 plot (model_gender_vtl_f0_reduced$criteria$loo$diagnostics$pareto_k, ylab="", 
-      ylim = c(0,1.5),col=bmmb::cols[1+mod_cat],pch=16, yaxt='n', xaxt='n')
+      ylim = c(0,1.5),col=bmmb::cols[1+point_col],pch=16, yaxt='n', xaxt='n')
 ```
 
-```{r}
-preds = predict (model_gender_vtl_f0)
-preds_reduced = predict (model_gender_vtl_f0_reduced)
+We made posterior predictions for each model, taking the average across all posterior samples: 
+
+```{r, cache = TRUE}
+p_preds = predict (model_gender_vtl_f0)
+p_preds_reduced = predict (model_gender_vtl_f0_reduced)
 ```
 
+And plot these in the left plot of figure below. It's clear that the main issue seems to be for males who are predicted to be female 0%, or nearly 0% of the time. In fact, several men *were* identified as women 0% of the time. Since a probability of 0 implies, in the limit, a logit of negative infinity, the model appears to have a hard time finding reasonable values for some parameters. We considered a  boxplot of Pareto k values by speaker (not presented here) which showed that a small number of individual men were responsible for most high k values. We found that several of these men had the lowest f0 values from among our speakers. In the middle plot we present each speaker plotted according to their f0 and VTL, where point size reflects the average Pareto $\hat{k}$ value for each speaker.
 
-```{r, fig.width = 8, fig.height = 3}
+```{r F11-15, fig.width = 8, fig.height = 3, fig.cap = "(left) --. (middle) --. (right) --.", echo = FALSE, cache = TRUE}
 
 ################################################################################
-### Figure 11.14
+### Figure 11-15
 ################################################################################
+point_col = tapply (height_exp$C_v, height_exp$S,findmode)
+point_col = as.numeric(factor(point_col))
 
-par (mfrow = c(1,2), mar = c(4,.5,1,.5), oma = c(0,4,0,0))
-plot (preds[,1], model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k,
-      col=bmmb::cols[1+mod_cat],pch=16, ylim = c(0,1.5))
-plot (preds_reduced[,1], model_gender_vtl_f0_reduced$criteria$loo$diagnostics$pareto_k,
-      col=bmmb::cols[1+mod_cat],pch=16, ylim = c(0,1.5))
+#par (mfrow = c(1,2), mar = c(4,.5,1,.5), oma = c(0,4,0,0))
+par (mfrow = c(1,3), mar = c(4,4,1,1))
+
+plot (p_preds[,1], model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k,
+      col=bmmb::cols[1+point_col],pch=16, ylim = c(0,1.5))
+
+#plot (p_preds_reduced[,1], model_gender_vtl_f0_reduced$criteria$loo$diagnostics$pareto_k,
+#      col=bmmb::cols[1+point_col],pch=16, ylim = c(0,1.5))
+
+#aggd = aggregate (pareto_k ~ f0_original + vtl_original + S, data = height_exp, FUN = mean)
+aggd = aggregate (pareto_k ~ f0 + vtl + S + A_v, data = height_exp, FUN = mean)
+aggd = aggd[aggd$A_v=="a",]
+
+tmp = height_exp[height_exp$A_v=="a",]
+point_col = tapply (tmp$C_v, tmp$S,findmode)
+point_col = as.numeric(factor(point_col))+2
+
+#plot(aggd[,2:1], cex = aggd$pareto_k*4, col = cols[1+point_col], pch=1,lwd=2,
+#     xlim = c(11,16.5), ylim = c(80,310), ylab="f0 (Hz)", xlab = "Vocal-tract length (cm)")
+plot(aggd[,2:1], cex = aggd$pareto_k*4, col = cols[1+point_col], pch=16,lwd=2,
+     xlab = "Expected Probbility of a Female Response", xlim = c(-2.2,3), 
+     ylim = c(-1.2,1.1), ylab = "Pareto k")
+
+
+#curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, to = -c_adult/d_adult, add = FALSE,
+#       lwd=2, lty=2,col=bmmb::cols[10], xlim = c(-2.2,2.5), ylim = c(-1.2,1.1))
+#curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, to = 6, add = TRUE,
+#       lwd=2, lty=2,col=bmmb::cols[10])
+
+#curve ((-b_adult*x - a_adult - 5) / (d_adult*x+c_adult), from = -6, to = -c_adult/d_adult, add = TRUE,
+#       lwd=2, lty=2,col=bmmb::cols[10])
+
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, 
+       to = -c_adult/d_adult, add = FALSE, lwd=2, lty=1,col=1, xlim = c(-2.2,3), ylim = c(-1.2,1.1))
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult, 
+     to = 6, add = TRUE, lwd=2, lty=1,col=1)
+
+colors = colorRampPalette(c("blue",bmmb::cols[4],bmmb::darkorange))(13)
+for (i in seq(-62,-2,2)){
+  curve ((-b_adult*x - a_adult - i) / (d_adult*x+c_adult), from = -6, 
+         to = -c_adult/d_adult, add = TRUE, lwd=1, lty=1,col=bmmb::cols[5])
+  curve ((-b_adult*x - a_adult - i) / (d_adult*x+c_adult), from = -c_adult/d_adult, 
+       to = 6, add = TRUE, lwd=1, lty=1,col=bmmb::cols[5])
+}
+
+for (i in seq(2,62,2)){
+  curve ((-b_adult*x - a_adult - i) / (d_adult*x+c_adult), from = -6, 
+         to = -c_adult/d_adult, add = TRUE, lwd=1, lty=1,col=bmmb::cols[4])
+  curve ((-b_adult*x - a_adult - i) / (d_adult*x+c_adult), from = -c_adult/d_adult, 
+       to = 6, add = TRUE, lwd=1, lty=1,col=bmmb::cols[4])
+  
+}
+points(aggd[,2:1], cex = 1, col = 1, pch=1,lwd=2)
+
+
 ```
 
-
-
-
-
-
-
-
-
-
-
-
+Based on figure above, we can see that the problematic male voices are those with extreme values of VTL and, in particular f0. If we think of our saddle shapes (see figure X), they can have areas where $z$ values (i.e., the dependent variable) can rise or fall extremely rapidly. For example, we can see in the right plot of figure above that the most problematic male voices were in a region that includes very high values that rise rapidly based on small differences in f0 and VTL. So, it appears that in this case we have some male speakers whose probability of being identified as female is very low, implying very negative logit values, in a region of our surface that is curved such that extremely negative predicted values are possible. Combining this with or relatively small number of observations (given the complexity/flexibility of our model) results in the situation we see above. 
+  To resolve this situation we could fit a model with tighter priors, which may have the result of providing more constrained parameter estimates. However, it may be the case that our model is simply too flexible given the amount of data we have. Independently of all of this, we are still concerned with the very basic problem that the high-frequency region associated with male responses (presented in figure X) defies common sense and is probably wrong. As a result of this, we're not going to try to 'fix' the more complicated model but simply abandon it, relying instead on the reduced model that does not include the VTL by f0 interaction. 
+  
 ### Answering our research questions
 
+As a reminder, the questions we posed above in section X are: 
+
+Q1) Do listeners use VTL, f0, and the interaction between them to determine speaker gender?
+
+Q2) Does apparent speaker age influence the use of the above mentioned acoustic cues?
+
+Q3) Is there a lot of between-speaker variation in perceptual behavior?
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r, eval = FALSE}
-# Fit the model yourself
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
-
-model_gender_vtl_f0_conservative =
-  brm (F ~ vtl*f0*A + (vtl*f0*A|L) + (1|S), data=height_exp, 
-       chains=4, cores=4, family="bernoulli", 
-       warmup=1000, iter = 5000, thin = 4,  
-       prior = c(set_prior("student_t(3, 0, 1)", class = "Intercept"),
-                 set_prior("student_t(3, 0, 1)", class = "b"),
-                 set_prior("student_t(3, 0, 1)", class = "sd"),
-                 set_prior("lkj_corr_cholesky (2)", class = "cor")))
+```{r}
+listener_coefficients = 
+  bmmb::short_hypothesis (model_gender_vtl_f0_reduced, scope="coef",group="L",
+                          c("Intercept+A1=0","vtl+vtl:A1=0","f0+f0:A1=0"))
 
 ```
-```{r, include = TRUE, eval = FALSE}
-# Or download it from the GitHub page:
-model_gender_vtl_f0_conservative = bmmb::get_model ('11_model_gender_vtl_f0_conservative.RDS')
-```
-```{r, include = FALSE, eval = TRUE}
-# saveRDS (model_gender_vtl_f0_conservative, '../models/11_model_gender_vtl_f0_conservative.RDS')
-model_gender_vtl_f0_conservative = readRDS ('../models/11_model_gender_vtl_f0_conservative.RDS')
+
+
+
+```{r F11-16, fig.width = 8, fig.height = 5, fig.cap = "(left) --. (right) --.", echo = FALSE, cache = TRUE}
+
+################################################################################
+### Figure 11-16
+################################################################################
+
+# y = (-b*x - a - z) / (dx+c)
+# fixef(model_gender_vtl_f0)
+
+aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + A_v + G_v, 
+                      data = height_exp, FUN = mean)
+aggd = aggd[aggd$A_v=='a',]
+
+a = listener_coefficients[1:15,1]
+b = listener_coefficients[16:30,1]
+c = listener_coefficients[31:45,1]
+
+par (mar = c(.2,.2,.2,.2), oma = c(3,3,.5,.5), mfrow = c(4,4))
+
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(4:5)][factor(aggd$G_v)], 
+      pch=16,lwd=2, xlab = "",ylab="f0 (cm)",xaxt = 'n')
+grid()
+
+for (i in 1:15)
+  curve ((-b[i]*x - a[i]) / (c[i]), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7],xaxt='n')
+
+for (i in 1:15){
+  xaxt = "n"
+  yaxt = "n"
+  if (i %in% 12:15) xaxt = "s"
+  if (i %in% c(4,8,12)) yaxt = "s"
+  tmp = height_exp[height_exp$L==i & height_exp$A=='a',]
+  plot (tmp$vtl,tmp$f0, cex =1.2, col = bmmb::cols[4:5][factor(tmp$G)],
+        pch=16,lwd=2, xlab = "",ylab="f0 (cm)",xaxt=xaxt,yaxt=yaxt,xlim = c(-1.1,2.6),ylim = c(-1.2,1))
+  grid()
+  curve ((-b[i]*x - a[i]) / (c[i]), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
+  text (-1.5,-.75,i,cex=1.5)
+}
 ```
 
 
-```{r, eval = FALSE}
-model_gender_vtl_f0_conservative = brms::add_criterion(model_gender_vtl_f0_conservative,"loo")
-```
+
+
+
+
+
+
+
+
+
 
 
 

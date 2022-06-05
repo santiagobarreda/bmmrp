@@ -17,7 +17,7 @@ $$
 \begin{split}
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mu_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]} \\
-...
+\dots 
 \end{split}
 (\#eq:101)
 \end{equation}
@@ -92,8 +92,10 @@ Plotting ones and zeros against speaker VTL is not very informative and suggests
 
 $$
 \begin{equation}
+\begin{split}
 p_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]}  \\
-...
+\dots
+\end{split}
 (\#eq:102)
 \end{equation}
 $$
@@ -289,7 +291,7 @@ p = \mathrm{logit}^{-1}(Intercept + VTL \times \mathrm{vtl}) =  \frac{1}{1 + e^{
 \end{equation}
 $$
 
-And even put all of \@ref(eq:F1011) inside the Bernoulli distribution directly as in \@ref(eq:F1012).
+And even put all of \@ref(eq:1011) inside the Bernoulli distribution directly as in \@ref(eq:1012).
 
 $$
 \begin{equation}
@@ -303,7 +305,7 @@ There is no particular reason to do this, apart from the fact that it directly i
 ### Building intuitions about logits
 
 The logistic (and logit) functions are **non linear** functions. In the simplest sense this means that the relationships they form between $x$ and $y$ variables, when plotted, do not form straight lines. In the left plot below we see a situation where a predictor $x$ is linearly related to the logit of some probability $p$. However, after applying the logistic function to our logit values, our predictor no longer enters into a linear relationship with the dependent variable. Another consequences of the non-linearity of these transformations is that a given unit increase in logits does not always equal the same increase in probabilities (and vice versa). In general,  logits closer to zero tend to map small changes in logits to large changes in probability, while logits with a larger magnitude tend to map larger and larger differences to smaller and smaller changes in probabilities. 
-  The non-linear relationship between probabilities and logits is evident in both plots in figure \@ref(fig:103). In the left plot we see horizontal lines that represent equal differences in probability (0.1 change per line). These lines are closer together closer to $y=0$, which shows that the same change in logits results in larger probability changes when values are closer to zero. In the right side of the plot we see that the slope of the curve actually changes, increasing in value as $p$ approaches 0, and then decreasing again as it crosses it. In both cases, this behavior is because this curve must approach but never actually reach 0 and 1, and as a result the slope will continuously decrease as probabilities apporach these bounds.      
+  The non-linear relationship between probabilities and logits is evident in both plots in figure \@ref(fig:F103). In the left plot we see horizontal lines that represent equal differences in probability (0.1 change per line). These lines are closer together closer to $y=0$, which shows that the same change in logits results in larger probability changes when values are closer to zero. In the right side of the plot we see that the slope of the curve actually changes, increasing in value as $p$ approaches 0, and then decreasing again as it crosses it. In both cases, this behavior is because this curve must approach but never actually reach 0 and 1, and as a result the slope will continuously decrease as probabilities apporach these bounds.      
 
 ```{r F103, fig.width = 8, fig.height = 3, fig.cap = "(left) A line relating some predictor to logits. (right) A sigmoid curve expressing the probability associated with each value along the line in the left. Horizontal lines are placed every 0.1 probability units from 0.1 to 0.9 probability.", echo = FALSE}
 
@@ -381,7 +383,7 @@ height_exp$vtl_original = height_exp$vtl
 height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
 ```
 
-We saw in figure \@ref(fig:101) that VTL is negatively related to the probability that a speaker will be identified as female. In addition, it seems that the relationship between speaker VTL and the perception of female speakers may differ based on the apparent age of the speaker. We would like to know:
+We saw in figure \@ref(fig:F101) that VTL is negatively related to the probability that a speaker will be identified as female. In addition, it seems that the relationship between speaker VTL and the perception of female speakers may differ based on the apparent age of the speaker. We would like to know:
 
   Q1) What is the relationship between speaker VTL and the perception of female speakers?
 
@@ -441,6 +443,10 @@ The main differences compared to our previous models are the lack of terms relat
 We're going to fit the model outlined above. Below is the function call we need to run the model described in ref:
 
 ```{r, eval = FALSE}
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+
 model_gender_vtl =
   brm (F ~ vtl*A + (vtl*A|L) + (1|S), data=height_exp, 
        chains=4, cores=4, family="bernoulli", 
@@ -450,11 +456,11 @@ model_gender_vtl =
                  set_prior("student_t(3, 0, 3)", class = "sd"),
                  set_prior("lkj_corr_cholesky (2)", class = "cor")))
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 model_gender_vtl = bmmb::get_model ('10_model_gender_vtl.RDS')
 ```
-```{r, include = FALSE}
+```{r, include = FALSE, TRUE}
 # saveRDS (model_gender_vtl, '../models/10_model_gender_vtl.RDS')
 model_gender_vtl = readRDS ('../models/10_model_gender_vtl.RDS')
 ```
@@ -746,12 +752,15 @@ $$
 
 We also calculate the overall hit and false alarm rates for our data with the code below:
 
-```{r, collapse = TRUE}
+```{r, eval = FALSE}
 H = mean(height_exp$F[height_exp$G_v == "f"])
-H 
-
 FA = mean(height_exp$F[height_exp$G_v == "m"])
-FA
+```
+
+Or more simply using: 
+
+```{r, collapse = TRUE}
+tapply(height_exp$F, height_exp$G_v, mean)
 ```
 
 **Sensitivity** is defined as the difference between a listeners hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no discrimination at all: They perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are identifying 90% of *people*, including men, as women. 
@@ -940,6 +949,10 @@ $$
 Below is the function call we need to fit the model described in \@ref(eq:1019). Note that it is simply a 'regular' logistic regression model, just one with a specific structure. 
 
 ```{r, eval = FALSE}
+# Fit the model yourself
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+
 model_gender_dt =
   brm (F ~ F_v*A_v + (F_v*A_v|L) + (1|S), data=height_exp, 
        chains=4, cores=4, family="bernoulli", 
@@ -949,7 +962,7 @@ model_gender_dt =
                  set_prior("student_t(3, 0, 3)", class = "sd"),
                  set_prior("lkj_corr_cholesky (2)", class = "cor")))
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 model_gender_dt = bmmb::get_model ('10_model_gender_dt.RDS')
 ```
@@ -985,7 +998,7 @@ biases_adult = bmmb::short_hypothesis (
   hypothesis = c("Intercept+A_v1 = 0"),group="L", scope="coef")
 ```
 
-```{r F107, fig.width = 8, fig.height = 3, fig.cap = "", echo = FALSE}
+```{r F107, fig.width = 8, fig.height = 3, fig.cap = "--", echo = FALSE}
 
 ################################################################################
 ### Figure 10.7
@@ -1026,12 +1039,12 @@ legend (5, 10, legend =c("Sensitivity", "Bias"), pch=16,lwd=2,
         col = cols[c(9,7)], cex = 1.5, bty='n')
 ```
 
-## Answering our research questions
+### Answering our research questions
 
 The following verbal description of the results in figure \@ref(fig:F107) are based on the parameters reconstructed in `gender_dt_hypothesis`. In addition, we used the `forpaper` function, like this `forpaper(gender_dt_hypothesis)` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output. Our model suggests there is a bias towards male responses for adults (mean = -1.04, s.d. = 0.29, 95% C.I = [-1.66, -0.5]), and perhaps a slight bias towards female responses for children (mean = 0.4, s.d. = 0.32, 95% C.I = [-0.24, 1.02]). Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children. 
-  We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:108)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:108). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
+  We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:F108)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:F108). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
 
-```{r F108, fig.width = 8, fig.height = 3.25, fig.cap = "", echo = FALSE}
+```{r F108, fig.width = 8, fig.height = 3.25, fig.cap = "--", echo = FALSE}
 
 ################################################################################
 ### Figure 10.8

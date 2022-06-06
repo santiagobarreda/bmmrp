@@ -260,15 +260,16 @@ brms::prior_summary(model_mildly_informative)
 We can copy the values of the `class`, `coeff`, and `group` values in the output above to set specific prior probabilities for our `A1` and `G1` parameters, and for the standard deviations of the `A1` and `G1` random effects. In the specification below, the parameters with a standard deviation represent the 'default' case, parameters with a standard deviation of 6 represent age-related effects, and parameters with a standard deviation of 3 represent gender-related effects.
 
 ```{r, eval = FALSE}
-priors = c(brms::set_prior("student_t(3,156, 6)", class = "Intercept"),
-           brms::set_prior("student_t(3,0, 6)", class = "b"),
-           brms::set_prior("student_t(3,0, 10)", class = "b", coef = "A1"),
-           brms::set_prior("student_t(3,0, 3)", class = "b", coef = "G1"),
-           brms::set_prior("student_t(3,0, 10)", class = "sd"),
-           brms::set_prior("student_t(3,0, 3)", class = "sd", coef = "A1", group = "L"),
-           brms::set_prior("student_t(3,0, 6)", class = "sd", coef = "G1", group = "L"),
-           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
-           brms::set_prior("student_t(3,0, 6)", class = "sigma"))
+priors = 
+  c(brms::set_prior("student_t(3,156, 6)", class = "Intercept"),
+    brms::set_prior("student_t(3,0, 6)", class = "b"),
+    brms::set_prior("student_t(3,0, 10)", class = "b", coef = "A1"),
+    brms::set_prior("student_t(3,0, 3)", class = "b", coef = "G1"),
+    brms::set_prior("student_t(3,0, 10)", class = "sd"),
+    brms::set_prior("student_t(3,0, 3)", class = "sd", coef = "A1", group = "L"),
+    brms::set_prior("student_t(3,0, 6)", class = "sd", coef = "G1", group = "L"),
+    brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+    brms::set_prior("student_t(3,0, 6)", class = "sigma"))
 
 set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
@@ -395,8 +396,8 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + G1 \colon L_{[L_{[i]}]} + A1 \colon G1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
-\sigma_{[i]} = \mathrm{Intercept_{\sigma}} + A1_{\sigma} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[L_{[i]}]} \\ + A1 \colon L_{[L_{[i]}]} + G1 \colon L_{[L_{[i]}]} + A1 \colon G1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
+\\ \sigma_{[i]} = \mathrm{Intercept_{\sigma}} + A1_{\sigma} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim t(3,0,\sigma_S) \\
 \begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\ \\ 

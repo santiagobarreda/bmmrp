@@ -33,6 +33,33 @@ options (contrasts = c('contr.sum','contr.sum'))
 height_exp = height_exp[height_exp$R=='a',]
 ```
 
+  * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
+ 
+  * `C`: A letter representing the speaker *category* (`b`=boy, `g`=girl, `m`=man, `w`=woman) reported by the listener for each trial.
+ 
+  * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
+ 
+  * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
+
+  * `C_v`: A letter representing the *veridical* (actual) speaker category ('b'=boy, 'g'=girl, 'm'=man, 'w'=woman) for each speaker for each trial. 
+ 
+ * `vtl`: An estimate of the speaker's *vocal-tract length* in centimeters. 
+ 
+  * `f0`: The vowel *fundamental frequency* (f0) measured in Hertz. 
+
+  * `dur`: The *duration* of the vowel sound, in milliseconds. 
+
+  * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
+
+  * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
+  
+  * `G_v`: The *veridical gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
+
+  * `A_v`: The *veridical age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
+
+
+
+
 In figure \@ref(fig:F71) we see that the distribution of apparent height with respect to apparent speaker category is very similar to its distribution with respect to veridical speaker category. In this chapter we're going to focus on the effect of *apparent* speaker category on apparent height. This is because we want to understand how the listener's assumptions about the speaker affect their height judgments (and listeners did not know the veridical speaker category). We're first going to treat the four groups as if they had no internal structure. In this case it may not be the best approach for this data since we know there are logical ways to subdivide boys, girls, men, and women. However, this is a good starting point since in many cases you will have levels of a factor with no logical internal divisions. 
 
 ```{r F72, fig.height = 3, fig.width=8, fig.cap = "Apparent height organized by apparent age (A) and veridical age (A_v). The first letter in each label indicates the apparent age of the speaker, either an adult (a) or a child (c).", echo = FALSE}
@@ -218,6 +245,36 @@ boxplot (height ~ G+A, data=height_exp, main = "Overall", ylim = c(90,200),col=c
 boxplot (height ~ G, data=height_exp, main="Gender", ylim =c(90,200), col=cols[7:8])
 boxplot (height ~ A, data=height_exp, main="Adultness", ylim = c(90,200), col=cols[1:2])
 ```
+
+
+### Data and research questions
+
+  * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
+ 
+  * `C`: A letter representing the speaker *category* (`b`=boy, `g`=girl, `m`=man, `w`=woman) reported by the listener for each trial.
+ 
+  * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
+ 
+  * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
+
+  * `C_v`: A letter representing the *veridical* (actual) speaker category ('b'=boy, 'g'=girl, 'm'=man, 'w'=woman) for each speaker for each trial. 
+ 
+ * `vtl`: An estimate of the speaker's *vocal-tract length* in centimeters. 
+ 
+  * `f0`: The vowel *fundamental frequency* (f0) measured in Hertz. 
+
+  * `dur`: The *duration* of the vowel sound, in milliseconds. 
+
+  * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
+
+  * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
+  
+  * `G_v`: The *veridical gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
+
+  * `A_v`: The *veridical age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
+
+
+
 
 ### Description of the model
 
@@ -503,6 +560,33 @@ interactionplot (height_exp$G, height_exp$A, y_post_pred[,1], col = 3:4,lwd=3, t
 
 As noted in the last chapter, you cannot estimate interactions of factors are not crossed: If you did not observe all combinations of factor levels, you are not in a position to talk about effects vary for those combinations. So, it is extremely important to be sure to only include interactions in your model when these predictors are *crossed*, or your model may run into problems. 
 
+### Data and research questions
+
+  * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
+ 
+  * `C`: A letter representing the speaker *category* (`b`=boy, `g`=girl, `m`=man, `w`=woman) reported by the listener for each trial.
+ 
+  * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
+ 
+  * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
+
+  * `C_v`: A letter representing the *veridical* (actual) speaker category ('b'=boy, 'g'=girl, 'm'=man, 'w'=woman) for each speaker for each trial. 
+ 
+ * `vtl`: An estimate of the speaker's *vocal-tract length* in centimeters. 
+ 
+  * `f0`: The vowel *fundamental frequency* (f0) measured in Hertz. 
+
+  * `dur`: The *duration* of the vowel sound, in milliseconds. 
+
+  * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
+
+  * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
+  
+  * `G_v`: The *veridical gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
+
+  * `A_v`: The *veridical age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
+
+
 
 ### Description of our model
 
@@ -763,7 +847,7 @@ $$
 \end{equation}
 $$
 
-This results in a *distribution* of $R62$ values, unlike more 'traditional' estimates of $R^2$ that result in point estimates. The `brms` package includes a function called `bayes_R2` that helps you calculate Bayesian $R^2$ for `brm` models. However, we are going to use the `r2_bayes` function from the `bmmb` package instead because this function allows you to modify (or omit) the fixed effects included in the prediction. Below we calculate $R^2$ for the models we fit this chapter. 
+This results in a *distribution* of $R^2$ values, unlike more 'traditional' estimates of $R^2$ that result in point estimates. The `brms` package includes a function called `bayes_R2` that helps you calculate Bayesian $R^2$ for `brm` models. However, we are going to use the `r2_bayes` function from the `bmmb` package instead because this function allows you to modify (or omit) the fixed effects included in the prediction. Below we calculate $R^2$ for the models we fit this chapter. 
 
 ```{r, cache = TRUE}
 r2_both = r2_bayes(model_both)

@@ -10,9 +10,9 @@ We've been making our models more and more complicated, but we've still only fit
 
 ## Comparing four (or any number of) groups
 
-First, we're going to discuss models that compare observations across any number of groups (levels) of a single factor. These designs have just one predictor factor, but it can have any number of levels. Although it's not very common to have a design that *only* consists of a single multi-group comparison, the inclusion of multi-group comparisons is ubiquitous in many disciplines (including linguistics). Examples of predictors with multiple levels are language, word category, and age groups. In figure \@ref(fig:F71) we see two ways that subjects (or listeners, or the levels of any grouping factor) can be arranged into groups. In the *within-subjects* version of this design, each subject is tested at each level of $A$. In the *between-subjects* version of the design, different subjects are tested at every level of $A$. We omit the 'bad' design discussed in chapter 5, where some subjects appear at all levels of $A$ and others don't. Such 'bad' designs are definitely analyzable with `brms`, however, they are not included in figure \@ref(fig:F71) because there are a large number of possible configurations of this, and because it is usually a bad idea to purposely create experiments featuring such designs. 
+First, we're going to discuss models that compare observations across any number of groups (levels) of a single factor. These designs have just one predictor factor, but it can have any number of levels. Although it's not very common to have a design that *only* consists of a single multi-group comparison, the inclusion of multi-group comparisons is ubiquitous in many disciplines (including linguistics). Examples of predictors with multiple levels are language, word category, and age groups. In figure \@ref(fig:F7-1) we see two ways that subjects (or listeners, or the levels of any grouping factor) can be arranged into groups. In the *within-subjects* version of this design, each subject is tested at each level of $A$. In the *between-subjects* version of the design, different subjects are tested at every level of $A$. We omit the 'bad' design discussed in chapter 5, where some subjects appear at all levels of $A$ and others don't. Such 'bad' designs are definitely analyzable with `brms`, however, they are not included in figure \@ref(fig:F7-1) because there are a large number of possible configurations of this, and because it is usually a bad idea to purposely create experiments featuring such designs. 
 
-```{r F71, echo = FALSE, out.width = "80%", fig.cap = "Data from a single group of subjects (S) divided according to a single grouping factor A."}
+```{r F7-1, echo = FALSE, out.width = "80%", fig.cap = "Data from a single group of subjects (S) divided according to a single grouping factor A."}
 
 ################################################################################
 ### Figure 7.1
@@ -28,9 +28,8 @@ Below we load the data for our experiment investigating apparent speaker height,
 ```{r}
 library (brms)
 library (bmmb)
-data (height_exp)
+data (exp_data)
 options (contrasts = c('contr.sum','contr.sum'))
-height_exp = height_exp[height_exp$R=='a',]
 ```
 
   * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
@@ -60,27 +59,26 @@ height_exp = height_exp[height_exp$R=='a',]
 
 
 
-In figure \@ref(fig:F71) we see that the distribution of apparent height with respect to apparent speaker category is very similar to its distribution with respect to veridical speaker category. In this chapter we're going to focus on the effect of *apparent* speaker category on apparent height. This is because we want to understand how the listener's assumptions about the speaker affect their height judgments (and listeners did not know the veridical speaker category). We're first going to treat the four groups as if they had no internal structure. In this case it may not be the best approach for this data since we know there are logical ways to subdivide boys, girls, men, and women. However, this is a good starting point since in many cases you will have levels of a factor with no logical internal divisions. 
+In figure \@ref(fig:F7-1) we see that the distribution of apparent height with respect to apparent speaker category is very similar to its distribution with respect to veridical speaker category. In this chapter we're going to focus on the effect of *apparent* speaker category on apparent height. This is because we want to understand how the listener's assumptions about the speaker affect their height judgments (and listeners did not know the veridical speaker category). We're first going to treat the four groups as if they had no internal structure. In this case it may not be the best approach for this data since we know there are logical ways to subdivide boys, girls, men, and women. However, this is a good starting point since in many cases you will have levels of a factor with no logical internal divisions. 
 
-```{r F72, fig.height = 3, fig.width=8, fig.cap = "Apparent height organized by apparent age (A) and veridical age (A_v). The first letter in each label indicates the apparent age of the speaker, either an adult (a) or a child (c).", echo = FALSE}
+```{r F7-2, fig.height = 3, fig.width=8, fig.cap = "Apparent height organized by apparent age (A) and veridical age (A_v). The first letter in each label indicates the apparent age of the speaker, either an adult (a) or a child (c).", echo = FALSE}
 
 ################################################################################
 ### Figure 7.2
 ################################################################################
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
-boxplot (height ~ C, data = height_exp, col = cols[1:4],ylim=c(100,200), 
+boxplot (height ~ C, data = exp_data, col = cols[1:4],ylim=c(100,200), 
          xlab = "Apparent Category", ylab = "Height (cm)")
-boxplot (height ~ C_v, data = height_exp, col = cols[1:4],ylim=c(100,200),  
+boxplot (height ~ C_v, data = exp_data, col = cols[1:4],ylim=c(100,200),  
          xlab = "Veridical Category", ylab = "Height (cm)")
 ```
 
 Even with only four different groups our potential research questions are substantially more complicated than in the two-group case. First, there are four groups now, meaning we could potentially make 6 2-group comparisons. Second, the groups differ along multiple dimensions, making it more difficult to make two-group comparisons that ask one single question. For example, the 'man' and 'girl' groups differ according to apparent adultness *and* apparent gender, making it difficult to distinguish the contribution of each characteristics to their difference in apparent height. For now, we are going to keep things simple and just build a model that can tell us about our average group values.
-
-To analyze data like this it should be in a data frame with one row for each observation. Then, one column should contain the dependent variable, the variable whose variation you're trying to predict. Another column should contain information about which group each observation belongs to for the fixed-effects predictor you will be considering. Finally, you need one or more columns indicating the sources of data in your experiment. The relevant columns in our data frame are presented below.  
+  To analyze data like this it should be in a data frame with one row for each observation. Then, one column should contain the dependent variable, the variable whose variation you're trying to predict. Another column should contain information about which group each observation belongs to for the fixed-effects predictor you will be considering. Finally, you need one or more columns indicating the sources of data in your experiment. The relevant columns in our data frame are presented below.  
 
 ```{r, eval = FALSE}
-head(height_exp[,c("height","A","L","S")])
+head(exp_data[,c("height","A","L","S")])
 ```
 
 ### Description of our model
@@ -104,10 +102,7 @@ contr.sum(1:4)
 ```
 
 Imagine this tiny matrix represented our 'fake' numerical predictors for our `C` parameters ($x1, x2, x3$). Our tiny data matrix above suggests that the first observation (row) belongs to the first group (boy). This is because our data results in the $C1$ being multiplied by one and $C1$ and $C2$ being zeroed out. The same logic suggests the second row is an observation from the second group and the third from the third. Since $C4$ is quite literally equal to $-(C1+C2+C3)$, adding the negative of $C1$, $C2$, and $C3$ to the prediction is equivalent to adding the value of $C4$ even though it is not directly estimated. So, the fourth row of our tiny matrix represents an observation from the fourth group and encodes the effect for $C4$ even without directly estimating this value. As a result, even though our model only directly estimates three parameters for our $C$ predictor, we could think of our model as actually containing four parameters for $C$: $C1$, $C2$, $C3$, and $-(C1+C2+C3)$. 
-
-Even though the inclusion of $C$ in our model requires the addition of three separate parameters, we're going to represent these with a single term like $C_{[C_{[i]}]}$ in our formal model descriptions. This is consistent with the way we have been representing our listener and speaker-dependent intercepts (as discussed in section 4.X) The possible confusion arises from the fact that the subscript of the term references a predictor which has four levels (`C`), however, our $C$ parameter does not actually contain four separate parameters. In other words, in situations where `C = g` (i.e. $C_{[C_{[i]=4}]}$) it would seem that we are referencing the fourth $C$ parameter, one that doesn't actually *exist* in our model. However, as noted above our model basically contains the information necessary to estimate the effects for all four groups in our data, even in situations where it does not directly return values for one of the levels of a factor. As a result, the $C_{[C_{[i]}]}$ terms in our models should not be taken to indicate that all indexed levels of a factor are actual parameters that are directly estimated by our model. Instead, terms like $C_{[C_{[i]}]}$ in our models are meant to reflect the information represented through combinations of parameter estimates and predictor variables. 
-
-The formal description of our model is given below:
+  Even though the inclusion of $C$ in our model requires the addition of three separate parameters, we're going to represent these with a single term like $C_{[C_{[i]}]}$ in our formal model descriptions. This is consistent with the way we have been representing our listener and speaker-dependent intercepts (as discussed in section 4.X) The possible confusion arises from the fact that the subscript of the term references a predictor which has four levels (`C`), however, our $C$ parameter does not actually contain four separate parameters. In other words, in situations where `C = g` (i.e. $C_{[C_{[i]=4}]}$) it would seem that we are referencing the fourth $C$ parameter, one that doesn't actually *exist* in our model. However, as noted above our model basically contains the information necessary to estimate the effects for all four groups in our data, even in situations where it does not directly return values for one of the levels of a factor. As a result, the $C_{[C_{[i]}]}$ terms in our models should not be taken to indicate that all indexed levels of a factor are actual parameters that are directly estimated by our model. Instead, terms like $C_{[C_{[i]}]}$ in our models are meant to reflect the information represented through combinations of parameter estimates and predictor variables. The formal description of our model is given below:
 
 $$
 \begin{equation}
@@ -118,7 +113,6 @@ height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\
 S_{[\bullet]} \sim N(0,\sigma_S) \\
 \begin{bmatrix} L_{[\bullet]} \\ C_{[1]} \colon L_{[\bullet]} 
 \\ C_{[2]} \colon L_{[\bullet]} \\ C_{[3]} \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left(\begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\
-\\
 \mathrm{Intercept} \sim N(156,12) \\
 C_{[\bullet]} \sim N(0,12) \\
 \sigma, \sigma_L, \sigma_{C \colon L}, \sigma_S \sim N(0,12) \\
@@ -130,14 +124,17 @@ R \sim \mathrm{LKJCorr} (2)
 $$
 
 Structurally, this model is extremely similar to the model described in \@ref(eq:66b) last chapter with $C_{[C_{[i]}]}$ replacing $A_{[A_{[i]}]}$ and $C_{[C_{[i]}]} \colon L_{[L_{[i]}]}$ replacing $A \colon L_{[L_{[i]}]}$. Note that since we are estimating three parameters for `C`, our listener-dependent 'random effects' are actually coming from a four-dimensional normal distribution which considers the relationships between the intercepts and category effects for individual listeners. 
-
-Since we are including adult male speakers in our data we should also reconsider our priors. Based on CDC (cite) we expect that average heights of 176, 162, 150 and 150 cm respectively for men, women, girls, and boys. These four groups have an average of 159 cm and a standard deviation of 12 cm. Based on this, and especially given that we are investigating *apparent* and not *veridical* height, the priors we used in the last chapter still seem appropriate.
+  Since we are including adult male speakers in our data we should also reconsider our priors. Based on CDC (cite) we expect that average heights of 176, 162, 150 and 150 cm respectively for men, women, girls, and boys. These four groups have an average of 159 cm and a standard deviation of 12 cm. Based on this, and especially given that we are investigating *apparent* and not *veridical* height, the priors we used in the last chapter still seem appropriate.
 
 ### Fitting and interpreting the model
 
 We fit the four-group model below:
 
 ```{r, eval = FALSE}
+# Fit the model yourself
+# set the random seed and contrasts
+set.seed (1); options (contrasts = c('contr.sum','contr.sum'))
+
 # set the priors
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
@@ -145,21 +142,15 @@ priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
            brms::set_prior("gamma(2, 0.1)", class = "nu"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
-# set the random seed
-set.seed (1)
-# set the contrasts
-options (contrasts = c('contr.sum','contr.sum'))
-# Fit the model yourself
 model_four_groups =  
-  brms::brm (height ~ C + (C|L) + (1|S), data = height_exp, chains = 4, cores = 4,
+  brms::brm (height ~ C + (C|L) + (1|S), data = exp_data, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
 ```
 
 ```{r, include = TRUE, eval = FALSE}
-# Or download it from the GitHub page:
+# or download it from the GitHub page:
 model_four_groups = bmmb::get_model ('7_model_four_groups.RDS')
 ```
-
 ```{r, include = FALSE}
 # saveRDS (model_four_groups, '../models/7_model_four_groups.RDS')
 model_four_groups = readRDS ('../models/7_model_four_groups.RDS')
@@ -175,7 +166,7 @@ We can see that the intercept corresponds to the average of the group means, and
 
 ```{r, collapse = TRUE}
 # group means
-means = tapply (height_exp$height, height_exp$C, mean)
+means = tapply (exp_data$height, exp_data$C, mean)
 
 # overall mean
 mean (means)
@@ -200,9 +191,9 @@ comparisons = bmmb::short_hypothesis (model_four_groups,
                                       c("C1 = C2", "C3 = -(C1+C2+C3)"))
 ```
 
-We can use the `brmplot` in the `bmmb` package to easily make plots showing means and credible intervals for our fixed effects, including the recovered coefficient. We also plot the two comparisons we made using the `hypothesis` function above. The distributions on the left tell us about probable values for our parameters: Given our data and model structure, there is a 95% probability that the parameter value falls within this interval. Our category effects reflect the expected difference between our model intercept, the overall grand mean, and each category mean. So, the intervals on the left of figure \@ref(fig:F72) tell us that there is a 95% probability (given our data and model structure) that the actual difference between the grand mean and each group mean falls within that range. What do the distributions in the right plot in figure \@ref(fig:F72) tell us? They represent the posterior distribution of the difference between category means directly, without involving the intercept. Conceptually, finding the difference between the intercept and a group mean is no different than finding the difference between individual group means. Consider the example of providing directions with respect to your house. If the library is 5 miles west and the park is 3 miles west, you could refer to these as -5 and -3 miles from your house, west to east. However, you could also express the difference between one and the other directly as 2 (or -2). The left plot in figure \@ref(fig:F72) expresses all distances with respect to the intercept (your house) while the right plot expresses differences with respect to individual category means directly (the library and park). 
+We can use the `brmplot` in the `bmmb` package to easily make plots showing means and credible intervals for our fixed effects, including the recovered coefficient. We also plot the two comparisons we made using the `hypothesis` function above. The distributions on the left tell us about probable values for our parameters: Given our data and model structure, there is a 95% probability that the parameter value falls within this interval. Our category effects reflect the expected difference between our model intercept, the overall grand mean, and each category mean. So, the intervals on the left of figure \@ref(fig:F7-2) tell us that there is a 95% probability (given our data and model structure) that the actual difference between the grand mean and each group mean falls within that range. What do the distributions in the right plot in figure \@ref(fig:F7-2) tell us? They represent the posterior distribution of the difference between category means directly, without involving the intercept. Conceptually, finding the difference between the intercept and a group mean is no different than finding the difference between individual group means. Consider the example of providing directions with respect to your house. If the library is 5 miles west and the park is 3 miles west, you could refer to these as -5 and -3 miles from your house, west to east. However, you could also express the difference between one and the other directly as 2 (or -2). The left plot in figure \@ref(fig:F7-2) expresses all distances with respect to the intercept (your house) while the right plot expresses differences with respect to individual category means directly (the library and park). 
 
-```{r F73, fig.height = 3, fig.width=8, fig.cap = "(left) Means and 95% credible intervals for group effects for our four group model. H1 through H4 reflect the effects for boys, girls, men, and women respectively.  (right) bla.", echo = FALSE}
+```{r F7-3, fig.height = 3, fig.width=8, fig.cap = "(left) Means and 95% credible intervals for group effects for our four group model. H1 through H4 reflect the effects for boys, girls, men, and women respectively.  (right) bla.", echo = FALSE}
 
 ################################################################################
 ### Figure 7.3
@@ -221,9 +212,9 @@ Our model above had a single factor with four groups/levels. Another way to look
 
 Designs where all the factors are crossed are sometimes called 'factorial' or 'orthogonal' designs. The name 'orthogonal' is particularly telling. It means 'at right angles, perpendicular' (from the greek stems "ortho-", meaning straight, right, and "-gon-", meaning side or angle). When you have orthogonal designs, that means that your 'dimensions' (i.e., factors) can be estimated independently. For example, if you want to know the difference in apparent height according to apparent gender, it helps to have observed both adults and children for each gender. A comparison of boys and women will conflate gender and age differences, thereby making it difficult to understand the independent effect of apparent gender. By *balancing* factors across each other, orthogonal designs allow us to 'decompose' the variation in our data using different factors more effectively. This allows us to attribute the variation in our observations to the different factors in our design, helping us understand what matters and what does not. This simple but extremely powerful idea forms the basis of ANOVA. 
 
-In figure \@ref(fig:F73) we present a few ways that subjects be combined with two two-level factors $A$ and $B$. First, we can see that factors $A$ and $B$ are crossed with each other since there are subjects, and presumably observations in each little **cell** (i.e. combination of factor levels). What would it look like for these factors to not be crossed? Well, one of the 'cells' (boxes) would be completely missing observations. If this were to happen, we would obviously lose the ability to make comparisons across groups involving the values in that cell. If your subjects factor is fully crossed with your fixed effects factors (in this case $A$ and $B$) then you have a fully *within-subjects* design. If you only observe certain subjects for specific combinations of fixed effects, you have a fully *between-subjects* design. Finally, we see a new possibility, a **mixed design**. In a mixed design, one or more factors are between-subjects, and the others are within-subjects. In the example below, $A$ is between-subjects but $B$ is within-subjects. An example of a mixed design would arise if, for example, we wanted to run our coffee and reading time experiment on multiple first languages. Each subject could be tested at both coffee and decaf, making that factor within subjects, however, each subject would only be observed within a single first language group, making that factor between subjects. 
+In figure \@ref(fig:F7-3) we present a few ways that subjects be combined with two two-level factors $A$ and $B$. First, we can see that factors $A$ and $B$ are crossed with each other since there are subjects, and presumably observations in each little **cell** (i.e. combination of factor levels). What would it look like for these factors to not be crossed? Well, one of the 'cells' (boxes) would be completely missing observations. If this were to happen, we would obviously lose the ability to make comparisons across groups involving the values in that cell. If your subjects factor is fully crossed with your fixed effects factors (in this case $A$ and $B$) then you have a fully *within-subjects* design. If you only observe certain subjects for specific combinations of fixed effects, you have a fully *between-subjects* design. Finally, we see a new possibility, a **mixed design**. In a mixed design, one or more factors are between-subjects, and the others are within-subjects. In the example below, $A$ is between-subjects but $B$ is within-subjects. An example of a mixed design would arise if, for example, we wanted to run our coffee and reading time experiment on multiple first languages. Each subject could be tested at both coffee and decaf, making that factor within subjects, however, each subject would only be observed within a single first language group, making that factor between subjects. 
 
-```{r F74, echo = FALSE, out.width = "100%", fig.cap = "Data from four groups of subjects (S) divided according to a two grouping factors A and B."}
+```{r F7-4, echo = FALSE, out.width = "100%", fig.cap = "Data from four groups of subjects (S) divided according to a two grouping factors A and B."}
 
 ################################################################################
 ### Figure 7.4
@@ -232,18 +223,18 @@ In figure \@ref(fig:F73) we present a few ways that subjects be combined with tw
 knitr::include_graphics("../images/design_ch7_2.png")
 ```
 
-Our model contains two predictors with two levels each, leading to four groups. Height judgments for these four groups are presented in figure \@ref(fig:F74). These four boxes correspond to the four cells in figure \@ref(fig:F73). The middle plot in \@ref(fig:F74) compares height judgments across levels of gender (male vs. female). Since we have both adults and children within each gender group, each box in the plot is really the average of two of the boxes from the left plot in \@ref(fig:F74) (boxes 1 and 3 vs. 2 and 4). This is equivalent to finding the average of one row in \@ref(fig:F73), and comparing it to the average of the other row. Similarly, the right plot in \@ref(fig:F73) compares height judgments across levels of age (adult vs. child). Since we have both males and females within each gender group, each box in the plot is really the average of two of the boxes from the left plot in \@ref(fig:F74) (boxes 1 and 2 vs. 3 and 4). This is equivalent to finding the average of one column in \@ref(fig:F73), and comparing it to the average of the other column. In this way, our model including two fixed effect predictors can use four groups to answer two questions simultaneously: What is the effect of apparent age on apparent height? What is the effect of apparent gender on apparent height? 
+Our model contains two predictors with two levels each, leading to four groups. Height judgments for these four groups are presented in figure \@ref(fig:F7-4). These four boxes correspond to the four cells in figure \@ref(fig:F7-3). The middle plot in \@ref(fig:F7-4) compares height judgments across levels of gender (male vs. female). Since we have both adults and children within each gender group, each box in the plot is really the average of two of the boxes from the left plot in \@ref(fig:F7-4) (boxes 1 and 3 vs. 2 and 4). This is equivalent to finding the average of one row in \@ref(fig:F7-3), and comparing it to the average of the other row. Similarly, the right plot in \@ref(fig:F7-3) compares height judgments across levels of age (adult vs. child). Since we have both males and females within each gender group, each box in the plot is really the average of two of the boxes from the left plot in \@ref(fig:F7-4) (boxes 1 and 2 vs. 3 and 4). This is equivalent to finding the average of one column in \@ref(fig:F7-3), and comparing it to the average of the other column. In this way, our model including two fixed effect predictors can use four groups to answer two questions simultaneously: What is the effect of apparent age on apparent height? What is the effect of apparent gender on apparent height? 
 
-```{r F75, echo=FALSE,fig.height = 3, fig.width = 8, fig.cap = "(left) Comparison of the four groups (middle) Comparison of productions based on whether the speaker is an adult (right) Comparison of all productions based on whether the speaker is male."}
+```{r F7-5, echo=FALSE,fig.height = 3, fig.width = 8, fig.cap = "(left) Comparison of the four groups (middle) Comparison of productions based on whether the speaker is an adult (right) Comparison of all productions based on whether the speaker is male."}
 
 ################################################################################
 ### Figure 7.5
 ################################################################################
 
 par (mfrow = c(1,3))
-boxplot (height ~ G+A, data=height_exp, main = "Overall", ylim = c(90,200),col=cols[3:6])
-boxplot (height ~ G, data=height_exp, main="Gender", ylim =c(90,200), col=cols[7:8])
-boxplot (height ~ A, data=height_exp, main="Adultness", ylim = c(90,200), col=cols[1:2])
+boxplot (height ~ G+A, data=exp_data, main = "Overall", ylim = c(90,200),col=cols[3:6])
+boxplot (height ~ G, data=exp_data, main="Gender", ylim =c(90,200), col=cols[7:8])
+boxplot (height ~ A, data=exp_data, main="Adultness", ylim = c(90,200), col=cols[1:2])
 ```
 
 
@@ -340,18 +331,18 @@ Our models have increasingly large numbers of priors, and many of these are the 
 Below we fit the model using the model structure outlined above. We don't need to change our priors because our new predictors are all covered by the classes of priors we have specified so far. 
 
 ```{r, eval = FALSE}
+# Fit the model yourself
+# set the random seed and contrasts
+set.seed (1); options (contrasts = c('contr.sum','contr.sum'))
+
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
            brms::set_prior("student_t(3,0, 12)", class = "sd"),
            brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
            brms::set_prior("gamma(2, 0.1)", class = "nu"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
-
-# Fit the model yourself
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
 model_both =  
-  brms::brm (height ~ A + G + (A + G|L) + (1|S), data = height_exp, chains = 4, cores = 4,
+  brms::brm (height ~ A + G + (A + G|L) + (1|S), data = exp_data, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
 ```
 ```{r, include = TRUE, eval = FALSE}
@@ -374,11 +365,11 @@ We now have two non-Intercept 'Population-Level' effects: `A1` and `G1`, represe
 
 ```{r, collapse = TRUE}
 # Intercept
-mean (tapply (height_exp$height, height_exp$C, mean)) 
+mean (tapply (exp_data$height, exp_data$C, mean)) 
 # Age effect
-diff (tapply (height_exp$height, height_exp$A, mean) ) / -2
+diff (tapply (exp_data$height, exp_data$A, mean) ) / -2
 # Gender effect
-diff (tapply (height_exp$height, height_exp$G, mean) ) / -2
+diff (tapply (exp_data$height, exp_data$G, mean) ) / -2
 ```
 
 We can recover the four individual group means by adding up the individual coefficients. This can sometimes be tedious and requires you to be careful and methodical, but isn't actually difficult. Remember that each of the four groups is uniquely identified by a combination of gender and adultness. This means that to recover the expected group means we need to add the right combination of coefficients to the intercept. For example, the first hypothesis we test below (`Intercept + -A1 + -G1 = 0`) takes the intercept and adds the effect for 'child' (`-A1`). We use `-A1` and not `A2` because our model does not contain a parameter called `A2`. This parameter is not estimated in our model because `-A1=A2`. So, if we want the value of `A2` we use `-A1`. Similarly, we add the effect for 'male' using `-G1`. Since we started with the overall mean apparent height (the intercept) and add the effects for a 'male' and a 'child', the hypothesis `Intercept + -A1 + -G1 = 0` estimates the group mean for 'boys'.
@@ -396,7 +387,7 @@ Below we compare our recreated group means with our average height judgment for 
 ```{R }
 means_pred
 
-tapply (height_exp$height, height_exp$C, mean)
+tapply (exp_data$height, exp_data$C, mean)
 ```
 
 
@@ -479,47 +470,47 @@ y_hat = predict (model_both, summary = FALSE)
 y_hat_no_re = predict (model_both, re_formula = NA, summary = FALSE)
 ```
 
-In figure \@ref(fig:F75) we compare the distribution of our data to our posterior predictive distributions, without and with the inclusion of random effects. There are some differences in the 'widths' of the different boxes, but we will not discuss this for now. Instead, we would like to highlight differences in the relative positions of the boxes representing the four groups across the plots. Our data shows different average heights for men and women but no height difference between boys and girls. Despite this, both sets of our posterior predictions show a difference in height between boys and girls. This is particularly evident in or fixed effects predictions since the random effects can help represent many of the idiosyncrasies of any given data set. It turns out that the structure of our data suggests that there is an *interaction* between apparent gender and apparent age, meaning that we should include the interaction between these predictors in our model.
+In figure \@ref(fig:F7-5) we compare the distribution of our data to our posterior predictive distributions, without and with the inclusion of random effects. There are some differences in the 'widths' of the different boxes, but we will not discuss this for now. Instead, we would like to highlight differences in the relative positions of the boxes representing the four groups across the plots. Our data shows different average heights for men and women but no height difference between boys and girls. Despite this, both sets of our posterior predictions show a difference in height between boys and girls. This is particularly evident in or fixed effects predictions since the random effects can help represent many of the idiosyncrasies of any given data set. It turns out that the structure of our data suggests that there is an *interaction* between apparent gender and apparent age, meaning that we should include the interaction between these predictors in our model.
 
-```{r F76, echo=FALSE,fig.height = 3, fig.width = 8, fig.cap = "(left) (middle)  (right) ."}
+```{r F7-6, echo=FALSE,fig.height = 3, fig.width = 8, fig.cap = "(left) (middle)  (right) ."}
 
 ################################################################################
 ### Figure 7.6
 ################################################################################
 par (mfrow = c(1,3), mar = c(4,4,1,1))
-boxplot (height_exp$height ~ height_exp$C, ylim = c(100,205), col = cols[2:5])
-boxplot (y_hat_no_re[2,] ~ height_exp$C, ylim = c(100,205), col = cols[2:5])
-boxplot (y_hat[2,] ~ height_exp$C, ylim = c(100,205), col = cols[2:5])
+boxplot (exp_data$height ~ exp_data$C, ylim = c(100,205), col = cols[2:5])
+boxplot (y_hat_no_re[2,] ~ exp_data$C, ylim = c(100,205), col = cols[2:5])
+boxplot (y_hat[2,] ~ exp_data$C, ylim = c(100,205), col = cols[2:5])
 ```
 
 ## Interactions and interaction plots
 
-We can think of a single effect representing a difference between groups/conditions/levels as a slope. For example, in the left panel in figure \@ref(fig:F76) we plot mean apparent height for apparent females and males at x-axis locations 0 and 1. The difference in the group means is 5 cm (females 160 cm, males 165 cm). As a result, the line formed by joining the averages of these groups has a slope of 5 (i.e., it rises 5 cm from 0 to 1, for a slope of 5/1). We can use any arbitrary x axis distance to calculate slopes, as long as we are consistent. However, there are obvious practical advantages to choosing to calculate these slopes over the arbitrary 'distance' of 1. The plot highlighting the effect for adultness on apparent height is a 'main effects' plot. You may have heard things like "the analysis showed a significant main effect for so and so...". Main effects are the average effects for one predictor averaged across everything else. Saying 'averaged across everything else' basically means we are ignoring everything else in our model. A person looking only at the left plot in figure \@ref(fig:F76) would not realize our data also investigates the effect of adultness. We have 'erased' the differences in adultness by averaging across all levels of that factor. Another way to think of main effects is that they are 'marginal' effects, the overall, average, unconditional difference. So, if someone asks you "whats the average difference in apparent height between males and females?" and you can respond "about 5 cm". As noted in the previous chapter, sometimes the answer is not so simple, and it starts more like: "well... it depends". Interactions represent situations like these, where the effect of one variable depends on, or is *conditional* on, the value of some other variable. 
+We can think of a single effect representing a difference between groups/conditions/levels as a slope. For example, in the left panel in figure \@ref(fig:F7-6) we plot mean apparent height for apparent females and males at x-axis locations 0 and 1. The difference in the group means is 5 cm (females 160 cm, males 165 cm). As a result, the line formed by joining the averages of these groups has a slope of 5 (i.e., it rises 5 cm from 0 to 1, for a slope of 5/1). We can use any arbitrary x axis distance to calculate slopes, as long as we are consistent. However, there are obvious practical advantages to choosing to calculate these slopes over the arbitrary 'distance' of 1. The plot highlighting the effect for adultness on apparent height is a 'main effects' plot. You may have heard things like "the analysis showed a significant main effect for so and so...". Main effects are the average effects for one predictor averaged across everything else. Saying 'averaged across everything else' basically means we are ignoring everything else in our model. A person looking only at the left plot in figure \@ref(fig:F7-6) would not realize our data also investigates the effect of adultness. We have 'erased' the differences in adultness by averaging across all levels of that factor. Another way to think of main effects is that they are 'marginal' effects, the overall, average, unconditional difference. So, if someone asks you "whats the average difference in apparent height between males and females?" and you can respond "about 5 cm". As noted in the previous chapter, sometimes the answer is not so simple, and it starts more like: "well... it depends". Interactions represent situations like these, where the effect of one variable depends on, or is *conditional* on, the value of some other variable. 
 
-To understand interactions we need to talk about **simple effects** or **simple main effects**, the effects of a factor at one specific level of another factor. Basically, main effects show you the overall effect for a factor and simple effects show you the effects of the factor *depending* on the value of other things. For example, we can break up the effect of gender into two effects, one for apparent adults and one for apparent children. In doing this we have split the singe (main) effect into two (simple main) effects, presented in the second plot in figure \@ref(fig:F76). Imagine what would happen if we began with the lower (blue) line and added a single value to each end of the line sgment. Since a single number would be added to both points on the line, the line would *slide* up to y-axis without ever changing its slope. In other words, adding a single value (a main effect) to the blue line can never make it look like the broken green line above it, since this has a different slope. In fact, the slope (effect) across genders is only 1 cm for children while it is 9 cm for adults. In order to make the green and blue lines *not* be parallel, we need to add different values to each side of the blue line segment. In other words, the effect for gender (the cause of the slopes) would need to differ based on whether apparent age is adult or child. This varying effect for gender at different levels of age means that age and gender interact. In general, when we our simple effects plots show lines that are not parallel, that means there may be an interaction in our data. 
+To understand interactions we need to talk about **simple effects** or **simple main effects**, the effects of a factor at one specific level of another factor. Basically, main effects show you the overall effect for a factor and simple effects show you the effects of the factor *depending* on the value of other things. For example, we can break up the effect of gender into two effects, one for apparent adults and one for apparent children. In doing this we have split the singe (main) effect into two (simple main) effects, presented in the second plot in figure \@ref(fig:F7-6). Imagine what would happen if we began with the lower (blue) line and added a single value to each end of the line sgment. Since a single number would be added to both points on the line, the line would *slide* up to y-axis without ever changing its slope. In other words, adding a single value (a main effect) to the blue line can never make it look like the broken green line above it, since this has a different slope. In fact, the slope (effect) across genders is only 1 cm for children while it is 9 cm for adults. In order to make the green and blue lines *not* be parallel, we need to add different values to each side of the blue line segment. In other words, the effect for gender (the cause of the slopes) would need to differ based on whether apparent age is adult or child. This varying effect for gender at different levels of age means that age and gender interact. In general, when we our simple effects plots show lines that are not parallel, that means there may be an interaction in our data. 
 
-```{r F77, fig.height=3,fig.width=8,fig.cap="Plots showing different ways to consider our f0 data.", echo = FALSE}
+```{r F7-7, fig.height=3,fig.width=8,fig.cap="Plots showing different ways to consider our f0 data.", echo = FALSE}
 
 ################################################################################
 ### Figure 7.7
 ################################################################################
 
 par (mfrow = c(1,4), mar = c(4,4,3,2))
-plot (0:1,tapply (height_exp$height,height_exp$G,mean), col=3, ylim = c(130,190),xaxt='n',
+plot (0:1,tapply (exp_data$height,exp_data$G,mean), col=3, ylim = c(130,190),xaxt='n',
       lwd=3,type='b',pch=16,cex=1.5,main="Gender",xlim=c(-.2,1.2),ylab='f0',xlab='')
 axis (at=0:1, labels = c('female','male'), side=1)
 
-G = height_exp$G
-A = height_exp$A
-bmmb::interactionplot (G, A, height_exp$height,col=3:4, lwd = 3, leg.y = 170, 
+G = exp_data$G
+A = exp_data$A
+bmmb::interactionplot (G, A, exp_data$height,col=3:4, lwd = 3, leg.y = 170, 
                   leg.x=1.8,type='b',pch=c(16,17),cex=1.5, ylim = c(130,190),
                   main="Both",ylab='f0', xlim = c(.9,2.5))
 
-plot (0:1,tapply (height_exp$height,height_exp$A,mean),col=3, ylim=c(130,190),xaxt='n',lwd=3,
+plot (0:1,tapply (exp_data$height,exp_data$A,mean),col=3, ylim=c(130,190),xaxt='n',lwd=3,
       type='b',pch=16,cex=1.5, main = "Adult",xlim=c(-.2,1.2),ylab='f0',xlab='')
 axis (at=0:1, labels = c('adult','child'),side=1)
 
-bmmb::interactionplot (A, G, height_exp$height,col=3:4, lwd = 3, leg.y = 170, 
+bmmb::interactionplot (A, G, exp_data$height,col=3:4, lwd = 3, leg.y = 170, 
                   leg.x=1.8,type='b',pch=c(16,17),cex=1.5, ylim = c(130,190),
                   main="Both",ylab='f0', xlim = c(.9,2.5))
 ```
@@ -530,15 +521,15 @@ In the absence of an interaction, we could just answer the question "whats the a
   
   * If there are interactions between factors, you must inspect the simple effects to understand the nature of the interaction. 
 
-Let us now consider the main effect for perceived adultness presented in the third plot in figure \@ref(fig:F76)). There is a 24 cm decrease in average apparent height based on the perceived adultness of the speaker. In the fourth plot in figure \@ref(fig:F76) we see that the simple effect for adultness at across levels of gender are not parallel. This tells us there is an interaction between age and gender. We can think of this interaction in two ways: 1) As the difference in slope between the two lines, 2) as the difference along the y-axis for each set of line-segment end points. For example, we can say "there is a larger effect for age on apparent height for male speakers relative to female speakers". This would focus on the difference in slope between the lines. In contrast, we might also say "there is an effect for apparent gender for adult speakers but not for child speakers". This would focus on the difference in the respective end points. The idea of conditional effects (interactions) *feels* complicated, but it is something we all understand intuitively. Anyone who is able to make such a statement based on the information in the plot above *understands* interactions, whether or not they know how to relate this concept to the mathematical formalisms used to implement this concepts in regression models. For example, how much progress will a person learning a second language make in a year? What if I told you that one group of speakers is 3 and the other is 65. You *know* that makes a difference, which is to say, that you *know* there is an interaction between the effect of time spent learning a language, and the age at which the learner begins. 
+Let us now consider the main effect for perceived adultness presented in the third plot in figure \@ref(fig:F7-6)). There is a 24 cm decrease in average apparent height based on the perceived adultness of the speaker. In the fourth plot in figure \@ref(fig:F7-6) we see that the simple effect for adultness at across levels of gender are not parallel. This tells us there is an interaction between age and gender. We can think of this interaction in two ways: 1) As the difference in slope between the two lines, 2) as the difference along the y-axis for each set of line-segment end points. For example, we can say "there is a larger effect for age on apparent height for male speakers relative to female speakers". This would focus on the difference in slope between the lines. In contrast, we might also say "there is an effect for apparent gender for adult speakers but not for child speakers". This would focus on the difference in the respective end points. The idea of conditional effects (interactions) *feels* complicated, but it is something we all understand intuitively. Anyone who is able to make such a statement based on the information in the plot above *understands* interactions, whether or not they know how to relate this concept to the mathematical formalisms used to implement this concepts in regression models. For example, how much progress will a person learning a second language make in a year? What if I told you that one group of speakers is 3 and the other is 65. You *know* that makes a difference, which is to say, that you *know* there is an interaction between the effect of time spent learning a language, and the age at which the learner begins. 
 
-The second and fourth plots in figure \@ref(fig:F76) are sometimes called **interaction plots**. Knowing how to interpret interaction plots is extremely useful because they help you quickly understand the nature of any interactions in your data. Interaction plots show you the simple main effects of one predictor across the levels of the other. They do this by having one factor vary across the x-axis and using different lines for the levels of the other. Note that the same information is presented in the two interaction plots in figure \@ref(fig:F76), it is just presented differently in each case. The slopes in the second plot correspond to the differences between line endpoints in the fourth plot; one is small and one is zero. The differences between the line endpoints in the second plot are the slopes of the fourth plot, both are large but one is larger. 
+The second and fourth plots in figure \@ref(fig:F7-6) are sometimes called **interaction plots**. Knowing how to interpret interaction plots is extremely useful because they help you quickly understand the nature of any interactions in your data. Interaction plots show you the simple main effects of one predictor across the levels of the other. They do this by having one factor vary across the x-axis and using different lines for the levels of the other. Note that the same information is presented in the two interaction plots in figure \@ref(fig:F7-6), it is just presented differently in each case. The slopes in the second plot correspond to the differences between line endpoints in the fourth plot; one is small and one is zero. The differences between the line endpoints in the second plot are the slopes of the fourth plot, both are large but one is larger. 
 
 ## Investigating interactions with a model
 
-Above we made posterior predictions of our data using our model, with and without the inclusion of the speaker random effects. We presented these as box plots in figure \@ref(fig:F75), and we present these as interaction plots in figure \@ref(fig:F77). We can see that the predictions made using only fixed effects are systematically wrong, and that the problem with our predictions is that the lines should not be parallel. As we've just discussed, in the absence of interactions, interaction plots contain only parallel lines. Since our model (`model_both`) does not include interaction terms it cannot represent interactions, and so is only capable of making predictions along parallel lines. This means our model is not capable of representing the pattern in our data using only fixed effects. We can see that when random effects are included, prediction is better. This is not surprising since the listener and speaker-specific intercept adjustments allow for deviations from the fixed effects predictions to still be captured by the model. Despite this, we should be concerned about the problems with our fixed effects predictions. Our model is a little universe we made up, and it only includes the information we included in it. This 'universe' only contains parallel lines because we only gave it that capability. So, the fact that your model generates parallel lines does not in any way 'prove' that the lines are parallel, because they were bound to be. In order to properly investigate whether the lines are parallel, the model must be built in a way that allows it to (at least potentially) represent the interactions in our data. 
+Above we made posterior predictions of our data using our model, with and without the inclusion of the speaker random effects. We presented these as box plots in figure \@ref(fig:F7-5), and we present these as interaction plots in figure \@ref(fig:F7-7). We can see that the predictions made using only fixed effects are systematically wrong, and that the problem with our predictions is that the lines should not be parallel. As we've just discussed, in the absence of interactions, interaction plots contain only parallel lines. Since our model (`model_both`) does not include interaction terms it cannot represent interactions, and so is only capable of making predictions along parallel lines. This means our model is not capable of representing the pattern in our data using only fixed effects. We can see that when random effects are included, prediction is better. This is not surprising since the listener and speaker-specific intercept adjustments allow for deviations from the fixed effects predictions to still be captured by the model. Despite this, we should be concerned about the problems with our fixed effects predictions. Our model is a little universe we made up, and it only includes the information we included in it. This 'universe' only contains parallel lines because we only gave it that capability. So, the fact that your model generates parallel lines does not in any way 'prove' that the lines are parallel, because they were bound to be. In order to properly investigate whether the lines are parallel, the model must be built in a way that allows it to (at least potentially) represent the interactions in our data. 
 
-```{r F78, fig.height=3,fig.width=8,fig.cap="Interaction plots showing comparing our f0 data to different posterior predictions, with and without RE (random effects).", echo = FALSE}
+```{r F7-8, fig.height=3,fig.width=8,fig.cap="Interaction plots showing comparing our f0 data to different posterior predictions, with and without RE (random effects).", echo = FALSE}
 
 ################################################################################
 ### Figure 7.8
@@ -546,14 +537,14 @@ Above we made posterior predictions of our data using our model, with and withou
 
 par (mfrow = c(1,3), mar = c(4,4,3,2))
 
-interactionplot (height_exp$G, height_exp$A, height_exp$height, col=3:4, ylim=c(140,180),lwd=3,
+interactionplot (exp_data$G, exp_data$A, exp_data$height, col=3:4, ylim=c(140,180),lwd=3,
                   type='b',pch=c(16,17),cex=1.5,main="Data",legend = FALSE)
 
-interactionplot (height_exp$G, height_exp$A, y_post_pred_no_re[,1],col=3:4, lwd=3,
+interactionplot (exp_data$G, exp_data$A, y_post_pred_no_re[,1],col=3:4, lwd=3,
                   type = 'b', pch = c(16,17), cex = 1.5, ylim = c(140,180),
                   main="Pred. without RE", leg.x=1.8,leg.y=270, xlim=c(.95,2.3))
 
-interactionplot (height_exp$G, height_exp$A, y_post_pred[,1], col = 3:4,lwd=3, type='b',
+interactionplot (exp_data$G, exp_data$A, y_post_pred[,1], col = 3:4,lwd=3, type='b',
                   pch = c(16,17), cex = 1.5, ylim = c(140,180),
                   main="Pred. with RE",legend=FALSE)
 ```
@@ -644,6 +635,10 @@ Our updated plain English description (still ignoring the priors) now says:
 Below we fit the our model now including an interaction term. Remember that the line `set_prior("student_t(3, 0, 12)", class = "b")` sets the prior for all non-intercept 'Population-Level' predictors (i.e. fixed effects). This includes all of our main effects predictors but also all of our interaction terms. 
 
 ```{r, eval = FALSE}
+# Fit the model yourself
+# set the random seed and contrasts
+set.seed (1); options (contrasts = c('contr.sum','contr.sum'))
+
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
            brms::set_prior("student_t(3,0, 12)", class = "sd"),
@@ -651,11 +646,8 @@ priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("gamma(2, 0.1)", class = "nu"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
 
-# Fit the model yourself
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
 model_interaction =  
-  brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), data = height_exp, chains = 4, cores = 4,
+  brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), data = exp_data, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
 ```
 ```{r, include = TRUE, eval = FALSE}
@@ -680,11 +672,11 @@ We can now focus on the fixed effect (`Population-Level Effects`), of which ther
 
 Ok, so we have a single interaction term, but what does it *mean*? The `A1:G1` term can be read aloud as "the effect of `A1` given (conditional on) the level of `G1`". Just as our models cannot estimate `A2` because `-A1 = A2` they cannot estimate `A2:G1` because `-A1:G1 = A2:G1`. In fact, `-A1:G1 = A2:G1 = -A2:G2  = -A1:G2`, which is precisely why you can't estimate more than one interaction for this model. Basically, you start with `A1:G1` and every time you want to change `A1` or `G1` to `A2` or `G2` you flip the sign of the `A1:G1` term instead. If you wanted to flip both terms (i.e. change `A1:G1` to `A2:G2`) you flip the sign twice, meaning you do not change it (i.e. `A1:G1 = A2:G2`). Why does this happen? Looking at how interaction plots are built up out of main effects and interactions may help illustrate the reason for this. 
 
-Figure \@ref(fig:F78) presents an example of how our interaction plot can be built up from the components in our fixed effects above, and is very useful for understanding the geometry of main effects and interactions. In (a) we see that the intercept lifts up a line from 0 to the level of the overall mean apparent height of 160 cm. Then, the effect for `A1` (adult, +10 cm) and `-A1` (children, -10 cm) are added to this value, causing the separation between the lines indicating a 'main effect' for adultness. Notice that the lines are parallel with respect to each other, and also parallel to the x-axis. This is because we have not added either an effect for gender (indicated as a slope along the x axis), or an interaction between gender an adultness. In (b) we see the addition of the gender effect: `G1` (female, -2.74 cm), and  `-G1` (male, 2.74 cm). Notice that the effect is added to one end of each line segment and subtracted from the other end of the line segment. The result is the same non-zero slope for both lines (i.e. no interaction yet). Panel (c) shows the addition of all of the effects shown in the top row, the result of a model that includes both main effects but no interaction. In (e) we add the gender interaction `A1:G1`, which was -1.45 cm. 
+Figure \@ref(fig:F7-8) presents an example of how our interaction plot can be built up from the components in our fixed effects above, and is very useful for understanding the geometry of main effects and interactions. In (a) we see that the intercept lifts up a line from 0 to the level of the overall mean apparent height of 160 cm. Then, the effect for `A1` (adult, +10 cm) and `-A1` (children, -10 cm) are added to this value, causing the separation between the lines indicating a 'main effect' for adultness. Notice that the lines are parallel with respect to each other, and also parallel to the x-axis. This is because we have not added either an effect for gender (indicated as a slope along the x axis), or an interaction between gender an adultness. In (b) we see the addition of the gender effect: `G1` (female, -2.74 cm), and  `-G1` (male, 2.74 cm). Notice that the effect is added to one end of each line segment and subtracted from the other end of the line segment. The result is the same non-zero slope for both lines (i.e. no interaction yet). Panel (c) shows the addition of all of the effects shown in the top row, the result of a model that includes both main effects but no interaction. In (e) we add the gender interaction `A1:G1`, which was -1.45 cm. 
 
 Notice that the interaction effect has different signs when added to the same line, and also for each end of each line segment. This means that the interaction terms *cancel out* at each end of the line segments across lines, but also for different endpoints of the same line. We can see that starting form the parallel lines in (d), the interaction in (e) constitutes an equal 'pinch' of one end of the lines and a spreading of the other side of the lines. This equal pinch is necessary in order to maintain the same average slope across both lines (the gender main effect) and the same average spacing between both ends of the lines (the age main effect). It turns out that to deviate from pararellism in a way that maintains the average slopes of the lines *and* the average spacings between the line segment end points, the same number must be added or subtracted from all four of the end points in the lines below, and this is why we get only a single interaction term in our model.
 
-```{r F79, echo = FALSE, out.width = "75%", fig.cap = "An interaction plot built up from its individual components. Need to add letters to plots."}
+```{r F7-9, echo = FALSE, out.width = "75%", fig.cap = "An interaction plot built up from its individual components. Need to add letters to plots."}
 
 ################################################################################
 ### Figure 7.9
@@ -707,7 +699,7 @@ means_pred_interaction =
                             "Intercept +  A1 +  G1 +  A1:G1 = 0"))
 
 # actual data means
-tapply (height_exp$height, height_exp$C, mean)
+tapply (exp_data$height, exp_data$C, mean)
 
 # predictions with no interaction term
 means_pred[,1]
@@ -748,20 +740,20 @@ y_post_pred_int = predict (model_interaction)
 y_post_pred_no_re_int = predict (model_interaction, re_formula = NA)
 ```
 
-In figure \@ref(fig:F79) we compare our data, the predictions of our original model, and the predictions of our model that includes interactions (both models with and without random effects). Whereas the model with no interactions enforced parallelism on the simple effects, our new model is able to capture the interaction in our data by representing different effects for gender at different levels of age (and vice versa). Although both of our models are able to capture the pattern in the data when random effects are included, only one of these is able to do so with its fixed effect structure. 
+In figure \@ref(fig:F7-9) we compare our data, the predictions of our original model, and the predictions of our model that includes interactions (both models with and without random effects). Whereas the model with no interactions enforced parallelism on the simple effects, our new model is able to capture the interaction in our data by representing different effects for gender at different levels of age (and vice versa). Although both of our models are able to capture the pattern in the data when random effects are included, only one of these is able to do so with its fixed effect structure. 
 
-```{r F710, fig.height=5,fig.width=8,fig.cap="--.", echo = FALSE}
+```{r F7-10, fig.height=5,fig.width=8,fig.cap="Interaction plots comparing apparent height for apparent females (f) and males (m) to different posterior predictions (red dashed lines). Posterior predictions in the top row contain model random effects while those in the bottom row do not.", echo = FALSE}
 
 ###############################################################################
 ### Figure 7.10
 ###############################################################################
 
-ps = aggregate (height_exp$height~ height_exp$G+ height_exp$A, FUN=mean)[,3]
+ps = aggregate (exp_data$height~ exp_data$G+ exp_data$A, FUN=mean)[,3]
 
 par (mfcol = c(2,3), mar = c(4,4,3,1))
 #layout (mat = t(c(1,2,3,4)), widths = c(.28,.28,.28,.16))
 
-interactionplot (height_exp$G, height_exp$A, height_exp$height, col=3:4, ylim=c(140,180),lwd=3,xlab="",
+interactionplot (exp_data$G, exp_data$A, exp_data$height, col=3:4, ylim=c(140,180),lwd=3,xlab="",
                   type='b',pch=c(16,17),cex=1.5,main="Data",legend = FALSE, ylab = 'Apparent Height (cm)')
 
 plot (0,type='n',xaxt='n',yaxt='n',bty='n', 
@@ -769,25 +761,25 @@ plot (0,type='n',xaxt='n',yaxt='n',bty='n',
 legend (0.2,.6,legend=c("Child","Adult"),lty=c(1,4),cex=1.5,col=c(3,4),
         pch=16:17,lwd=3,bty='n',pt.cex=2)
 
-interactionplot (height_exp$G, height_exp$A, y_post_pred_no_re[,1],col=3:4, lwd=3,
+interactionplot (exp_data$G, exp_data$A, y_post_pred_no_re[,1],col=3:4, lwd=3,
                   type = 'b', pch = c(16,17), cex = 1.5, ylim = c(140,180),xlab="",
                   main="No Interaction", legend = FALSE, ylab = 'Apparent Height (cm)')
 segments (1,ps[1],2,ps[2], col = coral,lty=3,lwd=4)
 segments (1,ps[3],2,ps[4], col = coral,lty=3,lwd=4)
 
-interactionplot (height_exp$G, height_exp$A, y_post_pred[,1],col=3:4, lwd=3,
+interactionplot (exp_data$G, exp_data$A, y_post_pred[,1],col=3:4, lwd=3,
                   type = 'b', pch = c(16,17), cex = 1.5, ylim = c(140,180),xlab="",
                   main="No Interaction", legend = FALSE, ylab = 'Apparent Height (cm)')
 segments (1,ps[1],2,ps[2], col = coral,lty=3,lwd=4)
 segments (1,ps[3],2,ps[4], col = coral,lty=3,lwd=4)
 
-interactionplot (height_exp$G, height_exp$A, y_post_pred_no_re_int[,1],col=3:4, lwd=3,
+interactionplot (exp_data$G, exp_data$A, y_post_pred_no_re_int[,1],col=3:4, lwd=3,
                   type = 'b', pch = c(16,17), cex = 1.5, ylim = c(140,180),xlab="",
                   main="Interaction", legend = FALSE, ylab = 'Apparent Height (cm)')
 segments (1,ps[1],2,ps[2], col = coral,lty=3,lwd=4)
 segments (1,ps[3],2,ps[4], col = coral,lty=3,lwd=4)
 
-interactionplot (height_exp$G, height_exp$A, y_post_pred_int[,1],col=3:4, lwd=3,
+interactionplot (exp_data$G, exp_data$A, y_post_pred_int[,1],col=3:4, lwd=3,
                   type = 'b', pch = c(16,17), cex = 1.5, ylim = c(140,180),xlab="",
                   main="Interaction", legend = FALSE, ylab = 'Apparent Height (cm)')
 segments (1,ps[1],2,ps[2], col = coral,lty=3,lwd=4)
@@ -854,7 +846,7 @@ r2_both = r2_bayes(model_both)
 r2_interaction = r2_bayes(model_interaction)
 ```
 
-We can inspect the output and see that they have very similar values. This is not surprising given their similarities seen in figure \@ref(fig:F79). 
+We can inspect the output and see that they have very similar values. This is not surprising given their similarities seen in figure \@ref(fig:F7-9). 
 
 ```{r}
 r2_both
@@ -877,9 +869,9 @@ r2_both_no_re
 r2_interaction_no_re
 ```
 
-Figure \@ref(fig:F710) compares our $R^2$ values with and without random effects. These values just formalize what we saw in our interaction plots in figure \@ref(fig:F79), that the interaction term helps model fit in a noticeable way if we only consider the model fixed effects structure. 
+Figure \@ref(fig:F7-10) compares our $R^2$ values with and without random effects. These values just formalize what we saw in our interaction plots in figure \@ref(fig:F7-9), that the interaction term helps model fit in a noticeable way if we only consider the model fixed effects structure. 
 
-```{r  F711, fig.height=3,fig.width=8,fig.cap=".", echo = FALSE}
+```{r  F7-11, fig.height=3,fig.width=8,fig.cap=".", echo = FALSE}
 
 ###############################################################################
 ### Figure 7.11
@@ -896,11 +888,11 @@ In our situation we would rather explain as much as possible using fixed as oppo
 
 ## Answering our research questions
 
-The results (based on `model_interaction`) indicate that the average apparent height across all speaker groups (i.e. the intercept) was 160 cm (s.d. = 1.1, 95% C.I = [157.8, 162.1]). We also found an average effect of 10.1 cm for apparent speaker age (s.d. = 1.1, 95% C.I = [7.9, 12.3]) and -2.7 cm for apparent speaker gender (s.d. = 0.6, 95% C.I = [-3.9, -1.6]). In addition, we found an interaction between the effects of apparent gender and apparent gender on apparent heights (mean = -1.4, s.d. = 0.4, 95% C.I = [-2.1, -0.7]). The result of these effects are that adults were perceived as taller than children and males were perceived as taller than males. However, the difference in apparent height due to gender was larger for adults than for children (and the effect for age was larger for males than for females). Figure \@ref(fig:F711) presents the model fixed effects other than the intercept (whose value is too large to plot in this range). 
+The results (based on `model_interaction`) indicate that the average apparent height across all speaker groups (i.e. the intercept) was 160 cm (s.d. = 1.1, 95% C.I = [157.8, 162.1]). We also found an average effect of 10.1 cm for apparent speaker age (s.d. = 1.1, 95% C.I = [7.9, 12.3]) and -2.7 cm for apparent speaker gender (s.d. = 0.6, 95% C.I = [-3.9, -1.6]). In addition, we found an interaction between the effects of apparent gender and apparent gender on apparent heights (mean = -1.4, s.d. = 0.4, 95% C.I = [-2.1, -0.7]). The result of these effects are that adults were perceived as taller than children and males were perceived as taller than males. However, the difference in apparent height due to gender was larger for adults than for children (and the effect for age was larger for males than for females). Figure \@ref(fig:F7-11) presents the model fixed effects other than the intercept (whose value is too large to plot in this range). 
 
 The fixed effects all have 95% credible intervals that do not overlap with zero. By convention, this has historically been thought of as indicating that the effect is 'real', as in not equal to zero. In contrast, when the 95% (or some other) credible interval of an effect overlaps with zero, researchers will often conclude that this effect is not 'real', i.e. that it is exactly equal to zero. Gelman (cite) notes that effects are rarely exactly equal to zero, and that an inability to conclusively distinguish the value of an effect from zero is not the same thing as thinking that the most probable value of an effect is exactly zero. As a result, rather than focusing on whether any given interval crosses zero or not, Gelman (cite) recommends thinking about data analysis in terms of avoiding **type S** and **type M** errors. Type S (sign) errors occur when you think an effect is negative but its actually positive (or vice versa). A type M (magnitude) error is when you think an effect is large but its actually small (or vice versa). Focusing on type M and S errors rather than whether an interval crosses zero forces researchers to focus on the magnitude of the predictor, its practical importance, and the uncertainty involved in the estimate. That being said, if a parameter has a 'large' magnitude (in the context of the dependent variable) and a 'small' amount of uncertainty (relative to the magnitude), this predictor is likely to be important for understanding the dependent variable in the context of your model.  
 
-```{r F712, fig.height=3,fig.width=8,fig.cap=".", echo = FALSE}
+```{r F7-12, fig.height=3,fig.width=8,fig.cap=".", echo = FALSE}
 
 ###############################################################################
 ### Figure 7.12
@@ -919,7 +911,7 @@ brmplot (fixef(model_interaction)[-1,])
 brmplot (pairwise_diffs_summary,labels = c("b-g","b-w","b-m","g-w","g-m","w-m"))
 ```
 
-Figure \@ref(fig:F711) also presents the pairwise difference between all four apparent speaker groups (boys, girls, women, and men). The difference between group means is calculated by extracting the samples from the group means we reconstructed in section 7.X (`means_pred_interaction`). The result of this is a matrix with four columns, each representing a group effect, with individual posterior samples differing along rows. To find the difference between group means between each pairs of groups, we subtract the columns representing the group effects and inspect the distribution of the differences. This process is shown below and the distribution of pairwise group differences in presented in figure \@ref(fig:F711).
+Figure \@ref(fig:F7-11) also presents the pairwise difference between all four apparent speaker groups (boys, girls, women, and men). The difference between group means is calculated by extracting the samples from the group means we reconstructed in section 7.X (`means_pred_interaction`). The result of this is a matrix with four columns, each representing a group effect, with individual posterior samples differing along rows. To find the difference between group means between each pairs of groups, we subtract the columns representing the group effects and inspect the distribution of the differences. This process is shown below and the distribution of pairwise group differences in presented in figure \@ref(fig:F7-11).
 
 
 ```{r}
@@ -957,7 +949,7 @@ In our case, we will conclude that this difference in apparent height between bo
 This is going to be a short one. The main shortcoming when it comes to usin `lmer` to fit models including factors with many levels is that there is no easy way to compare group effects within the model. For example, we can fit the model below which encodes the difference between each group mean and the overall mean.
 
 ```{r, collapse = TRUE, cache = TRUE}
-lmer_four_groups = lme4::lmer (height ~ C + (C|L) + (1|S), data = height_exp)
+lmer_four_groups = lme4::lmer (height ~ C + (C|L) + (1|S), data = exp_data)
 summary (lmer_four_groups)$coefficients
 ```
 

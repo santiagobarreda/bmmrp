@@ -32,18 +32,16 @@ In the last chapter we focused on the apparent height of adult male speakers. Th
 
 ```{r}
 library (bmmb)
-data (height_exp)
+data (exp_data)
 
-table (height_exp$C_v, height_exp$C)
+table (exp_data$C_v, exp_data$C)
 ```
 
 In this chapter we're going to focus on *confusable* voices, so we're going to exclude adult males from our data. Below we load our experimental data and create a new data frame called `notmen` that excludes all data associated with adult male speakers. This excludes both speech produced by adult males, and stimuli identified as being produced by adult males. We also exclude the 'big' resonance level, focusing only on the unmodified speech.
 
-[@@ #notallmen]
-
 ```{r}
-# exclude actual men, apparent men, and include only the actual resonance level
-notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
+# exclude actual men and apparent men
+notmen = exp_data[exp_data$C_v!='m' & exp_data$C!='m',]
 ```
 
 We add a new variable to our data frame called `A_v` which includes the veridical age group for our speakers, `c` for children and `a` for adults. We create a new confusion matrix to see to what extent listeners confused the adult women in our sample with younger speakers. We can see that although a majority of stimuli were classified correctly, there are plenty of misidentifications in the data. 
@@ -63,7 +61,7 @@ Our height responses could potentially be modeled on the basis of either apparen
 ################################################################################
 
 par (mfrow = c(1,1), mar = c(4,4,1,1))
-boxplot (height ~ A + A_v, data = notmen, col = cols[1:4], 
+boxplot (height ~ A + A_v, data = notmen, col = bmmb::cols[6:9], 
          xlab = "Age : Veridical Age", ylab = "Height (cm)")
 ```
 
@@ -139,6 +137,7 @@ model =
 model = bmmb::get_model ('5_model.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model, '../models/5_model.RDS')
 model = readRDS ('../models/5_model.RDS')
 ```
 
@@ -275,6 +274,7 @@ model_sum_coding =
 model_sum_coding = bmmb::get_model ('5_model_sum_coding.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model_sum_coding, '../models/5_model_sum_coding.RDS')
 model_sum_coding = readRDS ('../models/5_model_sum_coding.RDS')
 ```
 
@@ -783,7 +783,9 @@ Below we fit the new model described in \@ref(eq:54). This model is exactly like
 
 ```{r, eval = FALSE}
 # Fit the model yourself
-set.seed (1)
+# set the random seed and contrasts
+set.seed (1); options (contrasts = c('contr.sum','contr.sum'))
+
 model_sum_coding_t =  
   brms::brm (height ~ A + (1|L) + (1|S), data = notmen, chains = 4, cores = 4,
        warmup = 1000, iter = 3500, thin = 2, family="student",
@@ -798,6 +800,7 @@ model_sum_coding_t =
 model_sum_coding_t = bmmb::get_model ('5_model_sum_coding_t.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model_sum_coding_t, '../models/5_model_sum_coding_t.RDS')
 model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
 ```
 

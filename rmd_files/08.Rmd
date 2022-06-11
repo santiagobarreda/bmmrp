@@ -15,9 +15,9 @@ Below we load the data for our experiment investigating apparent speaker height,
 ```{r, message=FALSE, error=FALSE}
 library (brms)
 library (bmmb)
-data (height_exp)
+data (exp_data)
 options (contrasts = c('contr.sum','contr.sum'))
-height_exp = height_exp[height_exp$R=='a',]
+exp_data = exp_data[exp_data$R=='a',]
 ```
 
 We're going to use models whose structure is similar to the final model we fit in chapter 7 (`model_interaction`). However, in this chapter we're going to focus on questions related to variation in our standard deviation parameters. We would like to know three things:
@@ -64,7 +64,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 prior_uninformative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), sample_prior="only",
-             data = height_exp, chains = 4, cores = 4, warmup = 1000, 
+             data = exp_data, chains = 4, cores = 4, warmup = 1000, 
              iter = 5000, thin = 4, prior = priors)
 ```
 
@@ -128,7 +128,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 prior_mildly_informative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), sample_prior="only",
-             data = height_exp, chains = 4, cores = 4, warmup = 1000, 
+             data = exp_data, chains = 4, cores = 4, warmup = 1000, 
              iter = 5000, thin = 4, prior = priors)
 ```
 
@@ -160,7 +160,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 prior_conservative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), sample_prior="only",
-             data = height_exp, chains = 1, cores = 1, warmup = 1000, 
+             data = exp_data, chains = 1, cores = 1, warmup = 1000, 
              iter = 5000, thin = 1, prior = priors)
 ```
 
@@ -200,7 +200,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 model_uninformative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
-             data = height_exp, chains = 4, cores = 4, warmup = 1000, 
+             data = exp_data, chains = 4, cores = 4, warmup = 1000, 
              iter = 5000, thin = 4, prior = priors)
 
 #saveRDS (model_uninformative,"../models/8_model_uninformative.RDS")
@@ -215,7 +215,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 model_mildly_informative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
-             data = height_exp, chains = 4, cores = 4, warmup = 1000, 
+             data = exp_data, chains = 4, cores = 4, warmup = 1000, 
              iter = 5000, thin = 4, prior = priors)
 
 #saveRDS (model_mildly_informative,"../models/8_model_mildly_informative.RDS")
@@ -230,7 +230,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 model_informative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
-             data = height_exp, chains = 4, cores = 4, warmup = 1000, 
+             data = exp_data, chains = 4, cores = 4, warmup = 1000, 
              iter = 5000, thin = 4, prior = priors)
 
 #saveRDS (model_informative,"../models/8_model_informative.RDS")
@@ -287,7 +287,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 prior_informative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), sample_prior="only",
-             data = height_exp, chains = 1, cores = 1, warmup = 1000, 
+             data = exp_data, chains = 1, cores = 1, warmup = 1000, 
              iter = 5000, thin = 1, prior = priors)
 ```
 
@@ -454,7 +454,7 @@ For the first time we need to specify priors for terms for $\sigma$ rather than 
 ```{r, eval = FALSE}
 brms::get_prior (brms::bf(height ~ A*G + (A*G|L) + (1|S),
                           sigma ~ A),
-                 data = height_exp, family="student")
+                 data = exp_data, family="student")
 ```
 
 If you run the line above you will see that we have two parameters where `dpar=sigma`: An overall intercept (`class = "Intercept", dpar = "sigma"`), and an age term for sigma (`class = "b",coef="A1",dpar="sigma"`). We can set priors for these element using the lines:
@@ -483,7 +483,7 @@ priors = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"))
 
 prior_A_sigma = 
-  brms::brm (model_formula, data = height_exp, chains = 4, cores = 4,
+  brms::brm (model_formula, data = exp_data, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2, family="student",
              prior = priors, sample_prior = "only")
 ```
@@ -526,7 +526,7 @@ priors = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
           brms::set_prior("normal(0, 1.5)", class = "b", dpar = "sigma"))
 
 model_A_sigma = 
-  brms::brm (model_formula, data = height_exp, chains = 4, cores = 4,
+  brms::brm (model_formula, data = exp_data, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2, family="student",
              prior = priors)
 ```
@@ -654,7 +654,7 @@ priors = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
           brms::set_prior("normal(0, 1.5)", class = "sd", dpar = "sigma"))
 
 model_A_L_sigma = 
-  brms::brm (model_formula, data = height_exp, chains = 4, cores = 4,
+  brms::brm (model_formula, data = exp_data, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2, family="student",
              prior = priors)
 ```

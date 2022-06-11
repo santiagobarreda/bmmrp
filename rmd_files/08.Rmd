@@ -95,9 +95,9 @@ However, the `bmmb` package has a simple function called `p_check` that can be u
 bmmb::p_check (pp_uninformative)
 ```
 
-In the left plot of figure \@ref(fig:F81) we see the result of using `p_check` in ten evenly spaced samples from our 'uninformative' prior prediction. As can be seen, our 'cautious' approach results in a range of simulated heights that make no sense even given our relatively limited prior knowledge, in this case that most humans are between 100 and 200 cm tall. In fact, our simulated data contains not only large negative values, which make no sense in the context of height, but also substantial values above 5000 cm, which is about the size of a 10-story office building.  
+In the left plot of figure \@ref(fig:F8-1) we see the result of using `p_check` in ten evenly spaced samples from our 'uninformative' prior prediction. As can be seen, our 'cautious' approach results in a range of simulated heights that make no sense even given our relatively limited prior knowledge, in this case that most humans are between 100 and 200 cm tall. In fact, our simulated data contains not only large negative values, which make no sense in the context of height, but also substantial values above 5000 cm, which is about the size of a 10-story office building.  
 
-```{r F81, fig.height = 3, fig.width=8, fig.cap = "(left) Densities of 10 posterior predictions of apparent height for the uninformative prior. (middel) Densities of 10 posterior predictions of apparent height for the mildly informative prior. (right). Densities of 10 posterior predictions of apparent height for the conservative prior.", echo = FALSE, cache = FALSE}
+```{r F8-1, fig.height = 3, fig.width=8, fig.cap = "(left) Densities of 10 posterior predictions of apparent height for the uninformative prior. (middel) Densities of 10 posterior predictions of apparent height for the mildly informative prior. (right). Densities of 10 posterior predictions of apparent height for the conservative prior.", echo = FALSE, cache = FALSE}
 
 ###############################################################################
 ### Figure 8.1
@@ -141,7 +141,7 @@ prior_mildly_informative = bmmb::get_model ('8_prior_mildly_informative.RDS')
 prior_mildly_informative = readRDS ('../models/8_prior_mildly_informative.RDS')
 ```
 
-We can make prior predictions again using the `predict` function, and plot these using the `p_check` function. The results of this are shown in middle plot of figure \@ref(fig:F81). 
+We can make prior predictions again using the `predict` function, and plot these using the `p_check` function. The results of this are shown in middle plot of figure \@ref(fig:F8-1). 
 
 ```{r, cache = TRUE, eval = FALSE}
 yhat_better = predict (model_interaction_prior_better, summary = FALSE)
@@ -174,7 +174,7 @@ prior_conservative = bmmb::get_model ('8_prior_conservative.RDS')
 prior_conservative = readRDS ('../models/8_prior_conservative.RDS')
 ```
 
-The prior predictions made by this model are presented in the right plot of figure \@ref(fig:F81). This time, we see that our prior predictions are even more tightly clustered within our desired range. For the sake of comparison, we fit the three models specified above by erasing `sample_prior="only"` from the function call. We've named these models `model_uninformative`, `model_mildly_informative`, and `model_conservative` respectively.  Below we load the models:
+The prior predictions made by this model are presented in the right plot of figure \@ref(fig:F8-1). This time, we see that our prior predictions are even more tightly clustered within our desired range. For the sake of comparison, we fit the three models specified above by erasing `sample_prior="only"` from the function call. We've named these models `model_uninformative`, `model_mildly_informative`, and `model_conservative` respectively.  Below we load the models:
 
 ```{r, include = FALSE}
 model_uninformative = readRDS ("../models/8_model_uninformative.RDS")
@@ -236,7 +236,7 @@ model_informative =
 #saveRDS (model_informative,"../models/8_model_informative.RDS")
 ```
 
-```{r F82, fig.height = 3, fig.width=8, fig.cap = "Comparison of fixed effects estimates and 95% credible intervals for the uninformative (UI), mildly informative (MI), and conservative (C) models.", echo = FALSE, cache = FALSE}
+```{r F8-2, fig.height = 3, fig.width=8, fig.cap = "Comparison of fixed effects estimates and 95% credible intervals for the uninformative (UI), mildly informative (MI), and conservative (C) models.", echo = FALSE, cache = FALSE}
 
 ###############################################################################
 ### Figure 8.2
@@ -319,7 +319,7 @@ residuals_interaction = residuals (model_interaction)
 If we make a boxplot of the posterior means of our residuals we see that their distribution is not exactly equal for all listeners, and also appears to vary based on apparent speaker age. For example, the interquartile range for listener 9 is nearly as wide as the entire distribution of residuals for listener 12. The model we fit at the end of chapter 7 (`model_interaction`) allowed us to estimate variation in apparent height based on apparent age, and based on listener-specific information. In this section we will fit models with age and listener-specific error variances ($\sigma$). By allowing the random error to vary as a function of listener and apparent age, our model may be able to provide more-reliable information regarding our data, in addition to letting us ask questions like "is listener 12's error variance actually smaller than listener 9's, or does it just seem that way?" in a more formal manner. 
 
 
-```{r F83, fig.height = 4, fig.width = 8, fig.cap="(top left) Boxplots of residuals for each listener. (top right) Boxplot of residuals for apparent adults (a) and apparent children (c). (bottom) Boxplots of residuals for each listener, divided according to apparent children and apparent adults. Each color represents a different listener and the left box in each pair represents apparent adults.", cache = FALSE, echo = FALSE}
+```{r F8-3, fig.height = 4, fig.width = 8, fig.cap="(top left) Boxplots of residuals for each listener. (top right) Boxplot of residuals for apparent adults (a) and apparent children (c). (bottom) Boxplots of residuals for each listener, divided according to apparent children and apparent adults. Each color represents a different listener and the left box in each pair represents apparent adults.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 8.3
@@ -468,6 +468,9 @@ Notice that we set these priors using the classes we have already discussed, `In
 
 ```{r, eval = FALSE}
 # Fit the model yourself
+# set the random seed and contrasts
+set.seed (1); options (contrasts = c('contr.sum','contr.sum'))
+
 model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
                          sigma ~ A)
 
@@ -479,8 +482,6 @@ priors = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
           brms::set_prior("student_t(3, 0, 1.5)", class = "b", dpar = "sigma"),
           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"))
 
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
 prior_A_sigma = 
   brms::brm (model_formula, data = height_exp, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2, family="student",
@@ -511,6 +512,9 @@ For the first time below, we specify both the model formula (using the `bf` func
 
 ```{r, eval = FALSE}
 # Fit the model yourself
+# set the random seed and contrasts
+set.seed (1); options (contrasts = c('contr.sum','contr.sum'))
+
 model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
                          sigma ~ A)
 
@@ -521,8 +525,6 @@ priors = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
           brms::set_prior("normal(0, 1.5)", class = "Intercept", dpar = "sigma"),
           brms::set_prior("normal(0, 1.5)", class = "b", dpar = "sigma"))
 
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
 model_A_sigma = 
   brms::brm (model_formula, data = height_exp, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2, family="student",
@@ -553,9 +555,9 @@ sigmas = short_hypothesis(model_A_sigma,
 sigmas
 ```
 
-Since our model estimates `log(sigma)` and not `sigma` directly, to get our values of sigma we need to exponentiate our parameter estimates. We can do this directly in the `hypothesis` function as seen above. The three estimated error terms are presented in figure \@ref(fig:F84). Clearly, there are substantial differences in the value of $\sigma$ based on the perceived adultness of the speaker: The value of $\sigma$ was 61% greater (7.1/4.4) when listeners identified the speaker as a child. 
+Since our model estimates `log(sigma)` and not `sigma` directly, to get our values of sigma we need to exponentiate our parameter estimates. We can do this directly in the `hypothesis` function as seen above. The three estimated error terms are presented in figure \@ref(fig:F8-4). Clearly, there are substantial differences in the value of $\sigma$ based on the perceived adultness of the speaker: The value of $\sigma$ was 61% greater (7.1/4.4) when listeners identified the speaker as a child. 
 
-```{r F84, fig.height = 3, fig.width = 8, fig.cap="(left) Error standard deviation estimates in all situations, for apparent adults and for apparent children. (right) Comparison of some fixed-effects parameters shared by our heteroscedastic and homoscedastic models.", cache = FALSE, echo = FALSE}
+```{r F8-4, fig.height = 3, fig.width = 8, fig.cap="(left) Error standard deviation estimates in all situations, for apparent adults and for apparent children. (right) Comparison of some fixed-effects parameters shared by our heteroscedastic and homoscedastic models.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 8.4
@@ -572,7 +574,7 @@ brmplot (fixef(model_interaction)[2:4,], col = cols, add = TRUE,
 legend (1.7,10, legend = c("Heteroscedastic","Homoscedastic"), pch = c(16,17), bty='n')
 ```
 
-We might wonder two things about this new model. First, has it had any effect on our fixed-effect parameters? Second, is the additional model complexity justified? We can compare this heteroskedastic model to the equivalent homoskedastic model we fit in chapter 7 (`model_interaction`, loaded above). We can assess the first question visually using the `brmplot` function as seen in the right plot of figure \@ref(fig:F84). It doesn't seem like the change has had much impact on our parameter estimates of the intervals around them. We can make a more formal comparison using cross validation (discussed in section X). We add the `loo` (leave one out) criterion to each model and make a comparison.     
+We might wonder two things about this new model. First, has it had any effect on our fixed-effect parameters? Second, is the additional model complexity justified? We can compare this heteroskedastic model to the equivalent homoskedastic model we fit in chapter 7 (`model_interaction`, loaded above). We can assess the first question visually using the `brmplot` function as seen in the right plot of figure \@ref(fig:F8-4). It doesn't seem like the change has had much impact on our parameter estimates of the intervals around them. We can make a more formal comparison using cross validation (discussed in section X). We add the `loo` (leave one out) criterion to each model and make a comparison.     
 
 ```{r, collapse = TRUE, cache = TRUE}
 model_interaction = add_criterion(model_interaction,"loo")
@@ -613,13 +615,10 @@ height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma_{[i]}) \\
 \mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + G1 \colon L_{[L_{[i]}]} + A1 \colon G1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
 \sigma_{[i]} = \mathrm{Intercept_{\sigma}} + A1 + A1 \colon L_{\sigma[L_{[i]}]} + L_{\sigma[L_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
-
 \begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \\ G1 \colon L_{[\bullet]} \\ A1 \colon G1 \colon L_{[\bullet]} \\  \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ 
 \\
-
 \begin{bmatrix} L_{\sigma[\bullet]} \\ A1 \colon L_{\sigma[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ 
 \\
-
 S_{[\bullet]} \sim N(0,\sigma_S) \\ \\
 \mathrm{Intercept} \sim N(156,12) \\
 A1 \sim N(0,12) \\
@@ -640,6 +639,9 @@ We need to specify a prior distribution for the standard deviation of our listen
 
 ```{r, eval = FALSE}
 # Fit the model yourself
+# set the random seed and contrasts
+set.seed (1); options (contrasts = c('contr.sum','contr.sum'))
+
 model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
                          sigma ~ A + (A|L))
 
@@ -651,8 +653,6 @@ priors = c(brms::set_prior("normal(156, 12)", class = "Intercept"),
           brms::set_prior("normal(0, 1.5)", class = "b", dpar = "sigma"),
           brms::set_prior("normal(0, 1.5)", class = "sd", dpar = "sigma"))
 
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
 model_A_L_sigma = 
   brms::brm (model_formula, data = height_exp, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2, family="student",
@@ -673,7 +673,7 @@ If we look at the model output we see see the same `sigma_Intercept` and `sigma_
 bmmb::short_summary (model_A_L_sigma)
 ```
 
-Our listener-specific adjustments to the sigma intercept were fit with partial pooling, i.e. they are 'random' effects. As such, we can get these in the same two ways indicated for other random effects terms (discussed in section X). Here, we will use the `hypothesis` function to get the listener random effects themselves (`sigmas_centered`, $L_{\sigma}$), and the sum of these with the sigma intercept (`sigmas`), resulting in the logarithm of the listener-specific $\sigma$ parameter ($\mathrm{Intercept}_{\sigma} + L_{\sigma[i]}$). We compare these in figure \@ref(fig:F85), exponentiating the recreated `sigma` values to get the listener-specific $\sigma$ terms. 
+Our listener-specific adjustments to the sigma intercept were fit with partial pooling, i.e. they are 'random' effects. As such, we can get these in the same two ways indicated for other random effects terms (discussed in section X). Here, we will use the `hypothesis` function to get the listener random effects themselves (`sigmas_centered`, $L_{\sigma}$), and the sum of these with the sigma intercept (`sigmas`), resulting in the logarithm of the listener-specific $\sigma$ parameter ($\mathrm{Intercept}_{\sigma} + L_{\sigma[i]}$). We compare these in figure \@ref(fig:F8-5), exponentiating the recreated `sigma` values to get the listener-specific $\sigma$ terms. 
 
 ```{r}
 sigmas_centered = short_hypothesis(model_A_L_sigma, "sigma_Intercept = 0", 
@@ -682,7 +682,7 @@ sigmas = short_hypothesis(model_A_L_sigma, "sigma_Intercept = 0",
                           scope = "coef",group="L")
 ```
 
-```{r F85, fig.height = 3, fig.width = 8, fig.cap="(left) Values of $L_{\\sigma}$, listener-dependent variations from the `sigma` intercept (expressed as a logarithm). (right) Listener-specific sigma parameters. The result of $\\exp(\\mathrm{Intercept}_{\\sigma} + L_{\\sigma[i]})$ for listener $i$. We exponentiate the value in the plot so it reflects `sigma` rather than `log(sigma)`.", cache = FALSE, echo = FALSE}
+```{r F8-5, fig.height = 3, fig.width = 8, fig.cap="(left) Values of $L_{\\sigma}$, listener-dependent variations from the `sigma` intercept (expressed as a logarithm). (right) Listener-specific sigma parameters. The result of $\\exp(\\mathrm{Intercept}_{\\sigma} + L_{\\sigma[i]})$ for listener $i$. We exponentiate the value in the plot so it reflects `sigma` rather than `log(sigma)`.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 8.5
@@ -729,7 +729,7 @@ Based on the information we've already provided, we can answer these questions: 
   
   2) The model you chose. Given another model you may have come to different conclusions.
   
-So which model should we report? One way to think about our models is that they provide different *information* about our data. If we are primarily interested in the fixed effects then maybe we are not interested in this additional information. However, if we want to know about differences in error variation then we need one of the more complicated models. It's also worth considering how the differing model structures might affect the information they share in common, in this case the model 'fixed effects'. Figure \@ref(fig:F88) compares the fixed effects, random effects, and predicted values made by three models: `model_interaction`, `model_A_sigma`, and `model_A_L_sigma`. 
+So which model should we report? One way to think about our models is that they provide different *information* about our data. If we are primarily interested in the fixed effects then maybe we are not interested in this additional information. However, if we want to know about differences in error variation then we need one of the more complicated models. It's also worth considering how the differing model structures might affect the information they share in common, in this case the model 'fixed effects'. Figure \@ref(fig:F8-6) compares the fixed effects, random effects, and predicted values made by three models: `model_interaction`, `model_A_sigma`, and `model_A_L_sigma`. 
 
 ```{r, include = FALSE, cache = TRUE}
 ranefs1 = ranef (model_interaction)
@@ -748,10 +748,10 @@ fixefs1[1,c(1,3,4)] = fixefs1[1,c(1,3,4)] - 159
 fixefs2[1,c(1,3,4)] = fixefs2[1,c(1,3,4)] - 159
 fixefs3[1,c(1,3,4)] = fixefs3[1,c(1,3,4)] - 159
 ```
-```{r F88, fig.height = 4, fig.width = 8, fig.cap="(left) Comparison of fixed effect estimates and 95% credible intervals for three models. We subtracted 159 from the model intercept so that it would fit on the same scale as the other parameters. (right) Plots showing comparisons of parameter estimates for pairs of the same models presented in the left plot. Each row compares a different pair od models and each column presents a different set of parameters. The columns represent all listener random effects (left), all speaker random effects (middle), and the predictions made by each model (right).", cache = FALSE, echo = FALSE}
+```{r F8-6, fig.height = 4, fig.width = 8, fig.cap="(left) Comparison of fixed effect estimates and 95% credible intervals for three models. We subtracted 159 from the model intercept so that it would fit on the same scale as the other parameters. (right) Plots showing comparisons of parameter estimates for pairs of the same models presented in the left plot. Each row compares a different pair od models and each column presents a different set of parameters. The columns represent all listener random effects (left), all speaker random effects (middle), and the predictions made by each model (right).", cache = FALSE, echo = FALSE}
 
 ################################################################################
-### Figure 8.8
+### Figure 8.6
 ################################################################################
 
 par (mar = c(2,4,1,2.5), oma = c(1,1,1,.1))

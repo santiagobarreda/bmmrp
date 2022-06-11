@@ -35,7 +35,7 @@ Our regressions so far have only involved a single quantitative predictor. This 
 ### Figure 11-1
 ###############################################################################
 
-agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::height_exp_old, FUN=mean)
+agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data_old, FUN=mean)
 agg_data = agg_data[nrow(agg_data):1,]
 
 ptcex = agg_data[,4] - min(agg_data[,4])
@@ -63,7 +63,7 @@ It may be easier to see what we mean by considering figure \@ref(fig:F11-2), whi
 ################################################################################
 ### Figure 11.2
 ################################################################################
-agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::height_exp_old, FUN=mean)
+agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data_old, FUN=mean)
 
 par (mfrow = c(1,2), mar = c(0,1,0,2), oma = c(0,0,0,0))
 
@@ -165,19 +165,18 @@ library (brms)
 library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
 
-data (height_exp)
-height_exp = height_exp[height_exp$R=='a',]
+data (exp_data)
 ```
 
 We center our continuous predictors, and also scale f0 so that it has about the same magnitude as the VTL effect.  
 
 ```{r}
-height_exp$vtl_original = height_exp$vtl
-height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
+exp_data$vtl_original = exp_data$vtl
+exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 
-height_exp$f0_original = height_exp$f0 
-height_exp$f0 = height_exp$f0 - mean(height_exp$f0)
-height_exp$f0 = height_exp$f0 / 100
+exp_data$f0_original = exp_data$f0 
+exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
+exp_data$f0 = exp_data$f0 / 100
 ```
 
 We're not going to have well-defined research questions this time. Instead, we have a sort of vague one that we will try to deal with:
@@ -236,7 +235,7 @@ priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
 
 model_height_vtl_f0 =  
-  brms::brm (height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S), data = height_exp, chains = 4, cores = 4,
+  brms::brm (height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S), data = exp_data, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
 ```
 ```{r, include = TRUE, eval = FALSE}
@@ -261,7 +260,7 @@ At this point we have enough model components to build very large and complicate
 ```{r, eval = FALSE}
 lme_model_height_vtl_f0 =
   lme4::lmer (height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S), 
-              data=height_exp,verbose = TRUE,
+              data=exp_data,verbose = TRUE,
               control=lme4::lmerControl(optCtrl=list(maxfun=20000),optimizer="bobyqa"))
 ```
 ```{r, include = TRUE, eval = FALSE}
@@ -513,7 +512,7 @@ priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
 
 model_height_vtl_f0_reduced =  
   brms::brm (height ~ f0+vtl+A*G+vtl:A + (f0+vtl+A*G+vtl:A|L) + (1|S),
-             data = height_exp, chains = 4, cores = 4, warmup = 1000, 
+             data = exp_data, chains = 4, cores = 4, warmup = 1000, 
              iter = 5000, thin = 4, prior = priors, family = "student")
 ```
 ```{r, include = TRUE, eval = FALSE}
@@ -635,22 +634,21 @@ library (brms)
 library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
 
-data (height_exp)
-height_exp = height_exp[height_exp$R=='a',]
+data (exp_data)
 ```
 
 Below we add our dependent variable `F`. This variable equals 1 when the listener indicated hearing a female speaker and 0 when the listener indicated hearing a male speaker. As with our previous model we center our quantitative variables and divide f0 by 100 to make the expected regression coefficient more similar in magnitude
 
 ```{r}
 # our dependent variable
-height_exp$F = as.numeric (height_exp$G == 'f')
+exp_data$F = as.numeric (exp_data$G == 'f')
 
-height_exp$vtl_original = height_exp$vtl
-height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
+exp_data$vtl_original = exp_data$vtl
+exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 
-height_exp$f0_original = height_exp$f0 
-height_exp$f0 = height_exp$f0 - mean(height_exp$f0)
-height_exp$f0 = height_exp$f0 / 100
+exp_data$f0_original = exp_data$f0 
+exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
+exp_data$f0 = exp_data$f0 / 100
 ```
 
 Our research questions are:
@@ -680,7 +678,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_vtl_f0 =
-  brm (F ~ vtl*f0*A + (vtl*f0*A|L) + (1|S), data=height_exp, 
+  brm (F ~ vtl*f0*A + (vtl*f0*A|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -792,7 +790,7 @@ We can use these parameters to generate curves representing the boundaries betwe
 # y = (-b*x - a - z) / (dx+c)
 # fixef(model_gender_vtl_f0)
 
-tmp = bmmb::height_exp
+tmp = bmmb::exp_data
 tmp = tmp[tmp$R=='a',]
 
 tmp$vtl_original = tmp$vtl
@@ -869,7 +867,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_vtl_f0_reduced =
-  brm (F ~ (vtl+f0)*A + ((vtl+f0)*A|L) + (1|S), data=height_exp, 
+  brm (F ~ (vtl+f0)*A + ((vtl+f0)*A|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -923,7 +921,7 @@ fixef_2 = brms::fixef (model_gender_vtl_f0_reduced)
 # y = (-b*x - a - z) / (dx+c)
 # fixef(model_gender_vtl_f0)
 
-tmp = bmmb::height_exp
+tmp = bmmb::exp_data
 tmp = tmp[tmp$R=='a',]
 
 tmp$vtl_original = tmp$vtl
@@ -1037,7 +1035,7 @@ We plot these below, and compare them to the same values for our reduced model. 
 ################################################################################
 ### Figure 11-14
 ################################################################################
-point_col = tapply (height_exp$C_v, height_exp$S,findmode)
+point_col = tapply (exp_data$C_v, exp_data$S,findmode)
 point_col = as.numeric(factor(point_col))
 
 par (mfrow = c(1,2), mar = c(1,.5,1,.5), oma = c(0,4,0,0))
@@ -1065,7 +1063,7 @@ And plot these in the left plot of figure below. It's clear that the main issue 
 ### Figure 11-15
 ################################################################################
 
-tmp = bmmb::height_exp
+tmp = bmmb::exp_data
 tmp = tmp[tmp$R=='a',]
 
 tmp$vtl_original = tmp$vtl
@@ -1167,7 +1165,7 @@ Using these parameters, we can find boundaries for each listener using equation 
 # y = (-b*x - a - z) / (dx+c)
 # fixef(model_gender_vtl_f0)
 
-tmp = bmmb::height_exp
+tmp = bmmb::exp_data
 tmp = tmp[tmp$R=='a',]
 
 tmp$vtl_original = tmp$vtl

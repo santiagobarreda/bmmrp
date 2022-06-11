@@ -26,8 +26,7 @@ library (brms)
 library (bmmb)
 data (height_exp)
 
-notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
-notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
+notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m',]
 ```
 
 We recreate figure \ref(fig:F59) as figure \ref(fig:F61) below to show the distribution of apparent height by listener, and across apparent ages. In the last chapter we focused on 'the difference' between groups as a singular thing. This is a bit like focusing only on the difference between boxes in the left panel of figure \ref(fig:F61). However, if we instead focus on the right panel in figure \ref(fig:F61) we see that there is not a single difference between groups but rather a a set of different listener-specific differences between them. By allowing our models to represent these listener-specific differences, the model we will consider in this chapter will put us in a better position to answer the third question above.
@@ -81,17 +80,17 @@ Figure \ref(fig:F62) presents several ways to consider this information. In the 
 ################################################################################
 par (mfrow = c(1,3), mar = c(4,4,1,1))
 
-plot(listener_age_differences[1,], cex=2,
+plot(listener_age_differences[1,], cex=2,xlab = "Listener",
      type = 'b', col = lavender, pch=16, ylim = c(132,172),ylab = "Height (cm)",lwd=2)
 lines(listener_age_differences[2,],cex=2, 
       type = 'b', col = deepgreen, pch=16,lwd=2)
 abline (h = c(157, 165, 149), lty = c(1,3,3))
 
-plot(listener_age_effects, lwd=2,lty=1,cex=2,
+plot(listener_age_effects, lwd=2,lty=1,cex=2,xlab = "Listener",
      type = 'b', col = darkorange, pch=16, ylim = c(0,18),ylab = "Height difference (cm)")
 abline (h = mean (listener_age_effects))
 
-plot(listener_age_effects, lwd=1,lty=3,
+plot(listener_age_effects, lwd=1,lty=3,xlab = "Listener",
      type = 'n', col = darkorange, pch=16, ylim = c(0,18),ylab = "Height difference (cm)")
 arrows (1:15, rep(mean(listener_age_effects),15), 1:15, listener_age_effects,
         length=.1, lwd=2, col=skyblue)
@@ -485,7 +484,7 @@ In this section we will offer a high-level conceptual understanding of Bayesian 
 
 ### In-sample and out-of-sample prediction
 
-In order to compare models in a quantitative way, we need some value that can calculated for different models that captures how 'good' the model is. For Bayesian models, we begin with what is called the **log pointwise predictive density**, abbreviated $\mathrm{lpd}$ (or $\mathrm{lpd}$). The $\mathrm{lpd}$ can be calculated in several ways, but equation \@ref(eq:67) presents an example of the general case. The $\mathrm{lpd}$ is the sum of the logarithm of the density for each of your data points. The symbol $\theta$ represents posterior estimates of all of the estimated parameters necessary to determine the probability density over each data point. This can be thought of as the general case of the log-likelihood outlined for the normal distribution in section 2.X. The $\mathrm{lpd}$ value is clearly related to the log posterior density, discussed in section \@ref(c3-log-posterior). Since we are adding logarithmic values, we know we are multiplying the underlying probabilities. If the data points are independent given our parameter values, the $\mathrm{lpd}$ represents the joint density of observing the data given the model structure and the parameter estimates ($\theta$). Although prior probabilites are not included in this calculation they do factor into the estimation of $\theta$, and as a result do have an effect on values of $\mathrm{lpd}$. 
+In order to compare models in a quantitative way, we need some value that can calculated for different models that captures how 'good' the model is. For Bayesian models, we begin with what is called the **log (pointwise) predictive density**, abbreviated $\mathrm{lpd}$ (or $\mathrm{lppd}$). The $\mathrm{lpd}$ can be calculated in several ways, but equation \@ref(eq:67) presents an example of the general case. The $\mathrm{lpd}$ is the sum of the logarithm of the density for each of your data points. The symbol $\theta$ represents posterior estimates of all of the estimated parameters necessary to determine the probability density over each data point. This can be thought of as the general case of the log-likelihood outlined for the normal distribution in section 2.X. The $\mathrm{lpd}$ value is clearly related to the log posterior density, discussed in section \@ref(c3-log-posterior). Since we are adding logarithmic values, we know we are multiplying the underlying probabilities. If the data points are independent given our parameter values, the $\mathrm{lpd}$ represents the joint density of observing the data given the model structure and the parameter estimates ($\theta$). Although prior probabilites are not included in this calculation they do factor into the estimation of $\theta$, and as a result do have an effect on values of $\mathrm{lpd}$. 
 
 $$
 \begin{equation}
@@ -494,7 +493,7 @@ $$
 \end{equation}
 $$
 
-Because $\mathrm{lpd}$ is a logarithmic value, we know large negative values are closer to zero. So, values of $\mathrm{lpd}$ closer to (or above) zero represent models that are more likely given the data. As a result, we might think that we should simply select the model with the highest $\mathrm{lpd}$ as our 'best' model. However, $\mathrm{lpd}$ does not tell us directly about expected out-of-sample prediction. We can think about out-of-sample prediction in terms of the **expected log pointwise predictive density**, abbreviated $\mathrm{elpd}$ (or $\mathrm{elppd}$), presented in \@ref(eq:68). Unlike the $\mathrm{lpd}$, the $\mathrm{elpd}$ is defined in terms of hypothetical out-of-sample data ($\tilde{y}$) instead of the in-sample data ($y$). The $\mathrm{E}()$ below represents the expected value function (discussed in section X). So, the $\mathrm{elpd}$ basically represents the expected value of $\mathrm{lpd}$ for out-of-sample data. 
+Because $\mathrm{lpd}$ is a logarithmic value, we know large negative values are closer to zero. So, values of $\mathrm{lpd}$ closer to (or above) zero represent models that are more likely given the data. As a result, we might think that we should simply select the model with the highest $\mathrm{lpd}$ as our 'best' model. However, $\mathrm{lpd}$ does not tell us directly about expected out-of-sample prediction. We can think about out-of-sample prediction in terms of the **expected log (pointwise) predictive density**, abbreviated $\mathrm{elpd}$ (or $\mathrm{elppd}$), presented in \@ref(eq:68). Unlike the $\mathrm{lpd}$, the $\mathrm{elpd}$ is defined in terms of hypothetical out-of-sample data ($\tilde{y}$) instead of the in-sample data ($y$). The $\mathrm{E}()$ below represents the expected value function (discussed in section X). So, the $\mathrm{elpd}$ basically represents the expected value of $\mathrm{lpd}$ for out-of-sample data. 
 
 $$
 \begin{equation}

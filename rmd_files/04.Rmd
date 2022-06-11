@@ -106,7 +106,7 @@ $$
 $$
 
 A careful consideration of \@ref(eq:42) suggests that the $L_{[\bullet]}$ coefficients can't equal the average height reported by each listener. For example, if the overall mean (the intercept) is 170 cm and listener three reports heights of 175 cm on average, the equation above would predict a height response of 345 cm ($Intercept + L_{[3]}=354$) for this listener. Clearly that is not how the model should be working. Recall that regression models encode *differences* rather than absolute values. Our model already represents the overall data average using the intercept parameter. Thus, the listener predictors only need to contain information about *differences* between the listener average and the intercept, i.e. the *effect* for that listener. So, if the overall average is 170 cm and listener three reports an average height of 175 cm, then $L_{[3]}=5$ and $Intercept + L_{[3]}=175$. For this reason, multilevel models usually set $\mu_L$ equal to zero and model listener (or group) specific variation around zero, rather than the absolute values of listener (or group) averages.     
-  If every single factor level were to get an independent parameter represented in our regression equation, these would become very long and difficult to interpret. For example, we may want to include a factor with dozens or even hundreds of levels. Instead, we can treat the effects associated with each level of a factor as a vector. So, rather than use two separate predictors, $L_1$ and $L_2$, to represent the first and second listener effects, we will use $L_{[1]}$ and $L_{[1]}$, the first two elements of a vector of length 15. In order to know which listener contributed to each trial, we also need an index variable, a variable that equals a number from one to 15 that indicates which listener parameter to use on that trial. This is the `L` column in our `height_exp` data. For example, below we convert our listener vector to a factor and check out the order of the levels. 
+  If every single factor level were to get an independent parameter represented in our regression equation, these would become very long and difficult to interpret. For example, we may want to include a factor with dozens or even hundreds of levels. Instead, we can treat the effects associated with each level of a factor as a vector. So, rather than use two separate predictors, $L_1$ and $L_2$, to represent the first and second listener effects, we will use $L_{[1]}$ and $L_{[1]}$, the first two elements of a vector of length 15. In order to know which listener contributed to each trial, we also need an index variable, a variable that equals a number from one to 15 that indicates which listener parameter to use on that trial. This is the `L` column in our `exp_data` data. For example, below we convert our listener vector to a factor and check out the order of the levels. 
 
 ```{r}
 L = as.factor (men$L)
@@ -366,7 +366,7 @@ The information presented by `get_prior` does not just list the priors that must
 ```{r,eval = FALSE}
 # Fit the model yourself
 set.seed (1)
-multilevel_model =  
+model_multilevel =  
   brms::brm (height ~ 1 + (1|L), data = men, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2,
              prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
@@ -376,11 +376,11 @@ multilevel_model =
 
 ```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
-multilevel_model = bmmb::get_model ('4_multilevel_model.RDS')
+model_multilevel = bmmb::get_model ('4_model_multilevel.RDS')
 ```
 ```{r, include = FALSE}
-# saveRDS (multilevel_model, '../models/4_multilevel_model.RDS')
-multilevel_model = readRDS ('../models/4_multilevel_model.RDS')
+# saveRDS (model_multilevel, '../models/4_model_multilevel.RDS')
+model_multilevel = readRDS ('../models/4_model_multilevel.RDS')
 ```
 
 ### Interpreting the model
@@ -389,7 +389,7 @@ We can inspect the model print statement:
 
 ```{r, collapse = TRUE, eval=TRUE}
 # inspect model
-bmmb::short_summary (multilevel_model)
+bmmb::short_summary (model_multilevel)
 ```
 
 This model contains one new chunk its print statement, the `Group-Level Effects`, which tells us about the standard deviation for the Intercept (`sd(Intercept)`) for the `~L` factor. The term `sd(Intercept)` in this section corresponds to $\sigma_L$, the standard deviation of listener effects ($L_{[\;]}$) in the sample. Below, we calculate the listener mean heights values, the standard deviation of these, and the amount of within-speaker variation in apparent height judgments. We can see that these resemble the value of the analogous parameters in our model.
@@ -451,7 +451,7 @@ You may have noted that the estimates of our coefficients fit with partial pooli
 
 ```{r}
 # get random effects, without summarizing
-random_effects = brms::ranef (multilevel_model, summary = FALSE)
+random_effects = brms::ranef (model_multilevel, summary = FALSE)
 # get only the listener random effects
 listener_effects = random_effects$L
 ```
@@ -482,7 +482,7 @@ We can repeat the process above but without specifying `summary=FALSE` like we d
 
 ```{r, collapse = TRUE}
 # get random effects, *with* summarizing (by default)
-random_effects = brms::ranef (multilevel_model)
+random_effects = brms::ranef (model_multilevel)
 # get only the listener random effects
 listener_effects = random_effects$L
 # along the third (coefficient) dimension, take only the intercept dimension
@@ -692,12 +692,12 @@ If the error was the within-listener variation before, what does it represent no
 
 ### Fitting and interpreting the model
 
-Below, we fit the new model using exactly the same code as for `multilevel_model`, save for the modification to the model formula. We don't need to specify a hyperprior for $\sigma_S$ because this falls under the `sd` category (see section \@ref({c3-fitting-1})). As long as we can use the same hyperprior for each factor-specific standard deviation, i.e. $\sigma_{F}$ for factor $F$, we don't need to specify a prior for each parameter. 
+Below, we fit the new model using exactly the same code as for `model_multilevel`, save for the modification to the model formula. We don't need to specify a hyperprior for $\sigma_S$ because this falls under the `sd` category (see section \@ref({c3-fitting-1})). As long as we can use the same hyperprior for each factor-specific standard deviation, i.e. $\sigma_{F}$ for factor $F$, we don't need to specify a prior for each parameter. 
 
 ```{r,eval = FALSE}
 # Fit the model yourself
 set.seed (1)
-multilevel_L_S =  
+model_multilevel_L_S =  
   brms::brm (height ~ 1 + (1|L) + (1|S), data = men, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2,
              prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
@@ -707,17 +707,17 @@ multilevel_L_S =
 
 ```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
-multilevel_L_S = bmmb::get_model ('4_multilevel_L_S.RDS')
+model_multilevel_L_S = bmmb::get_model ('4_model_multilevel_L_S.RDS')
 ```
 ```{r, include = FALSE}
-# saveRDS (multilevel_L_S, '../models/4_multilevel_L_S.RDS')
-multilevel_L_S = readRDS ('../models/4_multilevel_L_S.RDS')
+# saveRDS (model_multilevel_L_S, '../models/4_model_multilevel_L_S.RDS')
+model_multilevel_L_S = readRDS ('../models/4_model_multilevel_L_S.RDS')
 ```
 
 After fitting the model we inspect the output:
 
 ```{r, eval=FALSE}
-bmmb::short_summary (multilevel_L_S)
+bmmb::short_summary (model_multilevel_L_S)
 ```
 
 The model print statement should look familiar except it contains one new chunk representing information about the speaker predictor in our model. This chunk reminds us that our `S` predictor had 45 levels, and provides us information about the estimate of the $\sigma_S$ parameter (`sd(Intercept)`), which is 2.84 according to our model.
@@ -728,8 +728,8 @@ We've mentioned that multilevel models can result in *shrinkage*, that is, in co
 
 ```{r, cache = TRUE}
 # these are the Bayesian 'shrinkage' estimates
-L_hat = brms::ranef(multilevel_L_S)$L[,1,'Intercept']
-S_hat = brms::ranef(multilevel_L_S)$S[,1,'Intercept']
+L_hat = brms::ranef(model_multilevel_L_S)$L[,1,'Intercept']
+S_hat = brms::ranef(model_multilevel_L_S)$S[,1,'Intercept']
 
 # these are the maximum likelihood estimates
 L_ml = tapply (men$height, men$L, mean)
@@ -843,10 +843,10 @@ bmmb::short_summary (model_priors)
 And compare this to the final model we considered above, which contained information about speakers and appropriate priors:
 
 ```{r, collapse = TRUE}
-bmmb::short_summary (multilevel_L_S)
+bmmb::short_summary (model_multilevel_L_S)
 ```
 
-Our complete pooling model from the previous chapter, `model_priors`, and our partial pooling model from this chapter, `multilevel_L_S`, agree on the average apparent height as reflected by their respective intercept terms. However, they disagree on a credible interval for that parameter with the complete pooling model having a credible interval that is nearly four times narrower (1.2 cm vs 4.4 cm). This is because the complete pooling model did not specify information about repeated measures, which caused our model to think that it had more independent observations than it did. This led the initial model to return an overly-precise estimate. Another difference is that the final model has a smaller `sigma` parameter (7.8 vs 6.5), which indicates that the error is smaller in the final model than in the initial model. Keep in mind that 'error' is just what your model can't explain at the data level. Our final model explains more (at the listener and speaker levels) and so there is less error (at the data level). The reduced error is a direct consequence of the fact that the final model splits variation in the data into several components (i.e., $\sigma^2_{total}=\sigma^2_{L}+\sigma^2_{S}+\sigma^2$). Since $\sigma_{total}$ is a fixed value (given the data), obviously, the larger your between-speaker and between-listener variation is, the smaller your random error ($\sigma$) *must* be.
+Our complete pooling model from the previous chapter, `model_priors`, and our partial pooling model from this chapter, `model_multilevel_L_S`, agree on the average apparent height as reflected by their respective intercept terms. However, they disagree on a credible interval for that parameter with the complete pooling model having a credible interval that is nearly four times narrower (1.2 cm vs 4.4 cm). This is because the complete pooling model did not specify information about repeated measures, which caused our model to think that it had more independent observations than it did. This led the initial model to return an overly-precise estimate. Another difference is that the final model has a smaller `sigma` parameter (7.8 vs 6.5), which indicates that the error is smaller in the final model than in the initial model. Keep in mind that 'error' is just what your model can't explain at the data level. Our final model explains more (at the listener and speaker levels) and so there is less error (at the data level). The reduced error is a direct consequence of the fact that the final model splits variation in the data into several components (i.e., $\sigma^2_{total}=\sigma^2_{L}+\sigma^2_{S}+\sigma^2$). Since $\sigma_{total}$ is a fixed value (given the data), obviously, the larger your between-speaker and between-listener variation is, the smaller your random error ($\sigma$) *must* be.
   Usually, parameters should be reported with *at least* the mean/median and standard deviations of the posterior distribution, in addition to some useful credible interval (i.e., 50%, 95%) around that parameter. Based on the result of our final model, a thorough answer to our research questions might go something like: 
 
 > "Based on our model the average apparent height of adult males is likely to be 174.8 cm (s.d. = 1.1, 95% CI = 171.6, 176.0). The estimated magnitude of the random error was 6.5 cm (s.d. = 0.2, 95% CI = 6.1, 6.8). Consistent between-listeners variation averages about 3.8 cm (s.d. = 0.9, 95% CI = 2.5, 5.8), while consistent between-listeners variation averages about 2.8 cm (s.d. = 0.4, 95% CI = 2.1, 3.8).
@@ -857,9 +857,9 @@ In frequentist corner, we're going to compare the output of `brms` to some more 
 
 ### Bayesian multilevel models vs. lmer
 
-Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the lme4 R package. The `lmer` function uses partial pooling to estimate its 'random effects' and no pooling to estimate its 'fixed effects'. We are not going to talk about `lmer` in very much detail. The focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in both kinds of models. Below we use `lmer` to fit a model that is analogous to our `multilevel_L_S` model. Notice that the formulas are identical in both cases, except we do not specify priors for this model.
+Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the lme4 R package. The `lmer` function uses partial pooling to estimate its 'random effects' and no pooling to estimate its 'fixed effects'. We are not going to talk about `lmer` in very much detail. The focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in both kinds of models. Below we use `lmer` to fit a model that is analogous to our `model_multilevel_L_S` model. Notice that the formulas are identical in both cases, except we do not specify priors for this model.
 
-```{r, warning=FALSE, message = FALSE, collapse = TRUE, cache = TRUE, eval = FALSE}
+```{r, warning=FALSE, message = FALSE, collapse = TRUE, cache = TRUE}
 set.seed (1)
 lmer_model = lme4::lmer (height ~ 1 + (1|L) + (1|S), data = men)
 ```
@@ -867,7 +867,7 @@ lmer_model = lme4::lmer (height ~ 1 + (1|L) + (1|S), data = men)
 We can consider the short print statement for our Bayesian model, which we have annotated with numbers. 
 
 ```{r, eval = FALSE}
-bmmb::short_summary(multilevel_L_S)
+bmmb::short_summary(model_multilevel_L_S)
 
 # (1) Formula:  height ~ 1 + (1 | L) + (1 | S)
 # 
@@ -918,7 +918,7 @@ summary (lmer_model)
 We can get the random effects out of our `brm` model and compare them to the random effects we get from `lmer`. As seen below, the random effects estimates we get from `brm` also include credible intervals. As a result, we have some idea regarding the uncertainty in these estimates.
 
 ```{r, collapse = TRUE, cache = TRUE, eval = TRUE}
-brms_ranefs = brms::ranef (multilevel_L_S)$L[,,"Intercept"]
+brms_ranefs = brms::ranef (model_multilevel_L_S)$L[,,"Intercept"]
 head (brms_ranefs)
 ```
 
@@ -937,7 +937,7 @@ Importantly, the values we get from both approaches are nearly identical, as see
 ### Figure 4.10
 ################################################################################
 
-brms_ranefs_S = brms::ranef (multilevel_L_S)$S[,,"Intercept"]
+brms_ranefs_S = brms::ranef (model_multilevel_L_S)$S[,,"Intercept"]
 lmer_ranefs_S = lme4::ranef (lmer_model)[["S"]]
 
 

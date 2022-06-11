@@ -10,7 +10,7 @@ In this chapter we're going to talk about the prediction of categorical variable
 
 ## Dichotomous variables and data
 
-The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable. For a model predicting apparent height using speaker VTL, this would mean that the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:101). We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F101) where expected apparent height ($\mu$) varies along a line as a function of VTL. In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we are interested in. What we mean by this is that the values along our line are the actual values of our dependent variable that we expect to observe for a given value of VTL. 
+The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable. For a model predicting apparent height using speaker VTL, this would mean that the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:101). We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of VTL. In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we are interested in. What we mean by this is that the values along our line are the actual values of our dependent variable that we expect to observe for a given value of VTL. 
 
 $$
 \begin{equation}
@@ -24,9 +24,9 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 $$
 
 Unlike quantitative variables, **dichotomous** variables can only take on only one of two possible discrete outcomes. We can easily think of many examples of this kind of data, for example something that is wrong or right, someone who is either male or female, or someone who is an adult or a child. None of these cases are meant to suggest that reality is this simple, for example that males and females are two discrete and internally homogeneous classes that fully explain variation in human gender. Instead we are simply discussing things like gender when it is *coded* as a dichotomous variable so that it has only two possible values (i.e. male or female). 
-  When your variable has only two categorical outcomes, you need to find a way to represent these numerically. One way to do this is to code one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way and should be based on what 'makes sense' given the analysis at hand. In our case we will assign 1 to cases where listeners identified a speaker as female, thereby associating female responses with 'successes'. The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right panel of figure \@ref(fig:F101). 
+  When your variable has only two categorical outcomes, you need to find a way to represent these numerically. One way to do this is to code one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way and should be based on what 'makes sense' given the analysis at hand. In our case we will assign 1 to cases where listeners identified a speaker as female, thereby associating female responses with 'successes'. The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right panel of figure \@ref(fig:F10-1). 
 
-```{r F101, fig.width = 8, fig.height = 5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, message = FALSE, warning = FALSE}
+```{r F10-1, fig.width = 8, fig.height = 5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, message = FALSE, warning = FALSE}
 
 ################################################################################
 ### Figure 10.1
@@ -34,19 +34,18 @@ Unlike quantitative variables, **dichotomous** variables can only take on only o
 
 
 library (bmmb)
-data (height_exp)
+data (exp_data)
 options (contrasts = c('contr.sum','contr.sum'))
-height_exp = height_exp[height_exp$R=='a',]
 data (cols)
 
-tab = table (height_exp$S, height_exp$C)
+tab = table (exp_data$S, exp_data$C)
 mod_cat = apply (tab, 1,which.max)
 
 
-height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
+exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 
 aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
-                      data = height_exp, FUN = mean)
+                      data = exp_data, FUN = mean)
 
 par (mfrow = c(2,2), mar = c(2,4,1,1), oma = c(3,1,0,0))
 
@@ -61,7 +60,7 @@ points (aggd$vtl, aggd$height, cex =2, pch=16,lwd=2,
 legend (.8,165, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
         col = cols[2:5], bty='n',pch=16,pt.cex=2)
 
-plot (height_exp$vtl, height_exp$G=='f', cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
+plot (exp_data$vtl, exp_data$G=='f', cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-.1,1.1),xlab = "",
       ylab="P(G  = 'f')",cex.lab=1.3,cex.axis=1.3)
 grid()
@@ -88,7 +87,7 @@ points (aggd$vtl, logit(aggd[,5]), cex =2, pch=16,lwd=2,
 mtext (side=1,text="Centered VTL (cm)", outer = TRUE, line = 1.5)
 ```
 
-Plotting ones and zeros against speaker VTL is not very informative and suggests using a line to directly predict dichotomous data is very, very wrong. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. Relatedly, it suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, when this simply is not the case. We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal zero. When we do this, we obtain the probability of observing a female response (see section X) for each speaker. The distribution of these probabilities with respect to speaker VTL is presented in the bottom left plot of figure \@ref(fig:F101). We can update \@ref(eq:101) so that our line now models the probability of observing one of our outcomes rather than our outcomes directly. This is presented in \@ref(eq:102).
+Plotting ones and zeros against speaker VTL is not very informative and suggests using a line to directly predict dichotomous data is very, very wrong. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. Relatedly, it suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, when this simply is not the case. We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal zero. When we do this, we obtain the probability of observing a female response (see section X) for each speaker. The distribution of these probabilities with respect to speaker VTL is presented in the bottom left plot of figure \@ref(fig:F10-1). We can update \@ref(eq:101) so that our line now models the probability of observing one of our outcomes rather than our outcomes directly. This is presented in \@ref(eq:102).
 
 $$
 \begin{equation}
@@ -138,7 +137,8 @@ So, when we have a binary outcome variable and are talking about individual tria
 
 ## Generalizing our linear models
 
-Figure \@ref(fig:F101) shows the probability of observing a classification of 'adult' (i.e., 'man' or 'woman') for each speaker as a function of their VTL. Clearly, the perception of femaleness is related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs (who are likely also shorter in height) as female. Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:102) and in the bottom left plot of figure \@ref(fig:F101). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that an effect causes an increase in probability of 0.2. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. This means an effect can't have the same magnitude given different underlying probabilities, which is a problem since our model parameter values are static. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
+Figure \@ref(fig:F10-1) shows the probability of observing a classification of 'adult' (i.e., 'man' or 'woman') for each speaker as a function of their VTL. Clearly, the perception of femaleness is related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs (who are likely also shorter in height) as female. 
+  Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:102) and in the bottom left plot of figure \@ref(fig:F10-1). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that an effect causes an increase in probability of 0.2. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. This means an effect can't have the same magnitude given different underlying probabilities, which is a problem since our model parameter values are static. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
 
 ### Link functions and the generalized linear model
 
@@ -243,9 +243,9 @@ $$
 \end{equation}
 $$
 
-In Figure \@ref(fig:F102) we draw a line with a slope of one and an intercept of 0 (i.e., $y = x$). We can imagine that this line defines expected values in *logits* as a function of some predictor $x$. In the middle panel, we've applied the logistic function to the line so that $\mathrm{logit}^{-1}(y) = x$. This results in what is known as a **sigmoid curve** relating our $x$ and $y$ variables. If we apply the logit function to this sigmoid curve, the result is a return of our original line. Thus, we can see that the logit and logistic/antilogit transformation are just in the inverse of each other. They can be applied over and over to go back and forth between a probability or logit interpretation of the relationships in the data. 
+In Figure \@ref(fig:F10-2) we draw a line with a slope of one and an intercept of 0 (i.e., $y = x$). We can imagine that this line defines expected values in *logits* as a function of some predictor $x$. In the middle panel, we've applied the logistic function to the line so that $\mathrm{logit}^{-1}(y) = x$. This results in what is known as a **sigmoid curve** relating our $x$ and $y$ variables. If we apply the logit function to this sigmoid curve, the result is a return of our original line. Thus, we can see that the logit and logistic/antilogit transformation are just in the inverse of each other. They can be applied over and over to go back and forth between a probability or logit interpretation of the relationships in the data. 
 
-```{r F102, fig.width = 8, fig.height = 3, fig.cap = "(left) A plot of a line with a slope of 1 and intercept of 0. We can treat the y-axis as logits. (middle) The result of applying the logistic function to every point of the line in the left plot. (right) Calculating the logit of each value specified on the curve in the middle turns our sigmoid curve back to a line.", echo = FALSE}
+```{r F10-2, fig.width = 8, fig.height = 3, fig.cap = "(left) A plot of a line with a slope of 1 and intercept of 0. We can treat the y-axis as logits. (middle) The result of applying the logistic function to every point of the line in the left plot. (right) Calculating the logit of each value specified on the curve in the middle turns our sigmoid curve back to a line.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.2
@@ -305,9 +305,9 @@ There is no particular reason to do this, apart from the fact that it directly i
 ### Building intuitions about logits
 
 The logistic (and logit) functions are **non linear** functions. In the simplest sense this means that the relationships they form between $x$ and $y$ variables, when plotted, do not form straight lines. In the left plot below we see a situation where a predictor $x$ is linearly related to the logit of some probability $p$. However, after applying the logistic function to our logit values, our predictor no longer enters into a linear relationship with the dependent variable. Another consequences of the non-linearity of these transformations is that a given unit increase in logits does not always equal the same increase in probabilities (and vice versa). In general,  logits closer to zero tend to map small changes in logits to large changes in probability, while logits with a larger magnitude tend to map larger and larger differences to smaller and smaller changes in probabilities. 
-  The non-linear relationship between probabilities and logits is evident in both plots in figure \@ref(fig:F103). In the left plot we see horizontal lines that represent equal differences in probability (0.1 change per line). These lines are closer together closer to $y=0$, which shows that the same change in logits results in larger probability changes when values are closer to zero. In the right side of the plot we see that the slope of the curve actually changes, increasing in value as $p$ approaches 0, and then decreasing again as it crosses it. In both cases, this behavior is because this curve must approach but never actually reach 0 and 1, and as a result the slope will continuously decrease as probabilities apporach these bounds.      
+  The non-linear relationship between probabilities and logits is evident in both plots in figure \@ref(fig:F10-3). In the left plot we see horizontal lines that represent equal differences in probability (0.1 change per line). These lines are closer together closer to $y=0$, which shows that the same change in logits results in larger probability changes when values are closer to zero. In the right side of the plot we see that the slope of the curve actually changes, increasing in value as $p$ approaches 0, and then decreasing again as it crosses it. In both cases, this behavior is because this curve must approach but never actually reach 0 and 1, and as a result the slope will continuously decrease as probabilities apporach these bounds.      
 
-```{r F103, fig.width = 8, fig.height = 3, fig.cap = "(left) A line relating some predictor to logits. (right) A sigmoid curve expressing the probability associated with each value along the line in the left. Horizontal lines are placed every 0.1 probability units from 0.1 to 0.9 probability.", echo = FALSE}
+```{r F10-3, fig.width = 8, fig.height = 3, fig.cap = "(left) A line relating some predictor to logits. (right) A sigmoid curve expressing the probability associated with each value along the line in the left. Horizontal lines are placed every 0.1 probability units from 0.1 to 0.9 probability.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.3
@@ -366,8 +366,8 @@ library (brms)
 library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
 
-data (height_exp)
-height_exp = height_exp[height_exp$R=='a',]
+data (exp_data)
+exp_data = exp_data[exp_data$R=='a',]
 ```
 
   - `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
@@ -386,16 +386,16 @@ We create a variable called `F`, which will be our dependent variable. This vari
 
 ```{r}
 # our dependent variable
-height_exp$F = as.numeric (height_exp$G == 'f')
+exp_data$F = as.numeric (exp_data$G == 'f')
 
 # make a copy of vtl
-height_exp$vtl_original = height_exp$vtl
+exp_data$vtl_original = exp_data$vtl
 
 # center vtl
-height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
+exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 ```
 
-We saw in figure \@ref(fig:F101) that VTL is negatively related to the probability that a speaker will be identified as female. In addition, it seems that the relationship between speaker VTL and the perception of female speakers may differ based on the apparent age of the speaker. We would like to know:
+We saw in figure \@ref(fig:F10-1) that VTL is negatively related to the probability that a speaker will be identified as female. In addition, it seems that the relationship between speaker VTL and the perception of female speakers may differ based on the apparent age of the speaker. We would like to know:
 
   Q1) What is the relationship between speaker VTL and the perception of female speakers?
 
@@ -420,7 +420,7 @@ You'll notice that we're using priors with a standard deviation of 3 across the 
   We think it's plausible that apparent age may, for example, change an expected probability from 50% to 95%. In terms of continuous predictors like VTL, the important thing to keep in mind is that the slope estimated for a predictor depends on the unit of measurement. For example, below we see the average VTL in centimeters for each speaker category. We can see that the average difference between men and women is about 2 cm. If we assume that people at the averages are classified correctly more often than not, this means that the logit of the probability of observing a female response for adult at 15 cm may be about -3, and the logit of the same at 13 cm may be about 3. Thus, we might expect a slope of about 3 logits per 1 cm change in VTL with respect to the perception of female speakers. 
 
 ```{r}
-tapply (height_exp$vtl_original, height_exp$C_v, mean)
+tapply (exp_data$vtl_original, exp_data$C_v, mean)
 ```
 
 However, what if we had measured VTL in meters? Then the difference in VTL would be only 0.02, meaning that the model slope would now have to be 300 in order to change from -3 to 3 in only 0.02 units of change ($300 = 6/0.02$). So, the same underlying data can result in dramatically different slope magnitudes based on the amount of variation you see in your data at that scale. Based on this we can see that is is important to think about the amount of variation there is in your quantitative predictors and how this might relate to the probabilities you are modeling. Our full model specification is:
@@ -460,7 +460,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_vtl =
-  brm (F ~ vtl*A + (vtl*A|L) + (1|S), data=height_exp, 
+  brm (F ~ vtl*A + (vtl*A|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -491,7 +491,7 @@ We see that the model looks just like all our previous models except for three m
 
 In chapter 9 we talked about the geometry of models that include a single quantitative predictor, categorical predictors, and their interactions. Essentially, these sorts of models result in a set of lines, an overall line and another line for each level of the categorical predictor interacting with the quantitative predictor. Since our model includes effects for apparent age (`A1`), VTL (`vtl`), and their interaction (`vtl:A1`), our model can be thought of as three lines: The overall (main effects) line, the line for apparent adult speakers, and the line for apparent child speaker. We can recover the parameters for these different lines by adding the appropriate model coefficients together using the hypothesis function. Since `A1` (and related parameters) represent the adult group and we are using sum coding, the effect for children is represented by subtracting, rather than adding, the relevant parameters (i.e. `Intercept - A1` to find the child intercept). 
 
-```{r, cache = TRUE, collapse = TRUE, echo = FALSE}
+```{r, cache = TRUE, collapse = TRUE}
 gender_vtl_hypothesis = bmmb::short_hypothesis (
   model_gender_vtl,
   hypothesis = c("Intercept = 0", # overall intercept
@@ -504,19 +504,19 @@ gender_vtl_hypothesis = bmmb::short_hypothesis (
 gender_vtl_hypothesis
 ```
 
-These parameters can be used to plot lines predicting the logit of the probability of a female response given speaker VTL. The left plot of figure \@ref(fig:F104) presents the overall 'main effects' line and the age-dependent lines, compared to our data. We can see that our age-dependent lines follow the data much better than the single average line does. In the right plot of \@ref(fig:F104) we see what happens when we apply the logistic transform on the lines (and points) in the left plot of the figure. The result is a set of sigmoid curves representing expected variation in the $p$ parameter of a Bernoulli distribution as a function of speaker VTL. These curves are a better fit for our probabilities than the lines we originally used in figure \@ref(fig:F101), and also do not ever result in values below zero or above 1. 
+These parameters can be used to plot lines predicting the logit of the probability of a female response given speaker VTL. The left plot of figure \@ref(fig:F10-4) presents the overall 'main effects' line and the age-dependent lines, compared to our data. We can see that our age-dependent lines follow the data much better than the single average line does. In the right plot of \@ref(fig:F10-4) we see what happens when we apply the logistic transform on the lines (and points) in the left plot of the figure. The result is a set of sigmoid curves representing expected variation in the $p$ parameter of a Bernoulli distribution as a function of speaker VTL. These curves are a better fit for our probabilities than the lines we originally used in figure \@ref(fig:F10-1), and also do not ever result in values below zero or above 1. 
 
-```{r F104, fig.width = 8, fig.height = 3, fig.cap = "(left) Line indicating linear relationship between f0 and the logit of the probability of an adult response. (middle) Same as the left but only males are plotted. (middle) Same as the middle but only females are plotted.", echo = FALSE, cache = TRUE}
+```{r F10-4, fig.width = 8, fig.height = 3, fig.cap = "(left) Line indicating linear relationship between f0 and the logit of the probability of an adult response. (middle) Same as the left but only males are plotted. (middle) Same as the middle but only females are plotted.", echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 10.4
 ################################################################################
 
-tab = table (height_exp$S, height_exp$C)
+tab = table (exp_data$S, exp_data$C)
 mod_cat = apply (tab, 1,which.max)
 
 aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
-                      data = height_exp, FUN = mean)
+                      data = exp_data, FUN = mean)
 aggd$C_v = factor(aggd$C_v)
 
 cffs = gender_vtl_hypothesis[,1]
@@ -525,14 +525,14 @@ par (mfrow = c(1,2), mar = c(3,4,1,1))
 
 plot (aggd$vtl, logit(aggd[,5]), cex =2, ylim = c(-5,5),xlab="",
       ylab = "Logit (P(F==1))", col = cols[c(2:5)][mod_cat],pch=16,
-      lwd=2, xlim =range (height_exp$vtl))
+      lwd=2, xlim =range (exp_data$vtl))
 abline (h=0,lty=3)
 grid()
-curve ( (cffs[1] + cffs[4]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( (cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = 1, lwd=4)
-curve ( (cffs[3] + cffs[6]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( (cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = coral, lwd=4, lty=3)
-curve ( (cffs[2] + cffs[5]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( (cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = teal, lwd=4, lty=3)
 
 legend (0.8,4.5, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
@@ -540,15 +540,15 @@ legend (0.8,4.5, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
 
 plot (aggd$vtl, (aggd[,5]), cex =2, ylim = c(0,1),xlab="",
       ylab = "P(F==1)", col = cols[c(2:5)][mod_cat],
-      pch=16,lwd=2, xlim =range (height_exp$vtl))
+      pch=16,lwd=2, xlim =range (exp_data$vtl))
 grid()
 abline (h=.50,lty=3)
 
-curve ( antilogit(cffs[1] + cffs[4]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( antilogit(cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = 1, lwd=4)
-curve ( antilogit(cffs[3] + cffs[6]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( antilogit(cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = coral, lwd=4, lty=3)
-curve ( antilogit(cffs[2] + cffs[5]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( antilogit(cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = teal, lwd=4, lty=3)
 
 legend (-2,-1, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
@@ -565,7 +565,7 @@ We can now consider the values of our fixed effect parameters:
 fixef (model_gender_vtl)
 ```
 
-The most important thing to remember when interpreting the coefficients of a logistic model is that positive coefficients push us towards a 1 response ('female'), while negative values push us towards a 0 response ('male'). A predicted value of exactly 0 means the outcome is 50/50. The model intercept is the value of the line when $VTL = 0$. Since we centered our VTL predictor, our positive intercept suggests a speaker with an average VTL (13.4 cm) was more likely to be classified as female (with a probability of 0.67 (`antilogit(0.71)`). The effect for perceived adultness (`A1`) is positive, indicating that a speaker with an average VTL is more likely to be identified as a woman when the speaker is also thought to be an adult. The negative effect for VTL tells us that as VTL increases, we are *less* likely to observe a 'female' response and *more* likely to observe a 'male' response. The interaction between VTL and age is negative, meaning this slope is even more negative when the speaker is thought to be an adult. This is evident in figure \@ref(fig:F104) where the line for apparent adults has a much steeper slope then the line for apparent children. In addition, the magnitude of the slope increases/decreases by nearly 50% since the VTL parameter is -3.4 and the interaction is -1.6 (1.6/3.4=0.47).
+The most important thing to remember when interpreting the coefficients of a logistic model is that positive coefficients push us towards a 1 response ('female'), while negative values push us towards a 0 response ('male'). A predicted value of exactly 0 means the outcome is 50/50. The model intercept is the value of the line when $VTL = 0$. Since we centered our VTL predictor, our positive intercept suggests a speaker with an average VTL (13.4 cm) was more likely to be classified as female (with a probability of 0.67 (`antilogit(0.71)`). The effect for perceived adultness (`A1`) is positive, indicating that a speaker with an average VTL is more likely to be identified as a woman when the speaker is also thought to be an adult. The negative effect for VTL tells us that as VTL increases, we are *less* likely to observe a 'female' response and *more* likely to observe a 'male' response. The interaction between VTL and age is negative, meaning this slope is even more negative when the speaker is thought to be an adult. This is evident in figure \@ref(fig:F10-4) where the line for apparent adults has a much steeper slope then the line for apparent children. In addition, the magnitude of the slope increases/decreases by nearly 50% since the VTL parameter is -3.4 and the interaction is -1.6 (1.6/3.4=0.47).
   We can interpret our model entirely in the logit space, focusing on the geometry of our models and interpreting our intercept and lope terms just as we did above and in the previous chapter. However, if we want to think of our model parameters in terms of probabilities (rather than logits), we need to combine parameter values first, and then carry out the logistic function on the logit values. It is absolutely essential that the operations be done in this order because the logistic function is not an **additive** function. A function, $f()$, is additive if the following property holds:
 
 $$
@@ -575,7 +575,7 @@ f(x+y) = f(x) + f(y)
 \end{equation}
 $$
 
-This means that adding two things and putting them into the function provides the same results as passing them individually through the function and adding them up after. For example imagine our function is $f(x)=x \times 2$. We put in $3+2$ (i.e. $5$) and get $10$ out. We then put in $3$ and $2$ individually, get $6$ and $4$ out, add them up and get $10$ again. Based on this we say that our function above is *additive*. As noted above, the logistic function is *not* additive. For example, consider the intercept for the adult line, the value of the line when VTL is equal to zero. We can see in figure \@ref(fig:F104) that the intercept of the adult (teal) line is about 3 logits. First let's consider the meaning of the `Intercept` and `A1` coefficients:
+This means that adding two things and putting them into the function provides the same results as passing them individually through the function and adding them up after. For example imagine our function is $f(x)=x \times 2$. We put in $3+2$ (i.e. $5$) and get $10$ out. We then put in $3$ and $2$ individually, get $6$ and $4$ out, add them up and get $10$ again. Based on this we say that our function above is *additive*. As noted above, the logistic function is *not* additive. For example, consider the intercept for the adult line, the value of the line when VTL is equal to zero. We can see in figure \@ref(fig:F10-4) that the intercept of the adult (teal) line is about 3 logits. First let's consider the meaning of the `Intercept` and `A1` coefficients:
 
 ```{r}
 # model intercept
@@ -595,7 +595,7 @@ antilogit (0.71) + antilogit (2.25)
 antilogit (0.71 + 2.25)
 ```
 
-As seen above, converting to a probability and then combining can lead to strange outcomes: 1.57 is not even a valid probability. When we combine first and then convert, we see that the result is a reasonable probability that matches what we see in figure \@ref(fig:F104). The same reasoning applies to the interpretation of logistic slopes. Our slope tells us that for every unit change in VTL we expect a 3.4 logit increase/decrease in our expected values. When it comes to probabilities, this increase/decrease can only be interpreted relative to the baseline. For example, the difference from 0 to 3.4 logits results in a change from 0.5 to 0.968 in probability, but the increase from 3.4 to 6.8 logits only results in an increase of probabilities from 0.968 to 0.999. As a result, when considering the effect of slopes in a logistic model in terms of probabilities, it is necessary to combine the necessary parameters first as logits, and then transform these into probabilities. 
+As seen above, converting to a probability and then combining can lead to strange outcomes: 1.57 is not even a valid probability. When we combine first and then convert, we see that the result is a reasonable probability that matches what we see in figure \@ref(fig:F10-4). The same reasoning applies to the interpretation of logistic slopes. Our slope tells us that for every unit change in VTL we expect a 3.4 logit increase/decrease in our expected values. When it comes to probabilities, this increase/decrease can only be interpreted relative to the baseline. For example, the difference from 0 to 3.4 logits results in a change from 0.5 to 0.968 in probability, but the increase from 3.4 to 6.8 logits only results in an increase of probabilities from 0.968 to 0.999. As a result, when considering the effect of slopes in a logistic model in terms of probabilities, it is necessary to combine the necessary parameters first as logits, and then transform these into probabilities. 
 
 ### Using logistic models to understand classification
 
@@ -645,7 +645,7 @@ boundaries
 However, our boundaries are expressed relative to a mean of zero. If we want them expressed relative to the true mean we need to add it back in. This might seem to violate our many warnings about summarizing before combining. Just keep in mind we are not combining parameters here, we are just adding a single number to *all* our summaries, which is equivalent to adding a single number to all of our samples. When we do this we see the category boundaries relative to values of VTL in the range of our real speakers. 
 
 ```{r}
-boundaries + mean (height_exp$vtl_original)
+boundaries + mean (exp_data$vtl_original)
 ```
 
 The second way to find boundaries is to use the pre-calculated line parameters we found in the previous section. We get the samples from our hypothesis object using the `attr` function as seen below. The individual samples underlying each hypothesis are stored as attributes so that these are not printed out every time the summary is. 
@@ -668,24 +668,24 @@ This process results in identical outcomes to our previous approach.
 ```{r, cache = TRUE, collapse = TRUE}
 boundaries = posterior_summary (
   cbind (boundary, boundary_adults, boundary_children)) 
-boundaries + mean (height_exp$vtl_original)
+boundaries + mean (exp_data$vtl_original)
 ```
 
-These boundaries are presented with our data in figure \@ref(fig:F105). The right plot divides the VTL dimension between sections associated with female classifications and sections associated with male classifications, overall, and based on apparent age. We can see in each case that the category boundary falls at the $y$ intercept corresponding to each line in the left plot of the same figure. 
+These boundaries are presented with our data in figure \@ref(fig:F10-5). The right plot divides the VTL dimension between sections associated with female classifications and sections associated with male classifications, overall, and based on apparent age. We can see in each case that the category boundary falls at the $y$ intercept corresponding to each line in the left plot of the same figure. 
 
-```{r F105, fig.width = 8, fig.height = 3, fig.cap = "(left) Points represent individual speakers in our data based on their VTL and the logit of the probability that they were identified as female. Lines indicate the overall relationship (black), the relationship expected for apparent children, and that expected for apparent adults. Vertical lines indicate each line's x-intercept. (right) Territorial maps implied by each line presented in the left plot. Each map divides the VTL dimension into 'territories' associated with male and female responses.", echo = FALSE}
+```{r F10-5, fig.width = 8, fig.height = 3, fig.cap = "(left) Points represent individual speakers in our data based on their VTL and the logit of the probability that they were identified as female. Lines indicate the overall relationship (black), the relationship expected for apparent children, and that expected for apparent adults. Vertical lines indicate each line's x-intercept. (right) Territorial maps implied by each line presented in the left plot. Each map divides the VTL dimension into 'territories' associated with male and female responses.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.5
 ################################################################################
 
-tab = table (height_exp$S, height_exp$C)
+tab = table (exp_data$S, exp_data$C)
 mod_cat = apply (tab, 1,which.max)
 
-muvtl = round (mean(height_exp$vtl_original),1)
+muvtl = round (mean(exp_data$vtl),1)
 
 aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
-                      data = height_exp, FUN = mean)
+                      data = exp_data, FUN = mean)
 aggd$C_v = factor(aggd$C_v)
 
 cffs = gender_vtl_hypothesis[,1]
@@ -695,17 +695,17 @@ layout (mat = matrix(c(1,2,1,3,1,4,1,5),4,2,byrow=TRUE))
 
 plot (aggd$vtl, bmmb::logit(aggd[,5]), cex =2, ylim = c(-5,5),xlab="",
       ylab = "Logit (P(F==1))", col = bmmb::cols[c(2:5)][mod_cat],pch=16,
-      lwd=2, xlim =range (height_exp$vtl),cex.lab = 1.3,cex.axis=1.3,
+      lwd=2, xlim =range (exp_data$vtl),cex.lab = 1.3,cex.axis=1.3,
       xaxt = 'n')
 axis (at = -2:2, labels = (-2:2) + muvtl, 
       cex.axis = 1.3, side=1)
 abline (h=0,lty=3)
 
-curve ( (cffs[1] + cffs[4]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( (cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = 1, lwd=3)
-curve ( (cffs[3] + cffs[6]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( (cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = bmmb::coral, lwd=4, lty=3)
-curve ( (cffs[2] + cffs[5]*x), xlim =range (height_exp$vtl), add = TRUE, 
+curve ( (cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = bmmb::teal, lwd=4, lty=3)
 
 legend (0.8,4.5, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
@@ -717,34 +717,35 @@ par (mar = c(.5,.5,.5,.5))
 
 bound = -0.87
 plot (0,xlim = c(-2,2),ylim=c(0,1),xaxt='n',yaxt='n',type='n')
-rect(-3, -1, bound, 2, col=bmmb::coral)
-rect(bound, -1, 3, 2, col=bmmb::skyblue)
+rect(-3, -1, bound, 2, col=bmmb::cols[3])
+rect(bound, -1, 3, 2, col=bmmb::cols[2])
 text (c(-1.5,1.2),c(0.5,0.5), c("Girl","Boy"), cex = 2, col = 0)
 
 bound = 0.21
 plot (0,xlim = c(-2,2),ylim=c(0,1),xaxt='n',yaxt='n',type='n')
-rect(-3, -1, bound, 2, col=bmmb::coral)
-rect(bound, -1, 3, 2, col=bmmb::skyblue)
+rect(-3, -1, bound, 2, col=bmmb::cols[8])
+rect(bound, -1, 3, 2, col=bmmb::cols[7])
 text (c(-1.5,1.2),c(0.5,0.5), c("Female","Male"), cex = 2, col = 0)
 
 bound = .59
 plot (0,xlim = c(-2,2),ylim=c(0,1),yaxt='n',type='n',
       cex.axis = 1.3, xaxt = 'n')
-rect(-3, -1, bound, 2, col=bmmb::coral)
-rect(bound, -1, 3, 2, col=bmmb::skyblue)
-text (c(-1.5,1.2),c(0.5,0.5), c("Women","Men"), cex = 2, col = 0)
+rect(-3, -1, bound, 2, col=bmmb::cols[5])
+rect(bound, -1, 3, 2, col=bmmb::cols[4])
+text (c(-1.5,1.2),c(0.5,0.5), c("Woman","Man"), cex = 2, col = 0)
 axis (at = -2:2, labels = (-2:2) + muvtl, 
       cex.axis = 1.3, side=1)
 
 mtext (side=1, "VTL (cm)", line = 3)
 
 ```
+
 We can think about the characteristics of our fixed effects parameters, and our age-dependent lines, in terms of what they mean for classification of speakers into males and females. It can be useful to think about category boundaries when interpreting logits because our model parameters can be interpreted as shifts in these boundaries. For example, our model intercept estimate was 0.72, and the effect for perceived adultness (`A1`) was 2.25. If we consider lines with fixed slopes, the effect of shifts in the $y$-intercept on classification can be understood in terms of the slope of the line. Since our line has a downward (negative) slope along VTL, raising the $y$-intercept has the effect of moving our $x$-intercept the the 'right' towards higher values of VTL. In other words, the positive intercept shift associated with perceived adultness increases the category boundary between apparent male and female speakers along the VTL dimension. Decreases in intercepts have the opposite effect. If the slope of our line had been positive the associations would be reversed: Positive $y$-intercept shifts would lead to a 'leftward' motion of the category boundary. In the left plot of the figure we see that adopting the overall boundary for all speakers would not be useful: All boys would be identified as female. Instead, the age-dependent boundaries allow listeners to identify speakers with shorter vocal tracts as males if they also think these speakers are children.  
-  Increasing the magnitude of our slopes (positive or negative) without changing intercepts does not affect the location of the category boundary. Instead, it results in more 'categorical', less fuzzy classifications. This is because a steeper slope gets from high probabilities to low probabilities (or vice versa) faster, and therefore has a smaller ambiguous region relative to a slope with a smaller magnitude. For example, the points representing women and men are further apart along VTL than boys and girls, hence are more separable along this dimension, and this is represented in the model by the steeper slope for speakers judged to be adults. When lines differ in both slopes and intercepts, the effect on classification boundaries needs to be considered on a case by case basis. However in general it is quite straightforward, one only needs to imagine the effects on our lines and the locations where they will cross zero. In figure \@ref(fig:F104), we can see that the intercept and slope differences between speakers identified as male and female both serve to increase the VTL threshold which a speaker must cross to be identified as a male. 
+  Increasing the magnitude of our slopes (positive or negative) without changing intercepts does not affect the location of the category boundary. Instead, it results in more 'categorical', less fuzzy classifications. This is because a steeper slope gets from high probabilities to low probabilities (or vice versa) faster, and therefore has a smaller ambiguous region relative to a slope with a smaller magnitude. For example, the points representing women and men are further apart along VTL than boys and girls, hence are more separable along this dimension, and this is represented in the model by the steeper slope for speakers judged to be adults. When lines differ in both slopes and intercepts, the effect on classification boundaries needs to be considered on a case by case basis. However in general it is quite straightforward, one only needs to imagine the effects on our lines and the locations where they will cross zero. In figure \@ref(fig:F10-4), we can see that the intercept and slope differences between speakers identified as male and female both serve to increase the VTL threshold which a speaker must cross to be identified as a male. 
 
 ### Answering our research question
 
-We can answer our research questions based on our models above. Speaker VTL is negatively related to the perception of femaleness with a slope of -3.41 logits per unit change in cm (s.d. = 0.47, 95% C.I = [-4.39, -2.54]). This effect increased by about 50% when listeners thought the speaker was an adult and decreased by about 50% when listeners thought the listener was a child (mean = 2.25, s.d. = 0.43, 95% C.I = [1.45, 3.15]). Our results do indicate that the relationship between VTL and apparent femaleness vary as a function of the apparent age of the speaker. These differences can be understood in terms of the information presented in figure \@ref(fig:F105), in particular the territorial maps presented in the right plot. In the plot we see that when listeners thought the speaker was a child, the boundary between male and female speakers is at a lower value of VTL (12.5 cm based on our calculations above), which makes sense given that children are smaller overall. When the listener thinks the speaker is an adult, a higher value of VTL (14 cm) is required to trigger a male response. 
+We can answer our research questions based on our models above. Speaker VTL is negatively related to the perception of femaleness with a slope of -3.41 logits per unit change in cm (s.d. = 0.47, 95% C.I = [-4.39, -2.54]). This effect increased by about 50% when listeners thought the speaker was an adult and decreased by about 50% when listeners thought the listener was a child (mean = 2.25, s.d. = 0.43, 95% C.I = [1.45, 3.15]). Our results do indicate that the relationship between VTL and apparent femaleness vary as a function of the apparent age of the speaker. These differences can be understood in terms of the information presented in figure \@ref(fig:F10-5), in particular the territorial maps presented in the right plot. In the plot we see that when listeners thought the speaker was a child, the boundary between male and female speakers is at a lower value of VTL (12.5 cm based on our calculations above), which makes sense given that children are smaller overall. When the listener thinks the speaker is an adult, a higher value of VTL (14 cm) is required to trigger a male response. 
 
 ## Measuring sensitivity and bias
 
@@ -765,14 +766,14 @@ $$
 We also calculate the overall hit and false alarm rates for our data with the code below:
 
 ```{r, eval = FALSE}
-H = mean(height_exp$F[height_exp$G_v == "f"])
-FA = mean(height_exp$F[height_exp$G_v == "m"])
+H = mean(exp_data$F[exp_data$G_v == "f"])
+FA = mean(exp_data$F[exp_data$G_v == "m"])
 ```
 
 Or more simply using: 
 
 ```{r, collapse = TRUE}
-tapply(height_exp$F, height_exp$G_v, mean)
+tapply(exp_data$F, exp_data$G_v, mean)
 ```
 
 **Sensitivity** is defined as the difference between a listeners hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no discrimination at all: They perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are identifying 90% of *people*, including men, as women. 
@@ -817,15 +818,15 @@ When defined in this way we see that increasing values of $b$ simply reflect the
   As an example, let's consider the detection of femaleness in our speaker's voices. We're going to consider how sensitivity and bias varies according to the veridical (not apparent) age of the speakers. Below we divide our data into trials involving (veridical) children and trials involving (veridical) adult speakers.
 
 ```{r}
-adults = height_exp[height_exp$A_v == "a",]
-children = height_exp[height_exp$A_v == "c",]
+adults = exp_data[exp_data$A_v == "a",]
+children = exp_data[exp_data$A_v == "c",]
 ```
 
 We can find the hit and false alarm rates by finding the average of our `F` variable independently for veridical males and female speakers. We see these values below for adults, children, and overall.  
 
 ```{r, collapse = TRUE}
 # hit and false alarm rate, overall
-tapply (height_exp$F, height_exp$G_v, mean)
+tapply (exp_data$F, exp_data$G_v, mean)
 
 # hit and false alarm rate, for adult
 tapply (adults$F, adults$G_v, mean)
@@ -834,9 +835,9 @@ tapply (adults$F, adults$G_v, mean)
 tapply (children$F, children$G_v, mean)
 ```
 
-Figure \@ref(fig:F106) presents these probabilities, in addition to their logit values. Overall we see a balanced case with hits and false alarms equally spaced around 0 logits, representing the zero bias case. When it comes to adults, the false alarm rate is lower than the hit rate is high, resulting in a negative value of $b$. This means that listeners were more likely to respond male than female for adult speakers. We also see that hits and false alarm rates are more separated for adults, indicating a higher value of $d$ (i.e. sensitivity). For children, we see largely the opposite pattern: Hits were more likely than false alarms, indicating a positive bias (and more female responses). In addition, the distance between hits and false alarm rates was much smaller than for adults indicating a substantially reduced sensitivity. 
+Figure \@ref(fig:F10-6) presents these probabilities, in addition to their logit values. Overall we see a balanced case with hits and false alarms equally spaced around 0 logits, representing the zero bias case. When it comes to adults, the false alarm rate is lower than the hit rate is high, resulting in a negative value of $b$. This means that listeners were more likely to respond male than female for adult speakers. We also see that hits and false alarm rates are more separated for adults, indicating a higher value of $d$ (i.e. sensitivity). For children, we see largely the opposite pattern: Hits were more likely than false alarms, indicating a positive bias (and more female responses). In addition, the distance between hits and false alarm rates was much smaller than for adults indicating a substantially reduced sensitivity. 
 
-```{r F106, fig.width = 8, fig.height = 3, fig.cap = "(left) Hits and false alarm rates for the detection of speaker 'femaleness', averaged across all listeners. (right) Same as in the left plot, except as a logit. The black point represents the average of hits and false alarms.", echo = FALSE}
+```{r F10-6, fig.width = 8, fig.height = 3, fig.cap = "(left) Hits and false alarm rates for the detection of speaker 'femaleness', averaged across all listeners. (right) Same as in the left plot, except as a logit. The black point represents the average of hits and false alarms.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.6
@@ -845,7 +846,7 @@ Figure \@ref(fig:F106) presents these probabilities, in addition to their logit 
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 
-p1 = (tapply (height_exp$F, height_exp$G_v, mean))
+p1 = (tapply (exp_data$F, exp_data$G_v, mean))
 p2 = (tapply (adults$F, adults$G_v, mean))
 p3 = (tapply (children$F, children$G_v, mean))
 
@@ -864,7 +865,7 @@ axis (side=1,at=1:3, labels=c("All","Adults","Chidren"))
 
 legend (2.3, 0.9, legend=c("H","FA"),col=c(3,2),pch=16,bty='n',pt.cex=1.3)
 
-p1 = bmmb::logit (tapply (height_exp$F, height_exp$G_v, mean))
+p1 = bmmb::logit (tapply (exp_data$F, exp_data$G_v, mean))
 p2 = bmmb::logit (tapply (adults$F, adults$G_v, mean))
 p3 = bmmb::logit (tapply (children$F, children$G_v, mean))
 
@@ -883,7 +884,7 @@ axis (side=1,at=1:3, labels=c("All","Adults","Chidren"))
 abline (h = 0)
 ```
 
-When considered as in the right plot of figure \@ref(fig:F106), the estimation of hit and false alarm rates is very similar to the two-group models described in chapter 5. In chapter 5 we estimated the effect of apparent adultness on apparent height. In that model we had two 'groups' of data: Trials where a listener indicated hearing an adult and trials where listeners indicated hearing a child. Our model predicted apparent height given the apparent age of the speaker. Since we used sum coding, the intercept in our model was the average of the two group means and the effect for age was equal to 1/2 the distance between the group means. 
+When considered as in the right plot of figure \@ref(fig:F10-6), the estimation of hit and false alarm rates is very similar to the two-group models described in chapter 5. In chapter 5 we estimated the effect of apparent adultness on apparent height. In that model we had two 'groups' of data: Trials where a listener indicated hearing an adult and trials where listeners indicated hearing a child. Our model predicted apparent height given the apparent age of the speaker. Since we used sum coding, the intercept in our model was the average of the two group means and the effect for age was equal to 1/2 the distance between the group means. 
   Here, we have two groups: Trials where the speaker was *actually* a female and trials where it was not. Our model predicts the logit of the probability of a female response given the veridical gender of the speaker. The probability of a female response when the speaker is actually female corresponds to the hit rate, i.e. $P(F=1 | G_v= \mathrm{f} \,)$, as in \@ref(eq:1016). Conversely, since the probability of a female response when the speaker is actually male corresponds to the false alarm rate, that means that the group associated with actual male speakers represents our false alarm rate (i.e. $P(F=1 | G_v= \mathrm{f} \,)$. Since we are using sum coding, the intercept in our model is the average of the two group means and so is a measure of *bias* (since it is equal to $b$ and $-c'$, see \@ref(eq:1017) and \@ref(eq:1018)). The effect for our group predictor, in this case the group separation based on veridical gender, will equal 1/2 the distance between the hit and false alarm rates. This means that our predictor in this case will equal $d/2$, meaning that the slope for veridical gender is related to *sensitivity*.
 
 ### Data and research questions
@@ -894,20 +895,20 @@ We're going to keep working with the data we loaded above, which we reload here 
 library (brms)
 library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
-data (height_exp)
-height_exp = height_exp[height_exp$R=='a',]
+data (exp_data)
+exp_data = exp_data[exp_data$R=='a',]
 # our dependent variable
-height_exp$F = as.numeric (height_exp$G == 'f')
+exp_data$F = as.numeric (exp_data$G == 'f')
 # make a copy of vtl
-height_exp$vtl_original = height_exp$vtl
+exp_data$vtl_original = exp_data$vtl
 # center vtl
-height_exp$vtl = height_exp$vtl - mean (height_exp$vtl)
+exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 ```
 
 We've talked about the 'secret' variables implicit in the use of categorical variables a couple of times (section X, X). When you have a categorical predictor with only two levels, we know that one of the levels cannot be estimated because it is the negative of the other coefficients. Numerically, this is represented by a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below we add a variable representing veridical speaker femaleness with values of 1 (for female) and -1 (for male). The reason we do this 'by hand' rather than as we've usually done it is that we need for the category coded with a 1 in our predictor (the estimated category) to be the same category coded with a 1 in the dependent variable. Creating a vector that we know equals 1 for a specific category and -1 for the other is the simplest way to be sure of this.
 
 ```{r, warning=FALSE, message=FALSE}
-height_exp$F_v = ifelse (height_exp$G_v=="f", 1,-1)
+exp_data$F_v = ifelse (exp_data$G_v=="f", 1,-1)
 ```
 
 We're going to model the ability of listeners to discriminate the gender of speakers from their voices. We would like to know:
@@ -981,7 +982,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_dt =
-  brm (F ~ F_v*A_v + (F_v*A_v|L) + (1|S), data=height_exp, 
+  brm (F ~ F_v*A_v + (F_v*A_v|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -1017,7 +1018,7 @@ gender_dt_hypothesis = bmmb::short_hypothesis (
                  "2*(F_v - F_v:A_v1) = 0")) # child sensitivity
 ```
 
-We plot these biases and sensitivities as in figure \@ref(fig:F107) below. We also include the listener-dependent biases in the adult and child condition. Since we've covered how to easily recover these previously (in sections X and X) we only provide a single example below.
+We plot these biases and sensitivities as in figure \@ref(fig:F10-7) below. We also include the listener-dependent biases in the adult and child condition. Since we've covered how to easily recover these previously (in sections X and X) we only provide a single example below.
 
 ```{r, eval = FALSE}
 biases_adult = bmmb::short_hypothesis (
@@ -1025,7 +1026,7 @@ biases_adult = bmmb::short_hypothesis (
   hypothesis = c("Intercept+A_v1 = 0"),group="L", scope="coef")
 ```
 
-```{r F107, fig.width = 8, fig.height = 3, fig.cap = "(left) Average bias and sensitivity and the 'simple effects' of bias and sensitivity across levels of veridical adultness. (middle) Bias and sensitivity for adult speakers, presented individually for each listener. (right) Bias and sensitivity for child speakers, presented individually for each listener.", echo = FALSE}
+```{r F10-7, fig.width = 8, fig.height = 3, fig.cap = "(left) Average bias and sensitivity and the 'simple effects' of bias and sensitivity across levels of veridical adultness. (middle) Bias and sensitivity for adult speakers, presented individually for each listener. (right) Bias and sensitivity for child speakers, presented individually for each listener.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.7
@@ -1068,10 +1069,10 @@ legend (5, 11, legend =c("Sensitivity", "Bias"), pch=16,lwd=2,
 
 ### Answering our research questions
 
-The following verbal description of the results in figure \@ref(fig:F107) are based on the parameters reconstructed in `gender_dt_hypothesis`. In addition, we used the `forpaper` function, like this `forpaper(gender_dt_hypothesis)` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output. Our model suggests there is a bias towards male responses for adults (mean = -1.04, s.d. = 0.29, 95% C.I = [-1.66, -0.5]), and perhaps a slight bias towards female responses for children (mean = 0.4, s.d. = 0.32, 95% C.I = [-0.24, 1.02]). Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children. 
-  We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:F108)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:F108). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
+The following verbal description of the results in figure \@ref(fig:F10-7) are based on the parameters reconstructed in `gender_dt_hypothesis`. In addition, we used the `forpaper` function, like this `forpaper(gender_dt_hypothesis)` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output. Our model suggests there is a bias towards male responses for adults (mean = -1.04, s.d. = 0.29, 95% C.I = [-1.66, -0.5]), and perhaps a slight bias towards female responses for children (mean = 0.4, s.d. = 0.32, 95% C.I = [-0.24, 1.02]). Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children. 
+  We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:F10-8)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:F10-8). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
 
-```{r F108, fig.width = 8, fig.height = 3.25, fig.cap = "Distribution of boys, girls, men, and women in our speaker data (Hillenbrand et al. 1995) according to their VTL.", echo = FALSE}
+```{r F10-8, fig.width = 8, fig.height = 3.25, fig.cap = "Distribution of boys, girls, men, and women in our speaker data (Hillenbrand et al. 1995) according to their VTL.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.8
@@ -1079,15 +1080,15 @@ The following verbal description of the results in figure \@ref(fig:F107) are ba
 
 par (mfrow = c(1,1), mar = c(4,4,1,1))
 
-plot (density (height_exp$vtl_original[height_exp$C_v=="b"]), xlim = c(11,16),
+plot (density (exp_data$vtl_original[exp_data$C_v=="b"]), xlim = c(11,16),
       ylim = c(0,1.3),lwd=2,col=cols[2],main="",xlab="Vocal-Tract Length (cm)")
-polygon (density (height_exp$vtl_original[height_exp$C_v=="b"]),
+polygon (density (exp_data$vtl_original[exp_data$C_v=="b"]),
        lwd=2,col=cols[2])
-polygon (density (height_exp$vtl_original[height_exp$C_v=="g"]),
+polygon (density (exp_data$vtl_original[exp_data$C_v=="g"]),
        lwd=2,col=cols[3])
-polygon (density (height_exp$vtl_original[height_exp$C_v=="w"]),
+polygon (density (exp_data$vtl_original[exp_data$C_v=="w"]),
        lwd=2,col=cols[5])
-polygon (density (height_exp$vtl_original[height_exp$C_v=="m"]),
+polygon (density (exp_data$vtl_original[exp_data$C_v=="m"]),
        lwd=2,col=cols[4])
 
 legend (13.8,1.2,legend = c("b","g","m","w"),col=bmmb::cols[2:5],

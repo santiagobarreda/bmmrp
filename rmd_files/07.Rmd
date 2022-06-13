@@ -32,32 +32,12 @@ data (exp_data)
 options (contrasts = c('contr.sum','contr.sum'))
 ```
 
+The model in this section will use the following variables from our data frame: 
+
   * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
- 
   * `C`: A letter representing the speaker *category* (`b`=boy, `g`=girl, `m`=man, `w`=woman) reported by the listener for each trial.
- 
   * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
- 
   * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
-
-  * `C_v`: A letter representing the *veridical* (actual) speaker category ('b'=boy, 'g'=girl, 'm'=man, 'w'=woman) for each speaker for each trial. 
- 
- * `vtl`: An estimate of the speaker's *vocal-tract length* in centimeters. 
- 
-  * `f0`: The vowel *fundamental frequency* (f0) measured in Hertz. 
-
-  * `dur`: The *duration* of the vowel sound, in milliseconds. 
-
-  * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
-  * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-  
-  * `G_v`: The *veridical gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
-  * `A_v`: The *veridical age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-
-
-
 
 In figure \@ref(fig:F7-1) we see that the distribution of apparent height with respect to apparent speaker category is very similar to its distribution with respect to veridical speaker category. In this chapter we're going to focus on the effect of *apparent* speaker category on apparent height. This is because we want to understand how the listener's assumptions about the speaker affect their height judgments (and listeners did not know the veridical speaker category). We're first going to treat the four groups as if they had no internal structure. In this case it may not be the best approach for this data since we know there are logical ways to subdivide boys, girls, men, and women. However, this is a good starting point since in many cases you will have levels of a factor with no logical internal divisions. 
 
@@ -240,30 +220,14 @@ boxplot (height ~ A, data=exp_data, main="Adultness", ylim = c(90,200), col=cols
 
 ### Data and research questions
 
+
+The model in this section will use the following variables from our data frame: 
+
   * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
- 
-  * `C`: A letter representing the speaker *category* (`b`=boy, `g`=girl, `m`=man, `w`=woman) reported by the listener for each trial.
- 
   * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
- 
   * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
-
-  * `C_v`: A letter representing the *veridical* (actual) speaker category ('b'=boy, 'g'=girl, 'm'=man, 'w'=woman) for each speaker for each trial. 
- 
- * `vtl`: An estimate of the speaker's *vocal-tract length* in centimeters. 
- 
-  * `f0`: The vowel *fundamental frequency* (f0) measured in Hertz. 
-
-  * `dur`: The *duration* of the vowel sound, in milliseconds. 
-
   * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
   * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-  
-  * `G_v`: The *veridical gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
-  * `A_v`: The *veridical age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-
 
 
 
@@ -553,35 +517,16 @@ As noted in the last chapter, you cannot estimate interactions of factors are no
 
 ### Data and research questions
 
+The model in this section will use the following variables from our data frame: 
+
   * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
- 
-  * `C`: A letter representing the speaker *category* (`b`=boy, `g`=girl, `m`=man, `w`=woman) reported by the listener for each trial.
- 
   * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
- 
   * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
-
-  * `C_v`: A letter representing the *veridical* (actual) speaker category ('b'=boy, 'g'=girl, 'm'=man, 'w'=woman) for each speaker for each trial. 
- 
- * `vtl`: An estimate of the speaker's *vocal-tract length* in centimeters. 
- 
-  * `f0`: The vowel *fundamental frequency* (f0) measured in Hertz. 
-
-  * `dur`: The *duration* of the vowel sound, in milliseconds. 
-
   * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
   * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-  
-  * `G_v`: The *veridical gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
-  * `A_v`: The *veridical age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-
 
 
 ### Description of our model
-
-[@@ SB - address why we always include random effects? talk about how we will mention it later in anova chapter and refer to increased interval in chapter 6 and not including is potentially misleading.]
 
 Luckily, the model presented above (`model_both`) requires only a slight tweak to include a term representing the interaction in our data. There are two ways to include interactions in R model formulas, either:
 
@@ -629,6 +574,8 @@ Our updated plain English description (still ignoring the priors) now says:
 
 > "We expect apparent height to vary according to a t distribution with a trial-specific mean parameter. That mean varies based on the apparent age and gender of speaker a,d the interaction between these predictors. The model includes listener dependent intercepts, age and gender effects, and their interaction, and listener dependent intercepts. Speaker random intercepts were drawn from a univariate normal distribution, and the listener random effects were drawn from a four-dimensional normal distribution." 
 
+Before continuing, we want to address the fact that we've included the same structure in our 'fixed effects' as for our listener 'random effects'. We will do this for all the models we fit in this book, and there are a couple of reasons for this. First, not including random effects for a predictor (e.g., apparent age) is assuming that that variance component is equal to zero (i.e. $\sigma_A=0$), which may not be the case. Second, not including a 'random' effect for a parameter according to a grouping factor effects adopts a 'complete pooling' approach to the estimation of the parameter across levels of the grouping factor. Both of these positions as *assumptions* that may or may not be true about our data, and can cause problems when they are wrong. 
+  In chapter 6 we saw that there is substantial variation in the listener-dependent effects for apparent age. We fit a model with and without random effects and saw that the model with random effects produced a substantially wider credible intervals for the apparent age 'fixed' effect, reflecting increased uncertainty in some parameter estimates. In that case, assuming listener-variation in the parameter was zero when it was not resulted in an overly precise estimate of that parameter. The only way to know whether a listener-dependent parameter shows substantial variation or not is to include the possibility for listener-dependent variation in your model, at least initially. Of course, the inclusion of any 'random effect' in your model assumes that: 1) Your model is designed in a way that the 'random' effect can be estimated, and 2) You have enough data to estimate those parameters. These issues will be discussed further in chapter 11.   
 
 ### Fitting and interpreting the model
 

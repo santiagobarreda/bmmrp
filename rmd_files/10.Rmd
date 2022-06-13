@@ -207,11 +207,16 @@ Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those to
   
 ### The logistic link function
 
+- explain that reference, 0 variable, is set to horizontal line at zero effectively
+- this is like setting its outcome to zero. this is exponentiated to eual 1. 
+- so, this is like setting its odds to 1 always. so if something is three times as likely its 3/1. It could have been 6/3 or 9.3/3.1 or an infinity more. but 1 and 0 are convenient numbers. 
+- this will come up in chapter 12 when we discuss multinomial regression.
+
 Our logistic regression models express predictions in logits, and our data generating distributions (Bernouilli or binomial) require a parameter $p$ that represents a probability. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this is called the **logistic function**, or sometimes the **antilogit function**. The logistic function is presented in \@ref(eq:106), for values of $z$ ranging continuously from positive to negative infinity, where $e$ is the mathematical constant that serves as the base for natural logarithms.
 
 $$
 \begin{equation}
-\mathrm{logit}^{-1}(z) = \frac{1}{1 + e^{-z}}
+\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
 (\#eq:106)
 \end{equation}
 $$
@@ -220,7 +225,7 @@ The `bmmb` package also contains a function called `antilogit` that will convert
 
 $$
 \begin{equation}
-\frac{1}{1 + e^{0}}=\frac{1}{1 + 1}=0.5
+\frac{e^{0}}{1 + e^{0}}=\frac{1}{1 + 1}=0.5
 (\#eq:107)
 \end{equation}
 $$
@@ -229,7 +234,7 @@ When $z$ is a positive value, $e^{-z}$ will be a fraction between 0 and 1, for e
 
 $$
 \begin{equation}
-\frac{1}{1 + e^{-3}}=\frac{1}{1 + 0.05}=0.95
+\frac{e^{-3}}{1 + e^{-3}}=\frac{0.05}{1 + 0.05}=0.05
 (\#eq:108)
 \end{equation}
 $$
@@ -238,7 +243,7 @@ On the other hand, when $z$ is negative, $e^{-z}$ will be a positive number grea
 
 $$
 \begin{equation}
-\frac{1}{1 + e^{3}}=\frac{1}{1 + 20.1}=0.05
+\frac{e^3}{1 + e^{3}}=\frac{20.1}{1 + 20.1}=0.95
 (\#eq:109)
 \end{equation}
 $$
@@ -286,7 +291,7 @@ We could put the prediction equation directly inside the logistic function:
 
 $$
 \begin{equation}
-p = \mathrm{logit}^{-1}(Intercept + VTL \times \mathrm{vtl}) =  \frac{1}{1 + e^{-(Intercept + VTL \times \mathrm{vtl})}}
+p = \mathrm{logit}^{-1}(Intercept + VTL \times \mathrm{vtl}) =  \frac{e^{(Intercept + VTL \times \mathrm{vtl})}}{1 + e^{(Intercept + VTL \times \mathrm{vtl})}}
 (\#eq:1011)
 \end{equation}
 $$
@@ -295,7 +300,7 @@ And even put all of \@ref(eq:1011) inside the Bernoulli distribution directly as
 
 $$
 \begin{equation}
-F \sim \mathrm{Bernoulli} \left (\frac{1}{1 + e^{-(Intercept + VTL \times \mathrm{vtl})}} \right ) 
+F \sim \mathrm{Bernoulli} \left (\frac{e^{(Intercept + VTL \times \mathrm{vtl})}}{1 + e^{(Intercept + VTL \times \mathrm{vtl})}} \right ) 
 (\#eq:1012)
 \end{equation}
 $$

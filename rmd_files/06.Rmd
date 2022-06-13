@@ -24,9 +24,9 @@ Below we load the data and add a column (`A`) that indicates the apparent age of
 ```{r}
 library (brms)
 library (bmmb)
-data (height_exp)
+data (exp_data)
 
-notmen = height_exp[height_exp$C_v!='m' & height_exp$C!='m' & height_exp$R=='a',]
+notmen = exp_data[exp_data$C_v!='m' & exp_data$C!='m',]
 notmen$A_v = c("c","a")[(notmen$C_v == "w")+1]
 ```
 
@@ -401,7 +401,7 @@ priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
 # Fit the model yourself
 set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
-model_re_t_t =  
+model_re_t =  
   brms::brm (height ~ A + (A|L) + (1|S), data = notmen, chains = 4, cores = 4,
        warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
 ```
@@ -410,6 +410,7 @@ model_re_t_t =
 model_re_t = bmmb::get_model ('6_model_re_t.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model_re_t, '../models/6_model_re_t.RDS')
 model_re_t = readRDS ('../models/6_model_re_t.RDS')
 ```
 
@@ -966,14 +967,16 @@ priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
 set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 model_re_t_tooBig =  
-  brms::brm (height ~ A + useless + (A + useless|L) + (1|S), data = notmen, chains = 4, cores = 4,
-       warmup = 1000, iter = 5000, thin = 4, prior = priors, family = "student")
+  brms::brm (height ~ A + useless + (A + useless|L) + (1|S), data = notmen, 
+             chains = 4, cores = 4, warmup = 1000, iter = 5000, thin = 4, 
+             prior = priors, family = "student")
 ```
 ```{r, include = FALSE, eval = FALSE}
 # Or download it from the GitHub page:
 model_re_t_tooBig = bmmb::get_model ('6_model_re_t_tooBig.RDS')
 ```
 ```{r, include = FALSE}
+# saveRDS (model_re_t_tooBig, '../models/6_model_re_t_tooBig.RDS')
 model_re_t_tooBig = readRDS ('../models/6_model_re_t_tooBig.RDS')
 ```
 

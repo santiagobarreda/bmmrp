@@ -10,15 +10,22 @@ So far our models have been a bit 'traditional' in one important way: They have 
 
 ## Data and Research questions
 
-Below we load the data for our experiment investigating apparent speaker height, in addition to the `brms` and `bmmb` packages. We are going to keep focusing on only the 'actual', unmodified resonance. 
+Below we load the data for our experiment investigating apparent speaker height, in addition to the `brms` and `bmmb` packages. 
 
 ```{r, message=FALSE, error=FALSE}
 library (brms)
 library (bmmb)
 data (exp_data)
 options (contrasts = c('contr.sum','contr.sum'))
-exp_data = exp_data[exp_data$R=='a',]
 ```
+
+The models we will be considering below use the following variables from our data frame:
+
+  * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
+   * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
+  * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
+  * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
+  * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
 
 We're going to use models whose structure is similar to the final model we fit in chapter 7 (`model_interaction`). However, in this chapter we're going to focus on questions related to variation in our standard deviation parameters. We would like to know three things:
 
@@ -28,18 +35,6 @@ We're going to use models whose structure is similar to the final model we fit i
 
   Q3) Do our speaker random effects exhibit category-specific standard deviations? 
   
-  
-  
-  * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
-
-  * `height`: A number representing the *height* (in centimeters) reported for the speaker on each trial. 
-
-  * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
-
-  * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
-  * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-
 ## More about priors 
 
 To this point our focus has been on understanding the components that make up our models, and how these are represented using our model parameters. Now that we've covered most of the essentials of using categorical predictors, we can focus a bit more on the prior distributions of the parameters in our models. The reason we've been able to get away with not talking about priors very much is that we have substantial **domain knowledge** regarding the distribution of human height as a function of age and gender. In addition, our models thus far have been relatively simple, making the consideration of prior distributions relatively straightforward. For example, based on the information in `height_data` (cite CDC), we know that 11 year-old boys and girls are about 150 cm tall, and women and men are 163 and 176 cm tall respectively, on average. This means that there is an difference of 19.5 cm ($(13+26)/2$) on average between adults and children between 11 and 12 years of age. A difference of 19.5 cm between age groups suggests about a 10 cm distance (half the group difference) between each age group and the overall intercept. In other words, if apparent height is similar to veridical height, we expect an $A$ predictor of about 10 cm in magnitude given sum coding. In contrast, we have an expected height difference of 0 cm across genders for children, and 12 cm across genders for adults for an average difference of 6 cm between males and females. This means that we expect an effect of about 3 cm for gender averaged across ages. Based on this, our prior standard deviation of 12 cm for our `b` (fixed-effects) parameters seems very reasonable. 
@@ -412,7 +407,7 @@ height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\
 \\ \sigma_{[i]} = \mathrm{Intercept_{\sigma}} + A1_{\sigma} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim t(3,0,\sigma_S) \\
-\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\ \\ 
+\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\ 
 \mathrm{Intercept} \sim t(3,156,12) \\
 A, G, A \colon G \sim t(3,0,12) \\
 \sigma_L, \sigma_{A \colon L}, \sigma_{G \colon L}, \sigma_{A \colon G \colon L}, \sigma_S \sim t(3,0,12) \\

@@ -207,21 +207,26 @@ Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those to
   
 ### The logistic link function
 
-- explain that reference, 0 variable, is set to horizontal line at zero effectively
-- this is like setting its outcome to zero. this is exponentiated to eual 1. 
-- so, this is like setting its odds to 1 always. so if something is three times as likely its 3/1. It could have been 6/3 or 9.3/3.1 or an infinity more. but 1 and 0 are convenient numbers. 
-- this will come up in chapter 12 when we discuss multinomial regression.
-
-Our logistic regression models express predictions in logits, and our data generating distributions (Bernouilli or binomial) require a parameter $p$ that represents a probability. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this is called the **logistic function**, or sometimes the **antilogit function**. The logistic function is presented in \@ref(eq:106), for values of $z$ ranging continuously from positive to negative infinity, where $e$ is the mathematical constant that serves as the base for natural logarithms.
+Our logistic regression models express predictions in logits, and our data generating distributions (Bernoulli or binomial) require a parameter $p$ that represents a probability. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this is called the **logistic function**, or sometimes the **antilogit function**. The logistic function is presented in \@ref(eq:106), for values of $z$ ranging continuously from positive to negative infinity, where $e$ is the mathematical constant that serves as the base for natural logarithms.
 
 $$
 \begin{equation}
-\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
+P(y=1)=\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
 (\#eq:106)
 \end{equation}
 $$
 
-The `bmmb` package also contains a function called `antilogit` that will convert logits back into probabilities for you. Any number raised to the power of zero is 1. So $e^0=1$, meaning that when $z=0$ $p=0.5$, as shown in \@ref(eq:107).
+The function above may seem inscrutable, but it is very much scrutable. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success. The odds can be thought of as the ratio of the number of successes to the number of failures. When thought of in this way $e^z$ is the expected number of observed successes in a given situation. We can arbitrarily set the number of failures to 1 to make things simpler. To do this, we set $z=0$ (since $e^0=1$) for failures for all values of the dependent variables. This has no effect on the behavior of the function but does make the value of $e^z$ easily interpretable. For example odds of 3/1, 9/3, and 12/4 all mean the same thing, and by arbitrarily setting the number of failures to 1 we can say that the odds of a success is $e^z/1$ and the odds of a failure is $1/e^z$. 
+  In order to convert counts of successes and failures to the probability of success, we need to divide the number of successes by the total number of observed outcomes, as seen in \@ref(eq:107a) below. Clearly, this is what the antilogit is doing in \@ref(eq:107b) above.
+
+$$
+\begin{equation}
+P(y=1)=P(\mathrm{success}) = \frac{\mathrm{successes}}{\mathrm{failiures} + \mathrm{successes}}
+(\#eq:107a)
+\end{equation}
+$$
+
+The `bmmb` package contains a function called `antilogit` that will convert logits back into probabilities for you. Any number raised to the power of zero is 1. So $e^0=1$, meaning that when $z=0$ $p=0.5$, as shown in \@ref(eq:107).
 
 $$
 \begin{equation}

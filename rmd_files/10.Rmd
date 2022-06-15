@@ -170,9 +170,21 @@ The presentation in \@ref(\eq:103) clearly separates our model into a random com
 
 **Logits** are log-odds, the logarithm of the odds of a success. The odds of a success is defined as:
 
-`odds = total number of successes / total number of failures`
+$$
+\begin{equation}
+\mathrm{odds}_{success} = \frac{N_{successes}}{N_{failures}}
+(\#eq:103b)
+\end{equation}
+$$
 
 Odds of 3/1 indicate that success is three times as likely as a failure. We can turn this into a probability with the following calculation:
+
+$$
+\begin{equation}
+\mathrm{Probability}_{success} = \frac{N_{successes}}{N_{failures} + N_{successes}} = \frac{N_{successes}}{N_{total}}
+(\#eq:103c)
+\end{equation}
+$$
 
 `probability = total number of successes / (total number of successes + total number of failures`)
 
@@ -216,17 +228,8 @@ P(y=1)=\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
 \end{equation}
 $$
 
-The function above may seem inscrutable, but it is very much scrutable. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success. The odds can be thought of as the ratio of the number of successes to the number of failures. When thought of in this way $e^z$ is the expected number of observed successes in a given situation. We can arbitrarily set the number of failures to 1 to make things simpler. To do this, we set $z=0$ (since $e^0=1$) for failures for all values of the dependent variables. This has no effect on the behavior of the function but does make the value of $e^z$ easily interpretable. For example odds of 3/1, 9/3, and 12/4 all mean the same thing, and by arbitrarily setting the number of failures to 1 we can say that the odds of a success is $e^z/1$ and the odds of a failure is $1/e^z$. 
-  In order to convert counts of successes and failures to the probability of success, we need to divide the number of successes by the total number of observed outcomes, as seen in \@ref(eq:107a) below. Clearly, this is what the antilogit is doing in \@ref(eq:107b) above.
-
-$$
-\begin{equation}
-P(y=1)=P(\mathrm{success}) = \frac{\mathrm{successes}}{\mathrm{failiures} + \mathrm{successes}}
-(\#eq:107a)
-\end{equation}
-$$
-
-The `bmmb` package contains a function called `antilogit` that will convert logits back into probabilities for you. Any number raised to the power of zero is 1. So $e^0=1$, meaning that when $z=0$ $p=0.5$, as shown in \@ref(eq:107).
+The function above may seem inscrutable, but it is in fact very scrutable. First, note its structural similarity to the way that we convert counts of outcomes to probabilities presented in equation above. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success. The odds can be thought of as the ratio of the number of successes to the number of failures observed in some number of trials. As a result, $e^z$ can be thought of as the expected number of observed successes in a given situation. Based on the similarity to equation above, it seems as though we are fixing the expected 'count' of failures at 1, and this is in fact what logistic regression does. This is because for $N$ trials if you have $S$ successes then you *must* have $N-S$ failures. This means that the odds (or probabilities) of successes *and* failures cannot both be independently estimated. We ran into a similar problem previously when we discussed contrasts in chapter 5, and our discussion of why all levels of a factor cannot be independently estimated. Logistic regression arbitrarily sets the number of failures to 1 for all values of the dependent variables. This has no effect on the behavior of the function but does make the value of $e^z$ easily interpretable. For example odds of 3/1, 9/3, and 15/5 all mean the same thing, but imply different values of $e^z$ (i.e. $\log(3), \log(9), \log(12)$). By fixing the 'count' of failures at 1, we can say that the odds of a success is $e^z/1$ and the odds of a failure is $1/e^z$, knowing only a single value ($z$). 
+  Thinking of $z$ as the logarithm of the expected number of successes relative to 1 expected failure may help interpret logits. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:107).
 
 $$
 \begin{equation}
@@ -235,7 +238,7 @@ $$
 \end{equation}
 $$
 
-When $z$ is a positive value, $e^{-z}$ will be a fraction between 0 and 1, for example if $z=3$ then $e^{-z}=e^{-(3)}=0.05$. This means that when $z>0$, we expect probabilities between 0.5 and 1, as in \@ref(eq:108).
+When $z$ is a negative value, $e^{-z}$ will be a fraction between 0 and 1. Obviously, this means that a success is less likely than a failiure in these cases since we have fixed the number of failures at 1. For example if $z=-3$ then $e^{z}=e^{-3}=0.05$. This means that when $z<0$, we expect probabilities between 0.0 and 0.5, as in \@ref(eq:108).
 
 $$
 \begin{equation}
@@ -244,7 +247,7 @@ $$
 \end{equation}
 $$
 
-On the other hand, when $z$ is negative, $e^{-z}$ will be a positive number greater than 1, as in $e^{-z}=e^{-(-3)}=e^{3}=20.1$. Thus, for negative values of $z$ we expect probabilities between 0 and 0.5 as in:
+On the other hand, when $z$ is positive, $e^{z}$ will be a number greater than 1, meaning success is more likely than failure. Thus, for positive values of $z$ we expect probabilities between 0.5 and 1 as in:
 
 $$
 \begin{equation}
@@ -795,7 +798,7 @@ d' = z(H) - z(FA)
 \end{equation}
 $$
 
-Where $z()$ represents a function that converts a proportion to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression. Probit models are basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function rather than the logistic link function. Probit models are straightforward to implement but will not be discussed here. The reason for this is that the logistic function effectively performs the same function as the $z()$ function above, meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:1018). 
+Where $z(p)$ represents a function that converts a proportion to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression. Probit models are basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function rather than the logistic link function. Probit models are straightforward to implement but will not be discussed here. The reason for this is that the logistic function effectively performs the same function as the $z(p)$ function above, meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:1018). 
 
 $$
 \begin{equation}

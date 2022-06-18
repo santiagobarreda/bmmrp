@@ -7,27 +7,24 @@ knitr::opts_chunk$set(
 ```
 # Multiple quantitative predictors, dealing with large models, and Bayesian ANOVA
 
-In this chapter we introduce models with multiple continuous predictors, and interactions between them. After that, we will have covered the modeling concepts necessary to fit most models of the sort used for experimental data. The models you fit to you own data will include some combination of the elements covered in the previous chapters, and can potentially result in large models with hundreds of parameters. Traditionally, models with many predictors have had three general problems:
+In this chapter we introduce models with multiple quantitative predictors, and interactions between them. After that, we will have covered the modeling concepts necessary to fit most models of the sort used for experimental data. The models you fit to you own data will include some combination of the elements covered in the previous chapters, and can potentially result in large models with hundreds of parameters. Traditionally, models with many predictors have had three general problems:
 
   1) A model may return spurious values for the 'extra' predictors, leading to incorrect conclusions.
-  2) The model may not fit/converge, meaning you can't get the model coefficients. 
+  2) The model may not fit/converge, meaning it can't find 'good' estimates for the model coefficients. 
   3) It can be difficult to interpret a model with *hundreds* of parameters.
 
-In this chapter we're going to cover a Bayesian approach to working with large models. We're going to discuss how working with multilevel Bayesian models can naturally help us with problems (1) and (2) above, and we're going to discuss an easy way to approach the third problem also. 
-  Before continuing, we should note that designs with many continuous predictors, factors, and interactions between these can result in very complicated models, which then have to be interpreted. However, the researcher has a big role to play in the complexity of the eventual analysis that they are faced with. Once when Santiago was buying a backpack for traveling, he was looking for the biggest backpack possible. One of the reviews said "1/5 stars, it was way too heavy when I filled it all the way up with my stuff". However, if we fill a backpack up with heavy things, it doesn't seem fair to blame the poor backpack when it becomes difficult to manage, does it? In the same way, if you are faced with a complex model that you then need to interpret, you shouldn't blame the model (or `brms`) for your predicament. In order to avoid a situation where you end up with data you can't analyze or a model you don't know how to interpret, it's worth considering the following questions before advancing to data collection stage of your experiment: 
+In this chapter we're going to cover a Bayesian approach to working with large models. We're going to discuss how working with multilevel Bayesian models can naturally help us with problems (1) and (2) above, and we're going to discuss an easy way to approach problem (3) as well. 
+  Before continuing, we should note that designs with many quantitative predictors, factors, and interactions between these can result in very complicated models, which then have to be interpreted. However, the researcher has a big role to play in the complexity of the eventual analysis that they are faced with. Once when Santiago was buying a backpack for traveling, he was looking for the biggest backpack possible. One of the reviews said "1/5 stars, it was way too heavy when I filled it all the way up with my stuff". However, if we fill a backpack up with many heavy things, it doesn't seem fair to blame the poor backpack when it becomes difficult to carry. In the same way, if you are faced with a complex model that you then need to interpret, you shouldn't blame the model, `brms`, or us for your predicament. In order to avoid a situation where you end up with data you can't analyze or a model you can't interpret, it's worth considering the following questions before advancing to the data collection stage of your experiment: 
 
   * How will I analyze the data? Will I be able to? 
   * What will the model structure be? 
-  * What would different results 'mean'? How will this manifest in my regression model?
-  * What kind of results am I expecting? 
+  * What kind of results am I expecting? How will this be reflected by the model parameters?
+  * How would different results manifest in my regression model?
   
-## Models with multiple continuous predictors
+## Models with multiple quantitative predictors
 
-- make clear each predictor is a dimension
-- check out what Ive said about dimensions before
-
-Our regressions so far have only involved a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed shapes with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL), and f0 (voice pitch), with apparent speaker height. In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, that is the prediction error, for each observation is the vertical distance between the line the observation.   
-  Rather than think of the effect of VTL and f0 on apparent height individually, we can think about apparent height, VTL, and f0 together at the same time. We can imagine that each point in figure \@ref(fig:F11-1) has a specific value of f0, VTL, and apparent height. These three quantitative variables define a specific location in a 3-dimensional space. For example, consider any given location in the room you are sitting in right now. Any such location can be specified using a variable that determines is location along the width, depth, and height of the room. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:F11-1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots below. The first plot show the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
+Our regression models so far have only involved a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed surfaces with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL) and f0 (voice pitch) with apparent speaker height. In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, for each observation is the vertical distance between the line the observation.   
+  Rather than think of the effect of VTL and f0 on apparent height individually, we can think about apparent height, VTL, and f0 together at the same time. Every point in figure \@ref(fig:F11-1) has a specific value of f0, VTL, and apparent height. These three quantitative variables can be thought of as defining a single location in a 3-dimensional space. For example, consider any given location in the room you are sitting in right now. Any such location can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:F11-1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots below. The first plot show the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
   
 ```{r F11-1, fig.height = 3, fig.width = 8, fig.cap='(left) Average apparent height reported for each speaker plotted against speaker VTL. Point size reflects average apparent height. (middle) Same as the left plot but comparing apparent height to f0. (right) A comparison of VTL and f0 for each speaker.', echo = FALSE, cache = TRUE}
 
@@ -56,7 +53,8 @@ grid()
 
 ```
 
-It may be easier to see what we mean by considering figure \@ref(fig:F11-2), which attempts to present our point in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds to the middle plot in figure \@ref(fig:F11-1). If we want to predict apparent height based on speaker f0 and VTL, that is basically asking: Can we predict the height of a point in our 3-dimensional space based on its x and y-axis location? 
+It may be easier to see what we mean by considering figure \@ref(fig:F11-2), which attempts to present our point in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds to the middle plot in figure \@ref(fig:F11-1). When we have two quantitative predictors, our models predict values along **planes** rather than lines. If we want to predict apparent height based on speaker f0 and VTL, that is basically asking: Can we predict the height of a point in our 3-dimensional space based on its x and y-axis location? 
+  For example, imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the error) still applies to our models.
 
 ```{r F11-2, fig.height = 5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in the figure above. (right) The same as the left plot but the cube has been rotated 90 debrees counter-clockwise.', echo = FALSE, cache = TRUE}
 
@@ -78,8 +76,7 @@ my.lm <- lm(height ~ f0+vtl, data = agg_data)
 #s3d$plane3d(my.lm, col = 2)
 ```
 
-When we have two quantitative predictors, our models predict values along **planes** rather than lines. For example, imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the "best" position for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. A Regressions model that includes two continuous predictors tries to find the 'best' plane that passes through your points in the three-dimensional space. In general, the 'best' plane is the one that minimizes the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this is still basically what's happening.  
-  Planes are specified by three parameters, a slope for each dimensions and an intercept. In \@ref(eq:11-1) we that the height of the plane along the $z$ axis is determined by an intercept ($a$) plus the product of the x-axis coordinate and its slope ($b$) and the product of the y-axis coordinate and its slope. When we fit a model that includes two quantitative predictors, the model represents the best planes using their $a$, $b$, and $c$ parameters. 
+In \@ref(eq:11-1) we see that that the height of the plane along the $z$ axis is determined by an intercept ($a$) plus the product of the x-axis coordinate and its slope ($b$) and the product of the y-axis coordinate and its slope. When we fit a model that includes two quantitative predictors, the model represents the planes it estimates using their $a$, $b$, and $c$ parameters. 
   
 $$
 \begin{equation}
@@ -88,21 +85,72 @@ z =  \mathrm{a} + \mathrm{b} \times x + \mathrm{c} \times y
 \end{equation}
 $$
 
-  Just like our slope coefficients changed the slope of our lines, our slope coefficients now change the slope of our planes. Since the plane has two dimensions it has two slopes: A field can be downhill away from you, but also be up/downhill left to right. Our intercept coefficients will change the intercepts of our planes, sliding entire planes up/down without changing their slopes. An important aspect of the interpretation of our slope terms is that they are meant to reflect the effect of an independent change along one dimension. Another way to say this is that the slope of each predictor reflects the expected change according to that predictor when all other predictors are *held constant*. As a result, our models specifying planes can also be thought of a series of models specifying lines, as will be discussed below. 
-  Our discussion above has been entirely about planes, however, your model can include any number of continuous predictors. The interpretation of these models is a simple continuation of the expansion of models specifying lines to those specifying planes. If your model has $n$ continuous predictors, your data specifies points in an $n+1$ dimensional space, where dimension $n+1$ represents the dependent variable. Residuals in such models would represent the difference between the surface of the $n$ dimensional shape specified by the predictors and the position of each point along the $n+1$ dimension.
+Since the plane has two dimensions it has two slopes: A field can be uphill/downhill away from you, but also be up/downhill left to right. The slope coefficients for each quantitative predictor change the slope of the plane independently for each dimension. In fact, the slope of each predictor reflects the expected change according to that predictor when all other predictors are *held constant*. The intercept will slide the planes up/down without changing their slopes along either dimension. 
+  Our discussion above has been entirely about planes, however, your model can include any number of quantitative predictors. The interpretation of these models is a simple continuation of the expansion of models specifying lines to those specifying planes. If your model has $n$ quantitative predictors, your data specifies points in an $n+1$ dimensional space, where dimension $n+1$ represents the dependent variable. Residuals in such models would represent the difference between the surface of the $n$ dimensional shape specified by the predictors and the position of each point along the $n+1$ dimension. 
   
-### Interactions between continuous predictors
+### Interactions between quantitative predictors
 
-Imagine you are standing on a flat cement plaza (a plane). There is a design defect such that as you walk across the plaza, the floor becomes slightly sloped left to right. Further, as you walk across the plaza, the floor becomes progressively more sloped to one side. Rather than a plane, the shape of the floor of this plaza would be a **hyperbolic parabaloid**, more commonly known as a **saddle** shape (because of its resemblance to a horse saddle). The function for a saddle shape can be seen below, where the height of the surface is equal to the product of its $x$ and $y$ coordinates. 
+Models with two quantitative predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by the **cross-product**, the multiple, of the two variables. We can add this term to equation representing our model with two quantitative predictors as in the equation below. It's common to refer to this term as the 'interaction' between our quantitative predictors, and we will adopt this convention, just keep in mind that we are actually referring to the cross product of the two variables.  
 
 $$
 \begin{equation}
-z =  x \times y 
+z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times x \times y)
 (\#eq:F11-2)
 \end{equation}
 $$
 
-In figure \@ref(fig:F11-3) we can see a comparison of a plane and two saddle shapes. In the middle left plot we can see the analogy of the plaza with the sloping floor. If we were walking "into" the plot the ground would first be sloping down left to right, but gradually changes so that it it sloping up left to right by the end of the surface. 
+In general, interaction terms are parameters that allow for the effect of a predictor to vary according to the value of some other predictor. When it comes to quantitative predictors, an interaction means that the slope of each predictor continuously increase/decreases as a function of the value of the *other* predictor. Consider the equation below which omits the terms for our $y$ variable for the sake of simplicity. First, let's factor out the $x$ form the second and third terms on the right. When we do this, we can see that the slope for the $x$ dimension, $b$, will vary as a function of the value of $y$.
+
+$$
+\begin{equation}
+\begin{split}
+z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{d} \times x \times y) \\
+z =  \mathrm{a} + (\mathrm{b} + \mathrm{d} \times y) \times x \\
+\end{split}
+(\#eq:F11-3)
+\end{equation}
+$$
+
+Imagine a case where the slope ($b$) along the $x$ dimension is fixed at 2 and the interaction term ($d$) is equal to zero. When this happens the slope of $x$ is constant and does not change based on the value of $y$. This is a case where the is no interaction between $x$ and $y$. 
+
+$$
+\begin{equation}
+\begin{split}
+b = 2, \; d = 0 \\
+z =  \mathrm{a} + (2 + 0 \times y) \times x \\
+z =  \mathrm{a} + 2  \times x \\
+\end{split}
+(\#eq:F11-4)
+\end{equation}
+$$
+
+When the interaction term has some non-zero value (e.g. 1), then we *will* see the slope along $x$ change as a function of the value of $y$. Below we see that as $y$ increases from 1 to 5, the effective slope along the $x$ axis increases in value.   
+
+$$
+\begin{equation}
+\begin{split}
+d = 1 , \; y = 1   \\
+z =  \mathrm{a} + (2 + 1 \times 1) \times x \\
+z =  \mathrm{a} + 3 \times x \\ \\ 
+d = 1 , \; y = 5   \\
+z =  \mathrm{a} + (2 + 1 \times 5) \times x \\
+z =  \mathrm{a} + 7 \times x \\
+\end{split}
+(\#eq:F11-5)
+\end{equation}
+$$
+
+This reasoning also holds for the $y$ dimension and also means that negative interactions result in a *decrease* in slopes as the value of variables increases. This is obviously not flat and not a plane anymore, but rather a **hyperbolic parabaloid**. Sometimes these sorts of surfaces are referred to as **saddle surfaces** because they contain what's known as a **saddle point**, a point where the slopes along the x and y dimension are both equal to zero. Informally, a saddle point can be thought of as the flat spot in the middle of a shape that curves along two dimensions in a manner resembling a horse saddle. We're often going to refer to hyperbolic parabaloids as *saddles* because their full name is a bit of a mouthful, and because we are mainly interested in contrasting these with planes. However, it's important to keep in mind that hyperbolic parabaloids are one among many types of saddle surface and not the *only* type of saddle surface. 
+  The function for a hyperbolic parabaloid can be seen below, where the height of the surface is equal to the product of some parameter $d$ and its $x$ and $y$ coordinates. 
+
+$$
+\begin{equation}
+z = d \times x \times y 
+(\#eq:F11-6)
+\end{equation}
+$$
+
+So, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:F11-6). When our models include effects for $x$, $y$, *and* their interactions, we are effectively modeling a surface that combined a plane and a saddle shape, as in \@ref(eq:F11-2). In figure \@ref(fig:F11-3) we can see a comparison of a plane and two saddle shapes. In the middle row on the left we can imagine that if we were walking 'into' the plot the ground would first be sloping down left to right. However, as we proceeded into the plot the ground would gradually change so that it it sloping up from left to right further into the figure. 
 
 ```{r F11-3, fig.height = 6, fig.width = 8, fig.cap='(top row) Three perspectives of the same plane. (middle row) Three perspectives of the same saddle shape. (bottom row) Three perspectives of the sum of the plane and the saddle shape in the top two rows.', echo = FALSE, cache = TRUE}
 
@@ -135,26 +183,35 @@ persp(x, y, z, col = bmmb::cols[4],theta = 45,zlim = c(-3,5))
 
 ```
 
-We can combine a plane and a saddle shape, as in the bottom row of figure \@ref(fig:F11-3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. 
+We can combine a plane and a saddle, as in the bottom row of figure \@ref(fig:F11-3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. 
 
 $$
 \begin{equation}
-z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times xy)
-(\#eq:F11-3)
+z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times x \times y)
+(\#eq:F11-7)
 \end{equation}
 $$
 
-What does any of this mean for our regression models? We discussed above that models with two continuous predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by the **cross-product**, the multiple, of the two variables. So, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:F11-2). When our models include effects for $x$, $y$, *and* their interactions, we are effectively modeling a surface that combined a plane and a saddle shape, as in \@ref(eq:F11-3). 
+When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use in the cross product term. For example, consider below where we generate two samples of 100 random Gaussian variables (`x1, x2`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated and yet their cross product (`x1x2`) is strongly correlated with both of them. This is because when variables are far from zero, the cross product between two variables will always be greater when one of the variables is greater. 
 
-Interaction terms represent conditional effects, and allow for the effect of a predictor to vary according to the value of some other predictor. When it comes to quantitative predictors, if two predictors interact it means that the slope of a predictor continuously increase/decreases as a function of the value of the other predictor.
+```{r}
+set.seed(1)
+x1 = rnorm (100,500,1)
+x2 = rnorm (100,500,1)
+x1x2 = x1*x2
 
+cor (cbind(x1,x2,x1x2))
+```
 
-When we include the interaction between quantitative predictors in our models we  
+On the other hand, consider a situation where `x1` and `x2` were centered (`x1_c, x2_x`). Now, their cross product (`x1x2_c`) will not always be greater when either variable is greater, it will only be large when both variables have values above their mean and may be negative when even one does not. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and that lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routine whenever you plan to include interactions between these in your models. 
 
-- independent dimension
-- cross product
-- centering is advised
+```{r}
+x1_c = x1 - mean (x1)
+x2_c = x2 - mean (x2)
+x1x2_c = x1_c*x2_c
 
+cor (cbind(x1_c,x2_c,x1x2_c))
+```
 
 ## Data and research questions
 
@@ -168,7 +225,7 @@ options (contrasts = c('contr.sum','contr.sum'))
 data (exp_data)
 ```
 
-We center our continuous predictors, and also scale f0 so that it has about the same magnitude as the VTL effect.  
+We center our quantitative predictors, and also scale f0 so that it has about the same magnitude as the VTL effect.  
 
 ```{r}
 exp_data$vtl_original = exp_data$vtl
@@ -575,7 +632,7 @@ And see that all of the extra complexity included in our full model gains us les
 
 ## Fitting a multivariate logistic regression model
 
-We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of BANOVA outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we will be fitting. A logistic regression model with two continuous predictors specifies planes along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1). When the value on the surface of these planes is negative, the model predicts a response of 0, and when the value of the plane is positive the model predicts a 1. We can imagine the plane such that $z=0$ representing a probability of 0.5. The planes represented by our models will intersect with these planes, forming a line at this intersection. Since these lines represent a division of our planes into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the lines formed by the intersection of these planes represent the *category boundary* as defined by our model. When we want to know the probability expected for any given x and y axis location, we can transform the value on the plane using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:11.9). Although these surfaces are are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. 
+We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of BANOVA outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we will be fitting. A logistic regression model with two quantitative predictors specifies planes along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1). When the value on the surface of these planes is negative, the model predicts a response of 0, and when the value of the plane is positive the model predicts a 1. We can imagine the plane such that $z=0$ representing a probability of 0.5. The planes represented by our models will intersect with these planes, forming a line at this intersection. Since these lines represent a division of our planes into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the lines formed by the intersection of these planes represent the *category boundary* as defined by our model. When we want to know the probability expected for any given x and y axis location, we can transform the value on the plane using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:11.9). Although these surfaces are are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. 
 
 ```{r F11-9, fig.height = 4, fig.width = 8, fig.cap='(top) Threee perspectives on a plane that specifies logits along its z axis. (bottom) The same plane after undergoing to antilogit transform, now expressing probabilities along the z axis.', echo = FALSE, cache = TRUE}
 

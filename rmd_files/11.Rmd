@@ -215,19 +215,16 @@ cor (cbind(x1_c,x2_c,x1x2_c))
 
 ## Data and research questions
 
-Our previous model was good, but it was missing an obvious and important predictor: the fundamental frequency of the speaker's voice (f0). The fundamental frequency of a sound is the main acoustic correlate of perceived pitch. We know from previous studies that, in general, speakers with lower speaking f0s tend to be identified as taller. In this section, we're going to fit a model that tries to predict apparent height from VTL and f0, and the interaction of the two. 
-
+The models we fit in chapter 9 and 10 were missing an obvious and important predictor: The fundamental frequency of the speaker's voice (f0). The fundamental frequency of a sound is the main acoustic correlate of perceived pitch. We know from previous studies that, in general, speakers with lower speaking f0s tend to be identified as taller (see chapter X for a discussion of this). In this section, we're going to fit a model that tries to predict apparent height from VTL and f0, and the interaction of the two. 
+  Below we load our packages and data, and center our quantitative predictors. We also scale f0 so that it has a reasonably similar magnitude as the VTL effect. Specifically, the average difference in VTL between adult females and males is about 2 cm, and the difference in f0 is about 100 Hz. This means that is we divide f0 by 100 the difference between men and women is about 1 unit, comparable to the 2 unit difference in VTL. 
+  
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
 library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
 
 data (exp_data)
-```
 
-We center our quantitative predictors, and also scale f0 so that it has about the same magnitude as the VTL effect.  
-
-```{r}
 exp_data$vtl_original = exp_data$vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 
@@ -236,7 +233,7 @@ exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
 
-We're not going to have well-defined research questions this time. Instead, we have a sort of vague one that we will try to deal with:
+We're not going to have well-defined research questions this time. Instead, we have a meta research question that we will try to deal with:
 
 Q1) What do we do with all these parameters? How do we know what to focus on and where to begin?
 
@@ -246,14 +243,14 @@ We're going to begin with a model that includes all possible interactions betwee
 
 `height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`
 
-We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is way too long at this point. However, we can talk about all of our model coefficients and what they mean for our model. And below is an 'expanded' version of our model that spell out all of the included parameters.
+We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is way too long at this point. However, we can talk about all of our model coefficients and what they mean for our model. Below is an 'expanded' version of our model that spells out all of the included parameters.
 
 ```
 height ~ Intercept + vtl + f0 + A + G + A:G1 + vtl:f0 + vtl:A + vtl:G1 + f0:A + 
          f0:G1 + vtl:f0:A + vtl:f0:G1 + vtl:A:G1 + f0:A:G1 + vtl:f0:A:G1
 ```
 
-We can group these parameters together based on the way they affect the surfaces [@@ - SB - shapes? whats the general term I should be using here?] represented by our model: Intercept parameters (`a`), VTL slope parameters (`b`), f0 parameters (`c`), and VTL:f0 interaction parameters (`d`).
+We can group these parameters together based on the way they affect the surfaces they represent: Intercept parameters (`a`), VTL slope parameters (`b`), f0 parameters (`c`), and VTL:f0 interaction parameters (`d`).
 
 ```
 a = Intercept + A        + G        + A:G 
@@ -271,12 +268,13 @@ height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\
 \mu_{[i]} = a_{[i]} +  (b_{[i]} \times \mathrm{vtl}_{[i]}) + (c_{[i]} \times \mathrm{f0}_{[i]}) + (d_{[i]} \times \mathrm{f0}_{[i]} \times \mathrm{vtl}_{[i]}) \\ \\
 \mathrm{and \; more} \ldots
 \end{split}
-(\#eq:11-4)
+(\#eq:11-8)
 \end{equation}
 $$
 
-And the lines below that would have described $a$, $b$, $c$, and $d$ as the sum of the model. Notice that there is a symmetry to the parameters for each 'dimension' in our model. Each one contains a 'main effect' term (`Intercept,A, G, A:G`), an interaction with apparent age (`A, vtl:A, f0:A, vtl:f0:A`), an interaction with apparent gender (`G, vtl:G, f0:G, vtl:f0:G`), and an interaction with apparent age *and* gender (`A:G, vtl:A:G, f0:A:G, vtl:f0:A:G`). 
-
+And the lines below that would have described $a$, $b$, $c$, and $d$ as the sum of the appropriate model parameters. Notice that there is a symmetry to the parameters for each 'dimension' in our model. Each one contains a 'main effect' term (`Intercept,A, G, A:G`), an interaction with apparent age (`A, vtl:A, f0:A, vtl:f0:A`), an interaction with apparent gender (`G, vtl:G, f0:G, vtl:f0:G`), and an interaction with apparent age *and* gender (`A:G, vtl:A:G, f0:A:G, vtl:f0:A:G`). 
+  Notice also that this relatively complex model has been built up out of parts: We discussed the decomposition of intercepts into multiple factors, as in $a$ in chapter 7. We discussed the inclusion of quantitative predictors and the decomposition of variation in these, as in $b$ in chapter 9. Now, we discuss the addition of more quantitative predictors ($c$) and the interactions between these ($d$). Effectively, we have been incrementally adding complexity to our models and from here on increasing complexity mostly consists of sticking together these basic components in more complicated manners. 
+  
 ### Fitting the model
 
 ```{r, eval = FALSE}
@@ -305,15 +303,16 @@ model_height_vtl_f0 = bmmb::get_model ('11_model_height_vtl_f0.RDS')
 model_height_vtl_f0 = readRDS ('../models/11_model_height_vtl_f0.RDS')
 ```
 
-We're going to leave a discussion of the properties of the model to the next section where we present some advantages of working with Bayesian models over some more 'traditional' approaches. 
+Normally this is around where we would discuss and interpret the characteristics of our model. We're going to leave this for chapter 14, where we present a model very similar to this in a format similar to what you might see in an academic journal. Instead, we will discuss some advantages of working with Bayesian models over some more 'traditional' (although still modern) approaches. 
 
 ### Advantages of Bayesian multilevel models for large models
 
-At this point we have enough model components to build very large and complicated models, like the one we fit above. Traditionally, models with many predictors have presented three general problems. First, a model with 'too many' predictors may return spurious values for the 'extra' predictors. Sometimes these spurious values are difficult to distinguish from the 'real' parameters, leading to incorrect conclusions. Second, the model may not be able to fit/converge on a solutions, meaning you can't get the model coefficients. Regardless of the approach to parameter estimation, more-complicated models make it more and more difficult for any estimation to 'find' the optimal parameter values given the data. Third, it can be difficult to interpret a model with *hundreds* (or thousands) of parameters. This becomes especially problematic when considered together with problem (1), that some of these values may simply represent noise. In this section we're going to discuss how working with multilevel Bayesian models can naturally help us with problems (1) and (2) above. In the following section we will discuss how our models can also help us resolve the third problem above.  
-  The Bayesian models fit by `brms` have three properties that help resolve the first two problems above. First, the use of prior probabilities and shrinkage, when properly applied, tend to 'pull' weakly-supported parameter values closer to the group mean (or to zero). This can help reduce many of the problems associated with models with large numbers of parameters (cite). Second, the fact that confidence intervals are provided for all parameters helps distinguish random variation from variation that is likely to consistently vary from zero. Third, the fact that our models do not try to find *the* best solution, but simply sample the posterior distribution, relieves much of the pressure associated with finding *the* best solution for models with large numbers of parameters. 
-  To this point we have not discussed the `lmer` function very much, apart from in 'Frequentist corner' at the end of some chapters. The `lmer` function (linear mixed-effects regression) is an extremely popular and extremely useful function. In general, `lmer` and an equivalent model specified in `brms` should provide reasonably similar answers when fitting the same models. However, there are some important differences between the two approaches. First, rather than provide a samples of value for each parameter, `lmer` returns *point estimates* representing the *best* values of parameters. This can cause a problem when parameters are bounded, or grow without bound. For example, standard deviation parameters (e.g., $\sigma$) cannot be 0 or negative, but sometimes they are very, very small. So, when `lmer` tries to find the 'best' value, it can get closer, and closer, and closer to zero, leading to problems involving calculations with very small values (e.g., as $x$ approaches $0$, $1/x$ approaches $\infty$). In contrast, Bayesian models don't try to find the single 'best' value but instead collect a series of samples. As a result, the models are less likely to encounter problems when they try to estimate values that are very close to boundaries (they just 'bounce' of the boundary as they randomly walk!). A second difference between the `lmer` estimation method and that of our Bayesian multilevel models is that `lmer` doesn't use prior probabilities to estimate any of it's parameters. This can cause some problems when estimating a large number of parameters without enough data. In contrast, `brms` applies 'shrinkage' to all its parameters (at least in principle), which can help avoid some of the problems encountered by `lmer`. 
-  We're going to compare the output of `lmer` and `brms` for the model we fit above. Just to be clear, our intention in comparing `lmer` and `brms` is not to compare different statistical *philosophies* or epistemological claims. Our aim is much, much more modest than that. We simply wish to compare `brms`, an approach that 1) uses priors, 2) provides confidence intervals, and 3) estimates based on posterior samples, to one that does not (`lmer`). 
-  Below we fit a model equivalent to `model_height_vtl_f0` using `lmer`.
+At this point we have enough model components to build very large and complicated models, like the one we fit above. Traditionally, models with many predictors have presented three general problems. First, a model with 'too many' predictors may return spurious values for the 'extra' predictors. Sometimes these spurious values are difficult to distinguish from the 'real' parameters, leading to incorrect conclusions. Second, the model may not be able to fit/converge on a solutions, meaning you can't get the model coefficients. Regardless of the approach to parameter estimation, more-complicated models make it more and more difficult for any estimator to 'find' the optimal parameter values given the data. Third, it can be difficult to interpret a model with *hundreds* (or thousands) of parameters. This becomes especially problematic when considered together with problem (1), that some of these values may simply represent noise. In this section we're going to discuss how working with multilevel Bayesian models can naturally help us with problems (1) and (2) above. In the following section we will discuss how our models can also help us resolve the third problem above.  
+  The Bayesian models fit by `brms` have three properties that help resolve the first two problems above. First, the use of prior probabilities and shrinkage, when properly applied, tend to 'pull' weakly-supported parameter values closer to the group mean (or to zero). This can help reduce many of the problems associated with models with large numbers of parameters (cite). Second, the fact that confidence intervals are provided for all parameters helps distinguish random variation from variation that is unlikely to be zero. Third, the fact that our models do not try to find *the* best solution, but simply sample the posterior distribution, relieves much of the pressure associated with finding *the* best solution for models with large numbers of parameters. 
+  To this point we have not discussed the `lmer` function very much, apart from in 'Frequentist corner' at the end of some chapters. The `lmer` function (linear mixed-effects regression) is an extremely popular and extremely useful function. In general, `lmer` and an equivalent model specified in `brms` should provide reasonably similar answers when fitting the same models. However, there are some important differences between the two approaches. First, rather than provide a distribution of sample for each parameter, `lmer` returns *point estimates* representing the *best* values of parameters. This can cause a problem when parameters are bounded or grow without bound. 
+  For example, standard deviation parameters (e.g., $\sigma$) cannot be 0 or negative, but sometimes they are very, very small. So, when `lmer` tries to find the 'best' value, it can get closer, and closer, and closer to zero, leading to problems involving calculations with very small values (e.g., as $x$ approaches $0$, $1/x$ approaches $\infty$). In contrast, Bayesian models don't try to find the single 'best' value but instead collect a series of samples. As a result, the models are less likely to encounter problems when they try to estimate values that are very close to boundaries (they just 'bounce' of the boundary as they randomly sample). 
+  A second difference between the `lmer` estimation method and that of our Bayesian multilevel models is that `lmer` doesn't use prior probabilities to estimate any of its parameters. This can cause some problems when estimating a large number of parameters without large amounts of data. In contrast, `brms` applies 'shrinkage' to all its parameters (at least in principle), which can help avoid some of the problems encountered by `lmer`. 
+  We're going to compare the output of `lmer` and `brms` for the model we fit above. Just to be clear, our intention in comparing `lmer` and `brms` is not to compare different statistical *philosophies* or epistemological claims. Our aim is much, much more modest than that. We simply wish to compare `brms`, an approach that 1) uses priors, 2) provides confidence intervals, and 3) estimates based on posterior samples, to a broadly similar approach that does not (`lmer`). Below we fit a model equivalent to `model_height_vtl_f0` using `lmer`.
 
 ```{r, eval = FALSE}
 lme_model_height_vtl_f0 =
@@ -330,10 +329,11 @@ lme_model_height_vtl_f0 = bmmb::get_model ('11_lme_model_height_vtl_f0.RDS')
 lme_model_height_vtl_f0 = readRDS ('../models/11_lme_model_height_vtl_f0.RDS')
 ```
 
-We won't show the model print statements they are both quite large, but we compare the estimates of our fixed effects in figure \@ref(fig:F11-4). Clearly, the two approaches provide very similar for the model fixed effects. That's reassuring! If results differed dramatically for approximately the same model based on the software used, we would need to think very carefully about the causes and possible meaning of these differences.
-  Since our model has a large number of parameters we are going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height. We define meaning differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We establih this lower limit simply based off the fact that people may describe themselves as 175 cm (or 5'10.5") but rarely make distinctions smaller than that (e.g. people rarely distinguish 5'10.5" and 5'10.75"). 
-  Our model suggests non-zero slopes for our plane along the VTL (mean = 3.09, s.d. = 0.63, 95% C.I = [1.84, 4.34]) and f0 dimensions (mean = -3.34, s.d. = 1.27, 95% C.I = [-5.88, -0.86]). However, the `vtl:f0` interaction does not seem to matter at all (mean = -0.72, s.d. = 0.96, 95% C.I = [-2.65, 1.17]). This means that, overall, our responses can be defined by a plane along f0 and VTL without curving the plane into a saddle shape. The `vtl:A1` interaction suggests a differing use of VTL based on apparent adultness, but there do not appear to be any other meaningful interactions between VTL, f0 and the other predictors. In terms of intercept terms (i.e. those not interacting with quantitative predictors), there is a large effect for apparent age (mean = 7.04, s.d. = 1.13, 95% C.I = [4.85, 9.28]) but no main effect for apparent gender (mean = -0.06, s.d. = 0.71, 95% C.I = [-1.43, 1.35]). However, the interaction between apparent age and apparent gender (`A1:G1`) had a 95% credible interval that did not overlap with zero and had a posterior mean value of -1.49 cm (s.d. = 0.51, 95% C.I = [-2.48, -0.44]). This indicates that although apparent gender had an average effect of about 0 cm on apparent height it may have had meaningful, but opposite, effects based on the apparent gender of the speaker. 
-  In order to interpret our predictors in the presence of interactions, we need to consider the simple effects. For example, in order to consider the `vtl:A1` interaction we need to consider the simple effect of VTL for apparent children, and then for apparent adults. This is done in exactly the same manner as outlined in chapter 9 and 10 for quantitative predictors, independently for each predictor or interaction (i.e. cross-product) between predictors.  We're not going to go over the interpretation of the coefficients and the reconstruction of the simple effects here, as this has been discussed in detail elsewhere (section X). 
+We won't show the model print statements as they are both quite large, but we compare the estimates of our fixed effects in figure \@ref(fig:F11-4). Clearly, the two approaches provide very similar estimates for the model fixed effects. That's reassuring because if results differed dramatically for approximately the same model based on the software used, we would need to think very carefully about the causes and possible meaning of these differences.
+  Since our model has a large number of parameters we're going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height. This is a similar approach to Kusch's Region of Practical Equivalence (ROPE, cite). Rather than worrying about whether things are exactly zero or not, Kruschke suggests we can think about when things are so small that they may as well be zero. For human height, apparent and veridical, we define meaningful differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We establish this lower limit simply based off the fact that people may describe themselves as 175 cm (or 5'10.5") but rarely make distinctions smaller than that (e.g. people rarely distinguish 5'10.5" and 5'10.75"). In addition, governments, doctors and even institutions like the NBA which are extremely interested in height will rarely measure to within less than 1 cm (half an inch). As a result, although a difference of 0,1 cm may very well be consistently different from zero, in the context of apparent height it likely has little to no practical significance.
+  We will discuss the Bayesian model fixed effects, which you can see by running `fixef(model_height_vtl_f0)`. Our model suggests non-zero slopes for our plane along the VTL (mean = 3.09, s.d. = 0.63, 95% C.I = [1.84, 4.34]) and f0 dimensions (mean = -3.34, s.d. = 1.27, 95% C.I = [-5.88, -0.86]). However, the `vtl:f0` interaction does not seem to matter at all (mean = -0.72, s.d. = 0.96, 95% C.I = [-2.65, 1.17]). This means that, overall, our responses can be predicted by a plane along f0 and VTL without curving the plane into a saddle shape. The `vtl:A1` interaction suggests a differing use of VTL based on apparent adultness, but there do not appear to be any other meaningful interactions between VTL, f0 and the other predictors. In terms of intercept terms (i.e. those not interacting with quantitative predictors), there is a large effect for apparent age (mean = 7.04, s.d. = 1.13, 95% C.I = [4.85, 9.28]) but no main effect for apparent gender (mean = -0.06, s.d. = 0.71, 95% C.I = [-1.43, 1.35]). However, the interaction between apparent age and apparent gender (`A1:G1`) had a 95% credible interval that did not overlap with zero and had a posterior mean value of -1.49 cm (s.d. = 0.51, 95% C.I = [-2.48, -0.44]). This indicates that although apparent gender had an average effect of about 0 cm on apparent height it may have had meaningful, but opposite, effects based on the apparent gender of the speaker. 
+    In order to interpret our predictors in the presence of interactions, we need to consider the simple effects. For example, in order to consider the `vtl:A1` interaction we need to consider the simple effect of VTL for apparent children, and then for apparent adults. This is done in exactly the same manner as outlined in chapter 9 and 10 for quantitative predictors, independently for each predictor or interaction (i.e. cross-product) between predictors.  We're not going to go over the interpretation of the coefficients and the reconstruction of the simple effects here, as this has been discussed in detail elsewhere (section X) and will be carried out in chapter 14.  
+
 
 ```{r F11-4, fig.height = 3.5, fig.width = 8, fig.cap='A comparison of fixed effect estimates provided by the brms (red) and lmer (black) models. The brms intervals are the 95% credible intervals, those for lmer are twice the standard error of the parameter estimate.', echo = FALSE, cache = TRUE}
 
@@ -343,12 +343,15 @@ We won't show the model print statements they are both quite large, but we compa
 pts = fixef (lme_model_height_vtl_f0)[-1]
 err_bars = summary (lme_model_height_vtl_f0)$coefficients[-1,2]
 
+pchs = ifelse (abs(fixef (model_height_vtl_f0)[-1,1]) > 0.5, 16,1)
+
 par (mfrow = c(1,1), mar = c(6,4,1,1))
-bmmb::brmplot (fixef (model_height_vtl_f0)[-1,], ylim = c(-7,10),las=2)
+bmmb::brmplot (fixef (model_height_vtl_f0)[-1,], ylim = c(-7,10),las=2, pch=pchs,lwd=2)
+points (fixef (model_height_vtl_f0)[-1,1], pch=pchs,lwd=2,cex=1.5)
 points ((1:15)+.2, pts, cex=1.5,lwd=2,col=2,pch=16)
 segments((1:15)+.2, pts-2*err_bars,(1:15)+.2, pts+2*err_bars,lwd=2,col=2)
 
-abline (h = c(-1,1), lty = 3, col = bmmb::cols[6],lwd=2)
+abline (h = c(-0.5,0.5), lty = 3, col = bmmb::cols[6],lwd=2)
 ```
 
 Figure \@ref(fig:F11-5) presents some ways in which the information provided by `lmer` and `brms` differ. In the top row we see a comparison of the 'random effects' standard deviation estimates provided by our two models, and the error terms estimated by our two models. For example, the standard deviation of the listener f0 'random effect' ($\sigma_{f0 \colon L}$) represents the variation around zero of the listener-specific effects for f0 in each model. As we can see, the models provide reasonably similar standard deviation estimates for most parameters. However, note that the `brm` models provide credible intervals for all parameters, while the `lmer` models only provide point estimates for these parameters. The lack of intervals on parameter estimates makes it difficult to 'rule out' variance parameters since they will *never* equal exactly zero. So, we will always have non-zero numbers for these parameters, and 'secretly' some of these are zero or nearly zero. In addition, variance components very close to zero can cause problems when estimating our models. For example, fitting our model with `lmer` resulted in the following error: 

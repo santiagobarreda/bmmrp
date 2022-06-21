@@ -801,7 +801,7 @@ In the figure above we see a relatively complex model, with an important role fo
 ### Categorization in two dimensions
 
 Imagine a horizontal plane such that $z=0$ for all values of $x$ and $y$ in figures \@ref(fig:11-9) and \@ref(fig:11-10). This plane would represent an expected probability of 0.5, meaning it is the boundary between successes and failures along the $z$ axis. Our response surface will intersect with the horizontal $z=0$ plane, forming a curve at this intersection. These curves represent the division of the response surface into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the curves formed by the intersection of our response surface and the $z=0$ plane represent the *category boundary* as defined by our model.
-  The intersection of two planes forms a straight line. Although these surfaces are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. Although the surfaces in the bottom row of figure \@ref(fig:11-9) are not planes, the intersection of these surfaces with planes still form straight lines. However, the intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an **asymptote** (a boundary line). Since saddle shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). 
+  The intersection of two planes forms a straight line. Although these surfaces are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. Although the surfaces in the bottom row of figure \@ref(fig:11-9) are not planes, the intersection of these surfaces with planes still form straight lines. However, the intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. Since saddle shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). 
   To find the intersection of the surfaces defined by our models and the plane at $z=0$, we can use some basic algebra. We take the equation defining the general shape, including the cross-product of $x$ and $y$:
 
 $$
@@ -861,9 +861,10 @@ c_child = mean (samples[,"f0"] - samples[,"f0:A1"])
 d_child = mean (samples[,"vtl:f0"] - samples[,"vtl:f0:A1"])
 ```
 
-We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our hyperbolic (equation X) boundaries in figure \@ref(fig:F11-12). You may notice small lines in the top left corner of the left plot in the figure. When we 'zoom out' in the right plot the figure \@ref(fig:F11-12), we see that this model actually predicts male classifications in the top left corner as well as in the bottom right corner. This is a result of the fact that our hyperbolic boundaries come in pairs, resulting from the bimodal shape seen in the bottom row of figure \@ref(fig:F11-10).
+We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our hyperbolic (equation X) boundaries in figure \@ref(fig:F11-12). You may notice small lines in the top left corner of the left plot in the figure. When we 'zoom out' in the middle plot the figure \@ref(fig:F11-12), we see that this model actually predicts male classifications in the top left corner as well as in the bottom right corner. This is a result of the fact that our hyperbolic boundaries come in pairs, resulting from the bimodal shape seen in the bottom row of figure \@ref(fig:F11-10).
+  In the right plot of figure \@ref(fig:F11-12) we present a *territorial map* of our stimulus space as defined by speaker VTL and f0, for apparent adults. This map tells us the expected classification of speakers into males and females given their voice f0 and VTL, and assuming that they are perceived as being adults. Unlike the territorial maps presented in the previous chapter (in figure X), the map below is defined along a two-dimensional stimulus space. In addition, although we only present one below we can make three separate maps, one for apparent children, one for apparent adults, and an overall map. 
 
-```{r F11-12, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Curves indicate male/female boundaries for adults (green), children (orange), and overall (blue). (right) The same as the left figure but zoomed out more.", echo = FALSE, cache = FALSE}
+```{r F11-12, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Curves indicate male/female boundaries for adults (green), children (orange), and overall (blue). (middle) The same as the left figure but zoomed out more. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space.", echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11-12
@@ -896,7 +897,7 @@ aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
 tab = table (tmp$S, tmp$C)
 mod_cat = apply (tab, 1,which.max)
 
-par (mfrow = c(1,2), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
+par (mfrow = c(1,3), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       pch=16,lwd=2, xlab = "",ylab="Height (inches)")
@@ -938,6 +939,24 @@ curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -6, to = -c_child/d_
        lwd=2, lty=2,col=bmmb::cols[8])
 curve ((-b_child*x - a_child) / (d_child*x+c_child), from = -c_child/d_child, to = 6, add = TRUE,
        lwd=2, lty=2,col=bmmb::cols[8])
+
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+      xlim=c(-4,4), ylim = c(-2,2),  pch=16,lwd=2, xlab = "",yaxt='n',
+      ylab="Height (inches)")
+grid()
+
+rect (-5,-3,5,3,col=2)
+
+x = seq(-c_adult/d_adult+.05,5,0.1)
+y = (-b_adult*x - a_adult) / (d_adult*x+c_adult)
+polygon (c(-5,x,5),c(-3,y,-3),col="seagreen")
+
+x = seq(-5 , -c_adult/d_adult-.05,0.1)
+y = (-b_adult*x - a_adult) / (d_adult*x+c_adult)
+polygon (c(-5,x,5),c(3,y,3),col="seagreen")
+
+points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+      col = 0)
 
 ```
 
@@ -991,7 +1010,7 @@ c_child_reduced = mean (samples[,"f0"] - samples[,"f0:A1"])
 
 We use these parameters to plot the linear category boundaries in our stimulus space. Figure \@ref(fug:11-13) compares the linear boundaries implied by our reduced model to those implied by our full model, ignoring the $d$ coefficients. We can see that in the absence of the cross-product, the boundaries for children and adults differ substantially in their slope. The change in slope indicates that f0 differences matter less for children than they do for adults. We can also see that the linear boundaries do not differ much in slope for our model that *does* include a cross-product. This is likely because either the cross-product, or the interaction of this with apparent age, is able to capture whatever difference our reduced model represents with differences in the effect of f0.  
 
-```{r F11-13, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Lines indicate male/female boundaries for adults (green), children (orange), and overall (blue) implied by the reduced model. (right) The same as the left figure but for the full model, ignoring the cross-product term.", echo = FALSE, cache = TRUE}
+```{r F11-13, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Lines indicate male/female boundaries for adults (green), children (orange), and overall (blue) implied by the full model, ignoring the cross-product term. (middle) The same as the left figure but for the reduced model. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space, for the reduced model.", echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11-13
@@ -1028,24 +1047,10 @@ aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
 tab = table (tmp$S, tmp$C)
 mod_cat = apply (tab, 1,which.max)
 
-par (mfrow = c(1,2), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
+par (mfrow = c(1,3), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",
-      ylab="Height (inches)")
-grid()
-points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
-      col = bmmb::cols[c(2:5)][aggd$C])
-
-legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
-
-curve ((-b_all_reduced*x - a_all_reduced) / (c_all_reduced), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
-curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
-curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
-
-plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
-      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
       ylab="Height (inches)")
 grid()
 points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
@@ -1058,6 +1063,37 @@ legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
 curve ((-b_all*x - a_all) / (c_all), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
 curve ((-b_adult*x - a_adult)/ (c_adult), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
 curve ((-b_child*x - a_child)/ (c_child), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
+
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
+      ylab="Height (inches)")
+grid()
+points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+      col = bmmb::cols[c(2:5)][aggd$C])
+
+legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
+        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
+
+curve ((-b_all_reduced*x - a_all_reduced) / (c_all_reduced), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
+curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
+curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
+
+
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
+      ylab="Height (inches)")
+grid()
+
+x = seq(-3,4,0.1)
+y = (-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced)
+polygon (c(-3,x,4),c(-3,y,-3),col="seagreen")
+
+y = (-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced)
+polygon (c(-3,x,1),c(3,y,3),col=2)
+
+points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+      col = 0)
+
 ```
 
 ### Model selection and misspecification

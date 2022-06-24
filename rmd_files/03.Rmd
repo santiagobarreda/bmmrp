@@ -308,7 +308,7 @@ If we focus on the general characteristics of posterior distributions with respe
 
 A consequence of the 'merging' of prior information with the likelihood is that posterior distributions can be **shrunk** towards the prior. Recall from chapter 2 that the maximum likelihood estimate of a parameter can be thought of as the 'best' parameter in that it is the parameter that makes your data as probable as it can be given the model structure. In figure \@ref(fig:F3-1) we see that in some cases the posterior distribution is not exactly like the likelihood and has been *pulled* towards the prior. This means that the maximum *a posteriori* parameter value is not necessarily equal to the *maximum likelihood* parameter value.
 
-The *pull* exerted by priors is referred to as **shrinkage**, because it tends to *shrink* the magnitude of effects by pulling them towards the prior mean (which is often zero). Broadly speaking, deviations from prior expectations are maintained when there is good enough evidence for them, and shrunk when there is not. What constitutes 'enough' evidence is based on the structure of the model and the nature of the data. As seen in figure \@ref(fig:F3-1) a wide enough prior will not meaningfully affect estimates even for extremely small sample sizes. You may wonder, is shrinkage a good thing? It turns out that shrinkage can help models arrive at more reliable parameter estimates by reducing weakly supported values that deviate substantially from prior expectations (cite). This will be discussed further in the following chapter.
+The *pull* exerted by priors is referred to as **shrinkage**, because it tends to *shrink* the magnitude of effects by pulling them towards the prior mean (which is often zero). Broadly speaking, deviations from prior expectations are maintained when there is good enough evidence for them, and shrunk when there is not. What constitutes 'enough' evidence is based on the structure of the model and the nature of the data. As seen in figure \@ref(fig:F3-1) a wide enough prior will not meaningfully affect estimates even for extremely small sample sizes. You may wonder, is shrinkage a good thing? It turns out that shrinkage can help models arrive at more reliable parameter estimates by reducing weakly supported values that deviate substantially from prior expectations (cite). This will be discussed further later in the chapter.
   
 ## Sampling from the posterior using `stan` and `brms` {#c3-sampling}
 
@@ -422,21 +422,21 @@ $$
 \end{equation}
 $$
 
-We can rearrange the terms in (\#eq:3-15) to isolate the random term on the left side, as in (\#eq:3-17). When we do this, we see that **error** is what we call the difference between the value of an observation and the expected value for that observation. 
+We can rearrange the terms in (\#eq:3-15) to isolate the random term on the left side, as in (\#eq:3-19). When we do this, we see that **error** is what we call the difference between the value of an observation and the expected value for that observation. 
 
 $$
 \begin{equation}
 \varepsilon_{[i]} = y_{[i]} - \mu_{[i]} 
-(\#eq:3-17)
+(\#eq:3-19)
 \end{equation}
 $$
 
-In practice, you never know the true expected value, the *real* exact parameter for whatever distribution you are working with. Instead, you work with an estimate of the predicted value $\hat{\mu}$. As a consequence, you do not have access to the exact errors but instead to estimated errors $\hat{\varepsilon}$, as seen in (\#eq:3-18). Estimated errors are called **residuals**. 
+In practice, you never know the true expected value, the *real* exact parameter for whatever distribution you are working with. Instead, you work with an estimate of the predicted value $\hat{\mu}$. As a consequence, you do not have access to the exact errors but instead to estimated errors $\hat{\varepsilon}$, as seen in (\#eq:3-20). Estimated errors are called **residuals**. 
 
 $$
 \begin{equation}
 \hat{\varepsilon}_{[i]} = y_{[i]} - \hat{\mu}_{[i]}
-(\#eq:3-18)
+(\#eq:3-20)
 \end{equation}
 $$
 
@@ -450,13 +450,13 @@ Model structures are expressed in R using a very specific syntax. Think of writi
 
 The variable we are interested in understanding (`y`) goes on the left hand side of the tilde (`~`) and on our predictors go on the right hand side. Notice that information regarding the random term ($\varepsilon$) is not included in the model formula. The formula above can be read as 'y is distributed according to some predictor', which really means "we think there is systematic variation in our y variable that can be understood by considering its joint variation with our predictor variable(s)."
 
-For intercept-only models, the number `1` is included in the model formula to indicate that a single constant value is being estimated (as in \@ref(eq:3-14)). As a result, our model formula will have the form seen below. This model could be said out loud like "we are trying to estimate the mean height" or "we are predicting mean height given only an intercept".
+For intercept-only models, the number `1` is included in the model formula to indicate that a single constant value is being estimated (as in \@ref(eq:3-16)). As a result, our model formula will have the form seen below. This model could be said out loud like "we are trying to estimate the mean height" or "we are predicting mean height given only an intercept".
 
 `height ~ 1`
 
 ### Fitting the model: Calling the `brm` function {#c3-calling-brm}
 
-The `brms` package contains the `brm` function, which we will use to fit our models. The `brm` function takes a model specification, data, and some other information, and fits a model that estimates all the model parameters. Unless otherwise specified, `brm` assumes that the error component ($\varepsilon$) of your model is normally distributed. The first argument in the function call is the model formula, and the second argument tells the function where to find the data (a data frame called `men`). The other arguments tell the function to estimate a single set of samples (chains = 1) using a single processor on your CPU (cores = 1). These arguments will be discussed in more detail later.
+The `brms` package contains the `brm` (Bayesian regression models) function, which we will use to fit our models. The `brm` function takes a model specification, data, and some other information, and fits a model that estimates all the model parameters. Unless otherwise specified, `brm` assumes that the error component ($\varepsilon$) of your model is normally distributed. The first argument in the function call below is the model formula, and the second argument tells the function where to find the data (a data frame called `men`). The other arguments tell the function to estimate a single set of samples (chains = 1) using a single processor on your CPU (cores = 1). These arguments will be discussed in more detail in the next chapter.
 
 ```{r, warning = FALSE, cache = TRUE, collapse = TRUE, eval = FALSE}
 # To ensure predictable results in examples, we will using the same random  
@@ -497,10 +497,13 @@ model = brms::brm (height ~ 1, data = men, chains = 1, cores = 1)
 model = readRDS ('../models/3_model.RDS')
 ```
 
-By default, `brms` takes 2000 samples, throwing out the first 1000 samples and returning the last 1000. The first 1000 samples are the **warmup**, the time the model uses to find appropriate parameter values for the model, and to tune the behavior of the sampling algorithm. The output above shows you that the sampler is working, and tells you about the progress as it works. This is a small amount of data and a simple model so it should be pretty fast. This is the only time we will be actually fitting a model in the code chunks. For all of the models discussed in this book, you can fit any of these models yourself locally using the code provided, or you can download them directly from the book GitHub repo using the code below. 
+By default, `brms` takes 2000 samples, throwing out the first 1000 samples and returning the last 1000. The first 1000 samples are the **warmup**, the time the model uses to find appropriate parameter values for the model, and to tune the behavior of the sampling algorithm. The output above shows you that the sampler is working, and tells you about the progress as it works. This is a small amount of data and a simple model so it should be pretty fast. For all of the models discussed in this book, you can fit any of these models yourself locally using the code provided, or you can download them directly from the book GitHub repo using the code below. 
 
 ```{r, eval = FALSE}
 # Download it from the GitHub page:
+# Change the model filename for different models. 
+# File names are in the formant: chapterNum_modelName
+
 model = bmmb::get_model ('3_model.RDS')
 ```
 
@@ -513,7 +516,7 @@ Typing the model name into the console and hitting enter prints the default `brm
 model
 ```
 
-The first part provides you with some basic information and part tells you some technical details that we don't have to worry about for now (though some are obvious).
+The first part provides you with some basic information and tells you some technical details that we don't have to worry about for now (though some are obvious).
 
 ```{r}
 ## Family: gaussian 
@@ -532,9 +535,9 @@ Next we see estimated effects for our predictors, in this case only an intercept
 ## Intercept   173.78      0.30   173.16   174.33 1.00     1055      714
 ```
 
-The information above provides the mean (Estimate) and standard deviation (Est. Error) of the posterior distribution of $\mu$ (`Intercept`). The values of `l-95% CI` and `u-95% CI` represent the upper and lower 95% **credible interval** of the posterior distribution. An $x\%$ credible interval of a parameter is an interval such that the parameter has an $x\%$ chance ($0.x$ probability) of falling inside the interval. `brm` calculates credible intervals using quantiles so that the `l-95% CI` and `u-95% CI` represent 2.5% and 97.5% quantiles of the posterior samples of a parameter. Based on its 95% credible interval, we see that there is a 95% probability that $\mu$ is between 173.2 and 174.3 cm given our data and model structure. Our model also provides us an estimate of the error standard deviation($\sigma$), under 'Family Specific Parameters: sigma'. This estimate closely matches our sample standard deviation estimate (`sd(mens_height)`) of 7.77 cm. 
+The information above provides the mean (`Estimate`) and standard deviation (`Est. Error`) of the posterior distribution of $\mu$ (`Intercept`). The values of `l-95% CI` and `u-95% CI` represent the upper and lower 95% **credible interval** of the posterior distribution. An $x\%$ credible interval of a parameter is an interval such that the parameter has an $x\%$ chance ($0.x$ probability) of falling inside the interval. `brm` calculates credible intervals using quantiles so that the `l-95% CI` and `u-95% CI` represent 2.5% and 97.5% quantiles of the posterior samples of a parameter. Based on its 95% credible interval, we see that there is a 95% probability that $\mu$ is between 173.2 and 174.3 cm given our data and model structure. 
 
-In addition, we also get a 95% credible interval for this parameter (2.5% = 7.37, 97.5% = 8.21). Although our focus is often on estimation mean parameters, it is very imprtant to keep in mind that our model in \@ref(eq:3-15) involves the estimations of *two* parameters, $\mu$ and $\sigma$.
+Our model also provides us an estimate of the error standard deviation($\sigma$), under `Family Specific Parameters: sigma`. This estimate closely matches our sample standard deviation estimate of 7.77 cm. In addition, we also get a 95% credible interval for this parameter (2.5% = 7.37, 97.5% = 8.21). Although our focus is often on estimation mean parameters, it is very important to keep in mind that our model in \@ref(eq:3-15) involves the estimations of *two* parameters, $\mu$ and $\sigma$.
 
 ```{r}
 ## Family Specific Parameters: 
@@ -552,17 +555,22 @@ This last section is just boilerplate and contains some basic reminders which wi
 
 ### Seeing the samples {#c3-seeing-samples}
 
-In section \@ref(c3-sampling) we discussed that Bayesian modeling software (like `stan`) takes *samples* of the posterior distributions of parameters given the data and model structure. It's helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summaries of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a data frame using the `get_samples` from the `bmmb` package. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the middle column is the error (`sigma`). The third column (`lp__`) is the log posterior density, to be discussed in section X. 
+In section \@ref(c3-sampling), we discussed that Bayesian modeling software (like `stan`) takes *samples* of the posterior distributions of parameters given the data and model structure. It's helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summaries of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a data frame using the `get_samples` function from the `bmmb` package. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the second column is the error (`sigma`). The third column (`lp__`) is the log posterior density, to be discussed in section \@ref{c3-log-posterior}. 
 
 ```{r, collapse = TRUE}
 # get posterior samples from model
 samples = bmmb::get_samples (model)
+
+# check number of samples
+nrow (samples)
+
+# see first six samples
 head (samples)
 ```
 
-We can plot the individual samples for the mean parameter on the left in figure \@ref(fig:F3-2), and on the right we can see a histogram of the samples. 
+We can plot the individual samples for the intercept parameter on the left in figure \@ref(fig:F3-2), and on the right we can see a histogram of the samples. 
 
-```{r F3-2, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Individual samples from posterior distribution of the model intercept paramter. (right) A histogram of the samples on the left. The curve shows a normal distribution with a mean of 173.8 and a standard deviation of 0.31.", echo = FALSE}
+```{r F3-2, fig.width = 8, fig.height = 3.5, fig.cap = "(left) Individual samples from posterior distribution of the model intercept paramter. (right) A histogram of the samples on the left. The curve shows a normal distribution with a mean of 173.8 and a standard deviation of 0.30.", echo = FALSE}
 
 ################################################################################
 ### Figure 3.2
@@ -572,7 +580,7 @@ par (mfrow = c(1,2), mar = c(4,4,1,1))
 plot (samples[,1], xlab = 'Sample number',ylab = 'Height (cm)',col=teal,pch=16)
 abline (h = mean (samples[,1]), lwd=4,col=yellow)
 hist (samples[,1], freq = FALSE, breaks = 15,main='',xlab='Height (cm)',col=maroon,ylim=c(0,1.3))
-curve (dnorm (x, 173.80, 0.31), xlim = c(172,175), lwd=4,add=TRUE,col=darkorange)
+curve (dnorm (x, 173.80, 0.30), xlim = c(172,175), lwd=4,add=TRUE,col=darkorange)
 ```
 
 Recall that our model output provides information about 95% credible intervals for the mean parameter: It was expected to fall between 173.2 and 174.3 cm. We know that this interval simply corresponds to the 2.5% and 97.5% quantiles of the posterior samples. We can confirm this by checking the quantiles on the vector containing our posterior samples and see that these exactly correspond to the values of `Estimate`, `l-95% CI`, and `u-95% CI` in the model print statement above. 
@@ -581,7 +589,7 @@ Recall that our model output provides information about 95% credible intervals f
 quantile (samples[,"b_Intercept"], c(.025, .975))
 ```
 
-One of the great things about Bayesian models is that you can make your own summaries of the posterior samples, summarize them in several ways as required, and ask different questions easily. For example, there is no special status for the 2.5 and 97.5% quantiles, and we can easily check the values of other ones:
+One of the great things about Bayesian models is that you can make your own summaries of the posterior samples, summarize them in several ways as required, and ask different questions easily. For example, there is no special status for the 2.5 and 97.5% quantiles, and we can easily check the values of other ones, such as the first and third quartiles:
 
 ```{r, collapse = TRUE}
 quantile (samples[,"b_Intercept"], c(.25, .75))
@@ -590,6 +598,7 @@ quantile (samples[,"b_Intercept"], c(.25, .75))
 We can also use the posterior distribution to find the probability that the mean parameter is over/under any arbitrary value:
 
 ```{r, collapse = TRUE}
+# probability that the intercept is less than 174 cm
 mean (samples[,"b_Intercept"] < 174)
 ```
 
@@ -597,24 +606,25 @@ Let's take a second to think about why this works. Recall that the probability i
 
 ### Getting the residuals {#c3-getting-residuals}
 
-We can get the model residuals using the `residuals` function. By default it returns a data frame where one row corresponds to each observation in your data, and the different columns provide you information about the estimate. You will notice that you get credible intervals for each of the estimated residuals. This is because there is one prediction for each set of posterior samples. Since we have 1000 posterior samples that means we have 1000 slightly different predicted values for each observation and therefore 1000 slightly different estimated errors for each observation. By default the distribution of residuals is presented, but you can get the individual estimates themselves by calling `residuals(model,summary=FALSE)`.
+We can get the model residuals using the `residuals` function. By default it returns a data frame where one row corresponds to each observation in your data, and the different columns provide you information about the estimate. You will notice that you also get credible intervals for each of the estimated residuals. This is because there is one prediction for each set of posterior samples. Since we have 1000 posterior samples that means we have 1000 slightly different predicted values for each observation and therefore 1000 slightly different estimated errors for each observation. By default the distribution of residuals is presented, but you can get the individual estimates themselves by calling `residuals(model,summary=FALSE)`.
 
 ```{r, collapse = TRUE}
 model_residuals = residuals (model)
 head (model_residuals)
 ```
 
-In the left panel of figure \@ref(fig:F3-3) we show a histogram of our residuals and compare this to the standard deviation estimated for the error distribution in our model (`sigma = 7.78`). It's no surprise that these match because this is precisely what the sigma parameter in our model is an estimate of, the standard deviation of the residuals. Since our model consists of only an intercept, a single expected value ($\mu$) for all instances of the variable, all variation around the mean constitutes error. We can compare this by comparing our residual estimates to the centered data (right panel of figure \@ref(fig:F3-3)) and seeing that these are basically the same.
+In the left plot of figure \@ref(fig:F3-3) we show a histogram of our residuals and compare this to a normal distribution centered at zero, with a standard deviation equal to the the error in our model (`sigma = 7.78`). It's no surprise that these match because this is precisely what the sigma parameter in our model is an estimate of, the standard deviation of the residuals. Since our model consists of only an intercept, a single expected value ($\mu$) for all instances of the variable, all variation around the mean constitutes error. We can show this by comparing our residual estimates to the centered data (right plot of figure \@ref(fig:F3-3)) and seeing that these are basically the same.
 
-```{r F3-3, fig.height = 3, fig.width = 8, fig.cap='(left) Histogram of the residuals of our model. (right) A comparison of our residuals and centered height judgments shows that these are the same thing.', echo = TRUE}
+```{r F3-3, fig.height = 3, fig.width = 8, fig.cap='(left) Histogram of the residuals of our model. (right) A comparison of our residuals and centered height judgments shows that these are nearly equal.', echo = TRUE}
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
-hist(model_residuals[,1],main="", col = bmmb::cols[13], freq=FALSE, xlim = c(-35,30))
-curve (dnorm (x,0,7.8), xlim=c(-40,45),add=TRUE,lwd=2,col=deepgreen)
+hist(model_residuals[,1],main="", col = bmmb::cols[14], 
+     freq=FALSE, xlim = c(-35,30))
+curve (dnorm (x,0,7.8), xlim=c(-40,45),add=TRUE,lwd=2,col=bmmb::cols[9])
 
 centered_height = mens_height - mean(mens_height)
-plot (model_residuals[,1], centered_height,lwd=2,col=4,cex=1.5)
-abline (0,1,col=2,lwd=2)
+plot (model_residuals[,1], centered_height,lwd=2,col=bmmb::cols[4],cex=1.5)
+abline (0,1,col=bmmb::cols[3],lwd=2)
 ```
 
 ## Checking model convergence {#c3-checking-convergence}
@@ -632,7 +642,7 @@ Our parameter estimates are based of a set of samples from the posterior distrib
 ## http://mc-stan.org/misc/warnings.html#tail-ess
 ```
 
-That is `brms` telling you that you need to collect more samples in order to be confident in your parameter estimates. To get more samples we can run the model longer, or we can use more **chains**. A chain is a separate set of samples for your parameter values. A model can be fit in parallel across several cores resulting in several independent chains. Since these chains are all supposed to be sampling from the same posterior distribution, their samples can be merged across chains after sampling. There is a fixed number of samples a single core of your computer can take in a fixed amount of time. When you do this across $N$ cores, you can get (approximately) $N$ times as many samples in the same amount of time. Since many computers these days have 4-8 (or more) cores, we can take advantage of parallel processing to fit models faster. Before fitting a model across multiple cores, you should confirm how many you have. You can use the following command (you may need to install the `parallel` package):
+That is `brms` telling you that you need to collect more samples in order to be confident in your parameter estimates. To get more samples we can run the model for more iterations, or we can use more **chains**. A chain is a separate set of samples for your parameter values. A model can be fit in parallel across several cores resulting in several independent chains. Since these chains are all supposed to be sampling from the same posterior distribution, their samples can be merged across chains after sampling. There is a fixed number of samples a single core of your computer can take in a given amount of time. When you do this across $N$ cores, you can get (approximately) $N$ times as many samples in the same amount of time. Since many personal computers these days have 4-8 (or more) cores, we can take advantage of parallel processing to fit models faster. Before fitting a model across multiple cores, you should confirm how many you have. You can use the following command (you may need to install the `parallel` package):
 
 ```{r, eval = FALSE}
 parallel::detectCores()
@@ -655,14 +665,16 @@ model_multicore = bmmb::get_model ('3_model_multicore.RDS')
 model_multicore = readRDS ('../models/3_model_multicore.RDS')
 ```
 
-We can print the model below, and can see that using four chains has substantially increased our ESS, without taking up much more computing time. Towards the top of our print statement we see that `4 chains` have collected `total post-warmup samples = 4000`. This means our model has 4000 samples for every parameter in the model. However, for some parameter we have only about 3000 'effective samples'. This means some of our samples are basically dead weight, taking up space and slowing down future computations for no good reason. The discrepancy between the number of samples and the 'effective' number of samples is due to something called **autocorrelation**, the self-similarity of nearby observations in a series of observations (discussed further in section \@ref{c5-manipulating-random-effects}). Sometimes consecutive samples can be too similar and so don't given you that much *independent* information. When this happens you end up with less information about a parameter than you might think based on the number of samples you have. Think of it like measuring the temperature of a place to get an idea of its average annual weather. Measurements need to be well separated in order to be really independent. If you were to measure the temperature every 5 minutes these measurements would have a high autocorrelation, and would not give you a good impression of the range of temperatures that place tends to experience in a calendar year.
+We print the model below, and can see that using four chains has substantially increased our ESS, without taking up much more computing time. Towards the top of our print statement we see that `4 chains` have collected `total post-warmup samples = 4000`. This means our model has 4000 samples for every parameter in the model. However, for some parameter we have only about 3000 'effective samples'. This means some of our samples are basically dead weight, taking up space and slowing down future computations for no good reason. The discrepancy between the number of samples and the 'effective' number of samples is due to something called **autocorrelation**, the self-similarity of nearby observations in a series of observations (discussed further in section \@ref{c5-manipulating-random-effects}). 
 
 ```{r, collapse = TRUE}
 # inspect model
 model_multicore
 ```
 
-One way to increase the ESS without increasing the total final sample size is to run longer chains and keep only every $Nth$ one. This strategy is called **thinning**. This lets your models be smaller while containing approximately the same information. To do this you have to change the `iter`, `warmup` and `thin` parameters when you fit your model. Default behavior is that the models you fit keep every sample after the `warmup` is done, up to the `iter` maximum. So if `iter=3000` and `warmup=1000` you will end up with 2000 samples. After this, you keep only one every `thin` samples. Basically, you will end up with $(iter-warmup) / thin$ samples per chain. If you are doing this across `Ncores` cores, then you will end up with $((iter-warmup) / thin) \times Ncores$ samples in total. Below, we ask for 3000 samples per chain. Since the warmup is 1000 this means we will keep 2000 post warm-up. However, since `thin=2`, we will keep only 1000 of these. Finally, since we are fitting the model on four cores, we will end up with 5000 samples in total (i.e. $((3000-1000) / 2) \times 4$). 
+Sometimes consecutive samples can be too similar and so don't given you that much *independent* information. When this happens you end up with less information about a parameter than you might think based on the number of samples you have. Think of it like measuring the temperature of a place to get an idea of its average annual weather. Measurements need to be well separated in order to be really independent and to give an accurate picture of the true average. If you were to measure the temperature every 5 minutes these measurements would have a high autocorrelation, and would not give you a good impression of the range of temperatures that place tends to experience in a calendar year.
+
+One way to increase the ESS without increasing the final number of posterior samples is to run longer chains and keep only every $Nth$ one. This strategy is called **thinning**, and it lets your models be smaller while containing approximately the same information. To do this you have to change the `iter`, `warmup` and `thin` parameters when you fit your model. Default behavior is that the models you fit keep every sample after the `warmup` is done, up to the `iter` maximum. So if `iter=3000` and `warmup=1000` you will end up with 2000 samples. If you set `thin` to some value other than 1, you keep only one every `thin` samples. As a result, you will end up with $(iter-warmup) / thin$ samples per chain. If you are doing this across `Ncores` cores, then you will end up with $((iter-warmup) / thin) \times Ncores$ samples in total. Below, we ask for 3000 samples per chain. Since the warmup is 1000 this means we will keep 2000 post warmup per chain, for 8000 total samples. However, since `thin=2`, we will keep only half of these of these. As a result, we will end up with 4000 samples in total (i.e. $((3000-1000) / 2) \times 4$). 
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -698,33 +710,35 @@ Below we can see that our model requires priors for our two estimated parameters
 brms::get_prior (height ~ 1, data = men)
 ```
 
-`brms` makes it easy to specify prior probabilities for specific parameters or whole 'classes' of parameters. Setting priors for entire classes of parameters is faster for you and makes the model run faster. Right now, our model only includes the following classes of parameters:
+`brms` makes it easy to specify prior probabilities for specific parameters or whole 'classes' of parameters. Setting priors for entire classes of parameters is faster for you and makes the model run faster, so it is a good idea to do it where possible. Right now, our model only includes the following classes of parameters:
 
 -   `Intercept`: this is a unique class, only for intercepts.
--   `sigma`: this is for the standard deviation of our error parameters. Our model only has one for now, `sigma` ($\sigma_{error}$), but it will have more later.
+-   `sigma`: this is for the standard deviation of our error parameters. Our model only has one for now, `sigma` ($\sigma_{error}$), but it can have more.
 
-We're going to set *weakly informative* prior probabilities for our parameters. To set these you have to use what you know about your variables and the world in general. Since we know that the average male over 20 in the US is 176 cm tall (cite), this seems like a reasonable prior expectation for how tall the adult males in our sample will sound. We also know that the standard deviation of adult male heights in the US is 7.5 cm, and will double this for our priors. This is to account for that fact that there may be more variation in how tall people 'sound' compared to how tall they *are*. The code to set the priors for our model looks like this:
+We're going to set *weakly informative* prior probabilities for our parameters. This means we are going to set our priors to be about the same size as the variation we expect in the data itself. To set these you have to use what you know about your variables and the world in general. Since we know that the average male over 20 in the US is 176 cm tall, this seems like a reasonable prior expectation for how tall the adult males in our sample will sound. We also know that the standard deviation of adult male heights in the US is 7.5 cm, and will double this for our priors. This is to account for that fact that there may be more variation in how tall people 'sound' compared to how tall they *are*. The code to set the priors for our model looks like this:
 
 ```{r, eval = FALSE}
 prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
           brms::set_prior("normal(0, 15)", class = "sigma"))
 ```
 
-The code above tells our model to use a normal distribution with a mean of 176 and a standard deviation of 15 (`normal(176, 15)`) for the prior distribution of the Intercept. Around 90-95% of the mass of normal distributions is within two standard deviations of the mean. This means that we are saying that we expect, a priori, that the intercept should be between around 146 (176-15x2) and 206 Hz (176+15x2). This is too broad, but at least places the supposed outcomes within reasonable human ranges. The random error, `sigma`, was given a prior with a normal distribution with a mean of 0 and a standard deviation of 15 (`normal(0, 15)`). This is likely an overestimation of the magnitude of the random error in this data. However, it is likely to be in the ballpark. Our prior specifies a normal distribution centered at 0 for the standard deviation. Since standard deviations, like variances, can only be positive the sampler (`stan`) used by `brm` ignores the negative half and uses only the positive half of the prior distribution. This prior basically says that we expect the average variation around the mean to be less than 30 cm, which it is very likely to be. 
+The code above tells our model to use a normal distribution with a mean of 176 and a standard deviation of 15 (`normal(176, 15)`) for the prior distribution of the intercept. Around 90-95% of the mass of normal distributions is within two standard deviations of the mean. This means that we are saying that we expect, a priori, that the intercept should be between around 146 (176-15x2) and 206 cm (176+15x2). This is probably too broad, but it places the expected outcomes within reasonable human ranges. 
 
-The left panel in figure \@ref(fig:F3-4) compares the normal distribution we used (blue line) to a histogram of our height judgments. As we can see, the prior distribution we used for the intercept is much broader (more vague) than the data distribution so that it will have basically no effect on our results (but will help our model fit properly). The right panel compares the prior for the standard deviation parameters to the absolute value of the centered apparent heights. This presentation shows how far each observation is from the mean apparent height (at 174 cm), and again we see that most of these deviations are in the thicker part of the prior density. As a result, neither of these priors is going to have much of an effect on our parameter estimates given the size of our sample (see figure \@ref(fig:F3-1).
+The random error, `sigma`, was given a prior with a normal distribution with a mean of 0 and a standard deviation of 15 (`normal(0, 15)`). Again, this is likely an overestimation of the magnitude of the random error in this data. However, it is likely to be in the ballpark. Our prior specifies a normal distribution centered at 0 for the standard deviation. Since standard deviations, like variances, can only be positive the sampler (`stan`) used by `brm` ignores the negative half and uses only the positive half of the prior distribution. This prior basically says that we expect the average variation around the mean to be less than 30 cm, which it is very likely to be. 
+
+The left plot in figure \@ref(fig:F3-4) compares the normal distribution we used (blue line) to a histogram of our height judgments. As we can see, the prior distribution we used for the intercept is much broader (more vague) than the data distribution so that it will probably have little to no practical effect on our posterior distribution (but will help our model fit properly). The right plot compares the prior for the standard deviation parameters to the absolute value of the centered apparent heights. This presentation shows how far each observation is from the mean apparent height (at 174 cm), and again we see that most of these deviations are in the thicker part of the prior density. As a result, neither of these priors is going to have much of an effect on our parameter estimates given the size of our sample (see figure \@ref(fig:F3-1).
 
 ```{r F3-4, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) A comparison of the densities of the prior for our intercept, compared to a histogram of our height judgments for male speakers. (right) The distribution of absolute deviations from the mean height judgment, compared to the prior distribution for the error parameter in our model."}
 
 ################################################################################
-### Figure 3.3
+### Figure 3.4
 ################################################################################
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 
 ## plot prior for mean
 hist (mens_height, xlim = c(140,200), freq = FALSE, col = deepgreen, ylab = 'Density', xlab = 'Heigh (cm)',
-      ylim = c(0,0.08), main="")
+      ylim = c(0,0.07), main="")
 curve (dnorm(x,176,15),lwd = 2, col = 4, add = TRUE)
 
 ## plot prior for standard deviations
@@ -734,7 +748,7 @@ curve (dnorm(x,0,15),lwd = 2, col = 4, add = TRUE)
 
 ```
 
-We can update the description of our model to include the specification of prior distributions for each estimated parameter, as in \@ref(eq:3-17). In the future, our model descriptions will always include these. Our model specification now makes it clear: We expect height judgments to be normally distributed, we expect the mean to always equal the intercept, and we have specific distributions in mind for all estimated model parameters (i.e., $\mu, \sigma$). 
+We can update the description of our model to include the specification of prior distributions for each estimated parameter, as in \@ref(eq:3-21). In the future, our model descriptions will always include these. Our model specification now makes it clear: We expect height judgments to be normally distributed, we expect the mean to always equal the intercept, and we have specific prior distributions in mind for all estimated model parameters (e.g., $\mathrm{Intercept}, \sigma$). 
 
 $$
 \begin{equation}
@@ -747,7 +761,7 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mathrm{Intercept} \sim \mathrm{N}(176, 15) \\
 \sigma \sim \mathrm{N}(0, 15) \\ 
 \end{split}
-(\#eq:3-17)
+(\#eq:3-21)
 \end{equation}
 $$
 
@@ -772,14 +786,14 @@ model_priors = bmmb::get_model ('3_model_priors.RDS')
 model_priors = readRDS ('../models/3_model_priors.RDS')
 ```
 
-We can use the `short_summary` function in the `bmmb` package to get a 'smaller' version of the model print statements. These shorter versions are not a replacement for the complete statement as they omit important information about model fit. However, they do help us to compare models while minimizing redundant information in this text, thereby making a more efficient use of space on the page. If we compare the output of `model_thinned`:
+We can use the `short_summary` function in the `bmmb` package to get a 'smaller' version of the model print statements. These shorter versions are not a replacement for the complete statement as they omit important information about model. However, they do help us to compare models while minimizing redundant information on the page and so are useful for this book. If we compare the output of `model_thinned`:
 
 ```{r, collapse = TRUE}
 # inspect model
 bmmb::short_summary (model_thinned)
 ```
 
-To that of the model where we specified wider priors (`model_priors`), we see that there is no noticeable effect on our results. This is because the prior matters less and less when you have a lot of data, and because we have set wide priors that are appropriate (but vague) given our data. Although the priors may not matter much for models as simple as these, they can be very important when working with more complex data, and are a necessary component of Bayesian modeling.
+To that of the model where we specified our own priors (`model_priors`), we see that there is no noticeable effect on our results. This is because the prior matters less and less when you have a lot of data, and because we have set priors that are appropriate (but vague) given our data. Although the priors may not matter much for models as simple as these, they can be very important when working with more complex data, and are a necessary component of Bayesian modeling.
 
 ```{r}
 bmmb::short_summary (model_priors)
@@ -787,60 +801,62 @@ bmmb::short_summary (model_priors)
 
 ## The log posterior density (`lp`) {#c3-log-posterior}
 
-When we get our model samples with the `get_samples` function, in addition to our mean and standard deviation estimates we get an estimate of something called `lp__`. This is a measure of the (unnormalized) **log posterior density**, basically, the overall posterior probability of your model parameters given your data. 
+When we got our posterior samples with the `get_samples` function, in addition to our mean and standard deviation estimates we got an estimate of something called `lp__`. This is a measure of the (unnormalized) **log posterior density**, basically, the overall posterior probability of your model parameters given your data. 
 
 ```{r}
 samples = bmmb::get_samples (model_priors)
 head (samples)
 ```
 
-In \@ref(eq:3-12) we presented the posterior probability of a $\mu$ parameter given your data and priors. We can generalize this to encompass all of our model parameters, represented by $\theta$ in \@ref(eq:3-12). Now, \@ref(eq:3-18) represents the posterior probability of all our model parameters given our data.
+In \@ref(eq:3-12) we presented the posterior probability of a $\mu$ parameter given your data and priors. We can generalize this to encompass all of our model parameters, represented by $\theta$ in \@ref(eq:3-22). Now, \@ref(eq:3-22) represents the posterior probability of all our model parameters given our data.
 
 $$
 \begin{equation}
-P(\theta|y) = \frac{P(y|\theta)*P(\theta)}{P(y)}
-(\#eq:3-18)
+P(\theta|y) = \frac{P(y|\theta) \times P(\theta)}{P(y)}
+(\#eq:3-22)
 \end{equation}
 $$
 
-The *unnormalized* posterior density ignores the marginal distribution ($P(y)$) and so returns a density that is proportional to the posterior density up to some constant, as in \@ref(eq:3-19). By saying that it is defined up to a proportional constant, this is what we mean. We cannot, or do not bother, calculating the exact posterior density. However, we can calculate some value, let's say $x$, where the true posterior density is equal to $x \times C$ where $C$ is some unknown constant. When we model the unnormalized posterior density we take this approach, we try to estimate $x$ ($P(\theta|y)$) while ignoring $C$ ($1/P(y)$).
+The *unnormalized* posterior density ignores the marginal distribution ($P(y)$) and so returns a density that is proportional to the posterior density up to some constant, as in \@ref(eq:3-23). By saying that it is defined up to a proportional constant, this is what we mean. We cannot, or do not bother, calculating the exact posterior density. However, we can calculate some value, let's say $x$, where the true posterior density is equal to $x \times C$ where $C$ is some unknown constant. When we model the unnormalized posterior density we take this approach, we try to estimate $x$ ($P(\theta|y)$) while ignoring $C$ ($1/P(y)$).
 
 $$
 \begin{equation}
-P(\theta|y) \propto P(y|\theta)*P(\theta)
-(\#eq:3-19)
+P(\theta|y) \propto P(y|\theta) \times P(\theta)
+(\#eq:3-23)
 \end{equation}
 $$
 
-If we log-transform both sides of \@ref(eq:3-19), we get the log-posterior density, shown in \@ref(eq:3-20).
+If we log-transform both sides of \@ref(eq:3-23), we get the log-posterior density, shown in \@ref(eq:3-24).
 
 $$
 \begin{equation}
 log (P(\theta|y)) = log (P(y|\theta)) + log(P(\theta))
-(\#eq:320)
+(\#eq:3-24)
 \end{equation}
 $$
 
-Let's pause to think about what \@ref(eq:3-19) means and why it is a useful measure. First, let's talk about $P(y|\theta)$ which is the model likelihood: The joint probability of the data given the values of the parameters. For example, we can think about the probability of observing each of the observations in our height data given the posterior means estimates of $\mu$ and $\sigma$ provided by `model_priors`. Below, we see the values of the probability density above the first six observations, and then the logarithm of these values below.
+Let's pause to think about what \@ref(eq:3-24) means and why it is a useful measure. First, let's talk about $P(y|\theta)$ which is the model likelihood: The joint density of the data given the values of the parameters. For example, we can think about the probability of observing each of the observations in our height data given the posterior mean estimates of $\mu$ and $\sigma$ provided by `model_priors`. Below, we see the values of the probability density above the first six observations, and then the logarithm of these values below.
 
 ```{r, collapse = TRUE}
+# density over first 6 opbservations
 head (dnorm (mens_height, 173.8, 7.77))
 
+# log density over first 6 opbservations
 head (dnorm (mens_height, 173.8, 7.77, log = TRUE))
 ```
 
-To find the joint probability of the data given the model parameters, we can sum the log-densities as seen below. This provides us an estimate of the likelihood of the model given all parameter values ($log (P(y|\theta))$). 
+To find the joint density of the data given the model parameters, we can sum the log-densities as seen below. This provides us an estimate of the log likelihood of the model given all parameter values ($log (P(y|\theta))$). 
 
 ```{r, collapse = TRUE}
 sum (dnorm (mens_height, 173.8, 7.77, log = TRUE))
 ```
 
-When we add the logarithm of the priors for our parameters to this. By combining our priors and likelihoods in this way, we are calculating the *unnormalized* posterior density. 
+We can then add the logarithm of the priors for our parameters to this. By combining our priors and likelihoods in this way, we are calculating the *unnormalized* posterior density. 
 
 ```{r}
-sum (dnorm (mens_height, 173.8, 7.78, log = TRUE)) + 
-  dnorm (173.8,176,15,log=TRUE) + 
-  dnorm (7.77,0,15,log=TRUE)+log(2) 
+sum (dnorm (mens_height, 173.8, 7.78, log = TRUE)) + # the likelihood
+  dnorm (173.8,176,15,log=TRUE) +   # prior probability of mu 
+  dnorm (7.77,0,15,log=TRUE)+log(2) # prior probability of sigma 
 ```
 
 We can see that our calculation is very close to the average value of the `lp__` estimates provided by our model. 
@@ -849,39 +865,43 @@ We can see that our calculation is very close to the average value of the `lp__`
 mean (samples$lp__)
 ```
 
-The log posterior density, or values related to it, will come up again in chapter X when we discuss model comparison. This is because the value captures the posterior probability of the parameters given the data. Broadly speaking, models with a higher posterior probability are more believable because they are more likely to generate the observed data, and/or they have parameter values that are more probable a priori. 
+The log posterior density, or values related to it, will come up again in chapter 6 when we discuss model comparison. This is because the value captures the posterior probability of the parameters given the data. Broadly speaking, models with a higher posterior probability are more believable because they are more likely to generate the observed data, and/or they have parameter values that are more probable a priori. 
 
 ## Answering our research questions {#c3-answering-qs}
 
 Finally, let's return again to the research questions we posed initially in chapter 2, and again at the beginning of this chapter:
 
-Q1)  What is the average apparent height  of the whole *population* likely to be?
+  Q1) How tall does the average adult male from the US sound?
 
-Q2)  Can we set bounds on likely mean f0 values based on the data we collected?
+  Q2) Can we set limits on credible average apparent heights based on the data we collected?
 
-We can consider the answers to these questions provided by our final model, `model_priors`. Usually, parameters should be reported with *at least* the mean/median and standard deviations of the posterior distribution, in addition to some useful credible interval (e.g. 50%, 95%) around that parameter. Based on the result of our final model, an answer to each question might be something like this: 
+Here is what we had to say about this at the end of chapter 2:
+
+"the average male speaker is *most likely* to sound about 174 cm tall. We can also conclude informally based on Figure \@ref(fig:F2-8) that the most likely mean values fall between (approximately) 173 and 174.5 cm"
+
+We can reconsider the answers to these questions provided by our final model, `model_priors`. Usually, parameters should be reported with *at least* the mean/median and standard deviations of the posterior distribution, in addition to some useful credible interval (e.g. 50%, 95%) around that parameter. Based on the result of our final model, an answer to each question might be something like this: 
 
 A1) Based on our model the average apparent height for adult males is likely to be 174 cm. In a paper we might report this like: "The mean height is 174 cm (s.d. = 0.3, 95% CI = 173.2, 174.4)".
 
-A2) Yes we can. There is a 95% probability that the population mean is between 173.5 and 174.4 given our data and model structure. In other words, 95% of the posterior density is concentrated between the values of 173.2 and 174.4. 
+A2) Yes we can. There is a 95% probability that the population mean is between 173.2 and 174.4 given our data and model structure. In other words, 95% of the posterior density is concentrated between the values of 173.2 and 174.4. 
 
-Notice that our answers correspond closely to what we concluded at the end of last chapter, that "the average male speaker is *most likely* to sound about 174 cm tall. We can also conclude informally based on Figure \@ref(fig:F2-8) that the most likely mean values fall between (approximately) 173 and 174.5 cm". The reason for this correspondence is because we made our inferences at the end of chapter 2 using only the likelihood and, due to the shape of the prior and the number of observations in our data, the shape posterior distribution of our model is being dominated by the likelihood. 
+Notice that our answers correspond closely to what we concluded at the end of last chapter. The reason for this correspondence is because we made our inferences at the end of chapter 2 using only the likelihood and, due to the shape of the prior and the number of observations in our data, the posterior distribution of our model is being dominated by the likelihood. As a result, the two approaches converge on approximately the same solution in this situation.
 
-## Frequentist corner {#c3-frequentist}
+## 'Traditionalists' corner {#c3-frequentist}
 
-In frequentist corner, we're going to compare the output of `brms` to some more 'traditional' approaches. We're not going to talk about the traditional models in any detail, the focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, some of the information provided here may not make much sense, although it may still be helpful. If you want to know more about the statistical methods being discussed here, please see section X for a list of suggested background reading in statistics.  
+[@@ SB - Noah check changes]
+
+In traditionalists corner, we're going to compare the output of `brms` to some more 'traditional' approaches. We're not going to talk about the traditional models in any detail, the focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, some of the information provided here may not make much sense, although it may still be helpful. If you want to know more about the statistical methods being discussed here, please see section X for a list of suggested background reading in statistics.  
 
 ### One-sample t-test vs. intercept-only Bayesian models {#c3-vs-ttest}
 
-A one sample t-test helps investigate whether the mean of a set of observations is consistent with a true underlying value of zero. The t-test answers questions by investigating the likelihood of parameters given the data (priors and posteriors are not involved). In addition, t-tests are calculated using analytic (exact) methods, and do not involve sampling from distributions. The t-test assumes that all of your observations are independent, so it is not appropriate to use for this data. However, we just want to compare it to our initial Bayesian model (which made the same assumptions). We can apply a one-sample t-test to our vector of apparent-height judgments:
-
-[@@ I think you're conflating frequentist *testing* and maximum likelihood estimation. Tests in MLE approaches typically (always?) rely on frequentist testing assumptions, but most frequentist testing does not rely on MLE. For example, the variance estimator in the denominator of a t-test is explicitly *not* the maximum likelihood estimate of the variance - it's the unbiased estimate (dividing by $n$ produces the maximum likelihood estimate, dividing by $n-1$ produces the unbiased estimate). I like the idea of explicitly comparing different approaches at the ends of chapters, but I think I'm inclined to avoid doing so in a "frequentist vs Bayesian" way, or at least I think that we should minimize our focus on that distinction, per se.]
+A one sample t-test helps investigate whether the mean of a set of observations is consistent with a true underlying value of zero. The t-test answers questions using the likelihood of parameters given the data (priors and posteriors are not involved). In addition, t-tests are calculated using analytic (exact) methods, and do not involve sampling from distributions. The t-test assumes that all of your observations are independent, so it is not appropriate to use for our experimental data. However, we just want to compare it to our initial Bayesian model (which made the same assumptions). We can apply a one-sample t-test to our vector of apparent-height judgments:
 
 ```{r}
 t.test (mens_height)
 ```
 
-Notice that the interval provided around the mean (`95 percent confidence interval: 173.2010 174.3744`) corresponds very well to the 95% credible interval around the intercept provided in `model` (`173.20, 174.33`). The reason they align so well is because both models have the same general structure and make similar assumptions. In addition, our Bayesian estimate is being dominated by the likelihood, and the more 'traditional' t-test *only* considers the likelihood. As a result, although the Bayesian model reports posterior probabilities, these can provide very similar responses as likelihood-based approaches. 
+Notice that the interval provided around the mean (`95 percent confidence interval: 173.2010 174.3744`) corresponds very well to the 95% credible interval around the intercept provided in `model` (`173.20, 174.33`). The reason they align so well is because both models have the same general structure and make similar mathematical assumptions. In addition, our Bayesian estimate is being dominated by the likelihood, and the more 'traditional' t-test *only* considers information from the likelihood. 
 
 ### Intercept-only ordinary-least-squares regression vs. intercept-only Bayesian models {#c3-vs-ols} 
 

@@ -484,7 +484,7 @@ The `bmmb` package contains a function called `getsds` that collects estimates o
 getsds (model_height_vtl_f0)
 ```
 
-[@@ SB] from here on down is a problem, I need to come up with how to get the fixed effects and also be more consistent in saying rms vs sd, also probably providing formulas for there.]
+[@@ SB from here on down is a problem, I need to come up with how to get the fixed effects and also be more consistent in saying rms vs sd, also probably providing formulas for there.]
 
 Getting the finite-sample standard deviations is a bit trickier. First, we should note that although they are called standard deviations, they are actually calculated by finding the root-mean squared error. The reason for this is that since we assume a mean of 0 for each batch of parameters we do not need to subtract the sample mean from our observations when calculating the standard deviation. If one uses sum coding, this means that the parameter values can be squared, their mean can be found, and then the square root of this is our estimate. To calculate the standard deviations of different batches of parameters you need to calculate the root-mean squared deviation for each batch, *for each sample*. This means you end up with an estimate of the finite-sample standard deviation for each set of posterior samples. The code below shows how to calculate the finite-population standard deviations for item based on the random effects parameter estimates. 
 
@@ -661,7 +661,7 @@ And see that all of the extra complexity included in our full model gains us les
 ## Fitting a multivariate logistic regression model
 
 We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of Bayesian ANOVA (henceforth **BANOVA**) outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we'll be fitting. 
-  A logistic regression model with two quantitative predictors specifies planes (or saddles) along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1 for the dependent variable). We will refer to these surfaces as **response surfaces** because these surfaces specify the value of the response variable based on the value of our quantitative predictors. When the value on the response surface is negative, the model predicts a response of 0 at this location, and when the value of the plane is positive the model predicts a 1. When we want to know the probability expected for any given $x$ and $y$ axis location, we can transform the value on response surface using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:11.9). 
+  A logistic regression model with two quantitative predictors specifies planes (or saddles) along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1 for the dependent variable). We will refer to these surfaces as **response surfaces** because these surfaces specify the value of the response variable based on the value of our quantitative predictors. When the value on the response surface is negative, the model predicts a response of 0 at this location, and when the value of the plane is positive the model predicts a 1. When we want to know the probability expected for any given $x$ and $y$ axis location, we can transform the value on response surface using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:F11-9). 
 
 ```{r F11-9, fig.height = 4, fig.width = 8, fig.cap='(top) Threee perspectives on a plane that specifies logits along its z axis. (bottom) The same plane after undergoing to antilogit transform, now expressing probabilities along the z axis.', echo = FALSE, cache = TRUE}
 
@@ -686,7 +686,7 @@ persp(x, y, ztop(z), col = bmmb::cols[4],theta = 45,zlim = c(-0,1))
 
 ```
 
-When our models include interactions between quantitative predictors (i.e. terms representing their cross-products), our predicted values no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model. When we convert these saddle shapes to represent percentages using the antilogit function, the resulting shape can be strange, as with the bottom row of figure \@ref(fig:11-10) which shows two non-contiguous sections associated with 'successes'. 
+When our models include interactions between quantitative predictors (i.e. terms representing their cross-products), our predicted values no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model. When we convert these saddle shapes to represent percentages using the antilogit function, the resulting shape can be strange, as with the bottom row of figure \@ref(fig:F11-10) which shows two non-contiguous sections associated with 'successes'. 
 
 ```{r F11-10, fig.height = 4, fig.width = 8, fig.cap='(top) Threee perspectives on a saddle shape that specifies logits along its z axis. (bottom) The same saddle shape after undergoing to antilogit transform, now expressing probabilities along the z axis.', echo = FALSE, cache = TRUE}
 
@@ -725,7 +725,9 @@ options (contrasts = c('contr.sum','contr.sum'))
 data (exp_data)
 
 # our dependent variable
-exp_data$F = ifelse(exp_data$G == 'f', 1, 0)
+#exp_data$F = ifelse(exp_data$G == 'f', 1, 0)
+exp_data$F = c(0,1)[(exp_data$G == 'f') + 1]
+
 
 exp_data$vtl_original = exp_data$vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
@@ -798,10 +800,12 @@ bmmb::banovaplot (banova_gender_vtl_f0, line = TRUE, las = 2)
 
 In the figure above we see a relatively complex model, with an important role for both f0 and VTL. We also see that unlike for our model predicting apparent height above, this model features a prominent f0 by VTL interaction (`vtl:f0`), and an interaction between this and apparent age (`vtl:f0:A1`). Just as with our last model, we are going to leave the interpretation of this model for chapter 14. Instead, we're going to focus on using our models to understand the classification of speakers into apparent females and apparent males.
 
+[@@ SB - no, do it now, model age in final model?]
+
 ### Categorization in two dimensions
 
-Imagine a horizontal plane such that $z=0$ for all values of $x$ and $y$ in figures \@ref(fig:11-9) and \@ref(fig:11-10). This plane would represent an expected probability of 0.5, meaning it is the boundary between successes and failures along the $z$ axis. Our response surface will intersect with the horizontal $z=0$ plane, forming a curve at this intersection. These curves represent the division of the response surface into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the curves formed by the intersection of our response surface and the $z=0$ plane represent the *category boundary* as defined by our model.
-  The intersection of two planes forms a straight line. Although these surfaces are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. Although the surfaces in the bottom row of figure \@ref(fig:11-9) are not planes, the intersection of these surfaces with planes still form straight lines. However, the intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. Since saddle shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). 
+Imagine a horizontal plane such that $z=0$ for all values of $x$ and $y$ in figures \@ref(fig:F11-9) and \@ref(fig:F11-10). This plane would represent an expected probability of 0.5, meaning it is the boundary between successes and failures along the $z$ axis. Our response surface will intersect with the horizontal $z=0$ plane, forming a curve at this intersection. These curves represent the division of the response surface into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the curves formed by the intersection of our response surface and the $z=0$ plane represent the *category boundary* as defined by our model.
+  The intersection of two planes forms a straight line. Although these surfaces are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. Although the surfaces in the bottom row of figure \@ref(fig:F11-9) are not planes, the intersection of these surfaces with planes still form straight lines. However, the intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. Since saddle shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). 
   To find the intersection of the surfaces defined by our models and the plane at $z=0$, we can use some basic algebra. We take the equation defining the general shape, including the cross-product of $x$ and $y$:
 
 $$
@@ -1215,8 +1219,9 @@ plot(aggd[,2:1], cex = aggd$pareto_k*4, col = cols[1+point_col], pch=16,lwd=2,
      xlab = "Vocal-tract length (cm)", xlim = c(-2.2,3), 
      ylim = c(-1.2,1.1), ylab = "f0 (Hz)")
 
-curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, 
-       to = -c_adult/d_adult-.01, add = FALSE, lwd=2, lty=1,col=1, xlim = c(-2.2,3), ylim = c(-1.2,1.1))
+curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -6, xlab="Vocal-tract length (cm)",
+       ylab = "f0 (Hz)", to = -c_adult/d_adult-.01, add = FALSE, lwd=2, lty=1,col=1, 
+       xlim = c(-2.2,3), ylim = c(-1.2,1.1))
 curve ((-b_adult*x - a_adult) / (d_adult*x+c_adult), from = -c_adult/d_adult+0.01, 
      to = 6, add = TRUE, lwd=2, lty=1,col=1)
 

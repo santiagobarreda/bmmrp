@@ -800,9 +800,9 @@ Ordinal logistic regression involves the prediction of ordered categories. Altho
 
 A simple example of an ordinal variable is first, second, and third place in a race. These values are categorical and not numerical. For example fourth place is not 'double' anything with respect to second place (i.e., $2 \times second \neq fourth$). However, there is clearly an inherent ordering in the categories such that first < second < third < fourth < and so on. A common experimental example of ordered categorical data arises from survey data that asks listeners to respond to questions using a small number of discrete, categorical choices (e.g., a scale from one to five). The reason this is not a truly quantitative variable is because there are a limited number of discrete choices with nothing 'in between', and it is not necessarily the case that, for example, the second choice implied double the quantity of the second. These limitations mat result in subjects, for example, reserving categories 1 and 5 for 'extreme' cases in a way that would not arise for truly quantitative data. 
 
-We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. Below we see a boxplot of apparent height judgments organized by apparent speaker category. Note that apparent boys and girls are rated at about the same apparent height, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. Based on this, we could think of our speaker classifications as classifications of speakers into small (boys, girls), medium (women), and large (men) speakers. For example, based on the boxplot below we might imagine that if we *had* asked listeners to label speakers small medium and large, they would have labelled most apparent children as small, most apparent women as medium, and most apparent men are large. In any case, we are only presenting this as an example and are only interested in establishing that the conversion of speaker category into an ordinal small < medium < large variable is not completely unfounded.
+We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. Below we see a boxplot of apparent height judgments organized by apparent speaker category, with boys and girls collapsed into one category. Note that apparent children are judged to be shortest, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. Based on this, we could think of our speaker classifications as classifications of speakers into small (boys, girls), medium (women), and large (men) speakers. For example, based on the boxplot below we might imagine that if we *had* asked listeners to label speakers small medium and large, they would have labelled most apparent children as small, most apparent women as medium, and most apparent men are large. In any case, we are only presenting this as an example and are only interested in establishing that the conversion of speaker category into an ordinal small < medium < large variable is not completely unfounded.
 
-
+The right plot in figure \@ref(F12-9) presents the y axis divided into three sections. These sections are halfway between the means of our small, medium and large speakers. Imagine that we use apparent height to slide along the line in the plot, and based on the value of the line at a given x axis location, we arrive at a classification of the speaker as small medium or large. 
 
 ```{r F12-9, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
@@ -844,12 +844,31 @@ abline (h = mean (tmp[2:3,2]), lwd = 6, col = bmmb::cols[10])
 
 ```
 
+We can see how this might work in the code below. First, we create a new variable that will hold our size group predictions, `SG_hat`. Then, we se this variable to 1 if apparent height is less than 155.7 cm, to 2 if apparent height is between 155.7 and 170 cm, and 3 if it is greater than 170 cm.
+
+```{r}
+SG_hat = exp_data$height * 0
+SG_hat[exp_data$height <= 155.7] = 1
+SG_hat[exp_data$height >= 155.7 & exp_data$height <= 170] = 2
+SG_hat[exp_data$height >= 170] = 3
+```
+
+We can see that even this relatively primitive 'model' is able to correctly predict size group responses in 75% of cases. 
+
+```{r}
+mean (exp_data$SG == SG_hat)
+
+xtabs (~ exp_data$SG + SG_hat)
+```
+
+
 
 ```{r F12-10, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
 ################################################################################
 ### Figure 12.10
-################################################################################}
+################################################################################
+tmp = aggregate (height ~ SG, data = exp_data, FUN = mean)
 
 x = seq (-35,35,.1)
 y = dlogis(x,0,5)
@@ -858,19 +877,21 @@ x_2 = seq (100,230,.1)
 y_2 = x_2
 
 
-par (mfrow = c(1,1), mar = c(4,.1,.1,.1), oma = c(.5,.5,.51,.51))
+par (mfrow = c(1,1), mar = c(4,4,.1,4), oma = c(.5,.5,.51,.51))
 
-plot (x,y, yaxt='n',type = 'l', xlim = c(120,190),ylim = c(105,215),
+plot (x,y, yaxt='s',type = 'l', xlim = c(120,190),ylim = c(105,215),
       xlab = "Apparent Height (cm)")
 rect (100,100,200,mean(tmp[1:2,2]), col = bmmb::cols[9])
 rect (100,mean(tmp[1:2,2]),200,mean(tmp[2:3,2]), col = bmmb::cols[11])
 rect (100,mean(tmp[2:3,2]),200,400, col = bmmb::cols[12])
 lines (x_2,y_2, lwd=4, col = bmmb::cols[2])
+axis (side=4, at = seq(120,200,20), labels = seq(120,200,20)/10)
 
 spot = 160
 lines (-y*150+spot, x+spot, ylim = c(120,190), xlim = c(-.35,0), xaxs='i',type='l',lwd=2)
 lines (rep(spot,length(x)),x+spot,type="l",lwd=2)
 points (spot,spot,pch=16,col=bmmb::cols[2],cex=2)
+
 spot = 140
 lines (-y*150+spot, x+spot, ylim = c(120,190), xlim = c(-.35,0), xaxs='i',type='l',lwd=2)
 lines (rep(spot,length(x)),x+spot,type="l",lwd=2)
@@ -907,61 +928,6 @@ Just like multinomial regression, ordinal regression involves modeling a latent 
 
 
 
-```{r}
-# Fit the model yourself
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
-
-model_ordinal_small = brms::brm (SG ~ height, data=exp_data, family=cumulative("logit"), 
-           chains=4, cores=4, warmup=1000, iter = 5000, thin = 4,
-           prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
-                     set_prior("student_t(3, 0, 3)", class = "b")))
-
-#  saveRDS (model_ordinal_small, "12_model_ordinal_small.RDS")
-```
-
-
-```{r}
-model_ordinal = readRDS ("../models/12_model_ordinal.RDS")
-```
-
-
-
-
-```{r}
-par (mfrow = c(1,1), mar = c(4,4,1,1))
-
-boxplot (height_original ~ C, data = exp_data,col=bmmb::cols[2:5])
-abline (h = 45.42 * (1/0.29))
-abline (h = 48.53 * (1/0.29))
-
-int_height = exp_data$height_original
-
-int_height[int_height<111] = 111
-int_height[int_height>190.2] = 190
-
-int_height = round(exp_data$height_original/10)
-
-tmp_tab = t(table (exp_data$SG, int_height))
-
-tmp_tab = tmp_tab / rowSums(tmp_tab)
-
-mosaicplot (tmp_tab, col = 2:4)
-```
-
-
-```{r}
-x = 10*(11:19)
-predds = cbind (round (plogis (151, x),5), 
-                round ((plogis (168, x)-plogis (151, x)),5),
-                round (1-plogis (168, x), 5))
-
-
-mosaicplot (predds, col = 2:4)
-
-
-```
-
 
 
 
@@ -986,10 +952,8 @@ exp_data$F = as.numeric (exp_data$G == 'f')
 exp_data$vtl_original = exp_data$vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 
-
-exp_data$height_original = exp_data$height
-exp_data$height = exp_data$height - mean (exp_data$height)
-
+#exp_data$height_original = exp_data$height
+#exp_data$height = exp_data$height - mean (exp_data$height)
 
 exp_data$f0_original = exp_data$f0 
 exp_data$f0 = exp_data$f0 - mean(exp_data$f0)

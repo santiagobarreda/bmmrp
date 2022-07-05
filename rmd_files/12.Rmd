@@ -235,12 +235,12 @@ multinomial_prior =
     brms::set_prior("lkj_corr_cholesky (2)", class = "cor"))
 ```
 
-And here is the code to fit our model, using the `multinomial()` family for the first time: 
+And here is the code to fit our model, using the `multinomial` family for the first time: 
 
 ```{r, eval = FALSE}
 model_multinomial = 
   brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|L) + (1|S), data=exp_data, 
-             family=multinomial(), chains=4, cores=4, warmup=1000, iter = 5000, 
+             family="multinomial", chains=4, cores=4, warmup=1000, iter = 5000, 
              thin = 4, prior = multinomial_prior)
 ```
 ```{r, eval = FALSE}
@@ -875,6 +875,7 @@ We can make this situation more general if we abstract the y axis to be a latent
 ################################################################################
 ### Figure 12.10
 ################################################################################
+
 tmp = aggregate (height ~ SG, data = exp_data, FUN = mean)
 
 x = seq (-35,35,.1)
@@ -885,6 +886,7 @@ y_2 = x_2
 
 
 par (mfrow = c(1,1), mar = c(4,4,.1,4), oma = c(.5,.5,.51,.51))
+#layout (mat = t(c(1,2)), widths = c(.6,.4))
 
 plot (x,y, yaxt='s',type = 'l', xlim = c(120,190),ylim = c(105,215),
       xlab = "Apparent Height (cm)",xaxt='n',ylab="Apparent Height (cm)")
@@ -892,7 +894,9 @@ rect (100,90,200,mean(tmp[1:2,2]), col = bmmb::cols[1],border=bmmb::cols[1])
 rect (100,mean(tmp[1:2,2]),200,mean(tmp[2:3,2]), col = bmmb::cols[11],border=bmmb::cols[11])
 rect (100,mean(tmp[2:3,2]),200,400, col = bmmb::cols[10],border=bmmb::cols[10])
 lines (x_2,y_2, lwd=4, col = bmmb::cols[2])
-axis (side=4, at = seq(120,200,20), labels = seq(120,200,20)/50)
+
+
+axis (side=4, at = seq(120,200,20), labels = seq(120,200,20)/5)
 
 spot = 160
 lines (-y*150+spot, x+spot, ylim = c(120,190), xlim = c(-.35,0), xaxs='i',type='l',lwd=2)
@@ -909,7 +913,7 @@ lines (-y*150+spot, x+spot, ylim = c(120,190), xlim = c(-.35,0), xaxs='i',type='
 lines (rep(spot,length(x)),x+spot,type="l",lwd=2)
 points (spot,spot,pch=16,col=bmmb::cols[2],cex=2)
 
-text (125,c(140,163,195), c("Small", "Medium", "Large"),cex=1.1)
+text (118,c(140,163,195), c("Small", "Medium", "Large"),cex=1.1, pos=4)
 
 abline (h = mean (tmp[1:2,2]), lwd = 5, col = bmmb::cols[15])
 abline (h = mean (tmp[2:3,2]), lwd = 5, col = bmmb::cols[15])
@@ -917,68 +921,205 @@ abline (h = mean (tmp[2:3,2]), lwd = 5, col = bmmb::cols[15])
 axis (side=1, at = seq(110,190,length.out=6), labels = 11:16)
 lines (x,y, lwd=4, col = bmmb::cols[2])
 
-mtext (side=4, "Bigness", line=2.75)
-
+mtext (side=4, "Bigness", line=2.2)
 ```
 
 We need to add one final detail to get to an almost explanation of ordinal regression. In figure \@ref(fig:F9-1) we showed that bivariate linear regression with Gaussian errors can be thought of as a Gaussian distribution sliding along a line based on the value of the dependent variable. The y axis value of the line at an x axis location tells you the expected value of y for that value of x. However, we will hardly (if ever) observed the expected value exactly. Instead, we assume that we have Gaussian error centered around our expected values so that the values we observe actually probabilistically vary around the expected value. 
 
 We show a similar situation in figure \@ref(F12-10), with a probability distribution sliding along a line. However, the values that this distribution generates cannot be the observed values of an ordinal variable. This is because our observed values are strictly the ordinal categories small (the first category), medium (the second category), and large (the third category), and a continuous probability distribution will generate continuous values. This means that our probability distribution, centered at our expected value, needs to generate values broadly consistent with three integer values 1, 2 and 3. Ordinal regression solves this problem by using the area under the curve of the error distribution in the latent variable to predict the probability of observing different probability distributions. 
 
-Ordinal regression estimates the location of boundaries between categories along the latent variable, and the expected value of the latent variable for a combination of predictor variables. For example, figure \@ref(fig:F9-1) shows a situation where the boundaries are at around 3.1 and 3.4 bigness, and you have an expected bigness of around 3.2 for a vocal-tract length of 14.1. We then center a **logistic** distribution at this location (hence the name, ordinal *logistic* regression), to represent the error in our model. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general, but these things are fuzzy and necessarily noisy. So there is actually a distribution of expected perceived/apparent 'bigness' given our predictors. 
+Ordinal regression estimates the location of boundaries between categories along the latent variable, and the expected value of the latent variable for a combination of predictor variables. For example, figure \@ref(fig:F9-1) shows a situation where the boundaries are at around 3.1 and 3.4 bigness, and you have an expected bigness of around 3.2 for a vocal-tract length of 14.1. We then center a **logistic** distribution at this location (hence the name, ordinal *logistic* regression), to represent the error in our model. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general, but these things are fuzzy and necessarily noisy. So there is actually a distribution of expected perceived/apparent 'bigness' given our predictors. In order to understand how this information is used in ordinal regression, we need to talk about cumulative distribution functions first. 
 
-For example, for a VTL of 14.1 and an expected bigness of 3.2, we see that a substantial amount of the distribution is in the 'small' zone of the y axis. Since the total area under the curve of the distribution is 1, the area in the 'small' section can be thought of as the probability of observing a small response. The same logic applies to the area within the 'medium' and large sections. We can also see that when there is a VTL of 15.4 and a bigness of 3.6 the probability distribution slides up along the y axis, changing the amount of probability density falling within each section of the dependent variable. 
+### Cumulative density
+
+We haven't explicitly talked about cumulative distribution functions yet, though we did see one in chapter 10 when it was referred to as the *logistic* function (more on this in a moment). To this point we've been focused on what are called probability density functions (PDF), functions that assign a density to given values of variables. Examples of density functions are given in the top row of figure \@ref(fig:F12-12). **Cumulative distribution functions** (CDF) tell you the probability that a variable will be less than or equal to some value. If we recall that a probability density function has an area under the curve equal to 1 (representing the total probability of the variable), then the cumulative distribution function tells you how much of the area under the curve of the density function is to the left of any value.
+
+For example, in the left column we see a standard normal distribution with a mean of 0 and a standard deviation of one. In the top row we see its probability density function showing that the most probable values are near the mean of the variable and values become less probable as we go further from the mean. We know that the normal distribution is symmetrical about its mean so that half the area under the curve of this density must be below 0. If we look at the bottom row of the first column, we can see the cumulative function corresponding to the density in the top row. If we look at the value of this function at x=0, we see that it is exactly equal to 0.5. In other words, the cumulative function tells us that the standard normal has exactly half its mass at values less than x=0. 
+
+```{r F12-12, fig.height = 4, fig.width=8, fig.cap = " -- ", echo = FALSE}
+
+################################################################################
+### Figure 12.12
+################################################################################
+
+par (mfcol = c(2,3), mar = c(.1,.2,.11,.2), oma = c(2.5,4,3,.5))
+
+x = seq(-5,5,.01)
+plot (x, dnorm (x), type = 'l', xaxt='n', xaxs='i',lwd=4,col=bmmb::cols[5],yaxt='n')
+mtext (side=2,"Density", line=2.5)
+mtext (side=3,"Standard Normal", line=1)
+abline (v = 0,lty=3,col="grey",lwd=3)
+plot (x, pnorm (x), type = 'l', xaxs='i',lwd=4,col=bmmb::cols[5])
+mtext (side=2,"Cumulative Probability", line=2.5)
+segments (-6,.5,0,.5,lty=3,col="grey",lwd=3)
+segments (0,-5,0,.5,lty=3,col="grey",lwd=3)
+text (0.1,.2,"x=0", cex = 1.5,pos=4)
+text (-3,.6,"y=0.5", cex = 1.5,pos=4)
+
+x = seq(-10,10,.01)
+plot (x, dlogis (x), type = 'l', xaxt='n', yaxt='n', xaxs='i',lwd=5,col=bmmb::cols[2])
+mtext (side=3,"Logistic", line=1)
+abline (v = 2,lty=3,col="grey",lwd=3)
+plot (x, plogis (x), type = 'l', yaxt='n', xaxs='i',lwd=5,col=bmmb::cols[2])
+segments (-16,.88,2,.88,lty=3,col="grey",lwd=3)
+segments (2,-5,2,.88,lty=3,col="grey",lwd=3)
+text (2.1,.2,"x=2", cex = 1.5,pos=4)
+text (-7,.8,"y=0.88", cex = 1.5,pos=4)
+
+x = seq(-10,10,.01)
+plot (x, dlogis (x), type = 'l', xaxt='n', yaxt='n', xaxs='i',lwd=5,col=bmmb::cols[1])
+mtext (side=3,"Logistic", line=1)
+abline (v = c(2,-1),lty=3,col="grey",lwd=3)
+plot (x, plogis (x), type = 'l', yaxt='n', xaxs='i',lwd=5,col=bmmb::cols[1])
+segments (-16,.88,2,.88,lty=3,col="grey",lwd=3)
+segments (-16,.27,-1,.27,lty=3,col="grey",lwd=3)
+segments (2,-5,2,.88,lty=3,col="grey",lwd=3)
+segments (-1,-5,-1,.27,lty=3,col="grey",lwd=3)
+text (2.1,.2,"x=2", cex = 1.5,pos=4)
+text (-7,.8,"y=0.88", cex = 1.5,pos=4)
+
+text (-5.11,.1,"x= -1", cex = 1.5,pos=4)
+text (-7,.35,"y=0.27", cex = 1.5,pos=4)
+```
+
+We can use the `pnorm` function (discussed in chapter 2) to get the value of the normal CDF for any value of x. Below we calculate this for x=0, x= -2, and x=2. See that in each case, the output of the function corresponds to the y axis value of the CDF at that x axis location.
+
+```{r}
+# cumulative density at x = 0
+pnorm (0,0,1)
+
+# cumulative density at x = -2,2
+pnorm (c(-2,2),0,1)
+```
+
+The CDF is the **integral** of the PDF, and the PDF is the **derivative** of the CDF. We've already explained the *integral* part of this: As you move left to right, the value of the CDF equals the cumulative (i.e. added up total) area under the curve in the PDF to that point. To say that the PDF is the derivative of the CDF means that the value of the PDF reflects the *rate of change* (i.e. the slope) in the CDF for different values of x. Imagine you were on a car driving up the standard normal CDF in figure \@ref(fig:F12-12). As you drive along around -4 the 'terrain' is flat and the value of the density is near 0. As you near -2 the slope of the CDF increases, as does the value of the PDF. The value of the PDF is largest at x=0, telling us that the slope of the CDF is greatest at that point. As we drive past x=0 we see a gradual decrease in the slope until we more or less reach 'flat ground' again at just past x=2. This is reflected by the gradual decrease in the value of the PDF between x=0 and x=2. 
+
+In the middle column we see a logistic distribution. The **logistic distribution** is a two-parameter distribution very similar to the normal distribution but with 'fatter/heavier tails' (like the t distribution). The logistic distribution has a location parameter (\mu, equal to the mean) that determines its location along the number line, and a scale parameter ($s$, equal to the standard deviation times $\sqrt{3}/\pi$) that is positively related to the 'width' of the density function. These parameters are very similar to those of the Gaussian and t distributions, and serve the same functions. However, they have different definitions and are involved in different ways in their respective density function. In the bottom row of the middle column, we see the CDF pf the logistic density. It turns out that logistic function we used as the link function for logistic regression in chapter 10 is simply the CDF of a logistic distribution with a mean of 0 and a scale 0f 1. 
+
+In the middle column we see that we can use the same approach we used for our normal distribution to calculate values of the CDF of our logistic distribution. Below, we use the `plogis` function to calculate the probability of observing a value greater than or equal to 2 form that distribution. 
+
+```{r}
+plogis (2,0,1)
+```
+
+In the right column of figure \@ref(fig:F12-12) we've placed two vertical lines at x= -2 and x=2. We use the code below to calculate the area under the curve of 
+
+
+```{r}
+# area left of first line
+plogis (-1,0,1)
+
+# area left of second line
+plogis (2,0,1)
+```
+
+
+```{r}
+# probability of observing category 1
+plogis (31,32,1)
+
+# probability of observing category 2
+plogis (34,32,1) - plogis (31,32,1)
+
+# probability of observing categry 3
+1 - plogis (34,32,1)
+```
+
+
+
+```{r}
+# probability of observing category 1
+plogis (31,36,1)
+
+# probability of observing category 2
+plogis (34,36,1) - plogis (31,36,1)
+
+# probability of observing categry 3
+1 - plogis (34,36,1)
+```
+
+
+
+
+
+
+For example, in the right plot of \@ref(fig:F12-10) we see logistic distributions corresponding to an expected bigness of 3.2 and 3.6. Effectively, we've rotated the left plot clockwise 90 degrees and omitted some information (including the lowest distribution). We see that a substantial amount of the first distribution is in the 'small' zone of the y axis. Since the total area under the curve of the distribution is 1, the area in the 'small' section can be thought of as the probability of observing a small response. 
+
+
+
+The same logic applies to the area within the 'medium' and large sections. We can also see that when there is a VTL of 15.4 and a bigness of 3.6 the probability distribution slides up along the y axis, changing the amount of probability density falling within each section of the dependent variable. 
+
+
+```{r F12-11, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
+
+################################################################################
+### Figure 12.11
+################################################################################
+
+x = seq (20,44,.01)
+y = dlogis(x,30,1)
+
+x_2 = seq (-4,4.4,.05)
+y_2 = x_2
+
+par (mfrow = c(1,1), mar = c(4,4,.1,4), oma = c(.5,.5,.51,.51))
+par (mar = c(4,2,.1,0.5))
+
+plot (x+3.2,y*2, yaxt='s',type = 'n', xlim = range(x),ylim = c(0.02,.8),
+      xlab = "Bigness",xaxt='n',ylab="",yaxt = 'n')
+rect (1,0,31,1, col = bmmb::cols[1],border=bmmb::cols[1])
+rect (31,0,34,1, col = bmmb::cols[11],border=bmmb::cols[11])
+rect (34,0,50,1, col = bmmb::cols[10],border=bmmb::cols[10])
+axis (side=4, at = seq(120,200,20), labels = seq(120,200,20)/50)
+axis (side=1, at = seq(24,40,4))
+
+lines (x+2,y*2.5, xaxs='i',type='l',lwd=2)
+lines (x+6,y*2.5, type = 'l', lwd=2)
+lines (x-2,y*2.5, type = 'l', lwd=2)
+
+abline (v = c(31,34),lwd=3,col=bmmb::cols[8])
+```
+
+
+
 
 ### Data and research questions
 
-
+We load our packages and data below. We also add a new variable, `SG` (size group), which will act as our dependent variable. This variable represents children with a 1, adult women with a 2, and adult males with a 3. We don't need to do anything special to make this variable 'ordinal', but we are using three consecutive integers to represent the categories to make things simpler. After this, we process our quantitative predictors in the same way as in the previous chapters.
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
 library (bmmb)
-options (contrasts = c('contr.sum','contr.sum'))
-
 data (exp_data)
-exp_data = exp_data[exp_data$R=='a',]
-```
 
-We create a variable called `F`, which will equal our dependent variable. This variable equals 1 when listeners indicated hearing a female speaker and 0 when listeners indicated a male speaker. We will predict this using a single quantitative predictor, speaker VTL, which we center below. 
+# new dependent variable: Size Group
+exp_data$SG = 0
+exp_data$SG[exp_data$C=='m'] = 3
+exp_data$SG[exp_data$C=='w'] = 2
+exp_data$SG[exp_data$C=='g'] = 1
+exp_data$SG[exp_data$C=='b'] = 1
 
-```{r}
-exp_data$F = as.numeric (exp_data$G == 'f')
+# preparation of quantitative predictors as in previous chapters
 exp_data$vtl_original = exp_data$vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
-
-#exp_data$height_original = exp_data$height
-#exp_data$height = exp_data$height - mean (exp_data$height)
 
 exp_data$f0_original = exp_data$f0 
 exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
 
+We're going to keep our research questions relatively simple this time: 
 
-```{r}
-exp_data$SG = 0
-exp_data$SG[exp_data$C=='m'] = 3
-exp_data$SG[exp_data$C=='w'] = 2
-exp_data$SG[exp_data$C=='g'] = 1
-exp_data$SG[exp_data$C=='b'] = 1
-```
-
-
-```{r}
-tmp = aggregate (height ~ C + L, data = bmmb::exp_data, FUN = mean)
-
-plot(tmp[tmp$C=='b',"height"]-tmp[tmp$C=='g',"height"])
-```
-
+Q1) Can we predict which size group people will tend to respond for a speaker's voice given their f0 and VTL?
 
 
 ### Description of the model
 
+To fit a model predicting apparent size group from speaker f0 and VTL, we can use the formula below:
 
+`SG ~ vtl+f0 + (vtl+f0|L) + (1|S)`
 
+There is actually nothing new or unique about this model formula, it is very much like ones we've used several times in earlier chapters and should require no explanation at this point. Instead, we will focus a bit on the `family` parameter used for this model. We've used the family parameter before when we set `family="student"` for more robust models, `family="bernoulli"` for logistic regression, and `family="multinomial"` for multinomial regression above. When you carry out an ordinal regression, you set the family parameter to `family=cumulative("logit")`. This parameter tells `brm` two things. First, we are using a cumulative link function, and second that cumulative function is that of the logistic distribution. 
 
 Like multinomial regresion, ordinal logistic regression involves modeling a latent variable. 
 
@@ -1015,14 +1156,17 @@ model_ordinal = brms::brm (SG ~ vtl+f0 + (vtl+f0|L) + (1|S), data=exp_data, fami
                      set_prior("student_t(3, 0, 3)", class = "b"),
                      set_prior("student_t(3, 0, 3)", class = "sd"),
                      brms::set_prior("lkj_corr_cholesky (2)", class = "cor")))
-
-#  saveRDS (model_ordinal, "12_model_ordinal.RDS")
 ```
 
-
-```{r}
+```{r, eval = FALSE}
+model_ordinal = bmmb::get_model ("12_model_ordinal.RDS")
+```
+```{r, include = FALSE}
+#  saveRDS (model_multinomial, "../../models/12_model_multinomial.RDS")
+load("../models/12_multinomial_predictions.Rda")
 model_ordinal = readRDS ("../models/12_model_ordinal.RDS")
 ```
+
 
 
 
@@ -1102,3 +1246,5 @@ for (i in 1:15){
 
 
 ```
+
+

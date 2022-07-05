@@ -802,7 +802,7 @@ A simple example of an ordinal variable is first, second, and third place in a r
 
 We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. Below we see a boxplot of apparent height judgments organized by apparent speaker category, with boys and girls collapsed into one category. Note that apparent children are judged to be shortest, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. Based on this, we could think of our speaker classifications as classifications of speakers into small (boys, girls), medium (women), and large (men) speakers. For example, based on the boxplot below we might imagine that if we *had* asked listeners to label speakers small medium and large, they would have labelled most apparent children as small, most apparent women as medium, and most apparent men are large. In any case, we are only presenting this as an example and are only interested in establishing that the conversion of speaker category into an ordinal small < medium < large variable is not completely unfounded.
 
-The right plot in figure \@ref(F12-9) presents the y axis divided into three sections. These sections are halfway between the means of our small, medium and large speakers. Imagine that we use apparent height to slide along the line in the plot, and based on the value of the line at a given x axis location, we arrive at a classification of the speaker as small medium or large. 
+The right plot in figure \@ref(F12-9) presents the y axis divided into three sections. The boundaries are halfway between the means of our small and medium, and medium and large speakers respectively. We know from earlier chapters that a longer speaker VTL is associated with taller apparent speakers. Imagine that we slide along the line in the plot based on the VTL of the speaker. Based on the apparent height value at a given x axis location, we arrive at a classification of the speaker as small medium or large. 
 
 ```{r F12-9, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
@@ -810,41 +810,48 @@ The right plot in figure \@ref(F12-9) presents the y axis divided into three sec
 ### Figure 12.9
 ################################################################################
 
-exp_data$SG = 0
-exp_data$SG[exp_data$C=='m'] = 3
-exp_data$SG[exp_data$C=='w'] = 2
-exp_data$SG[exp_data$C=='g'] = 1
-exp_data$SG[exp_data$C=='b'] = 1
+library (bmmb)
+data (exp_data)
+
+SG = 0
+SG[exp_data$C=='m'] = 3
+SG[exp_data$C=='w'] = 2
+SG[exp_data$C=='g'] = 1
+SG[exp_data$C=='b'] = 1
 
 
 x = seq (100,200,.1)
-y = x
+y = seq (100,200,.1)
 
 par (mfrow = c(1,2), mar = c(.1,.1,.1,.1), oma = c(4,4,.5,.5))
 
-boxplot (height_original ~ SG, data = exp_data,col=bmmb::cols[c(9,11,12)])
+boxplot (height ~ SG, data = exp_data,col=bmmb::cols[c(1,11,10)],ylim = c(100,200),
+         xlab = "Size Group")
 
-tmp = aggregate (height_original ~ SG, data = exp_data, FUN = mean)
-abline (h = mean (tmp[1:2,2]), lwd = 6, col = bmmb::cols[8])
-abline (h = mean (tmp[2:3,2]), lwd = 6, col = bmmb::cols[10])
-boxplot (height_original ~ SG, data = exp_data,col=bmmb::cols[c(9,11,12)],
+tmp = aggregate (height ~ SG, data = exp_data, FUN = mean)
+abline (h = mean (tmp[1:2,2]), lwd = 6, col = bmmb::cols[15])
+abline (h = mean (tmp[2:3,2]), lwd = 6, col = bmmb::cols[15])
+boxplot (height ~ SG, data = exp_data,col=bmmb::cols[c(1,11,10)],
          add = TRUE)
+mtext (side=1,text="Size Group", line = 2.5)
+mtext (side=2,text="Apparent Height (cm)", line = 2.75)
 
-plot (x,y, yaxt='n',type = 'l', xlim = c(120,190),ylim = c(120,190))
-rect (100,100,200,mean(tmp[1:2,2]), col = bmmb::cols[9])
-rect (100,mean(tmp[1:2,2]),200,mean(tmp[2:3,2]), col = bmmb::cols[11])
-rect (100,mean(tmp[2:3,2]),200,400, col = bmmb::cols[12])
+plot (x,y, yaxt='n',type = 'l', xlim = c(120,190),ylim = c(100,200),xaxt='n')
+rect (100,90,200,mean(tmp[1:2,2]), col = bmmb::cols[1],border=bmmb::cols[1])
+rect (100,mean(tmp[1:2,2]),200,mean(tmp[2:3,2]), col = bmmb::cols[11],border=bmmb::cols[11])
+rect (100,mean(tmp[2:3,2]),200,400, col = bmmb::cols[10],border=bmmb::cols[10])
 lines (x,y, lwd=4, col = bmmb::cols[2])
 
 points (c(140,160,180),c(140,160,180),pch=16,col=bmmb::cols[2],cex=2)
-abline (h = mean (tmp[1:2,2]), lwd = 6, col = bmmb::cols[8])
-abline (h = mean (tmp[2:3,2]), lwd = 6, col = bmmb::cols[10])
+abline (h = mean (tmp[1:2,2]), lwd = 6, col = bmmb::cols[15])
+abline (h = mean (tmp[2:3,2]), lwd = 6, col = bmmb::cols[15])
 
-
-
+text (118,c(140,163,195), c("Small", "Medium", "Large"),cex=1.1,pos=4)
+axis (side=1, at = seq(110,190,length.out=6), labels = 11:16)
+mtext (side=1,text="Vocal tract length (cm)", line = 2.75)
 ```
 
-We can see how this might work in the code below. First, we create a new variable that will hold our size group predictions, `SG_hat`. Then, we se this variable to 1 if apparent height is less than 155.7 cm, to 2 if apparent height is between 155.7 and 170 cm, and 3 if it is greater than 170 cm.
+We can see how this might work in the code below. First, we create a new variable that will hold our size group predictions, `SG_hat`. Then, we see this variable to 1 if apparent height is less than 155.7 cm, to 2 if apparent height is between 155.7 and 170 cm, and 3 if it is greater than 170 cm.
 
 ```{r}
 SG_hat = exp_data$height * 0
@@ -861,7 +868,7 @@ mean (exp_data$SG == SG_hat)
 xtabs (~ exp_data$SG + SG_hat)
 ```
 
-
+We can make this situation more general if we abstract the y axis to be a latent variable that is not necessarily apparent height. We can think of this as 'size' or 'bigness', buts its name is not important, and neither is us having a rock-solid conceptual grasp of what it is exactly. Instead, all we need to conceptualize is that we think there is some latent variable, something like 'bigness', that allows listeners to classify speakers into small, medium, and large groups based on their voices. The right side of figure \@ref(F12-10) is labelled "Bigness" to correspond to this latent variable. Actually, this variable is just apparent height divided by 50, but the point is that the values of this axis are entirely arbitrary. Notice that the change in axis units has absolutely no effect of the way our conceptual model works. If the latent variable units are 50 times smaller than some other variable, that just means the line relating x to y is 50 times smaller and the boundaries between categories are equal to the other categories divided by 50. The same logic applies to the relationship between our latent dependent variable and our predictors. 
 
 ```{r F12-10, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
@@ -880,12 +887,12 @@ y_2 = x_2
 par (mfrow = c(1,1), mar = c(4,4,.1,4), oma = c(.5,.5,.51,.51))
 
 plot (x,y, yaxt='s',type = 'l', xlim = c(120,190),ylim = c(105,215),
-      xlab = "Apparent Height (cm)")
-rect (100,100,200,mean(tmp[1:2,2]), col = bmmb::cols[9])
-rect (100,mean(tmp[1:2,2]),200,mean(tmp[2:3,2]), col = bmmb::cols[11])
-rect (100,mean(tmp[2:3,2]),200,400, col = bmmb::cols[12])
+      xlab = "Apparent Height (cm)",xaxt='n',ylab="Apparent Height (cm)")
+rect (100,90,200,mean(tmp[1:2,2]), col = bmmb::cols[1],border=bmmb::cols[1])
+rect (100,mean(tmp[1:2,2]),200,mean(tmp[2:3,2]), col = bmmb::cols[11],border=bmmb::cols[11])
+rect (100,mean(tmp[2:3,2]),200,400, col = bmmb::cols[10],border=bmmb::cols[10])
 lines (x_2,y_2, lwd=4, col = bmmb::cols[2])
-axis (side=4, at = seq(120,200,20), labels = seq(120,200,20)/10)
+axis (side=4, at = seq(120,200,20), labels = seq(120,200,20)/50)
 
 spot = 160
 lines (-y*150+spot, x+spot, ylim = c(120,190), xlim = c(-.35,0), xaxs='i',type='l',lwd=2)
@@ -904,33 +911,23 @@ points (spot,spot,pch=16,col=bmmb::cols[2],cex=2)
 
 text (125,c(140,163,195), c("Small", "Medium", "Large"),cex=1.1)
 
-abline (h = mean (tmp[1:2,2]), lwd = 6, col = bmmb::cols[8])
-abline (h = mean (tmp[2:3,2]), lwd = 6, col = bmmb::cols[10])
+abline (h = mean (tmp[1:2,2]), lwd = 5, col = bmmb::cols[15])
+abline (h = mean (tmp[2:3,2]), lwd = 5, col = bmmb::cols[15])
+
+axis (side=1, at = seq(110,190,length.out=6), labels = 11:16)
+lines (x,y, lwd=4, col = bmmb::cols[2])
+
+mtext (side=4, "Bigness", line=2.75)
+
 ```
 
+We need to add one final detail to get to an almost explanation of ordinal regression. In figure \@ref(fig:F9-1) we showed that bivariate linear regression with Gaussian errors can be thought of as a Gaussian distribution sliding along a line based on the value of the dependent variable. The y axis value of the line at an x axis location tells you the expected value of y for that value of x. However, we will hardly (if ever) observed the expected value exactly. Instead, we assume that we have Gaussian error centered around our expected values so that the values we observe actually probabilistically vary around the expected value. 
 
-Like multinomial regresion, ordinal logistic regression involves modeling a latent variable. 
+We show a similar situation in figure \@ref(F12-10), with a probability distribution sliding along a line. However, the values that this distribution generates cannot be the observed values of an ordinal variable. This is because our observed values are strictly the ordinal categories small (the first category), medium (the second category), and large (the third category), and a continuous probability distribution will generate continuous values. This means that our probability distribution, centered at our expected value, needs to generate values broadly consistent with three integer values 1, 2 and 3. Ordinal regression solves this problem by using the area under the curve of the error distribution in the latent variable to predict the probability of observing different probability distributions. 
 
-Just like multinomial regression, ordinal regression involves modeling a latent variable. 
+Ordinal regression estimates the location of boundaries between categories along the latent variable, and the expected value of the latent variable for a combination of predictor variables. For example, figure \@ref(fig:F9-1) shows a situation where the boundaries are at around 3.1 and 3.4 bigness, and you have an expected bigness of around 3.2 for a vocal-tract length of 14.1. We then center a **logistic** distribution at this location (hence the name, ordinal *logistic* regression), to represent the error in our model. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general, but these things are fuzzy and necessarily noisy. So there is actually a distribution of expected perceived/apparent 'bigness' given our predictors. 
 
-- weird latent variable
-- unpredictable decision based on some choice. the distribution is the range of outcomes. 
-- slide distribution like in regular regression
-- except e assume logistic. 
-- cumulative distribution function
-
-- rather than one intercept, we have n-1 for n levels
-- intercepts are fixed aspects of the model
-- we model mu, and this changes responses as mu slides across intercepts
-- you can also model the sd parameter
-- there is also a normal model, but we will not be discussing here
-- in practice little to no difference just like probit and logit for logistic
-
-
-
-
-
-
+For example, for a VTL of 14.1 and an expected bigness of 3.2, we see that a substantial amount of the distribution is in the 'small' zone of the y axis. Since the total area under the curve of the distribution is 1, the area in the 'small' section can be thought of as the probability of observing a small response. The same logic applies to the area within the 'medium' and large sections. We can also see that when there is a VTL of 15.4 and a bigness of 3.6 the probability distribution slides up along the y axis, changing the amount of probability density falling within each section of the dependent variable. 
 
 ### Data and research questions
 
@@ -979,6 +976,29 @@ plot(tmp[tmp$C=='b',"height"]-tmp[tmp$C=='g',"height"])
 
 
 ### Description of the model
+
+
+
+
+Like multinomial regresion, ordinal logistic regression involves modeling a latent variable. 
+
+Just like multinomial regression, ordinal regression involves modeling a latent variable. 
+
+- weird latent variable
+- unpredictable decision based on some choice. the distribution is the range of outcomes. 
+- slide distribution like in regular regression
+- except e assume logistic. 
+- cumulative distribution function
+
+- rather than one intercept, we have n-1 for n levels
+- intercepts are fixed aspects of the model
+- we model mu, and this changes responses as mu slides across intercepts
+- you can also model the sd parameter
+- there is also a normal model, but we will not be discussing here
+- in practice little to no difference just like probit and logit for logistic
+
+
+
 
 
 ### Fitting and interpreting the model

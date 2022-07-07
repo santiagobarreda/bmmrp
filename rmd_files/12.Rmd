@@ -1,5 +1,5 @@
 \newpage
-```{r}
+```{r, include = FALSE}
 knitr::opts_chunk$set(
   dpi = 300, dev = "jpeg", collapse=TRUE
 )
@@ -102,9 +102,11 @@ The prediction equation for the 'reference' category (`brm` uses the first categ
 
 $$
 \begin{equation}
+\begin{split}
 z_1 = 0 \\
 0 = \alpha_j + \beta_{j1} \times x_1 + \beta_{j2} \times x_2 + \dots + \beta_{kj} \times x_k \\
 z_1 = 0 + 0 \times x_1 + 0 \times x_2 + \dots + 0 \times x_k \\
+\end{split}
 (\#eq:12-6)
 \end{equation}
 $$
@@ -252,18 +254,10 @@ load("../models/12_multinomial_predictions.Rda")
 model_multinomial = readRDS ("../models/12_model_multinomial.RDS")
 ```
 
-Figure \@ref(fig:F12-1) presents the model fixed effects, the intercept, VTL slope, and the f0 slope for each category with estimated parameters. Each group of parameters defines a plane whose value along the $z$ dimension can be predicted based on the values of f0 and VTL. We have four planes an four values of $z_j$ for any given location in the two dimensional space defined by f0 and VTL. For each point, we can select as the most probable category the one whose value of $z_j$ is highest at the point in the space. Another way to look at this is that we select the highest plane at any given location in the space. 
+Below we see the model fixed effects, the intercept, VTL slope, and the f0 slope for each category with estimated parameters. Each group of parameters defines a plane whose value along the $z$ dimension can be predicted based on the values of f0 and VTL. We have four planes an four values of $z_j$ for any given location in the two dimensional space defined by f0 and VTL. For each point, we can select as the most probable category the one whose value of $z_j$ is highest at the point in the space. Another way to look at this is that we select the highest plane at any given location in the space. 
 
-```{r F12-1, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
-
-################################################################################
-### Figure 12.1
-###############################################################################
-
-par(mar=c(4,7,.51,.51))
-brmplot (fixef (model_multinomial)[c(1,4,5,2,6,7,3,8,9),], 
-         horizontal=FALSE, col = rep(bmmb::cols[3:5],each=3))
-mtext (side=1,line=3,"Coefficient")
+```{r}
+fixef (model_multinomial)
 ```
 
 Since the dependent variable is the score for each category, the parameters above are difficult to interpret in isolation. Also, keep in mind that scores need to be interpreted relative to the baseline category value of 0 (for boys), or two each other, rather than absolutely. For example, the negative coefficient for VTL for 'girl' (`mug_vtl`) indicates the a longer VTL made a girl response less likely. We can also see that increasing f0 made a 'woman' response less likely, and a 'male' response more likely.
@@ -297,6 +291,7 @@ Since these are probabilities, the sum of each row equals one, because only thes
 ```{r}
 head(rowSums (multi_pred_re[,1,]))
 ```
+
 We can use the code below to find the 'winning' category for each observation, that is, the category with the highest posterior probability in each row. We use the resulting column numbers to get category labels. 
 
 ```{r}
@@ -470,7 +465,7 @@ points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmm
 plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25), 
      xlim = c(-2.5,3), pch = 16, col = bmmb::cols[2:5][mod_cat],ylab="",yaxt="n")
 
-#maps = make_map (t(params))
+maps = make_map (t(params))
 
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
 
@@ -537,8 +532,6 @@ plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25),
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
 points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmmb::cols[2:5][mod_cat2], cex = 2)
 mtext (side=3, text = "Model Predictions (no RE)", line = 0.5)
-
-
 
 mtext (side=1, "Centered vocal tract length (cm)", outer = TRUE, line=2.5)
 mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
@@ -616,7 +609,7 @@ model_multinomial_noS = bmmb::get_model ("../models/12_model_multinomial_noS.RDS
 model_multinomial_noS = readRDS ("../models/12_model_multinomial_noS.RDS")
 ```
 
-```{r, cache = TRUE}
+```{r, eval = FALSE}
 multi_pred_noS = predict (model_multinomial_noS, re_formula = NA)
 multi_pred_re_noS = predict (model_multinomial_noS)
 ```
@@ -681,7 +674,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 ```
 
-Figure \@ref(fig:12-7) compares the territorial maps represented by our models with (left) and without (right) speaker information. In addition to being a better fit to the data, we think the new territorial maps make more 'sense'. This is because the map with speakers suggests that the difference between women and boys was almost entirely due to f0, with women being associated with the higher f0. This is despite boys being associated with shorter VTLs than adult females *and* a higher f0. The new map has basically no effect for f0 between these categories and makes it a primarily VTL difference, which is backed up by the distributions of these characteristics between these speaker types. 
+Figure \@ref(fig:F12-7) compares the territorial maps represented by our models with (left) and without (right) speaker information. In addition to being a better fit to the data, we think the new territorial maps make more 'sense'. This is because the map with speakers suggests that the difference between women and boys was almost entirely due to f0, with women being associated with the higher f0. This is despite boys being associated with shorter VTLs than adult females *and* a higher f0. The new map has basically no effect for f0 between these categories and makes it a primarily VTL difference, which is backed up by the distributions of these characteristics between these speaker types. 
 
 ```{r F12-7, fig.height = 3, fig.width=8, fig.cap = "(left) Territorial maps indicating which sections of the stimulus space are associated with: Boys (turquoise), girls (yellow), men (green), and women (red). Points represent individual speakers, colors represent modal classifications using the same colors as the territories.", echo = FALSE}
 
@@ -733,7 +726,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 ```
 
-One concern with omitting the speaker effects is that our model now thinks all observations for any one speaker are independent. Based on what we saw in figure (intercepts) we know that this is defnitely not the case. Instead, individual speakers were identified as one or another category consistently, indicating that these judgments were related across listeners. Tis can potentially have the effect of artificially decreasing our confidence intervals, as we see in chapter 6 (heck out details, it was for A1). Figure \@ref(fig:12-8) compares the fixed effects between our two models, suggesting that the omission of the speaker effects has not had a large effect on our parameters. The two largest differences are for the woman category: The intercept went from slightly negative to slightly positive, nd the effect for f0 went from zero to positive. 
+One concern with omitting the speaker effects is that our model now thinks all observations for any one speaker are independent. Based on what we saw in figure (intercepts) we know that this is defnitely not the case. Instead, individual speakers were identified as one or another category consistently, indicating that these judgments were related across listeners. Tis can potentially have the effect of artificially decreasing our confidence intervals, as we see in chapter 6 (heck out details, it was for A1). Figure \@ref(fig:F12-8) compares the fixed effects between our two models, suggesting that the omission of the speaker effects has not had a large effect on our parameters. The two largest differences are for the woman category: The intercept went from slightly negative to slightly positive, nd the effect for f0 went from zero to positive. 
 
 ```{r F12-8, fig.height = 3, fig.width=8, fig.cap = "-- ", echo = FALSE}
 ################################################################################
@@ -756,6 +749,7 @@ legend (2.5,9,legend =c("With Speaker","No Speaker"),bty='n',
 ```
 
 We again find the maximum a posteriori speaker classification and get a label for each trial. 
+
 ```{r}
 predicted_noS = apply (multi_pred_re_noS[,1,],1,which.max)
 predicted_category_noS = c("b","g","m","w")[predicted_noS]
@@ -802,7 +796,7 @@ A simple example of an ordinal variable is first, second, and third place in a r
 
 We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. Below we see a boxplot of apparent height judgments organized by apparent speaker category, with boys and girls collapsed into one category. Note that apparent children are judged to be shortest, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. Based on this, we could think of our speaker classifications as classifications of speakers into small (boys, girls), medium (women), and large (men) speakers. For example, based on the boxplot below we might imagine that if we *had* asked listeners to label speakers small medium and large, they would have labelled most apparent children as small, most apparent women as medium, and most apparent men are large. In any case, we are only presenting this as an example and are only interested in establishing that the conversion of speaker category into an ordinal small < medium < large variable is not completely unfounded.
 
-The right plot in figure \@ref(F12-9) presents the y axis divided into three sections. The boundaries are halfway between the means of our small and medium, and medium and large speakers respectively. We know from earlier chapters that a longer speaker VTL is associated with taller apparent speakers. Imagine that we slide along the line in the plot based on the VTL of the speaker. Based on the apparent height value at a given x axis location, we arrive at a classification of the speaker as small medium or large. 
+The right plot in figure \@ref(fig:F12-9) presents the y axis divided into three sections. The boundaries are halfway between the means of our small and medium, and medium and large speakers respectively. We know from earlier chapters that a longer speaker VTL is associated with taller apparent speakers. Imagine that we slide along the line in the plot based on the VTL of the speaker. Based on the apparent height value at a given x axis location, we arrive at a classification of the speaker as small medium or large. 
 
 ```{r F12-9, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
@@ -863,12 +857,12 @@ SG_hat[exp_data$height >= 170] = 3
 We can see that even this relatively primitive 'model' is able to correctly predict size group responses in 75% of cases. 
 
 ```{r}
-mean (exp_data$SG == SG_hat)
+mean (SG == SG_hat)
 
-xtabs (~ exp_data$SG + SG_hat)
+xtabs (~ SG + SG_hat)
 ```
 
-We can make this situation more general if we abstract the y axis to be a latent variable that is not necessarily apparent height. We can think of this as 'size' or 'bigness', buts its name is not important, and neither is us having a rock-solid conceptual grasp of what it is exactly. Instead, all we need to conceptualize is that we think there is some latent variable, something like 'bigness', that allows listeners to classify speakers into small, medium, and large groups based on their voices. The right side of figure \@ref(F12-10) is labelled "Bigness" to correspond to this latent variable. Actually, this variable is just apparent height divided by 50, but the point is that the values of this axis are entirely arbitrary. Notice that the change in axis units has absolutely no effect of the way our conceptual model works. If the latent variable units are 50 times smaller than some other variable, that just means the line relating x to y is 50 times smaller and the boundaries between categories are equal to the other categories divided by 50. The same logic applies to the relationship between our latent dependent variable and our predictors. 
+We can make this situation more general if we abstract the y axis to be a latent variable that is not necessarily apparent height. We can think of this as 'size' or 'bigness', buts its name is not important, and neither is us having a rock-solid conceptual grasp of what it is exactly. Instead, all we need to conceptualize is that we think there is some latent variable, something like 'bigness', that allows listeners to classify speakers into small, medium, and large groups based on their voices. The right side of figure \@ref(fig:F12-10) is labelled "bigness" to correspond to this latent variable. Actually, this variable is just apparent height divided by 50, but the point is that the values of this axis are entirely arbitrary. Notice that the change in axis units has absolutely no effect of the way our conceptual model works. If the latent variable units are 50 times smaller than some other variable, that just means the line relating x to y is 50 times smaller and the boundaries between categories are equal to the other categories divided by 50. The same logic applies to the relationship between our latent dependent variable and our predictors. 
 
 ```{r F12-10, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
@@ -926,7 +920,7 @@ mtext (side=4, "Bigness", line=2.2)
 
 We need to add one final detail to get to an almost explanation of ordinal regression. In figure \@ref(fig:F9-1) we showed that bivariate linear regression with Gaussian errors can be thought of as a Gaussian distribution sliding along a line based on the value of the dependent variable. The y axis value of the line at an x axis location tells you the expected value of y for that value of x. However, we will hardly (if ever) observed the expected value exactly. Instead, we assume that we have Gaussian error centered around our expected values so that the values we observe actually probabilistically vary around the expected value. 
 
-We show a similar situation in figure \@ref(F12-10), with a probability distribution sliding along a line. However, the values that this distribution generates cannot be the observed values of an ordinal variable. This is because our observed values are strictly the ordinal categories small (the first category), medium (the second category), and large (the third category), and a continuous probability distribution will generate continuous values. This means that our probability distribution, centered at our expected value, needs to generate values broadly consistent with three integer values 1, 2 and 3. Ordinal regression solves this problem by using the area under the curve of the error distribution in the latent variable to predict the probability of observing different probability distributions. 
+We show a similar situation in figure \@ref(fig:F12-10), with a probability distribution sliding along a line. However, the values that this distribution generates cannot be the observed values of an ordinal variable. This is because our observed values are strictly the ordinal categories small (the first category), medium (the second category), and large (the third category), and a continuous probability distribution will generate continuous values. This means that our probability distribution, centered at our expected value, needs to generate values broadly consistent with three integer values 1, 2 and 3. Ordinal regression solves this problem by using the area under the curve of the error distribution in the latent variable to predict the probability of observing different probability distributions. 
 
 Ordinal regression estimates the location of boundaries between categories along the latent variable, and the expected value of the latent variable for a combination of predictor variables. For example, figure \@ref(fig:F9-1) shows a situation where the boundaries are at around 3.1 and 3.4 bigness, and you have an expected bigness of around 3.2 for a vocal-tract length of 14.1. We then center a **logistic** distribution at this location (hence the name, ordinal *logistic* regression), to represent the error in our model. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general, but these things are fuzzy and necessarily noisy. So there is actually a distribution of expected perceived/apparent 'bigness' given our predictors. In order to understand how this information is used in ordinal regression, we need to talk about cumulative distribution functions first. 
 
@@ -1114,14 +1108,13 @@ We're going to keep our research questions relatively simple this time:
 
 Q1) Can we predict which size group people will tend to respond for a speaker's voice given their f0 and VTL?
 
-
 ### Description of the model
 
 To fit a model predicting apparent size group from speaker f0 and VTL, we can use the formula below:
 
 `SG ~ vtl+f0 + (vtl+f0|L) + (1|S)`
 
-There is actually nothing new or unique about this model formula, it is very much like ones we've used several times in earlier chapters. However, the relationship it represents between our predictors and our dependent variables is substantially different to what we have seen before. Let's consider the relationship between the independent variables and the mean of our logistic distribution, presented in equation below:
+There is nothing new about this model formula, it is very much like ones we've used several times in earlier chapters. The formula says "predict size group using a plane based on voice f0 and VTL, allow for listener-specific planes, and speaker-specific adjustments to the height of the plane". However, the relationship it represents between our predictors and our dependent variables is substantially different to what we've seen before. Let's consider the relationship between the independent variables and the mean of our logistic distribution, presented in equation below:
 
 
 $$
@@ -1159,10 +1152,7 @@ SG_{[i]} =
 \end{equation}
 $$
 
-Notice that the model prediction equation (reference equation) does not contain an intercept term in its prediction of the expected value of the latent variable. This is because the value of the latent variable doesn't really matter on its own, but only relative to the thresholds. Suppose we had an intercept = 0 and thresholds of 2 and 5. The behavior of this model would be exactly analogous to a model with an intercept of 10 and thresholds of 12 and 15. There are an infinite number of such analogous models, one for each possible value of the intercept. For this reason, the overall intercept in these models is usually set to zero and not modeled, and instead only the J-1 thresholds are modeled. 
-
-Although ordinal models do not usually model the overall intercept, they *can* model listener-dependent intercepts. Effectively, this is analogous to sliding the thresholds up and down the numberline by different amounts for each listener. This sort of listener-adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above.  
-
+Here is a full description of our model:
 
 $$
 \begin{equation}
@@ -1179,57 +1169,37 @@ z_{[i]} \sim \mathrm{Logistic} (\mu_{[i]}, s)\\
 \mu_{[i]} = a_{[i]} + b_{[i]} \times \mathrm{vtl}_{[i]} + c_{[i]} \times \mathrm{f0}_{[i]}  \\ 
 a_{[i]} =  L_{[L_{[i]}]} \\
 b_{[i]} =  VTL + VTL \colon L_{[L_{[i]}]} \\
-c_{[i]} =  f0 + f0 \colon L_{[L_{[i]}]} \\ 
+c_{[i]} =  F0 + F0 \colon L_{[L_{[i]}]} \\ 
 \\
 \textrm{Priors:} \\
 S_{[\bullet]} \sim \mathrm{Normal}(0,\sigma_{S_j}) 
 \\ 
-\begin{bmatrix} L_{[\bullet]} \\ VTL \colon L_{[\bullet]} \\ f0 \colon L_{[\bullet]} \end{bmatrix}	
+\begin{bmatrix} L_{[\bullet]} \\ VTL \colon L_{[\bullet]} \\ F0 \colon L_{[\bullet]} \end{bmatrix}	
 \sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\
-Intercept \sim t(3, 0, 3) \\
-VTL, f0 \sim t(3, 0, 3) \\
+\theta_{[1]}, \theta_{[2]} \sim t(3, 0, 3) \\
+VTL, F0 \sim t(3, 0, 3) \\
 \sigma_{L}, \sigma_{VTL \colon L}, \sigma_{f0 \colon L} \sim t(3, 0, 3) \\ R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:12-14)
 \end{equation}
 $$
 
+Notice that the model prediction equation (reference equation) does not contain an intercept term in its prediction of the expected value of the latent variable. This is because the important thing for our model is the distance between the intercept and the thresholds, and not the value of the latent variable itself. For example, imagine an 'intercept-only' model (chapter 4) that had intercept = 0 and thresholds of 2 and 5. The behavior of this model would be exactly analogous to a model with an intercept of 10 and thresholds of 12 and 15.  There are an infinite number of models that maintain these distances, one for each possible value of the intercept, making finding the 'best' one an impossible task. To resolve this issue, the overall intercept in these models is usually set to zero and not modeled, and instead only the J-1 thresholds are modeled. 
+
+Although ordinal models do not usually model the overall intercept, they *can* model listener-dependent (and speaker) intercepts, and our model in equation does. Using cluster-dependent intercepts can be thought of as sliding the thresholds up and down the number line by different amounts for each level of a grouping factor, or as moving the predicted values for the cluster by a given amount. This sort of adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above. 
+
 Here's a verbal description of our model:
 
-> We are modelling an ordinal variable, size group ($SG$), with possible outcomes of small (1), medium (2), and large (3). The value expected for any given trial is based on the value of a latent variable ($z$) in relation to two thresholds ($\theta_{[1]},\theta_{[2]}$). Our latent variable is modeled as coming from a logistic distribution with a scale of 1 and a mean that varies from trial to trial. The mean of these distributions varies based on the combination of 'main' (e.g., $VTL$) and listener-dependent (e.g. $VTL \colon L$) effects for vocal tract length and f0, and a listener-dependent intercept. 
+> We are modelling an ordinal variable, size group ($SG$), with possible outcomes of small (1), medium (2), and large (3). The value expected for any given trial is based on the value of a latent variable ($z$) in relation to two thresholds ($\theta_{[1]},\theta_{[2]}$), which were estimated from the data. Our latent variable is modeled as coming from a logistic distribution with a scale of 1 and a mean that varies from trial to trial. The mean of these distributions varies based on the combination of 'main' (e.g., $VTL$) and listener-dependent (e.g. $VTL \colon L$) effects for vocal tract length and f0, and a listener-dependent intercept. 
 
-
-
-
-
-
-
-The mean is modeled as varying based on 
-
-
-
-> We're treating our femaleness judgments (1 or 0 for female or male) as coming from a Bernoulli distribution with a probability that varies trial to trial. The *logit of the probability* (z) varies along lines. The lines are specified by intercepts and slopes that vary trom trial to trial, and there is a single continuous predictor (speaker VTL). The intercept of these lines vary based on an overall intercept (the main effect), an overall effect for the perception of an adult speaker ($A1$), listener-specific effects for apparent age ($A1 \colon L$), listener-specific deviations from the mean ($L$), and speaker-specific deviations from the mean (S). The slope of these lines vary based on an overall slope ($VTL$, the main effect), deviations based on apparent age ($VTL \colon A1$), listener-specific deviations from the average slope ($VTL \colon L$), and listener-specific interactions between apparent age and VTL ($A1 \colon VTL \colon A1$)). 
-  The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of 0 of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, A, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
-
-
-
-
-
-
-
-
-
+> The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of 0 of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
 
 
 ### Fitting and interpreting the model
 
-- you can also model the sd parameter
-- there is also a normal model, but we will not be discussing here
-- in practice little to no difference just like probit and logit for logistic
-- not used because they are the real distribution but because commonly used, efficient, easy, convenient etc
+To fit an ordinal logistic model, you set `family=cumulative` when fitting your model. The logistic distribution is the default distribution for these sorts of models, but other distributions such as the normal distribution can be used. 
 
-
-```{r}
+```{r, eval = FALSE}
 # Fit the model yourself
 set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
@@ -1249,59 +1219,89 @@ model_ordinal = bmmb::get_model ("12_model_ordinal.RDS")
 model_ordinal = readRDS ("../models/12_model_ordinal.RDS")
 ```
 
-
-
-
-
-
+We can inspect the short summary to see the information it contains:
 
 ```{r}
-preds = predict (model_ordinal, re_formula = NA)
-preds2 = predict (model_ordinal)
+bmmb::short_summary(model_ordinal)
 ```
+
+Note that we get listener-dependent intercepts, VTL, and f0 effects. Note that these intercepts correspond to the $L$ terms in the model equation above, and do not refer to thresholds/cutoffs. In the population-level effects, we see the two estimated thresholds `Intercept[1]` and `Intercept[1]` representing $\theta_{[1]}$ and $\theta_{[1]}$ above. We also see our 'main' effects for VTL and f0 in this section. Our results indicate that VTL is positively related to a larger size group response, while f0 is negatively related to this (no surprises there). 
+
+Below we make 'fixed effect' predictions using our model. These predictions omit the random effects structure to let us see how well our fixed effects can predict our data. We inspect the predictions for our first six observations, and we can see that these consist of three columns representing the probability that the observation belongs to each category. 
 
 ```{r}
+# make predictions
+predictions = fitted (model_ordinal, re_formula = NA)
 
-fixed = brms::fixef(model_ordinal)
-
-x = model_ordinal$data$vtl * fixed[3,1] + model_ordinal$data$f0  * fixed[4,1]
-
-predds = cbind (round (plogis (fixed[1,1], x),5), 
-                round ((plogis (fixed[2,2], x)-plogis (fixed[1,1], x)),5),
-                round (1-plogis (fixed[2,2], x), 5))
-
-head (predds)
-head (preds)
-
-       
+# see first six
+head (predictions[,1,])
 ```
 
-
+Below we find the maximum value across each row, representing the categorical prediction made by our model for each observation.  
 
 ```{r}
-pred_cat = apply (preds,1,which.max)
-pred_cat2 = apply (preds2,1,which.max)
-
-mean (exp_data$SG == pred_cat)
-mean (exp_data$SG == pred_cat2)
+SG_hat = apply (predictions[,1,],1,which.max)
 ```
 
-
-
+We can see that our model does a pretty good job of predicting our data:
+      
+```{r}
+mean (exp_data$SG == SG_hat)
+```
+      
+Below we make predictions using our posterior mean fixed effects. We do this just to show that it does, in fact, align with the model we outlined above. First, we get the posterior mean model fixed effects and use this to come up with an expected value for our latent variable for each observation. Then, we assign each observation to a response category based on where the expected value lies relative to the thresholds.
 
 ```{r}
-tapply (bmmb::exp_data$vtl, bmmb::exp_data$C, mean)
-tapply (bmmb::exp_data$f0, bmmb::exp_data$C, mean)
+# get fixed effects
+fixed_effects = brms::fixef(model_ordinal)
 
-par (mar = c(.2,.2,.2,.2), oma = c(3,3,.5,.5), mfrow = c(4,4))
-curve (dlogis (x), from=-7,to=7)
-abline (v = fixed[1:2])
+threshold_1 = fixed_effects[1,1]
+threshold_2 = fixed_effects[2,1]
+vtl_slope = fixed_effects[3,1]
+f0_slope = fixed_effects[4,1]
+
+# get expected values
+mu = exp_data$vtl * vtl_slope + exp_data$f0  * f0_slope
+
+# assign to category based on location relative to threshold.
+SG_hat_manual = 0
+SG_hat_manual[mu < threshold_1] = 1
+SG_hat_manual[(threshold_1 < mu) & (mu < threshold_2)] = 2
+SG_hat_manual[threshold_2 < mu] = 3
 ```
 
+We can see that this approach results in basically the same predictions as using our linear predictions (with the differences attributable to using the posterior means).  
 
+```{r, eval = FALSE}
+mean (SG_hat == SG_hat_manual)
+```
+
+We can also use the expected values and thresholds to calculate the predicted probabilities that the observation will belong to each category. Again, because of the different approaches used, we expect small differences to the predictions made using the `fitted` function above. 
+
+```{r}
+predictions_manual = 
+  cbind (round (plogis (threshold_1, mu),5),
+         round ((plogis (threshold_2, mu)-plogis (threshold_1, mu)),5),
+         round (1-plogis (threshold_2, mu), 5))
+
+head (predictions_manual)
+```
 
 ### Answering our research questions
 
+We can try to answer our research question:
+
+Q1) Can we predict which size group people will tend to respond for a speaker's voice given their f0 and VTL?
+
+Yes we can, and with reasonable accuracy based only on the fixed effects. Here's something else worth noting: There is very little between-listener variation in our parameters. 
+
+```{r F12-13, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
+
+par (mfrow = c(1,2), mar = c(2,3,.1,.1), oma = c(.7,1,1,1))
+layout (mat = t(c(1,2)), widths = c(.6,.4))
+brmplot (fixef(model_ordinal), ylim = c(-3,4))
+brmplot (get_sds(model_ordinal), ylim = c(0,7))
+```
 
 
 

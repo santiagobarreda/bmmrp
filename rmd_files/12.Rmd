@@ -1105,7 +1105,7 @@ plogis (34,32,1) - plogis (31,32,1)
 1 - plogis (34,28,1)
 ```
 
-This conceptualization of our model leads to both **hard** and **soft** classification. An ordinal regression model will predict, for every classification, an expected value of the dependent variable based on the values of the predictors. This value can then be used to classify the predictions into a predicted category, 1, 23, or 3 based on the value of the variable relative to the thresholds. That would be a *hard* classification that reports only the winning category. In contrast, the expected value can be used in the method shown just above to report response probabilities for each category. For example, it may be useful for the example shown in figure \@ref(fig:F12-12) that the most probable classification is of a 'medium' speaker. However, it may be just as useful to indicate that the probability of this response was only 0.61, making the observation of a small response (P=0.26) not unlikely.
+This conceptualization of our model leads to both **hard** and **soft** classifications. An ordinal regression model will predict, for every observation, an expected value of the dependent variable based on the values of the predictors. This value can then be used to classify the predictions into a predicted category, 1, 2, or 3 based on the value of the variable relative to the thresholds. That would be a *hard* classification that reports only the winning category. In contrast, the expected value can be used in the method shown just above to report response probabilities for each category. For example, it may be useful for the example shown in figure \@ref(fig:F12-12) that the most probable classification is of a 'medium' speaker. However, it may be just as useful to indicate that the probability of this response was only 0.61, making the observation of a small response (P=0.26) not unlikely.
 
 ### Data and research questions
 
@@ -1118,10 +1118,9 @@ data (exp_data)
 
 # new dependent variable: Size Group
 exp_data$SG = 0
-exp_data$SG[exp_data$C=='m'] = 3
+exp_data$SG[exp_data$C=='b' | exp_data$C=='g'] = 1
 exp_data$SG[exp_data$C=='w'] = 2
-exp_data$SG[exp_data$C=='g'] = 1
-exp_data$SG[exp_data$C=='b'] = 1
+exp_data$SG[exp_data$C=='m'] = 3
 
 # preparation of quantitative predictors as in previous chapters
 exp_data$vtl_original = exp_data$vtl
@@ -1132,7 +1131,7 @@ exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
 
-We're going to keep our research questions relatively simple this time: 
+We're going to keep our research questions relatively simple this time, as this is mostly a demonstration of an ordinal regression analysis: 
 
 Q1) Can we predict which size group people will tend to respond for a speaker's voice given their f0 and VTL?
 
@@ -1142,8 +1141,9 @@ To fit a model predicting apparent size group from speaker f0 and VTL, we can us
 
 `SG ~ vtl+f0 + (vtl+f0|L) + (1|S)`
 
-There is nothing new about this model formula, it is very much like ones we've used several times in earlier chapters. The formula says "predict size group using a plane based on voice f0 and VTL, allow for listener-specific planes, and speaker-specific adjustments to the height of the plane". However, the relationship it represents between our predictors and our dependent variables is substantially different to what we've seen before. Let's consider the relationship between the independent variables and the mean of our logistic distribution, presented in equation below:
+This model formula is very much like ones we've used several times in earlier chapters. The formula says "predict size group using a plane based on voice f0 and VTL, allow for listener-specific planes, and speaker-specific adjustments to the height of the plane". However, the relationship it represents between our predictors and our dependent variables is substantially different to what we've seen before. 
 
+Let's begin with the relationship between the independent variables and the expected value of the latent variable (i.e., mean of our logistic distribution), presented in equation below:
 
 $$
 \begin{equation}
@@ -1154,7 +1154,7 @@ $$
 \end{equation}
 $$
 
-The result of this regression equation is an expected value for our latent variable. We model this latent variable as being distributed according to a logistic distribution with a mean of $\mu$ and a scale parameter equal to 1, as in equation below. 
+We model this latent variable as being distributed according to a logistic distribution with a mean of $\mu$ and a scale parameter equal to 1, as in equation below. Actually, for reasons that we won't get into, for ordinal regression `brm` uses a parameter called the **discrimination** parameter, which is the inverse of the scale. However, since we are using a scale of 1 we can ignore this for now.  
 
 $$
 \begin{equation}
@@ -1164,7 +1164,7 @@ z_{[i]} \sim \mathrm{Logistic} (\mu_{[i]}, 1)
 (\#eq:12-12)
 \end{equation}
 $$
-Our observed (dependent) ordinal category is then selected based on the value of the latent variable ($z_{[i]}$) for that trial, relative to the model thresholds. We see this in equation below. 
+Our observed (dependent) ordinal category is then predicted based on the value of the latent variable ($z_{[i]}$) for that trial, relative to the model thresholds ($\theta_{[1]},\theta_{[2]}$). We see this in equation below. 
 
 $$
 \begin{equation}
@@ -1212,16 +1212,15 @@ VTL, F0 \sim t(3, 0, 3) \\
 \end{equation}
 $$
 
-Notice that the model prediction equation (reference equation) does not contain an intercept term in its prediction of the expected value of the latent variable. This is because the important thing for our model is the distance between the intercept and the thresholds, and not the value of the latent variable itself. For example, imagine an 'intercept-only' model (chapter 4) that had intercept = 0 and thresholds of 2 and 5. The behavior of this model would be exactly analogous to a model with an intercept of 10 and thresholds of 12 and 15.  There are an infinite number of models that maintain these distances, one for each possible value of the intercept, making finding the 'best' one an impossible task. To resolve this issue, the overall intercept in these models is usually set to zero and not modeled, and instead only the J-1 thresholds are modeled. 
-
-Although ordinal models do not usually model the overall intercept, they *can* model listener-dependent (and speaker) intercepts, and our model in equation does. Using cluster-dependent intercepts can be thought of as sliding the thresholds up and down the number line by different amounts for each level of a grouping factor, or as moving the predicted values for the cluster by a given amount. This sort of adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above. 
-
 Here's a verbal description of our model:
 
 > We are modelling an ordinal variable, size group ($SG$), with possible outcomes of small (1), medium (2), and large (3). The value expected for any given trial is based on the value of a latent variable ($z$) in relation to two thresholds ($\theta_{[1]},\theta_{[2]}$), which were estimated from the data. Our latent variable is modeled as coming from a logistic distribution with a scale of 1 and a mean that varies from trial to trial. The mean of these distributions varies based on the combination of 'main' (e.g., $VTL$) and listener-dependent (e.g. $VTL \colon L$) effects for vocal tract length and f0, and a listener-dependent intercept. 
 
 > The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of 0 of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
 
+Notice that the model in \@ref(eq:12-14) does not contain a term representing the overall model intercept. This is because the important thing for our model is the distance between the intercept and the thresholds, and not the value of the latent variable itself. For example, imagine an 'intercept-only' model (chapter 4) that had intercept = 3 and thresholds of 1 and 5. The behavior of this model would be exactly analogous in its behavior to a model with an intercept of 13 and thresholds of 11 and 15. In fact, there are an infinite number of models that maintain these distances, one for each possible value of the intercept. Under these conditions finding the 'best' model is an impossible task. To resolve this issue, the overall intercept in these models is usually set to zero and not modeled, and instead only the J-1 thresholds are modeled. 
+
+Although ordinal models do not usually model the overall intercept, they *can* model listener-dependent (and speaker) intercepts, and our model in equation does contain these. Using cluster-dependent intercepts can be thought of as sliding the thresholds up and down the number line by different amounts for each level of a grouping factor (e.g. listener), or as moving the predicted values by the same amount. This sort of adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above. 
 
 ### Fitting and interpreting the model
 

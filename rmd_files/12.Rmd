@@ -515,7 +515,7 @@ par (mfrow = c(1,3), mar = c(.0,.0,.21,.2),oma=c(4,4,2,.1))
 
 plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25), 
      xlim = c(-2.5,3), pch = 16, col = bmmb::cols[2:5][mod_cat],ylab="")
-#maps = make_map (t(params))
+maps = make_map (t(params))
 mtext (side=3, text = "Listener Judgments", line = 0.5)
 
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
@@ -1164,7 +1164,7 @@ z_{[i]} \sim \mathrm{Logistic} (\mu_{[i]}, 1)
 (\#eq:12-12)
 \end{equation}
 $$
-Our observed (dependent) ordinal category is then predicted based on the value of the latent variable ($z_{[i]}$) for that trial, relative to the model thresholds ($\theta_{[1]},\theta_{[2]}$). We see this in equation below. 
+Our observed (dependent) ordinal category is then predicted based on the value of the latent variable ($z_{[i]}$) for that trial, relative to the model boundaries, called **thresholds**, or **cutoffs** ($\theta_{[1]},\theta_{[2]}$). We see this in equation below. 
 
 $$
 \begin{equation}
@@ -1252,31 +1252,19 @@ We can inspect the short summary to see the information it contains:
 bmmb::short_summary(model_ordinal)
 ```
 
-Note that we get listener-dependent intercepts, VTL, and f0 effects. Note that these intercepts correspond to the $L$ terms in the model equation above, and do not refer to thresholds/cutoffs. In the population-level effects, we see the two estimated thresholds `Intercept[1]` and `Intercept[1]` representing $\theta_{[1]}$ and $\theta_{[1]}$ above. We also see our 'main' effects for VTL and f0 in this section. Our results indicate that VTL is positively related to a larger size group response, while f0 is negatively related to this (no surprises there). 
+In the population-level effects, we see the two estimated thresholds `Intercept[1]` and `Intercept[1]` representing $\theta_{[1]}$ and $\theta_{[1]}$ above. We also see our 'main' effects for VTL and f0 in this section. Our results indicate that VTL is positively related to a larger size group response, while f0 is negatively related to this (no surprises there). In the group-level effects section, note that we get listener-dependent intercepts, VTL, and f0 effects. Importantly, the intercepts correspond to the $L$ terms in the model equation above, and do not refer to listener-dependent thresholds/cutoffs. 
 
-Below we make 'fixed effect' predictions using our model. These predictions omit the random effects structure to let us see how well our fixed effects can predict our data. We inspect the predictions for our first six observations, and we can see that these consist of three columns representing the probability that the observation belongs to each category. 
+Below we make 'fixed effect' predictions using our model. These predictions omit the random effects structure to let us see how well our fixed effects can predict our data. Note that we use the `fitted` rather than `predict` functions. This is because we are interested in the value of our *linear predictor*, the expected value of our latent variable. In contrast, the `predict` would give us *posterior predictions* which would incorporate our modeled noise (see section cite). In addition, we set `scale="linear"` so that we get predictions of the latent variable rather than probability of category membership.
 
-```{r}
-# make predictions
-predictions = fitted (model_ordinal, re_formula = NA)
+```{r, cache = TRUE}
+# make latent variable predictions
+predictions_latent = fitted (model_ordinal,scale="linear", re_formula = NA)
 
-# see first six
-head (predictions[,1,])
+# inspect first 6 predictions
+head (predictions_latent)
 ```
 
-Below we find the maximum value across each row, representing the categorical prediction made by our model for each observation.  
-
-```{r}
-SG_hat = apply (predictions[,1,],1,which.max)
-```
-
-We can see that our model does a pretty good job of predicting our data:
-      
-```{r}
-mean (exp_data$SG == SG_hat)
-```
-      
-Below we make predictions using our posterior mean fixed effects. We do this just to show that it does, in fact, align with the model we outlined above. First, we get the posterior mean model fixed effects and use this to come up with an expected value for our latent variable for each observation. Then, we assign each observation to a response category based on where the expected value lies relative to the thresholds.
+Below we predict our latent variable using our posterior mean fixed effects. We do this just to show that it does, in fact, result in the expected predictions. Below, we get the posterior mean model fixed effects and use this to come up with an expected value for our latent variable for each observation (`mu`). 
 
 ```{r}
 # get fixed effects
@@ -1289,21 +1277,37 @@ f0_slope = fixed_effects[4,1]
 
 # get expected values
 mu = exp_data$vtl * vtl_slope + exp_data$f0  * f0_slope
-
-# assign to category based on location relative to threshold.
-SG_hat_manual = 0
-SG_hat_manual[mu < threshold_1] = 1
-SG_hat_manual[(threshold_1 < mu) & (mu < threshold_2)] = 2
-SG_hat_manual[threshold_2 < mu] = 3
 ```
 
-We can see that this approach results in basically the same predictions as using our linear predictions (with the differences attributable to using the posterior means).  
+Below we see that the prediction above results in the same expected values for our latent variable as obtained using the `fitted` function, save for that `fitted` computes a prediction for each observation for each posterior sample (as ought to be done). 
 
-```{r, eval = FALSE}
-mean (SG_hat == SG_hat_manual)
+```{r}
+cor (predictions_latent[,1], mu)
+sd (predictions_latent[,1] - mu)
 ```
 
-We can also use the expected values and thresholds to calculate the predicted probabilities that the observation will belong to each category. Again, because of the different approaches used, we expect small differences to the predictions made using the `fitted` function above. 
+We can also ask for predictions as probabilities by not specifying the scale:
+
+```{r, cache = TRUE}
+# predict probability of category membership
+predictions_latent = fitted (model_ordinal, re_formula = NA)
+```
+
+In this case our prediction results in a three dimensional matrix where response category varies along the third dimension. For example, below we see the probability of observing the first response category (small), for the first six observations. 
+
+```{r}
+# see first six for the first category
+head (predictions[,,1])
+```
+
+If we consider only the first element of the second dimension (columns), we can get the expected value for each observing for each category, for the first six observations.
+
+```{r}
+# see first six for each category
+head (predictions[,1,])
+```
+
+We can use the expected value for the latent variable calculated manually above (`mu`), combined with the model thresholds, to calculate the expected probability that the observation will belong to each category. 
 
 ```{r}
 predictions_manual = 
@@ -1314,8 +1318,73 @@ predictions_manual =
 head (predictions_manual)
 ```
 
-- explain disc
-- inverse of scale, not modeled here but we could have
+Again, we can see that this approach results in the same values as those calculated with the `fitted` function. 
+
+```{r}
+cor (predictions[,1,1],predictions_manual[,1])
+cor (predictions[,1,2],predictions_manual[,2])
+cor (predictions[,1,3],predictions_manual[,3])
+```
+
+Below we find the maximum value across each row of our predictions, representing the *hasrd*, categorical prediction for each observation.  
+
+
+```{r}
+SG_hat = apply (predictions[,1,],1,which.max)
+SG_hat_manual = apply (predictions_manual,1,which.max)
+```
+
+We can see that these two approaches lead to the same outcomes and that in either case we can correctly predict about 83% of our observations using only our fixed effects.
+
+```{r}
+mean (SG_hat == SG_hat_manual)
+
+mean (SG_hat == exp_data$SG)
+mean (SG_hat_manual == exp_data$SG)
+```
+
+### Listener-specific discrimation terms
+
+equation 85
+
+Before wrapping up our discussion of our model, we want to talk briefly about the `disc` parameter. As mentioned above, this parameter is equal to the inverse of the scale parameter of the logistic distribution. In our model above, the parameter was fixed at a value of 1. However, this parameter can be modeled just as the error term (`sigma`, $\sigma$) of our Gaussian or t distributed errors was modeled in chapter 8. Since this value cannot be negative our model will predict the logarithm of `disc` just as it did for `sigma` in chapter 8. 
+
+Below we fit a model with listener-specific discrimination parameters. We are not going to discuss this in any detail, however, the model structure is extremely similar to that presented in chapter 8, \@ref(eq:8-5).  
+
+```{r, eval = FALSE}
+set.seed (1)
+options (contrasts = c('contr.sum','contr.sum'))
+
+model_formula = bf(SG ~ vtl+f0 + (vtl+f0|L) + (1|S),
+                   disc ~ 1 + (1|L))
+
+model_ordinal_disc = brms::brm (model_formula, data=exp_data, family="cumulative", 
+           chains=4, cores=4, warmup=1000, iter = 5000, thin = 4,
+           prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
+                     set_prior("student_t(3, 0, 3)", class = "b"),
+                     set_prior("student_t(3, 0, 3)", class = "sd"),
+                     set_prior("student_t(3, 0, 1)", class = "Intercept",dpar="disc"),
+                     set_prior("student_t(3, 0, 1)", class = "sd",dpar="disc"),
+                     brms::set_prior("lkj_corr_cholesky (2)", class = "cor")),
+           control = list(adapt_delta = 0.99))
+```
+
+We can see that our model summary:
+
+```{r}
+bmmb::short_summary (model_ordinal_disc)
+```
+
+Now includes a fixed effect for the `disc_Intercept` and the standard deviation of the listewner-dependent discrimination terms (`sd(disc_Intercept)`) in the listener random effects section.
+ 
+```{r}
+listener_disc = 
+  short_hypothesis (model_ordinal_disc, "disc_Intercept=0", group="L",scope="coef")
+
+1/exp(listener_disc[,1])
+
+```
+
 
 
 ### Answering our research questions

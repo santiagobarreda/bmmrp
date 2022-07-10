@@ -1375,15 +1375,83 @@ We can see that our model summary:
 bmmb::short_summary (model_ordinal_disc)
 ```
 
-Now includes a fixed effect for the `disc_Intercept` and the standard deviation of the listewner-dependent discrimination terms (`sd(disc_Intercept)`) in the listener random effects section.
+Now includes a fixed effect for the `disc_Intercept` and the standard deviation of the listewner-dependent discrimination terms (`sd(disc_Intercept)`) in the listener random effects section. We can get the listener-dependent disc terms using the `short_hypothesis` function as shown below:
  
 ```{r}
 listener_disc = 
   short_hypothesis (model_ordinal_disc, "disc_Intercept=0", group="L",scope="coef")
 
-1/exp(listener_disc[,1])
+head(listener_disc)
+```
+
+Since these values are the logarithm of the discrimination, to get the logistic scale parameter we need to exponentiate and then invert the parameter estimate to get the scale. We do this inside the hypothesis function so that we summarize after manipulating (rather than exponentiating and inverting our summary).
+
+```{r}
+
+listener_disc = 
+  short_hypothesis (model_ordinal_disc, 
+                    "1/exp(disc_Intercept)=0", group="L",scope="coef")
+
+head(listener_disc)
+```
+
+```{r  F12-13, fig.height = 4.5, fig.width=8, fig.cap = " -- ", echo = FALSE}
+
+################################################################################
+### Figure 12.13
+################################################################################
+
+fixefs = fixef(model_ordinal_disc)
+thresholds = fixefs[1:2,1]
+
+xaxts = c('n','n','n','n','n',
+          'n','n','n','n','n',
+          's','s','s','s','s')
+
+ymaxs = c(.2,.2,.2,.2,.2,
+          .2,.2,.2,.2,.2,
+          .35,.35,.35,.35,.35)
+
+par (mfrow = c(3,5), mar = c(.15,.1,.1,.1), oma = c(4,3,1,1))
+i=1
+for (i in 1:15){
+  x = seq (-15,15,.1)
+  y = dlogis (x,0,listener_disc[i,1])
+  plot (x, y, type = 'l',yaxt='n',xaxt=xaxts[i], 
+        yaxs = 'i',ylim=c(0,ymaxs[i]),xaxs='i',xaxt='n')
+  
+  if (xaxts[i]=='s') axis(side=1,at = seq(-12,12,4))
+  x = seq (-15,thresholds[1],.1)
+  y = c(0,dlogis (x,0,listener_disc[i,1]),0)
+  x = c(x[1],x,x[length(x)])
+  polygon (x,y,col=bmmb::cols[1],border=bmmb::cols[1])
+  
+  x = seq (thresholds[1],thresholds[2],.1)
+  y = c(0,dlogis (x,0,listener_disc[i,1]),0)
+  x = c(x[1],x,x[length(x)])
+  polygon (x,y,col=bmmb::cols[11],border=bmmb::cols[11])
+  
+  x = seq (thresholds[2],15,.1)
+  y = c(0,dlogis (x,0,listener_disc[i,1]),0)
+  x = c(x[1],x,x[length(x)])
+  polygon (x,y,col=bmmb::cols[10],border=bmmb::cols[10])
+  
+  x = seq (-15,15,.1)
+  y = dlogis (x,0,listener_disc[i,1])
+  lines (x, y, type = 'l',yaxt='n',xaxt=xaxts[i],lwd=2)
+  abline (v = thresholds,col=bmmb::cols[15], lwd=2)
+  
+  p1 = plogis (thresholds[1],0,listener_disc[i,1])
+  p3 = 1 - plogis (thresholds[2],0,listener_disc[i,1])
+  p2 = (1-p3) - p1
+  
+  text (-8,.13,round(p1,2))
+  text (0,.13,round(p2,2))
+  text (8,.13,round(p3,2))
+}
 
 ```
+
 
 
 
@@ -1395,7 +1463,7 @@ Q1) Can we predict which size group people will tend to respond for a speaker's 
 
 Yes we can, and with reasonable accuracy based only on the fixed effects. Here's something else worth noting: There is very little between-listener variation in our parameters. 
 
-```{r F12-13, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
+```{r F12-14, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
 par (mfrow = c(1,2), mar = c(2,3,.1,.1), oma = c(.7,1,1,1))
 layout (mat = t(c(1,2)), widths = c(.6,.4))

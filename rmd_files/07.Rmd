@@ -10,7 +10,7 @@ We've been making our models more and more complicated, but we've still only fit
 
 ## Comparing four (or any number of) groups
 
-First, we're going to discuss models that compare observations across any number of groups (i.e., levels of a single factor). A model that can be used to compare multiple groups might have just one predictor, but the predictor can have any number of levels [@@ NHS: In some sense, I can see how it has "one predictor", since R can read it in as a factor, but doesn't it turn it into something like dummy coding (or whatever) under the hood? Maybe it's not worth making this distinction here...]. Although it's not very common to have a study design or model that *only* consists of a single multi-group comparison, the inclusion of multi-group comparisons is ubiquitous in many disciplines (including linguistics). Examples of predictors with multiple levels are language (e.g., participants' first languages), word category (e.g., part of speech, or usage frequency bins), and age groups. In figure \@ref(fig:F7-1) we see two ways that subjects (or listeners, or the levels of any grouping factor) can be arranged into groups. In the *within-subjects* version of this design, each subject is tested at each level of $A$. In the *between-subjects* version of the design, different subjects are tested at every level of $A$. Here we omit the more complicated design discussed in chapter 5, in which some subjects appear at all levels of $A$ and others don't. Such designs are definitely analyzable with `brms`, and sometimes they may be unavoidable. However, they are not included in figure \@ref(fig:F7-1) because there are a large number of possible configurations of this, and because the additional complexity of such designs can make them extremely challenging to use effectively, so we are typically better off not using such designs if at all possible. 
+First, we're going to discuss models that compare observations across any number of groups (i.e., levels of a single factor). A model that can be used to compare multiple groups might have just one predictor factor, but that factor can have any number of levels [@@ NHS: In some sense, I can see how it has "one predictor", since R can read it in as a factor, but doesn't it turn it into something like dummy coding (or whatever) under the hood? Maybe it's not worth making this distinction here...]. Although it's not very common to have a study design or model that *only* consists of a single multi-group comparison, the inclusion of multi-group comparisons is ubiquitous in many disciplines (including linguistics). Examples of predictors with multiple levels are language (e.g., participants' first languages), word category (e.g., part of speech, or usage frequency bins), and age groups. In figure \@ref(fig:F7-1) we see two ways that subjects (or listeners, or the levels of any grouping factor) can be arranged into groups. In the *within-subjects* version of this design, each subject is tested at each level of $A$. In the *between-subjects* version of the design, different subjects are tested at every level of $A$. Here we omit the more complicated design discussed in chapter 5, in which some subjects appear at all levels of $A$ and others don't. Such designs are definitely analyzable with `brms`, and sometimes they may be unavoidable. However, they are not included in figure \@ref(fig:F7-1) because there are a large number of possible configurations of this, and because the additional complexity of such designs can make them extremely challenging to use effectively, so we are typically better off not using such designs if at all possible. 
 
 ```{r F7-1, echo = FALSE, out.width = "80%", fig.cap = "Data from a single group of subjects (S) divided according to a single grouping factor A."}
 
@@ -67,9 +67,11 @@ Even with only four different groups our potential research questions are substa
   
 And we are going to ask the following basic question:
 
-Q1) Are there differences in average apparent height based on apparent speaker category?
+Q1) Is average apparent speaker height different based on apparent speaker category?
 
 [@@ NHS: I find that phrases like "based on" kind of bother me here - we don't really know if people are categorizing the stimuli as b/g/m/w first and then basing their height judgments (in part) on the category, right? maybe they do both simultaneously, or maybe they judge height and that informs the category...]
+
+[@@ SB - I went back over the earlier chapters to remove causal stuff like this]
 
 ### Description of our model
 
@@ -84,9 +86,10 @@ Where `C` is the apparent speaker category indicated by the listener for each tr
 
 In section 4.X we noted that each parameter in our model needs to be associated with a predictor. If we call the predictors `x1`, `x2`, and `x3` our model formula could sort of be thought of like this:
 
-`height ~ x1*C1 + x1*C2 + x1*C3 + (x1*C1 + x1*C2 + x1*C3|L) + (1|S)`
+`height ~ x1*C1 + x2*C2 + x3*C3 + (x1*C1 + x2*C2 + x3*C3|L) + (1|S)`
 
 [@@ NHS: I don't understand what `x1` is here or why `x2` and `x3` aren't in the formula...]
+[@@ SB - this was basically a typo]
 
 Of course this is no longer a real or working model formula, we are just trying to show how the $C$ might actually be included in our model. 
   When a factor has only two levels, the effect for one level must equal the negative of the effect for the other level. As a result, group membership for observations can be represented using a single predictor equal to either -1 or 1 (for sum coding). When the observation is associated with one level of the factor the predictor is 1, and when the observation is associated with the other level the predictor is -1. In that way, a single predictor and coefficient can reflect two different levels of the factor. When there are more than two levels, each level that is being estimated is associated with a predictor variable, meaning that we expect $J-1$ estimated coefficients for a factor with $J levels in the absence of additional constraints. An example of this is seen below, where we generate three 'fake' predictors to represent four groups. Each row is represented by a single 1 save for the final row which is represented by -1 in *all other predictors* for that factor. 
@@ -118,7 +121,7 @@ R \sim \mathrm{LKJCorr} (2)
 \end{equation}
 $$
 
-Structurally, this model is extremely similar to the model described in \@ref(eq:66b) last chapter with $C_{[C_{[i]}]}$ replacing $A_{[A_{[i]}]}$ and $C_{[C_{[i]}]} \colon L_{[L_{[i]}]}$ replacing $A \colon L_{[L_{[i]}]}$. Note that since we are estimating three parameters for `C`, our listener-dependent 'random effects' are actually coming from a four-dimensional normal distribution which considers the relationships between the intercepts and category effects for individual listeners. 
+Structurally, this model is extremely similar to the model described in \@ref(eq:6-7) last chapter with $C_{[C_{[i]}]}$ replacing $A_{[A_{[i]}]}$ and $C_{[C_{[i]}]} \colon L_{[L_{[i]}]}$ replacing $A \colon L_{[L_{[i]}]}$. Note that since we are estimating three parameters for `C`, our listener-dependent 'random effects' are actually coming from a four-dimensional normal distribution which considers the relationships between the intercepts and category effects for individual listeners. 
 
 ### Fitting and interpreting the model
 

@@ -163,20 +163,20 @@ We'll focus on the fixed effects, seen below:
 brms::fixef(model_four_groups)
 ```
 
-We can see that the intercept corresponds to the average of the group means, and our `C` coefficients correspond reasonably to the centered group means. 
+It's always a good idea to make sure your model coefficients make sense given your data. Doing things like this will help minimize mistakes and make sure that you really understand your model. We can see that the intercept corresponds to the average of the group means, and our `C` coefficients correspond reasonably, but don't exactly match, the centered group means. There are many possible reasons for this including the fact that the group means don't account for repeated measures, a lack of balance in the data, or for the way that outliers can unduly influence sample mean estimates. That being said, it is useful to see that our model coefficients seem to reflect the data and we should be concenred if these diverged wildly. 
 
 ```{r, collapse = TRUE}
 # group means
 means = tapply (exp_data$height, exp_data$C, mean)
 
-# overall mean
+# Intercept = mean of means
 mean (means)
 
-# centered means
+# Group effects = centered group means
 means - mean (means)
 ```
 
-There's two things worth noting here. The first is that the coefficients don't exactly match the group means. There are many possible reasons for this including the fact that the group means don't account for repeated measures, a lack of balance in the data, or for the way that outliers can unduly influence sample mean estimates. Basically, if they were totally off we should be worried that something may have gone wrong but we should expect that there may be some differences between model coefficients and the sort of 'careless' averaging we've done above. Second, as discussed above, we're missing the `C4` coefficient. We can use the `short_hypothesis` function to easily recover the final group coefficient by finding the negative sum of the coefficients that *were* estimated. An example of this is shown below. 
+Note that, as discussed above, we're missing the `C4` coefficient. We can use the `short_hypothesis` function to easily recover the final group coefficient by finding the negative sum of the coefficients that *were* estimated. An example of this is shown below. 
 
 ```{r, collapse = TRUE}
 # parameters = centered means
@@ -196,7 +196,7 @@ comparisons = bmmb::short_hypothesis (model_four_groups,
 
 We can use `brmplot` from the `bmmb` package to easily make plots showing means and credible intervals for our fixed effects, including the recovered coefficient. We also plot the two comparisons we made using the `hypothesis` function above, presented in figure \@ref(fig:F7-3).
 
-The distributions on the left tell us about probable values for our category parameters: Given our data and model structure, there is a 95% probability that the parameter value falls within this interval [@@ NHS: shouldn't this be (something like) "this is the most probable 95% set of possible parameter values"? the way it's written sounds like a very frequentist, CI-focused interpretation (and incorrect with respect to what CIs are/mean)]. Our category effects reflect the expected difference between our model intercept, the overall grand mean, and each category mean. So, the intervals on the left of figure \@ref(fig:F7-3) tell us that there is a 95% probability (given our data and model structure) that the actual difference between the grand mean and each group mean falls within that range. What do the distributions in the right plot in figure \@ref(fig:F7-2) tell us? They represent the posterior distribution of the difference between category means directly, without involving the intercept. 
+The distributions on the left tell us about probable values for our category parameters: Given our data and model structure, there is a 95% probability that the parameter value falls within this interval. Our category effects reflect the expected difference between our model intercept, the overall grand mean, and each category mean. So, the intervals on the left of figure \@ref(fig:F7-3) tell us that there is a 95% probability (given our data and model structure) that the actual difference between the grand mean and each group mean falls within that range. What do the distributions in the right plot in figure \@ref(fig:F7-2) tell us? They represent the posterior distribution of the difference between category means directly, without involving the intercept. 
 
 Conceptually, finding the difference between the intercept and a group mean is no different than finding the difference between individual group means. Consider the example of providing directions with respect to your house. If the library is 5 miles west and the park is 3 miles west, you could refer to these as -5 and -3 miles from your house, west to east. However, you could also express the difference between one and the other directly as 2 (or -2). The left plot in figure \@ref(fig:F7-2) expresses all distances with respect to the intercept (your house) while the right plot expresses differences with respect to individual category means directly (the library and park). 
 
@@ -306,9 +306,7 @@ $$
 \end{equation}
 $$
 
-The above can be thought of as a 'decomposition' of the variance in your model by breaking it up into parts and assigning them to different sources. We have actually been doing this from the start by making more and more complicated models. Recall that our very first approach (in chapter 3) to understanding variation in apparent height treated all variation as error, and so did not 'decompose' anything. In chapter 4 we added between-listener and speaker variation to the model, and in chapter 5 we added apparent age. Now we include apparent age and gender, listener specific effects and intercepts, and speaker specific intercepts. There is a fixed amount of variation in our dependent variable. Every tiny bit of variance that these added components explain takes away from the error variance, and potentially also from the other components that had previously been in the model. Our updated model description is provided in \@ref(eq:74).
-
-[@@ NHS: should the deterministic equation relating $\Sigma$ to $R$ and the various $\sigma$ parameters be given here, too?]
+The above can be thought of as a 'decomposition' of the variance in your model by breaking it up into parts and assigning them to different sources. We have actually been doing this from the start by making more and more complicated models. Recall that our very first approach (in chapter 3) to understanding variation in apparent height treated all variation as error, and so did not 'decompose' anything. In chapter 4 we added between-listener and speaker variation to the model, and in chapter 5 we added apparent age. Now we include apparent age and gender, listener specific effects and intercepts, and speaker specific intercepts. There is a fixed amount of variation in our dependent variable. Every tiny bit of variance that these added components explain takes away from the error variance, and potentially also from the other components that had previously been in the model. Our updated model description is provided in \@ref(eq:74). We omit the deterministic equation 'building' up $\Sigma$ from the correlation matrix ($R$) and the individual standard deviations (shown in \@ref(eq:6-7)) since this does not involve the user, and it makes the model description even bigger. 
 
 $$
 \begin{equation}
@@ -368,7 +366,9 @@ We can inspect the model fixed effects:
 brms::fixef (model_both)
 ```
 
-We now have two non-Intercept 'Population-Level' effects: `A1` and `G1`, representing the categories 'adult' and 'female' respectively. Remember that since we used sum coding and have only two levels, the effects for the groups that are not represented ('child', 'male') are just the opposite sign of the groups that are represented. Below we calculate the mean apparent height of the four groups and find the grand mean of the four groups. We can see that this is very similar to our intercept. Next we find the average apparent height at the different levels of adultness, find the difference between these, and divide it by negative two (just to flip the sign to match our effects). We also do the same for the levels of age. We can see that these values are reasonably similar to the estimated `A1` and `G1` predictors, which represent the same information.  
+We now have two non-Intercept 'Population-Level' effects: `A1` and `G1`, representing the categories 'adult' and 'female' respectively. Remember that since we used sum coding and have only two levels, the effects for the groups that are not represented ('child', 'male') are just the opposite sign of the groups that are represented. 
+
+Below, we calculate the mean apparent height of the four groups and find the grand mean of the four groups. We can see that this is very similar to our intercept. Next we find the average apparent height at the different levels of adultness, find the difference between these, and divide it by negative two (just to flip the sign to match our effects). We also do the same for the levels of age. We can see that these values are reasonably similar to the estimated `A1` and `G1` predictors, which represent the same information.  
 
 ```{r, collapse = TRUE}
 # Intercept
@@ -387,19 +387,21 @@ means_pred = bmmb::short_hypothesis (model_both,
                           "Intercept + -A1 +  G1 = 0",  # girls 
                           "Intercept +  A1 + -G1 = 0",  # men
                           "Intercept +  A1 +  G1 = 0")) # women
+
+means_pred
 ```
 
 Below we compare our recreated group means with our average height judgment for each group. There is a reasonably close match, however there also appear to be some important mismatches. For example, we see that adult women and men differ in height by 9 cm in our data, while boys and girls by only 2 cm. So, it seems like in our data the difference between males and females is different for children and adults. However, according to our model men and women and boys and girls both differ from each other by about 4-5 cm each, a value in between the 9 and 1 cm differences between the groups in our data. This discrepancy suggests that our model is potentially missing important information about our data.
 
 ```{R }
-means_pred
-
 tapply (exp_data$height, exp_data$C, mean)
 ```
 
-## Linear and posterior prediction
+## Using our models to predict
 
-So far we've been working with very simple models and so we haven't worried very much about how well they *fit*, or represent our data. Our reconstruction of the group means above suggests our current model may have some issues, and that we should be concerned about its ability to accurately capture the patterns in the data. So far we've only been discussing modeling in one direction, going from data to abstract, reduced representations (i.e. regression models). However, it's also worth considering going in the other direction, from the abstraction representation back towards data. One way to consider how well our model represents our data is to consider what data would be *generated* by the relationships represented in our model. Using your model in this way is called **prediction**, and you can use prediction to evaluate the fit of your model. The reasoning is basically, if your model is a good representations of the data, the 'fake' data it generates should look very much like your real data. If the fake data it generates doesn't look like your real data, something about your model is slightly 'off'. The discussion of prediction presented here will involve dependent variables that do not require a link function (discussed in chapter 10). Some of the details discussed here, in particular those involving expected values, do not exactly apply to models that require a link function.
+So far we've been working with very simple models and so we haven't worried very much about how well they *fit*, or represent our data. Our reconstruction of the group means above suggests our current model may have some issues, and that we should be concerned about its ability to accurately capture the patterns in the data. So far we've only been discussing modeling in one direction, going from data to abstract, reduced representations (i.e. regression models). However, it's also worth considering going in the other direction, from the abstraction representation back towards data. 
+
+One way to consider how well our model represents our data is to consider what data would be *generated* by the relationships represented in our model. Using your model in this way is called **prediction**, and you can use prediction to evaluate the fit of your model. The reasoning is basically, if your model is a good representations of the data, the 'fake' data it generates should look very much like your real data. If the fake data it generates doesn't look like your real data, something about your model is slightly 'off'. The discussion of prediction presented here will involve dependent variables that do not require a link function (discussed in chapter 10). Some of the details discussed here, in particular those involving expected values, do not exactly apply to models that require a link function.
 
 All our models so far have contained lines like those seen in \@ref(eq:75). These lines tell our models that: 1) We expect our data to be normally distributed given some mean and standard deviation, and 2) The mean for a given trial can be predicted using some combination of the independent variables. 
 
@@ -413,7 +415,7 @@ y_{[i]} \sim N (\mu_{[i]}, \sigma) \\
 \end{equation}
 $$
 
-The value of $\mu$ above is the expected value for a given trial. This is also sometimes called the **linear predictor** [@@ NHS: I believe you that it's called this sometimes, but this phrase doesn't feel familiar to me. I might also add in "conditional expectation function", which is a useful descriptor from econometrics]. Since the linear predictor is the value you expect for a trial, it's obvious that there should be a reasonable correspondence between the linear predictor and your dependent variable. If what your model tells you to expect is not like what you actually observe, then what good is the model? One shortcoming of the linear predictor is that this does not incorporate the random trial-to-trial error (i.e., $\sigma$) that you know is a part of your model. As a result, the linear predictor is constant for any single combination of dependent variables, and undersells the amount of variation that can be expected in a given data set. 
+The value of $\mu$ above is the expected value for a given trial. This is also sometimes called the **linear predictor**, or the **conditional expectation function** (in econometrics). Since the linear predictor is the value you expect for a trial, it's obvious that there should be a reasonable correspondence between the linear predictor and your dependent variable. If what your model tells you to expect is not like what you actually observe, then what good is the model? One shortcoming of the linear predictor is that this does not incorporate the random trial-to-trial error (i.e., $\sigma$) that you know is a part of your model. As a result, the linear predictor is constant for any single combination of dependent variables, and undersells the amount of variation that can be expected in a given data set. 
 
 The **posterior predictive distribution** is the distribution of possible data given your parameter estimates and probability model. In other words, the posterior predictive distribution uses your linear predictor, but also includes the data-level noise implied by the structure of your model. For normally distributed data, our posterior predictive distribution is the distribution of generated values of $\tilde{y}$ given estimates of $\mu$ and $\sigma$ as in \@ref(eq:77).
 
@@ -437,7 +439,8 @@ y_post_pred = predict (model_both)
 ```
 
 In both cases the functions return four-column data frames with as many rows as the number of observations in the data. These data frames contain columns representing the mean, standard deviation and the upper and lower 95% credible intervals for each one of our data points. The reason we get intervals for our posterior predictions is because our model has a different prediction for each set of posterior samples. This means that if we have 4000 samples we actually have 4000 slightly different sets of parameter estimates and so 4000 slightly different predictions. So, in addition to information about the average prediction for each data point, we get information about variation around these estimates.
-  Below we see the (summarized) data frame representing our linear predictors. You can also set `summary=FALSE` to get the individual (unsummarized) predictions. If you do this you get an individual predictions for every set of posterior samples for your parameters, for every data point. So, if you have 1500 data points and 4000 posterior samples, the unsummarized output of these functions would be a matrix with 4000 rows and 1500 columns.  
+
+Below we see the (summarized) data frame representing our linear predictors. You can also set `summary=FALSE` to get the individual (unsummarized) predictions. If you do this you get an individual predictions for every set of posterior samples for your parameters, for every data point. So, if you have 1500 data points and 4000 posterior samples, the unsummarized output of these functions would be a matrix with 4000 rows and 1500 columns.  
 
 ```{r, cache = TRUE, collapse = TRUE}
 # linear predictions
@@ -550,13 +553,14 @@ grid()
 ```
 
 Imagine what would happen if we began with a main effect plot like the first plot in figure \@ref(fig:F7-7), and added/subtracted a single value to each end of the line segment. This single value could represent the main effect of some other factor, for example the main effect for apparent age. Since a single number would be added to both points on the line, the line representing the effect of apparent gender would *slide* up/down the y-axis, however, the line would not change its slope. We might imagine trying to slide the line in the first plot in figure \@ref(fig:F7-7) up and down the y axis to try to get it to match the simple effects presented in the second plot of the same figure. However, we will not be successful because these two lines do not share a slope. In order to make the lower and upper lines *not* be parallel, we need to add different values to each side of the blue line segment. In other words, we don't slide the lines up and down in a balanced manner but move one side up more than the other. 
-  The varying effect for apparent gender at different levels of apparent age indicates that these effects *interact* in our data. Interactions between our factors are detectable visually in the form of a lack of parallel lines in interaction plots (i.e. varying slopes in the simple effects). In the absence of an interaction, all lines in such a plot should be parallel, save for variation due to random error. We can see that the lines in the second and fourth plots in figure \@ref(fig:F7-7) are *not* parallel, suggesting an interaction between apparent age and gender in our data. In the absence of an interaction, we could just answer the question "whats the average difference between apparent height between males and females?" with a number like 6 cm. In the presence of an interaction we need to consider the *conditional effects* of each predictor at the levels of the other predictor (i.e., the simple effects). So, the most important thing to remember about interpreting main effects is:
+
+The varying effect for apparent gender at different levels of apparent age indicates that these effects *interact* in our data. Interactions between our factors are detectable visually in the form of a lack of parallel lines in interaction plots (i.e. varying slopes in the simple effects). In the absence of an interaction, all lines in such a plot should be parallel, save for variation due to random error. We can see that the lines in the second and fourth plots in figure \@ref(fig:F7-7) are *not* parallel, suggesting an interaction between apparent age and gender in our data. In the absence of an interaction, we could just answer the question "whats the average difference between apparent height between males and females?" with a number like 6 cm. In the presence of an interaction we need to consider the *conditional effects* of each predictor at the levels of the other predictor (i.e., the simple effects). So, the most important thing to remember about interpreting main effects is:
 
   * If there are no interactions between factors, focus on main effects.
   
   * If there are interactions between factors, you must inspect the simple effects to understand the nature of the interaction. 
 
-  Let's now consider the main effect for perceived adultness presented in the third plot in figure \@ref(fig:F7-7)). We're going to rehash some of what we just said, but we are going to adopt the *other* perspective. We can calculate the difference in apparent age based on apparent adultness and see that there is a 24 cm decrease in average apparent height based on the perceived adultness of the speaker. 
+Let's now consider the main effect for perceived adultness presented in the third plot in figure \@ref(fig:F7-7)). We're going to rehash some of what we just said, but we are going to adopt the *other* perspective. We can calculate the difference in apparent age based on apparent adultness and see that there is a 24 cm decrease in average apparent height based on the perceived adultness of the speaker. 
   
 ```{r}
 # main effect for apparent age
@@ -571,7 +575,8 @@ tapply (exp_data$height, exp_data[,c('G','A')], mean)
 ```
 
 And see a 21 cm in apparent height for apparent females and a 28 cm difference for apparent females. Note that the simple effects involve the same four values were present in these simple effects calculated above. The only difference is the row wise differences in the first are column wise differences in the second. For example, relative to the second plot in figure \@ref(fig:F7-7) we can say "the larger slope for adults reflects a stronger effect for apparent gender on apparent height". Relative to the fourth plot we can say "the larger difference between the line endpoints for adults compared to children reflects a stronger effect for apparent gender on apparent height for adults". 
-  So, we see that interactions represent conditional effects, situations when the effect of a variables varies across levels of another variable. The idea of conditional effects (interactions) *feels* complicated, but it is something we all understand intuitively. For example, how much progress will a person learning a second language make in a year? What if I told you that one group of speakers is 3 and the other is 65. You *know* that makes a difference, which is to say, that you *know* there is an interaction between the effect of time spent learning a language, and the age at which the learner begins. Anyone who understands these varying effects *understands* interactions, whether or not they know how to relate this concept to the mathematical formalisms used to implement these in regression models. 
+
+So, we see that interactions represent conditional effects, situations when the effect of a variables varies across levels of another variable. The idea of conditional effects (interactions) *feels* complicated, but it is something we all understand intuitively. For example, how much progress will a person learning a second language make in a year? What if I told you that one group of speakers is 3 and the other is 65. You *know* that makes a difference, which is to say, that you *know* there is an interaction between the effect of time spent learning a language, and the age at which the learner begins. Anyone who understands these varying effects *understands* interactions, whether or not they know how to relate this concept to the mathematical formalisms used to implement these in regression models. 
 
 ## Investigating interactions with a model
 
@@ -656,7 +661,7 @@ But cannot represent this one (since it omits the `Z:W` interaction):
  
 `y ~ Z + X + W + Z:X + X:W + Z:X:W`  
 
-Our full model specification is presented in \@ref(eq:78). The model now includes an *interaction* term ($A \colon G$) that can help explain variation that cannot be explained by the independent effects of adultness and gender. This interaction term helps us model the *conditional* effect of one predictor given the other. Our model also actually contains a three-way interaction as well ($A \colon G \colon L_{[L_{[i]}]}$), though it may not seem that way to us superficially. This is the 'random' effect of the interaction between $A$ and $G$ for each level of listener, `(A:G|L)` in our model. This is a three-way interaction because it represents the interaction between the two-way interaction of $A$ and $G$ with our listener factor: The listener dependent two-way interaction between $A$ and $G$. 
+Our full model specification is presented in \@ref(eq:78), once again omitting the equation specifying $\Sigma$. The model now includes an *interaction* term ($A \colon G$) that can help explain variation that cannot be explained by the independent effects of adultness and gender. This interaction term helps us model the *conditional* effect of one predictor given the other. Our model also actually contains a three-way interaction as well ($A \colon G \colon L_{[L_{[i]}]}$), though it may not seem that way to us superficially. This is the 'random' effect of the interaction between $A$ and $G$ for each level of listener, `(A:G|L)` in our model. This is a three-way interaction because it represents the interaction between the two-way interaction of $A$ and $G$ with our listener factor: The listener dependent two-way interaction between $A$ and $G$. 
 
 $$
 \begin{equation}

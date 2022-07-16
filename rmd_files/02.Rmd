@@ -200,13 +200,13 @@ This short cut will not work for variables that are not independent. For example
 # TRUE is the listener is 10
 L12 = (men$L=='12')
 # TRUE if the height is over 180
-under_180 = men$height > 180
+over_180 = men$height > 180
 
 # Empirical probability of the observation
 mean(men$L=='12' & men$height > 180)
 
 # Wrong: multiplying marginal probabilities
-mean(L12) * mean(under_180)
+mean(L12) * mean(over_180)
 ```
 
 Below we calculate the joint probability correctly by using the conditional probability.
@@ -453,7 +453,7 @@ f(x) = \frac{1}{\sigma\sqrt{2\pi}} \times \exp( -\frac{1}{2\sigma^2}(x-\mu)^{2}\
 \end{equation}
 $$
 
-
+In math, its much more common to denote exponentiation like $e^x$ rather than $\exp(x)$. However, in this book we will often use the latter notation for two reasons. First, is makes the exponent bigger and more segregated which can both make equations easier to read. Second, this makes it look just like the R function `exp(x)` which makes it easier to remember what it is and what it does. 
 
 ### The standard normal distribution {#c2-standard-normal}
 
@@ -556,7 +556,11 @@ This is what our theoretical probabilities tell us: *If* height judgments come f
 
 ## Probabilities of events and likelihoods of parameters {#c2-likelihoods}
 
-We're going to switch from talking about *probabilities* to talking about *likelihoods*. Probability is the odds of observing some data/event/outcome, given some parameter(s). A **likelihood** inverts this, and places odds on different *parameter* values given some observed data. For example, you could say "how probable is it that a random man from the US will be sound shorter than 162.1 cm in height?". In contrast, you could ask "how likely is it that the average man from the US sounds 162.1 cm tall?". The likelihood of a parameter represents the joint probability (density) of observing all the data you observed, given a certain parameter value. In other words, the likelihood relates to the odds that a specific probability distribution would produce your first observation, *and* your second observation, *and* your third observation, and so on, for all observations. 
+[@@ noah check]
+
+We're going to switch from talking about *probabilities* to talking about *likelihoods*. Probability is the odds of observing some data/event/outcome, given some parameter(s). A **likelihood** inverts this, and places odds on different *parameter* values given some observed data. For example, you could say "how probable is it that a random man from the US will sound shorter than 162.1 cm in height if the mean is 174 cm?". When stated this way, we are discussing the odds of observing *data* (apparent height < 162.1) from some fixed distribution. So, probability puts the *data* in question and takes the distribution for granted. 
+
+In contrast, you could ask "how likely is it that the average man from the US sounds 162.1 cm tall, given some observations?". Now, we are discussing the odds of observing a mean *parameter* (apparent height = 162.1) from some fixed data. So, likelihood puts the *parameters* in question and takes the data for granted. The likelihood of a parameter represents the joint probability (density) of observing all the data you observed, given a certain parameter value. In other words, the likelihood relates to the odds that a specific probability distribution would produce your first observation, *and* your second observation, *and* your third observation, and so on, for all observations. 
 
 The **likelihood function** is a curve showing the relative likelihoods of different parameter values, given a fixed set of observations/data. The likelihood function tells you what parameter values are *credible* given your data. If a value is very unlikely, that means that it is not supported by your data. In other words, unlikely parameter estimates represent conclusions that your data is rejecting as not viable, and hence they are not credible. Every parameter for every probability distribution has a likelihood function, given some data. Here, we're only going to discuss the likelihood of the normal mean parameter, $\mu$, in detail. 
 
@@ -570,7 +574,7 @@ The likelihood of a parameter value (e.g., $\mu$ = 174 cm in the right panel of 
   
   3) The joint probability of all of the observations (the likelihood) is the product of all of these densities (heights). This assumes that all of your observations are statistically independent of each other (see section \@ref(c2-joint)). 
   
-So, the value of the likelihood function in the left panel of figure \@ref(fig:F2-6) at 174 cm (rightmost vertical line) is equal to the product of the probabilities of the points in the right panel (i.e., the heights of the lines in the panel). Imagine we did this for a range of values along the $x$ axis, recording the likelihood values at each step. If we do this and then plot the product of the densities for each corresponding $x$ value the result would be a curve identical to that of the left panel in figure \@ref(fig:F2-6). 
+So, the value of the likelihood function in the left panel of figure \@ref(fig:F2-6) at 174 cm (rightmost vertical line) is equal to the product of the probabilities of the points in the right panel (i.e., the heights of the lines in the panel). Imagine we did this for a range of values along the $x$ axis, sliding our probability distribution along the x axis and recording the likelihood values at each step. If we do this and then plot the product of the densities for each corresponding $x$ value the result would be a curve identical to that of the left panel in figure \@ref(fig:F2-6). 
 
 ```{r F2-6, echo = FALSE, fig.height = 3, fig.width = 8, fig.cap='(left) The red curve indicates the likelihood of the population mean given the blue points in the figure. The vertical lines indicate three different parameters, or hypotheses, that will be considered. (right) The red curve indicates the density of the points given an assumed mean of 174 cm. Vertical lines highlight the dentisty over each point, given the assumed mean', echo = FALSE}
 
@@ -600,6 +604,8 @@ segments (height_sample,rep(0,n),height_sample,
 #abline (v = c(mean (height_sample)), lwd=1,lty=3)
 
 ```
+
+Before moving on, let's discuss what the likelihood in in figure \@ref(fig:F2-6) *means*. When you conduct an experiment, you *know* you have your data, but you don't know much else. Suppose all your data was the blue points in the figure. If someone said to you "hey do you think the mean is 140 cm?" you might respond "that is unlikely". It is unlikely because the observations you have are extremely *improbable* given a probability distribution centered at 140 cm. Since your data is incompatible with a mean of 140 cm, and you *know* you have your data, a mean of 140 cm does not seem credible given your probability model. This information is reflected by the very low value of the likelihood function at 140 cm. In contrast, based on the high value of the likelihood function, we can see that a mean of 174 cm *is* likely. This is because the data you have is very probable with a mean of 174 cm, making this parameter value consistent with our data. 
 
 The right panel of figure \@ref(fig:F2-6) shows the probability of points assuming that the population mean is equal to the sample mean (for our tiny sample). We can see in the left panel of figure \@ref(fig:F2-6) that this is the most likely value for the mean parameter. When we said earlier that the sample mean is the 'best' estimate of the population mean, what we really meant was that the sample mean is the **maximum-likelihood estimate** of the population mean. This means that the sample mean provides an estimate of $\mu$ that maximizes the value of the likelihood function given the data. This is related to the fact that, as mentioned in section \@ref(c2-sample-mean), the sample mean minimizes the variance of the sample. As a result, if you want to know which mean estimate is most likely given your data, you simply need to calculate the sample mean as in equation \@ref(eq:2-1).
 
@@ -632,11 +638,11 @@ segments (height_sample,rep(0,n),height_sample,
 
 ```
 
-We need to talk about why it makes sense to multiply densities to calculate joint probabilities. Above, we stated that probabilities relate to areas under the curve. A problem we have is that the area under the curve of a single point is always zero. This is because a single point is so thin (it's width is basically zero) that the area under the curve under the point will equal zero regardless of its density. Suppose that we said "ok let's agree to use a fixed width, $a$, around our point to calculate our area under the curve". We can make $a$ so very tiny that is is almost as if we were calculating just the area under our density. We can use $f(x)$ to represent the height of a density for a given value of $x$. This means that we could approximate the value of the area under the curve at $x$ by treating it like a trapezoid and finding $f(x)*a$. If we wanted to calculate the joint probability of a number of observations, we could multiply a series of these areas, as seen in \@ref(eq:2-10). 
+We need to talk about why it makes sense to multiply densities to calculate joint probabilities. Above, we stated that probabilities relate to areas under the curve. A problem we have is that the area under the curve of a single point is always zero. This is because a single point is so thin (it's width is zero) that the area under the curve under the point will equal zero regardless of its density. Suppose that we said "ok let's agree to use a fixed width, $a$, around our point to calculate our area under the curve". We can make $a$ so very tiny that is is almost as if we were calculating just the area under our density. We can use $f(x)$ to represent the height of a density for a given value of $x$. This means that we could approximate the value of the area under the curve at $x$ by treating it like a trapezoid and finding $f(x)*a$. If we wanted to calculate the joint probability of a number of observations, we could multiply a series of these areas, as seen in \@ref(eq:2-10). 
 
 $$
 \begin{equation}
-P(x_1\,\&\,x_2\,\&\, x_3\,\&\,...)=[f(x_1) \times a] \times [f(x_2) \times a] \times [f(x_3) \times a] \times  ...
+P(x_1\,\&\,x_2\,\&\, x_3\,\&\,...)=[f(x_1) \times a] \times [f(x_2) \times a] \times [f(x_3) \times a] \times  \dots \times [f(x_n) \times a]
 (\#eq:2-10)
 \end{equation}
 $$
@@ -645,12 +651,12 @@ Since each term in \@ref(eq:2-10) contains $a$, this can be factored out as in \
 
 $$
 \begin{equation}
-P(x_1\,\&\,x_2\,\&\, x_3\,\&\,...)=[f(x_1) \times f(x_2) \times f(x_3) \times  ...] \times a
+P(x_1\,\&\,x_2\,\&\, x_3\,\&\,...)=[f(x_1) \times f(x_2) \times f(x_3) \times \dots \times f(x_n)] \times a^n
 (\#eq:2-11)
 \end{equation}
 $$
 
-At this point, we see that the joint probability of a set of values ($x_n$) can be thought of as the the product of the densities over those values ($f(x_n)$) times some arbitrary constant $a$. If we agree to use the same constant for all our calculations, we can ignore it and use the product of the densities to evaluate the relative probabilities of different combinations of observations.
+At this point, we see that the joint probability of a set of values ($x_n$) can be thought of as the the product of the densities over those values ($f(x_n)$) times some arbitrary constant $a^n$. If we agree to use the same constant for all our calculations, we can ignore it and use the product of the densities to evaluate the relative probabilities of different combinations of observations.
 
 ### Characteristics of likelihoods {#c2-chars-of-likelihoods}
 
@@ -685,6 +691,8 @@ $$
 (\#eq:2-14)
 \end{equation}
 $$
+
+Understanding logarithms and log densities is important because, in practice, much of statistics is done on the logarithms of probabilities, likelihoods, and densities. In addition, is is extremely common to log-transform probability density functions or other equations before manipulating them, making a good understanding of the properties of logarithms extremely useful. As a result, as we will see below, using logarithms can help us simplify and understand at least some probability distributions. 
 
 Before explaining equation \@ref(eq:2-14), we will discuss some basic properties of logarithms that are useful to understand probabilities and probability distributions, as these often involve exponentiation and logarithms. The first line in \@ref(eq:2-15) shows the basic behavior of logarithms. The next four lines pertain to the values expected, or undefined, for different $x$. The next two lines highlight the fact that exponentiation of numbers is equivalent to the multiplication of their logarithms. The final two lines highlight the fact that multiplication of two numbers is equivalent to the addition of the logarithms of the numbers. 
 

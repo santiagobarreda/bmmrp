@@ -1,0 +1,402 @@
+\newpage
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  dpi = 300, dev = "jpeg", collapse=TRUE
+)
+```
+
+# Writing up experiments: An investigation of the perception of speaker category from speech acoustics
+
+In this chapter we will present a complete analysis of our experimental data based on the models we've considered in the last few chapters. Will be written in the general structure of an academic paper, but less formally, and will include a meta-discussion of what we are doing and why we are doing it. 
+
+Writing a paper is like directing a short (maybe slightly dull) movie. A movie is made up of hundreds or thousands of discrete "shots", stuck together to give the impression of a single, continuous, coherent "story". Do you ever watch a movie and wonder, why is this scene here? What is this characters motivation? Where are characters right now and how did they get here? If so, this shows that either the director or the editor has been careless with the way they have stuck their shots together, resulting in problems with your understanding of the story. 
+
+In the same way, the papers you write based on data analysis need to present the reader with dozens or hundreds of individual pieces of information, parameter settings, differences between conditions, and the like. You are in charge of stitching these pieces of information so that when the reader reads the paper, they feel like they are reading a coherent story regarding your research questions and what your experiment says about them. 
+
+
+
+## Introduction
+
+The acoustic characteristics of the human voice vary in a systematic way between speakers with different indexical characteristics such as age and gender. Listeners are familiar with this co-variation and use this information to guess speaker indexical characteristics from their speech. Although listeners are often incorrect in their assessments they tend to be fairly consistent. In this way, listener judgments of speaker indexical characteristics can be thought of as incorrect but precise: People often make errors but their errors are fairly predictable. In this experiment we will investigate how listeners asses speaker characteristics from speech acoustics, and the way that our assumptions about speakers can affect the use of these cues. 
+
+## The role for voice fundamental frequency
+
+The main acoustic predictors of apparent speaker age, size and gender are the fundamental frequency, and the resonance properties of speech. Voice fundamental frequency will be discussed, and resonance will be introduced in the following section. 
+  Your vocal folds, housed inside your larynx (in your neck) vibrate when you speak. For example, you will feel the front of your neck vibrate when you produce a 'zzzzzz' or a vowel sound. The rate of vibration of the vocal folds varies as a function of the mass and length of the vocal folds, among other things. Think of guitar strings and the fact that the lower frequency strings tend to be thicker, and not pulled as tight. Rate of vibration is measured units of cycles per second, referred to as Hertz (Hz). 
+  The rate of vibration of the vocal folds determines the fundamental frequency (f0) of a person's speech. The f0 of a sound is its strongest determinant of perceived pitch. So, speakers with larger vocal folds tend to produce speech with lower f0 (and pitch), and vice versa. In general, adult speakers have lower voice f0 than children, and post-pubescent males tend to have the lowest overall speaking f0s in the human population. For example, figure \@ref(fig:F12-1) presents the relationship between height and age for males and females, and the relationship between age, height and f0 males and females. As we can see, young children have speech f0s around 250 Hz or higher, adult females tend to have f0s in the 225 Hz range, and adult males tend to have f0s in the adult female range. In addition, we see that decreases in f0 are associated with older, taller speakers, in particular for male speakers.
+
+```{r F14-1, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) Average height of males and females in the United states of America, organized by age (cite). (middle) Average f0 produced by male and female speakers between from 5 years of age until adulthood. (right) Estimated vocal-tract length for male and female speakers between from 5 years of age until adulthood, based on the acoustic data provided in Lee at al. (?)."}
+
+################################################################################
+### Figure 14.1
+################################################################################
+
+data(height_data, package="bmmb")
+data(exp_data_all, package="bmmb")
+
+par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
+
+plot (height_data$age[height_data$gender=="f"],height_data$height[height_data$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(80,190),type='b', xlab="Age (years)",
+      ylab = "Height (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
+lines (height_data$age[height_data$gender=="m"],height_data$height[height_data$gender=="m"],
+      pch=16,col=4,lwd=2,cex=1.5,type='b')
+grid()
+legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
+
+#ats = c(8,9.5,11,12.5,14, 15.5)
+#vtls = (ats - 2.7)/0.068
+#axis (side=4, at = vtls, labels = ats)
+data(lee_etal_data, package="bmmb")
+lee_etal_data$gbar = rowMeans(log(lee_etal_data[,4:6]))
+
+agg = aggregate (cbind(f0,gbar) ~ age + gender, data = lee_etal_data, FUN = mean)
+
+agg$vtls = exp(-((agg$gbar)-min(agg$gbar)))
+agg$vtls = 15 * agg$vtls
+
+rect (9.5,140,12.5,160,lwd=3,border=3)
+rect (17.5,155,20.5,185,lwd=3,border=3)
+
+plot (agg$age[agg$gender=="f"],agg$f0[agg$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,300),type='b', xlab="Age (years)",
+      ylab = "f0 (Hz)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
+lines (agg$age[agg$gender=="m"],agg$f0[agg$gender=="m"],
+      pch=16,col=4,lwd=2,cex=1.5,type='b')
+grid()
+
+#rect (9.5,220,12.5,270,lwd=3,border=3)
+#rect (17.5,110,20.5,250,lwd=3,border=3)
+
+points (c(11,11,19,19), tapply (exp_data$f0, exp_data$C, mean), pch=1,lwd=4, 
+        cex = 3,col=bmmb::cols[2:5])
+
+plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],agg$f0[agg$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,300),type='b', xlab="Hieght (cm)",
+      ylab = "f0 (Hz)",xlim=c(110,180),cex.axis=1.3,cex.lab=1.3)
+lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],agg$f0[agg$gender=="m"],
+      pch=16,col=4,lwd=2,cex=1.5,type='b')
+grid()
+
+#rect (9.5,220,12.5,270,lwd=3,border=3)
+#rect (17.5,110,20.5,250,lwd=3,border=3)
+
+points (height_data$height[c(29,10,38,19)],  tapply (exp_data$f0, exp_data$C, mean), pch=1,lwd=4, 
+        cex = 3,col=bmmb::cols[2:5])
+
+```
+
+## The role of vocal tract resonance
+
+Another way that speakers vary systematically in their speech acoustics is in their voice resonance. When we speak, we push air through our vocal folds, causing them to vibrate. The opening and closing of the vocal folds cause little periodic puffs of air to pass by. This results in a buzzing sound much like is made by the reed of a saxophone. The puffs of air go from your larynx (in your neck) to your mouth. Even if your mouth is open, some of the energy in these puffs 'bounces' off of the boundary at your mouth and *reflect* back towards your vocal folds. These reflections add up and result in what is known as a **standing wave**. These standing waves cause an **acoustic resonance** are what allow us to produce speech that is so loud given how little effort we put into it.   Acoustic resonance occurs when a sound wave bounces back and forth in an enclosed cavity so the energy can't leave the system easily, and builds up inside. Resonance forms the basis of most musical instruments and animal communication systems. So, dogs, cats, and birds, but also guitars and pianos, all make sounds by containing structures that result in acoustic resonances. Most of these things make sounds by putting energy into a tube or enclosed space, and taking advantage of the resonance properties of that enclosed structure. For example, an acoustic guitar uses its strings to introduce energy into the cavity in its body, which serves to substantially amplify the sound. Without this amplification, the guitar strings alone would only make a very quiet and unappealing sound. 
+  For human speech communication, the enclosed structure used to create acoustic resonances is the **vocal tract**, the space between the vocal folds and the lips. The vocal tract is an empty space comprising the oral cavity (your mouth) and the pharyngeal cavity (your throat). The vocal folds are like the guitar strings, they introduce energy into the vocal tract cavity by vibrating. Actually, as noted above the vocal folds are also very much like the reed of a saxophone, and since the vocal tract is just a cavity like the body of a saxophone, the vocal tract and vocal folds can be thought of as an upside-down saxophone.  
+  The speed of sound is fixed for a given environment (temperature, pressure, gas composition, etc.). This means that the bouncing back and forth between your mouth and your larynx occurs at a fixed speed. However, the number of cycles per second that it is able to complete, measured in Hz, varies as a function of the length of the vocal tract. This is obvious: A longer travel time at a fixed velocity entails fewer repetitions per unit time. As a result, the vocal-tract length of a speaker has a predictable acoustic consequence that can be measured with speakers with longer vocal tracts having lower resonances. 
+ 
+  Let's imagine the number of times a puff of air can bounce back and forth between the ends of the vocal tract in 1 second. Since the speed of sound is fixed, the repetition rate of this cycle will be entirely determined by the length of the vocal tract. A puff of air will take twice as long to repeat a single cycle along a vocal tract that is twice as long.
+
+  Exactly how VTL is measured acoustically is beyond the scope of this explanation, but we use the method described in Reby et al. (cite). This method uses estimates of the voice resonance frequencies to estimate the length of the vocal tract that produced them, in centimeters. This is possible because of the reliable connection between the length of a resonator and the frequencies it resonates, noted above. So, we will discuss speaker vocal-tract length in units of centimeters even though this measure is arrived at from acoustic measurements. This will be done because people tend to find VTL in cm more relatable than an eqivalent measurement based on the acoustic resonances expressed in frequency units.  
+  In figure \@ref(fig:F14-2)
+  
+```{r F14-2, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) Average height of males and females in the United states of America, organized by age (cite). (middle) Average f0 produced by male and female speakers between from 5 years of age until adulthood. (right) Estimated vocal-tract length for male and female speakers between from 5 years of age until adulthood, based on the acoustic data provided in Lee at al. (?)."}
+
+################################################################################
+### Figure 14.2
+################################################################################
+
+data(height_data, package="bmmb")
+data(exp_data_all, package="bmmb")
+
+par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
+
+plot (height_data$age[height_data$gender=="f"],height_data$height[height_data$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(80,190),type='b', xlab="Age (years)",
+      ylab = "Height (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
+lines (height_data$age[height_data$gender=="m"],height_data$height[height_data$gender=="m"],
+      pch=16,col=4,lwd=2,cex=1.5,type='b')
+grid()
+legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
+
+#ats = c(8,9.5,11,12.5,14, 15.5)
+#vtls = (ats - 2.7)/0.068
+#axis (side=4, at = vtls, labels = ats)
+data(lee_etal_data, package="bmmb")
+lee_etal_data$gbar = rowMeans(log(lee_etal_data[,4:6]))
+
+agg = aggregate (cbind(f0,gbar) ~ age + gender, data = lee_etal_data, FUN = mean)
+
+agg$vtls = exp(-((agg$gbar)-min(agg$gbar)))
+agg$vtls = 15 * agg$vtls
+
+rect (9.5,140,12.5,160,lwd=3,border=3)
+rect (17.5,155,20.5,185,lwd=3,border=3)
+
+plot (agg$age[agg$gender=="f"],agg$vtl[agg$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,16),type='b', xlab="Age (years)",
+      ylab = "VTL (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
+lines (agg$age[agg$gender=="m"],agg$vtl[agg$gender=="m"],
+      pch=16,col=4,lwd=2,cex=1.5,type='b')
+grid()
+
+#rect (9.5,220,12.5,270,lwd=3,border=3)
+#rect (17.5,110,20.5,250,lwd=3,border=3)
+
+points (c(11,11,19,19), tapply (exp_data$vtl, exp_data$C, mean), pch=1,lwd=4, 
+        cex = 3,col=bmmb::cols[2:5])
+
+plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],agg$vtl[agg$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,16),type='b', xlab="Height (cm)",
+      ylab = "VTL (cm)",xlim=c(110,180),cex.axis=1.3,cex.lab=1.3)
+lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],agg$vtl[agg$gender=="m"],
+      pch=16,col=4,lwd=2,cex=1.5,type='b')
+grid()
+
+#rect (9.5,220,12.5,270,lwd=3,border=3)
+#rect (17.5,110,20.5,250,lwd=3,border=3)
+
+points (height_data$height[c(29,10,38,19)],  tapply (exp_data$vtl, exp_data$C, mean), pch=1,lwd=4, 
+        cex = 3,col=bmmb::cols[2:5])
+
+```
+
+
+
+## Perception of age, gender and size
+
+- accurate for gender, consistent
+- more subtle than just f0 and VTL
+- not accurate but consistent for size
+- relatively consistent for age for growing people, not so much for adults maybe?
+
+
+
+  
+```{r F14-3, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) Average height of males and females in the United states of America, organized by age (cite). (middle) Average f0 produced by male and female speakers between from 5 years of age until adulthood. (right) Estimated vocal-tract length for male and female speakers between from 5 years of age until adulthood, based on the acoustic data provided in Lee at al. (?)."}
+
+################################################################################
+### Figure 14.3
+################################################################################
+
+data(height_data, package="bmmb")
+
+data(exp_data_all, package="bmmb")
+
+tmp_h_data = height_data
+tmp_h_data = tmp_h_data[!(tmp_h_data$age %in% c(2,3,4,19)),]
+
+
+agg = aggregate (cbind(f0,gbar) ~ age + gender, data = lee_etal_data, FUN = mean)
+
+agg$vtls = exp(-((agg$gbar)-min(agg$gbar)))
+agg$vtls = 15 * agg$vtls
+
+par (mfrow = c(1,2), mar = c(4.1,4.1,1,1))
+
+
+plot (agg$vtl,agg$f0, pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,280),type='n', 
+      xlab="Age (years)", ylab = "VTL (cm)",xlim=c(10,16),cex.axis=1.3,cex.lab=1.3)
+grid()
+
+text (agg$vtl,agg$f0, 5:19, col = rep(c(2,4), each = 15))
+
+use = agg$age %in% c(10,11,12,18,19)
+plot (agg$vtl[use],agg$f0[use], pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,280),type='n', 
+      xlab="Age (years)", ylab = "VTL (cm)",xlim=c(10,16),cex.axis=1.3,cex.lab=1.3)
+grid()
+
+text (agg$vtl[use],agg$f0[use], rep(5:19,2)[use], col = rep(c(2,4), each = 15)[use])
+
+#
+
+```
+
+
+
+There is extensive experimental evidence showing that voice f0 strongly affects the perception of speaker age (cite), gender (cite), and height (cite). 
+
+
+
+
+
+## Category-dependent behavior
+
+Previous research has found that perception of the age of children between the ages of 5 and 18 is dependent on the perceived gender of the child. Research has also shown the inverse: Perception of the gender of children is dependent on the apparent age of the child. Barreda (2017) also found that the way that VTL is used to estimate the height of adult females would not let them predict the height of younger women because the VTL to height relationship did not feature large enough changes to height as a function of VTL.  
+
+## Methods
+
+In this section we will discuss the methods we used to collect the data. The goal is to provide enough information so that a person reading it should be able to replicate your experiment. You also need to keep in mind that the person reading your paper may have no idea what you did and things that seem obvious to you may not be obvious at all to your reader.
+
+###  Listeners
+
+Listeners were 15 speakers of California English. Listeners were not all native speakers of English but all spoke English well enough to attend a university in the United States. All listeners participated in the experiment for partial course credit. Listeners were told that this was not a "real" experiment, but rather that the resulting data would be analyzed in a book. Listeners were also told that the data would be shared publicly. Participating in the experiment and contributing their data to the book were both opt-in on the part of the student. 
+
+- information about what they used to do the experiment and what they reported about the dialect and so on?
+
+###  Stimuli
+
+Stimuli where isolated productions of the word "heed" produced by the 139 speakers in the Hillenbrand et al. (1995) data set. Productions represented speech form x types of speakers. Speakers were all from Michigan and had the northeast cities dialect. In addition, speech samples were collected in 1995 meaning the local dialect may have changed substantially in the meantime. However, dialects of English do not usually exhibit much variation in the vowel sound in "heed" meaning that the speech should have sounded relatively "normal" to speakers of California English. In any case, any possible dialectal difference is not expected to have much effect on the important research questions we hope to address.
+
+All syllables were manipulated using the "change gender" function in Praat (cite). This function allows you to scale the spectral envelope of speech sounds up/down according to uniform scaling, thereby imitating the effects of differences in VTL. The spectral envelope of each syllable was scaled down by 8% (?), replicating a VTL increase of 8%. However, the fundamental frequency and duration of the sound were not changed. 
+
+- explain measuring vtl and f0
+
+ 
+### Procedure
+
+Listeners were instructed that they would hear the word "heed" produced by adult males (18+), adult females (18+), girls (10-12 years old), and boys (10-12 years old). They were asked to indicate how tall the speaker 'sounded' in feet and inches, and the category of the speaker. Responses could be provided in any order. Height responses were entered on a slider ranging form 4'0" to 6'6" (?). The slider displayed the selected height to the listener to the nearest tenth of an inch. Category responses were entered by selecting one of four category buttons labelled "women (18+ years old)", "man (18+ years old)", "girl (10-12 year old)", and "boy (10-12 years old)".
+
+The experiment was conducted over Qualtrics, an online survey tool, with very little control over listening conditions. For example, listeners may have had headphones or speakers or very different qualities when carrying out the experiment. If this were a 'real' experiment, we would have exerted more control over the listening conditions. Listeners were presented with syllables one at a time, randomized across stimulus dimensions. This means that all 276 (?) unique stimuli were presented in a completely unpredictable, random manner. This randomization was carried out independently for each listener. 
+
+### Data screening
+
+Data was collected from approximately 30 people, however, we only wanted 15 for the book in order to keep plots and model outputs manageable. As a result, we needed to eliminate about half the original listeners. Because the experiment was done online via Qualtrics and not in a controlled environment like a lab, the data was of varying quality between listeners. In addition, since listeners participated for partial course credit, in lieu of actual research participation, some may have been motivated by their grade rather than the love of science and may not have been as diligent in their responses as we might have liked. In addition, although idiosyncratic results do occur in real life, dealing with them in this text would have been a distracting digression from the goal of the text.
+
+In light of this, when removing participants we tried to remove the "bad" data and tried to keep the "good" data. In general, this meant removing listeners that exhibited 'unusual' behavior, or behavior suggesting that they were not conducting the experiment in good faith. For example, some listeners provided the same average height for all categories of speakers or identified adult males at a low rate (despite the ease of this classification).
+
+The above screening might be more difficult to justify in a 'real' experiment, and that's why we would like to stress that this is not a 'real' experiment. The data presented and analyzed here is 100% real, provided by actual listeners participating in the experiment described above. They did not know each other and did not co-ordinate their behavior in any way, now where they 'prepped' in any way regarding what sort of responses were expected for the experiment. However, the data has been 'curated' to make it suitable for its use as a pedagogical tool, and so any inferences taken from this data should be taken with a grain of salt. 
+
+### Statistical Analysis
+
+We're going to use the statistical models we fit, but did not interpret, in chapter 11. We can use the code below to retrieve both of these models. We also take the opportunity to load the R packages we need and to load our data. 
+
+```{r, warning=FALSE,error=FALSE}
+library (bmmb)
+library (brms)
+data (height_exp)
+options (contrasts = c('contr.sum','contr.sum'))
+
+```
+```{r, include = TRUE, eval = FALSE}
+# Download the height from the GitHub page:
+height_model = bmmb::get_model ('13_model_height_vtl_f0.RDS')
+
+# Download the gender model from the GitHub page:
+gender_model = bmmb::get_model ('11_model_gender_vtl_f0_reduced.RDS')
+```
+
+
+```{r, include = FALSE, eval = TRUE}
+height_model = readRDS ('../models/13_model_height_vtl_f0.RDS')
+gender_model = readRDS ('../models/11_model_gender_vtl_f0_reduced.RDS')
+```
+
+These models present independent analyses of their respective dependent variables, despite the fact that these were provided at the same time and are obviously related. As a result, our approach may not be totally appropriate. However, we are choosing to present the analysis this way in order to provide parallel examples of linear and logistic analyses of large models. As with the data screening, we are presenting a pedagogical example and this is not necessarily the best way to approach this data if one were interested in presenting an analysis of these variables. What follows is something like what we would write in a paper or journal article describing the analyses we carried out. 
+
+Our experiment consisted of two dependent variables: Apparent height judgments and the apparent femaleness of the speaker. Each of these response variables were analyzed using multilevel Bayesian models fit with stan (cite), using the brms (cite) package in R (cite). 
+
+Apparent height was treated as a quantitative variable coming from a t distribution with a trial-specific mean and fixed (but unknown) scale and nu parameters. Apparent height responses were converted to centimeters prior to analysis. Expected apparent trial was predicted based on the following 'fixed' effects: 1) Speaker VTL (`vtl`) measured in centimeters, 2) speaker fundamental frequency (`f0`) measured in hectohertz (1 hectohertz = 100 Hertz), 3) apparent speaker age, a factor `A` with levels adult (`a`) and child (`c`), and 4) apparent speaker gender, a factor `G` with levels female (`f`) and male (`m`). All possible interactions between fixed effects were included in the model. In addition, listener 'random effects' intercepts were calculated, as were listener-dependent effects for all fixed effects and their interactions. Speaker-dependent random intercepts were also included in the model. The model formula used is presented below.  
+
+`height ~ (vtl+f0) * A * G + ((vtl+f0) * A * G | L) + (1 | S)`
+
+Model 'fixed' effects were all estimated es coming from t distributions with a mean of zero, a scale of 12, and a nu of 3. The model intercept was given a t prior with a mean of 160, a scale of 12, and a nu parameter of 3. Speaker random intercepts were estimated as coming from a normal distribution with a mean of zero and a distribution-specific standard deviarion estimated from the data. Listener random effects were estimated as coming from a 16-dimensional normal distribution. Each dimension was assumed to have a mean of zero and a standard deviation estimated from the data. An LKJ prior was used was a *concentration* parameter of 2, meaning our model would be somewhat skeptical of large correlations. Finally, the error term (`sigma`, $\sigma$) was given a half-t prior with a mean of 0, a scale of 12 and a nu of 3, and the nu parameter for our error distribution (i.e.this one $height \sim t(\nu, \mu, \sigma)$) was given a gamma prior with scale and rate parameters of 2 and 0.1 respectively. 
+
+- something about convergence
+
+The above was a verbal description of the model presented in equation (last chapter). Here is the code we used to fit this model last chapter. We wouldn't include the code below in a paper, we would just like to note that the code below has the same information in it as the three paragraphs above. 
+
+```{r}
+priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
+           brms::set_prior("student_t(3,0, 12)", class = "b"),
+           brms::set_prior("student_t(3,0, 12)", class = "sd"),
+           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+           brms::set_prior("gamma(2, 0.1)", class = "nu"),
+           brms::set_prior("student_t(3,0, 12)", class = "sigma"))
+
+model_height_vtl_f0 =  
+  brms::brm (height ~ (vtl+f0)*A*G + ((vtl+f0)*A*G|L) + (1|S), data = exp_data, 
+             chains = 4, cores = 4, warmup = 1000, iter = 5000, thin = 4, 
+             prior = priors, family = "student")
+
+```
+
+Apparent speaker femaleness (`F`) was treated as a binomial (dichotomous) variable coming from a Bernoullit distribution with a trial-specific p parameter. For the purposes of analysis responses of female were coded as 1 and responses of male were coded as 0. Expected apparent trial was predicted based on the following 'fixed' effects: 1) Speaker VTL (`vtl`) measured in centimeters, 2) speaker fundamental frequency (`f0`) measured in hectohertz (1 hectohertz = 100 Hertz), and 3) apparent speaker age, a factor `A` with levels adult (`a`) and child (`c`). All possible interactions between fixed effects were included in the model, save for the exclusion of the cross-product of f0 and VTL (and all related predictors). 
+
+In addition, listener 'random effects' intercepts were calculated, as were listener-dependent effects for all fixed effects and their interactions. Speaker-dependent random intercepts were also included in the model. The model formula used is presented below.  
+
+`F ~ (vtl + f0) * A + ((vtl + f0) * A | L) + (1 | S)`
+
+Model 'fixed' effects, including the intercept, were all estimated es coming from t distributions with a mean of zero, a scale of 3, and a nu of 3. Speaker random intercepts were estimated as coming from a normal distribution with a mean of zero and a distribution-specific standard deviarion estimated from the data. Listener random effects were estimated as coming from a 6-dimensional normal distribution. Each dimension was assumed to have a mean of zero and a standard deviation estimated from the data. An LKJ prior was used was a concentration parameter of 2. 
+
+## Results
+
+- show raw data
+- show speaker average distribution not pooled data
+
+In this section we will outline a structured way to present large models to the reader. In general, we suggest figuring out what story you are trying to tell with your data, and making sure that everything you tell the reader is in service of helping them understand the story. This approach helps people understand your data better than loading up a cannon with numbers and blasting it at the reader. We will present and analysis of the height model first before moving onto the gender model. 
+
+### Apparent height judgments
+
+Before presenting the model results it's useful to talk about the results a bit, and to present some visual representation of the results. Although we've discussed our experimental data ad nauseam at this point, we will present this as we would the beginning of a results section and assume that the reader has never seen this data before. Figure below presents a boxplot showing all size responses across all listeners for speakers judged to be girls, women, men, and boys respectively. There are clear systematic differences in apparent height across the different apparent speaker categories. As seen in the middle and right plots of the same figure, it appears that these between-category differences may be associated with differing voice characteristics across speakers in different categories. 
+
+```{r F13-4, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = " -- "}
+
+################################################################################
+### Figure 14.3
+################################################################################
+
+aggd = aggregate (cbind (height,f0,vtl) ~ S + C_v, data = exp_data, FUN = mean)
+
+tab = table (exp_data$S, exp_data$C)
+mod_cat = apply (tab, 1,which.max)
+
+par (mfrow = c(1,3))
+boxplot (height ~ A+G, data = exp_data, col = bmmb::cols[c(5,3,4,2)],ylim=c(110,195))
+plot (aggd$f0, aggd$height, pch=16, col = bmmb::cols[1+mod_cat], cex=2,ylim=c(110,195))
+plot (aggd$vtl, aggd$height, pch=16, col = bmmb::cols[1+mod_cat], cex=2,ylim=c(110,195))
+```
+
+The fixed effects for our height model are presented in figure below, and the standard deviations for all model random effects, as well as the model error term, are presented in the right plot of the same figure. As outlined in chapter 11, since our model has a large number of parameters we're going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height (see ROPE, cite). For human height, apparent and veridical, we define meaningful differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We see in the figure below that only a small number of these effects exceed that threshold. In addition, roughly the same subset of predictors exhibit the largest systematic between-listener variation in parameters. These predictors are: The main effect for VTL (`vtl`), the main effect for f0 (`f0`), the main effect for apparent age, and the interaction between apparent age and vtl. Our discussion below will focus on these effects.  
+
+```{r F13-5, fig.height = 4, fig.width = 8, fig.cap='A comparison of fixed effect estimates provided by the brms (red) and lmer (black) models. The brms intervals are the 95% credible intervals, those for lmer are twice the standard error of the parameter estimate.', echo = FALSE, cache = TRUE}
+
+################################################################################
+### Figure 11.4
+################################################################################
+
+
+par (mfrow = c(1,2), mar = c(4,6,1,1))
+
+fixefs = fixef (height_model)[-1,]
+good = (fixefs[,3] < -0.5 & fixefs[,4] < -0.5) | (fixefs[,3] > 0.5 & fixefs[,4] > 0.5) 
+pchs = ifelse (good, 16,1)
+
+brmplot (fixefs, xlim = c(-7,10),las=2, #ylim = c(-1,12),
+               pch=pchs,lwd=2,horizontal=FALSE,xlab="Apparent Height (cm)")
+abline (v = c(-0.5,0.5), lty = 3, col = bmmb::cols[6],lwd=2)
+
+sds = bmmb::get_sds (height_model)
+good = (sds[,3] < -0.5 & sds[,4] < -0.5) | (sds[,3] > 0.5 & sds[,4] > 0.5) 
+pchs = ifelse (good, 16,1)
+
+brmplot (sds, xlim = c(0,10),las=2, pch=pchs,lwd=2,xaxs='i',
+               horizontal=FALSE,xlab="Apparent Height (cm)")
+abline (v = c(0.5), lty = 3, col = bmmb::cols[6],lwd=2)
+
+```
+
+Table below presents information regarding our model fixed effects. We can see in the table (and figure) that f0 and VTL differences between speakers are associated with large and noticeable differences in apparent height. For example, the average difference of 100 Hz, and 2 cm difference in f0 and VTL respectively between adult males and females is expected to result in a difference of 11.9 cm (3.04 x 2 + 2.92 x 2) in apparent height. 
+
+```{r T12-1}
+knitr::kable(fixef(height_model), digits=2)
+```
+
+We can investigate the apparent age by VTL interaction by considering the simple effects of vtl across levels of apparent age. We can get these using the code below, and report it as follows. The simple effect for VTL when listeners thought the speaker was a child was 4.74 (s.d. = 0.78, 95% C.I = [3.24, 6.29]), meaning we expect an increase of 4.7 cm in apparent height for every 1 cm in increase in speaker VTL, on average. However, this value dropped all the way to (mean = 1.34, s.d. = 0.67, 95% C.I = [0.06, 2.72]) for apparent adults. So, differences in speaker VTL appear to be associated with much larger differences in apparent height when listeners think the speaker is a child. 
+
+```{r}
+bmmb::short_hypothesis(height_model, c("vtl + vtl:A1 = 0","vtl - vtl:A1 = 0"))
+```
+
+Given that we have a large difference in intercepts based on apparent age, this indicates that the lines relating speaker VTL to apparent height is substantially different for apparent children vs. apparent adults. This is presented in figure below. 
+### Apparent gender judgments
+
+
+
+## Discussion
+
+
+
+
+## Conclusion
+
+
+
+

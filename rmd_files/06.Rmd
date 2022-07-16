@@ -159,7 +159,7 @@ So, if we wanted to include the marginal effects of age and listener, and the in
 
 `height ~ 1 + A * L + (1|S)`
 
-However, we know that is is advisable to estimate factors with large numbers of levels using partial pooling, regardless of how 'random' the effect may be (see section \@ref{c4-strategies}). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. This leads to the second way of including interactions in our model. Whenever fixed effects interact with random effects, it is most common to include these inside the parentheses belonging to the random effect they interact with, like so:
+However, we know that is is advisable to estimate factors with large numbers of levels using partial pooling, regardless of how 'random' the effect may be (see section \@ref(c4-strategies)). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. This leads to the second way of including interactions in our model. Whenever fixed effects interact with random effects, it is most common to include these inside the parentheses belonging to the random effect they interact with, like so:
 
 `height ~ 1 + A + (1 + A|L) + (1|S)`
 
@@ -398,7 +398,7 @@ And `brm` (and Stan) will do the rest.
 
 ### Updating our model description
 
-Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:6-7). Only two things have changed with respect to the description in \@ref(eq:6-1). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than as independent univariate normal variables. Second, we specify a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal covariance matrix $\Sigma$. This is because, as noted above, `stan` constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A1 \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$) as in equation \@ref{eq:6-4}. 
+Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:6-7). Only two things have changed with respect to the description in \@ref(eq:6-1). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than as independent univariate normal variables. Second, we specify a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal covariance matrix $\Sigma$. This is because, as noted above, `stan` constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A1 \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$) as in equation \@ref(eq:6-4). 
 
 $$
 \begin{equation}
@@ -424,7 +424,7 @@ $$
 
 [@@ SB - refer to new deterministic part, say we will be omitting it in the future but mention we omit it often in text]
 
-Here's a plain English description of the model specification in \@ref{eq:6-7}:
+Here's a plain English description of the model specification in \@ref(eq:6-7):
 
 > We are modeling apparent height as coming from a t distribution with unknown nu, mean, and scale parameters. The expectec value for any given trial is modeled as the sum of an intercept, an effect for apparent age, a listener effect, a listener dependent effect for apparent age, and a speaker effect. The speaker effects were drawn from a univariate normal distribution with a standard deviation estimated from the data. The two listener effects were drawn from a bivariate normal distribution with standard deviations and a correlation that was estimated from the data. The reaminder of the 'fixed' effects and the bivariate correlation were given fixed priors. 
 
@@ -558,7 +558,7 @@ The value of $\mathrm{lpd}$ is clearly related to the log posterior density, dis
 
 Because $\mathrm{lpd}$ is a logarithmic value, large negative values are closer to zero on the original scale. So, values of $\mathrm{lpd}$ closer to (or above) zero represent models that are more likely given the data. As a result, we might think that we should simply select the model with the highest $\mathrm{lpd}$ as our 'best' model. However, $\mathrm{lpd}$ does not tell us directly about expected out-of-sample prediction, which is what we often care about. 
 
-We can think about out-of-sample prediction in terms of the **expected log pointwise predictive density**, abbreviated $\mathrm{elpd}$ (or $\mathrm{elppd}$), presented in \@ref(eq:6-9). Unlike the $\mathrm{lpd}$, the $\mathrm{elpd}$ is defined in terms of hypothetical out-of-sample data ($\tilde{y}$) instead of the in-sample data ($y$). The $\mathrm{E}()$ below represents the expected value function (discussed in section \@ref{c2-sample-mean}). So, the $\mathrm{elpd}$ represents the expected value of $\mathrm{lpd}$ for out-of-sample data. 
+We can think about out-of-sample prediction in terms of the **expected log pointwise predictive density**, abbreviated $\mathrm{elpd}$ (or $\mathrm{elppd}$), presented in \@ref(eq:6-9). Unlike the $\mathrm{lpd}$, the $\mathrm{elpd}$ is defined in terms of hypothetical out-of-sample data ($\tilde{y}$) instead of the in-sample data ($y$). The $\mathrm{E}()$ below represents the expected value function (discussed in section \@ref(c2-sample-mean)). So, the $\mathrm{elpd}$ represents the expected value of $\mathrm{lpd}$ for out-of-sample data. 
 
 $$
 \begin{equation}
@@ -571,7 +571,7 @@ Of course, you can't actually know the value of $\mathrm{E}(\mathrm{log} (p(\til
 
 We can demonstrate this for some very simple models using simulations. In the code below, we generate three random variables consisting only of the values -1 and 1. We then use only the first variable (`x1`) to simulate some random data, and we add random Gaussian error to this fake variable. After this we generate two sets of data using the same data generating process, in-sample (`y`) and out-of-sample data (`y_tilde`). We then fit three models to both data sets. These models include increasingly more predictor variables ($x_1, x_2, x_3$), however, we know that only $x_1$ is useful to understand the underlying process. 
 
-The models below are fit using a function that we have not discussed to this point. The `lm` (linear model) function uses maximum-likelihood estimation (see section \@ref{c2-inference-and-likelihood}) to fit regression models with relatively simple ('unilevel', see figure \@ref(fig:F4-2)) structures. We use it here because it estimates regression parameters very quickly and therefore is reasonable to use when we want to fit 3000 models in 5 seconds or so. 
+The models below are fit using a function that we have not discussed to this point. The `lm` (linear model) function uses maximum-likelihood estimation (see section \@ref(c2-inference-and-likelihood)) to fit regression models with relatively simple ('unilevel', see figure \@ref(fig:F4-2)) structures. We use it here because it estimates regression parameters very quickly and therefore is reasonable to use when we want to fit 3000 models in 5 seconds or so. 
 
 ```{r, cache = TRUE}
 n = 50         # how many observations
@@ -881,7 +881,7 @@ resids = scale(residuals(model_sum_coding)[,1])
 resids_t = scale(residuals(model_sum_coding_t)[,1])
 ```
 
-We scale our residuals so that they are represented in terms of standard deviations from the mean, and plot these against the `p_waic` values calculated for each data point by each model. Clearly, large residuals relate to large `p_waic` values. In other words, large `p_waic` values are related to data points that are a very poor fit for our model. In our model with Gaussian errors this relationship is very predictable and quickly leads to large values in `p_waic`. For our model with t distributed errors (`model_sum_coding_t`) residuals beyond two standard deviations do not strongly affect `p_waic`. These differences are due to the different behaviors of the normal and t distributions in their tails, as discussed in section \@ref{c5-robustness}. 
+We scale our residuals so that they are represented in terms of standard deviations from the mean, and plot these against the `p_waic` values calculated for each data point by each model. Clearly, large residuals relate to large `p_waic` values. In other words, large `p_waic` values are related to data points that are a very poor fit for our model. In our model with Gaussian errors this relationship is very predictable and quickly leads to large values in `p_waic`. For our model with t distributed errors (`model_sum_coding_t`) residuals beyond two standard deviations do not strongly affect `p_waic`. These differences are due to the different behaviors of the normal and t distributions in their tails, as discussed in section \@ref(c5-robustness). 
 
 ```{r F6-8, fig.height = 3, fig.width = 8, fig.cap="(left) Standardized model residuals plotted against values of the WAIC penalty term (P_WAIC) for each data point for the model with Gaussian errors, `model_sum_coding`. (right) The same as on the left but for the model with t distributed errors, `model_sum_coding_t`.", cache = TRUE, echo = FALSE}
 
@@ -1097,13 +1097,13 @@ We've selected the model with random effects as the 'best' model and are ready t
   
   (Q3) What is the difference in apparent height associated with the perception of adultness? 
   
-Our answers to the main research questions are largely unchanged from the previous chapter (section \@ref{c5-answering-qs}), however, there have been some changes that highlight interesting aspects of our data. We are going to focus on what our model tells us the listener dependent intercepts and effects for apparent age. 
+Our answers to the main research questions are largely unchanged from the previous chapter (section \@ref(c5-answering-qs)), however, there have been some changes that highlight interesting aspects of our data. We are going to focus on what our model tells us the listener dependent intercepts and effects for apparent age. 
 
 We saw that there was a strong negative correlation between the listener means and age effects. The reason for this is clearly evident in figure \@ref(fig:F6-1). Listeners generally provided quite stable estimates for adult speakers. However, they exhibited substantial variation in their average judged height for child speakers. This makes sense. Most people probably have a good sense for approximately how tall adult females are on average. However, how tall are children 10-12? This is harder to answer for the average person. Not only is there more variability in height for children in these age ranges, but in addition most people are not around large numbers of children 10-12 and so may not have a good sense of how tall they are on average. 
 
 Since the adult heights are more or less fixed across listeners, listeners that indicated shorter children necessarily indicated shorter speakers overall. In addition, listeners that indicated shorter children also would tend to exhibit larger age effects. In this way, the listener means and age effect become negatively correlated. 
 
-Although we said we would stick to sum coding for this book, it is worth noting that this is actually a situation where it might sense to use treatment coding, using adult as the reference level (see section \@ref{c5-treatment-coding}). This would not affect our answers to the questions above but it would make the structure of the model more closely reflect the structure of the data, and it would decrease the correlation between the listener-dependent random effects. Why? Because when the listener intercepts correspond to their adult means (and not the grand mean), the intercept no longer helps you predict their age effect. As we can see in figure \@ref(fig:F6-1), all listeners rate adult speakers about the same height regardless of how tall/short they think the children are. 
+Although we said we would stick to sum coding for this book, it is worth noting that this is actually a situation where it might sense to use treatment coding, using adult as the reference level (see section \@ref(c5-treatment-coding)). This would not affect our answers to the questions above but it would make the structure of the model more closely reflect the structure of the data, and it would decrease the correlation between the listener-dependent random effects. Why? Because when the listener intercepts correspond to their adult means (and not the grand mean), the intercept no longer helps you predict their age effect. As we can see in figure \@ref(fig:F6-1), all listeners rate adult speakers about the same height regardless of how tall/short they think the children are. 
 
 ## 'Traditionalists' corner {#c6-frequentist}
 

@@ -7,30 +7,30 @@ knitr::opts_chunk$set(
 ```
 # Multiple quantitative predictors, dealing with large models, and Bayesian ANOVA
 
-In this chapter we introduce models with multiple quantitative predictors, and interactions between them. After that, we will have covered the modeling concepts necessary to fit most models of the sort used for experimental data. The models you fit to you own data will include some combination of the elements covered in the previous chapters, and can potentially result in large models with hundreds of parameters. Traditionally, models with many predictors have had three general problems:
+In this chapter we introduce models with multiple quantitative predictors, and interactions between them. After that, we will have covered the basic modeling concepts necessary to fit most models. The models you fit to you own data will include some combination of the elements covered in the previous chapters, and can potentially result in large models with hundreds of estimated parameters. Traditionally, models with many estimated parameters have had three general problems:
 
-  1) A model may return spurious values for the 'extra' predictors, leading to incorrect conclusions.
-  2) The model may not fit/converge, meaning it can't find 'good' estimates for the model coefficients. 
-  3) It can be difficult to interpret a model with *hundreds* of parameters.
+  1) A model with 'too many' predictors may return spurious values for the 'extra' predictors. We will vaguely define 'extra' predictors as those which have no statistical association with your dependent variable, and which do not appreciably improve your model in any way. Sometimes these spurious values are difficult to distinguish from the 'real' parameters, leading to incorrect conclusions. 
+  2) Second, the model may not be able to fit/converge on a solutions, meaning you can't get good estimates for the model coefficients. Regardless of the approach to parameter estimation, more-complicated models make it more difficult for any estimator to 'find' the optimal parameter values given the data. 
+  3) It can be difficult to interpret a model with *hundreds* (or thousands) of parameters. This becomes especially problematic when considered together with problem (1), that some of these values may simply represent noise. 
 
-In this chapter we're going to cover a Bayesian approach to working with large models. We're going to discuss how working with multilevel Bayesian models can naturally help us with problems (1) and (2) above, and we're going to discuss an easy way to approach problem (3) as well. 
+In this chapter we're going to cover a Bayesian approach to working with large models. First we're going to discuss how working with multilevel Bayesian models can help us with problems (1) and (2) above. After that we're going to discuss an easy way to approach problem (3) using our Bayesian models.
 
-Before continuing, we should note that designs with many quantitative predictors, factors, and interactions between these can result in very complicated models, which then have to be interpreted. However, the researcher has a big role to play in the complexity of the eventual analysis that they are faced with. Once when Santiago was buying a backpack for traveling, he was looking for the biggest backpack possible. One of the reviews said "1/5 stars, it was way too heavy when I filled it all the way up with my stuff". However, if we fill a backpack up with many heavy things, it doesn't seem fair to blame the poor backpack when it becomes difficult to carry. In the same way, if you are faced with a complex model that you then need to interpret, you shouldn't blame the model, `brms`, or us for your predicament. 
+Before continuing, we should note that designs with many quantitative predictors, factors, and interactions between these can result in very complicated models which then have to be interpreted. However, the researcher has a big role to play in the complexity of the analysis they are faced with. Once when Santiago was buying a backpack for traveling, he was looking for the biggest backpack possible. One of the reviews said "1/5 stars, it was way too heavy when I filled it all the way up with my stuff". However, if we fill a backpack up with many heavy things, it doesn't seem fair to blame the backpack when it becomes difficult to carry. In the same way, if you are faced with a complex model that you then need to interpret, you shouldn't blame the model, `brms`, or us for your predicament. 
 
 In order to avoid a situation where you end up with data you can't analyze or a model you can't interpret, it's worth considering the following questions before advancing to the data collection stage of your experiment: 
 
   * How will I analyze the data? Will I be able to? 
   * What will the model structure be? 
   * What kind of results am I expecting? How will this be reflected by the model parameters?
-  * How would different results manifest in my regression model?
+  * How would different results manifest in the model parameters?
   
 ## Models with multiple quantitative predictors
 
 Our regression models so far have only involved a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed surfaces with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL) and f0 (voice pitch) with apparent speaker height. In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, for each observation is the vertical distance between the line the observation.   
 
-Rather than think of the effect of VTL and f0 on apparent height individually, we can think about apparent height, VTL, and f0 together at the same time. Every point in figure \@ref(fig:F11-1) has a specific value of f0, VTL, and apparent height. These three quantitative variables can be thought of as defining a single location in a 3-dimensional space. For example, consider any given location in the room you are sitting in right now. Any such location can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:F11-1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots below. The first plot show the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
+We can also think about how apparent height, VTL, and f0 vary together. Every point in figure \@ref(fig:F11-1) has a specific value of f0, VTL, and apparent height. These three quantitative variables can be thought of as defining a single location in a 3-dimensional space. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:F11-1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots in figure \@ref(fig:F11-1). The first plot show the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
   
-```{r F11-1, fig.height = 3, fig.width = 8, fig.cap='(left) Average apparent height reported for each speaker plotted against speaker VTL. Point size reflects average apparent height. (middle) Same as the left plot but comparing apparent height to f0. (right) A comparison of VTL and f0 for each speaker.', echo = FALSE, cache = TRUE}
+```{r F11-1, fig.height = 2.5, fig.width = 8, fig.cap='(left) Average apparent height reported for each speaker plotted against speaker VTL. Point size reflects average apparent height. (middle) Same as the left plot but comparing apparent height to f0. (right) A comparison of VTL and f0 for each speaker.', echo = FALSE, cache = TRUE}
 
 ###############################################################################
 ### Figure 11-1
@@ -44,44 +44,51 @@ ptcex = 1 + (ptcex / max(ptcex))*1.5
 
 par (mfrow = c(1,3), mar = c(4,4,1,1))
 plot (agg_data[,c(2,4)],pch=16,col = bmmb::cols[2:5][factor(agg_data[,3])], 
-      cex=ptcex)
+      cex=ptcex,xlab="VTL (cm)",ylab="Height (cm)",cex.lab=1.3,cex.axis=1.3)
 abline (lm(agg_data[,c(4)]~agg_data[,c(2)]),lwd=2,lty=2)
 grid()
-plot (agg_data[,c(1,4)],pch=16,col = bmmb::cols[2:5][factor(agg_data[,3])], cex=ptcex)
+plot (agg_data[,c(1,4)],pch=16,col = bmmb::cols[2:5][factor(agg_data[,3])], 
+      cex=ptcex,xlab="f0 (Hz)",ylab="Height (cm)",cex.lab=1.3,cex.axis=1.3)
 abline (lm(agg_data[,c(4)]~agg_data[,c(1)]),lwd=2,lty=2)
 grid()
 
 plot (agg_data[,c(1,2)],pch=16,col = bmmb::cols[2:5][factor(agg_data[,3])], 
-      cex=ptcex)
+      cex=ptcex,xlab="f0 (Hz)",ylab="VTL (cm)",cex.lab=1.3,cex.axis=1.3)
 grid()
 
 ```
 
-It may be easier to see what we mean by considering figure \@ref(fig:F11-2), which attempts to present our point in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds to the middle plot in figure \@ref(fig:F11-1). When we have two quantitative predictors, our models predict values along **planes** rather than lines. If we want to predict apparent height based on speaker f0 and VTL, that is basically asking: Can we predict the height of a point in our 3-dimensional space based on its x and y-axis location? 
+It may be easier to see what we mean in figure \@ref(fig:F11-2), which attempts to present our points in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds (more or less) to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds (more or less) to the middle plot in figure \@ref(fig:F11-1). When we have two quantitative predictors, our models predict values along **planes** rather than lines. If we want to predict apparent height based on speaker f0 and VTL, we are basically asking: Can we predict the height of a point in our 3-dimensional space based on its x and y-axis location? 
 
-For example, imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the error) still applies to our models.
-
-```{r F11-2, fig.height = 5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in the figure above. (right) The same as the left plot but the cube has been rotated 90 debrees counter-clockwise.', echo = FALSE, cache = TRUE}
+```{r F11-2, fig.height = 4.5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in the figure above. (right) The same as the left plot but the cube has been rotated 90 debrees counter-clockwise.', echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 11.2
 ################################################################################
 agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data, FUN=mean)
+colnames(agg_data) = c("f0","VTL","C_v","Height")
+
 
 par (mfrow = c(1,2), mar = c(0,1,0,2), oma = c(0,0,0,0))
 
 tmp = agg_data[,c(2,1,4)]
 s3d = scatterplot3d::scatterplot3d (tmp, color = bmmb::cols[2:5][factor(agg_data[,3])],
                      pch=16, angle = 55,type = "p",ylim=c(90,310), cex.symbols=rev(ptcex)*.9)
-my.lm <- lm(height ~ f0+vtl, data = agg_data)
+my.lm <- lm(Height ~ f0+VTL, data = agg_data)
+#s3d$plane3d(my.lm, col = 1)
 
-s3d = scatterplot3d::scatterplot3d (agg_data[,-3], color = bmmb::cols[2:5][factor(agg_data[,3])],
-                     pch=16, angle = 55,type = "p",xlim=c(90,310), cex.symbols=rev(ptcex)*.9)
-my.lm <- lm(height ~ f0+vtl, data = agg_data)
-#s3d$plane3d(my.lm, col = 2)
+s3d = scatterplot3d::scatterplot3d (agg_data[,-3],pch=16, angle = 155,
+                                    color = bmmb::cols[2:5][factor(agg_data[,3])],    
+                                    type = "p",xlim=c(90,310),
+                                    cex.symbols=rev(ptcex)*.9)
+my.lm <- lm(Height ~ f0+VTL, data = agg_data)
+s3d$plane3d(my.lm, col = 1,lty=3, draw_polygon=TRUE,
+            polygon_args = list(col = rgb(0, 0, 0, 0.2)))
 ```
 
-In \@ref(eq:11-1) we see that that the height of the plane along the $z$ axis is determined by an intercept ($a$) plus the product of the x-axis coordinate and its slope ($b$) and the product of the y-axis coordinate and its slope. When we fit a model that includes two quantitative predictors, the model represents the planes it estimates using their $a$, $b$, and $c$ parameters. 
+For example, any given point in the room you are sitting in right now can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the error) still applies to our models. In the right plot of figure \@ref(fig:F11-2), we see the plane that results in the smallest residuals between our points and the plane along the apparent height axis.   
+
+In \@ref(eq:11-1) we see that that the height of the plane along the z axis is determined by an intercept ($a$) plus the product of the x-axis coordinate and its slope ($b$), and the product of the y-axis coordinate and its slope ($c$). When we fit a model that includes two quantitative predictors, the model represents the planes it estimates using their $a$, $b$, and $c$ parameters. 
   
 $$
 \begin{equation}
@@ -90,22 +97,22 @@ z =  \mathrm{a} + \mathrm{b} \times x + \mathrm{c} \times y
 \end{equation}
 $$
 
-Since the plane has two dimensions it has two slopes: A field can be uphill/downhill away from you, but also be up/downhill left to right. The slope coefficients for each quantitative predictor change the slope of the plane independently for each dimension. In fact, the slope of each predictor reflects the expected change according to that predictor when all other predictors are *held constant*. The intercept will slide the planes up/down without changing their slopes along either dimension. 
+Since the plane has two dimensions it has two slopes: A field can be uphill/downhill away from you, but also be up/downhill left to right. The slope coefficients for each quantitative predictor change the slope of the plane independently for each dimension. In fact, the slope of each predictor reflects the expected change in the dependent variable when all other predictors are *held constant*. The intercept of the model slide the planes up/down the z axis without changing their slopes along either the x or y dimensions. 
 
-Our discussion above has been entirely about planes, however, your model can include any number of quantitative predictors. The interpretation of these models is a simple continuation of the expansion of models specifying lines to those specifying planes. If your model has $n$ quantitative predictors, your data specifies points in an $n+1$ dimensional space, where dimension $n+1$ represents the dependent variable. Residuals in such models would represent the difference between the surface of the $n$ dimensional shape specified by the predictors and the position of each point along the $n+1$ dimension. 
+Our discussion above has been entirely about planes, and we will stick to two quantitative predictors for our models. However, your model can include any number of quantitative predictors, it just gets a harder to have good intuitions about the geometry involved. If your model has $n$ quantitative predictors, your data specifies points in an $n+1$ dimensional space, where dimension $n+1$ represents the dependent variable. Residuals in such models represent the difference between the surface of the $n$ dimensional shape specified by the predictors, and the position of each point along the $n+1$ dimension. 
   
 ## Interactions between quantitative predictors
 
-Models with two quantitative predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by the **cross-product**, the multiple, of the two variables. We can add this term to equation representing our model with two quantitative predictors as in the equation below. It's common to refer to this term as the 'interaction' between our quantitative predictors, and we will adopt this convention, just keep in mind that we are actually referring to the cross product of the two variables.  
+Models with two quantitative predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by adding a new predictor, the **cross-product** (i.e. $x_1 \times x_2$) of the two variables. We can add a term representing the interaction between our two quantitative predictors to equation \@ref(eq:11-2). It's common to refer to this term as the 'interaction' between our quantitative predictors, and we will adopt this convention. Just keep in mind that we are actually referring to the cross product of the two variables.  
 
 $$
 \begin{equation}
 z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times x \times y)
-(\#eq:F11-2)
+(\#eq:11-2)
 \end{equation}
 $$
 
-In general, interaction terms are parameters that allow for the effect of a predictor to vary according to the value of some other predictor. When it comes to quantitative predictors, an interaction means that the slope of each predictor continuously increase/decreases as a function of the value of the *other* predictor. Consider the equation below which omits the terms for our $y$ variable for the sake of simplicity. First, let's factor out the $x$ form the second and third terms on the right. When we do this, we can see that the slope for the $x$ dimension, $b$, will vary as a function of the value of $y$.
+In general, interaction terms are parameters that allow for the effect of a predictor to vary according to the value of some other predictor. When it comes to quantitative predictors, an interaction means that the slope of each predictor continuously increases/decreases as a function of the value of the *other* predictor. Consider the equation below which omits the term $(c \times y)$ for the sake of simplicity. If we factor out the $x$ form the second and third terms on the right. When we do this, we can see that the slope for the $x$ dimension, $b$, will vary as a function of the value of $y$ and the interaction coefficient $d$.
 
 $$
 \begin{equation}
@@ -113,11 +120,11 @@ $$
 z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{d} \times x \times y) \\
 z =  \mathrm{a} + (\mathrm{b} + \mathrm{d} \times y) \times x \\
 \end{split}
-(\#eq:F11-3)
+(\#eq:11-3)
 \end{equation}
 $$
 
-Imagine a case where the slope ($b$) along the $x$ dimension is fixed at 2 and the interaction term ($d$) is equal to zero. When this happens the slope of $x$ is constant and does not change based on the value of $y$. This is a case where the is no interaction between $x$ and $y$. 
+Imagine a case where the slope ($b$) along the $x$ dimension is fixed at 2 and the interaction term ($d$) is equal to zero. In this case the is no interaction between $x$ and $y$. When this happens the slope of $x$ is constant and does not change based on the value of $y$, as in \@ref(eq:11-4). 
 
 $$
 \begin{equation}
@@ -126,38 +133,38 @@ b = 2, \; d = 0 \\
 z =  \mathrm{a} + (2 + 0 \times y) \times x \\
 z =  \mathrm{a} + 2  \times x \\
 \end{split}
-(\#eq:F11-4)
+(\#eq:11-4)
 \end{equation}
 $$
 
-When the interaction term has some non-zero value (e.g. 1), then we *will* see the slope along $x$ change as a function of the value of $y$. Below we see that as $y$ increases from 1 to 5, the effective slope along the $x$ axis increases in value.   
+Now consider a situation where the interaction term has some non-zero value (e.g. 1). In this case we *will* see the slope along $x$ change as a function of the value of $y$. In  \@ref(eq:11-5) we see that as $y$ increases from 1 to 5, the effective slope along the $x$ axis increases from 3 to 7. This reasoning also holds for the $y$ dimension and also means that negative interactions result in a *decrease* in slopes as the value of variables increase.   
 
 $$
 \begin{equation}
 \begin{split}
-d = 1 , \; y = 1   \\
+b = 2 , \; d = 1 , \; y = 1   \\
 z =  \mathrm{a} + (2 + 1 \times 1) \times x \\
 z =  \mathrm{a} + 3 \times x \\ \\ 
-d = 1 , \; y = 5   \\
+b = 2 , \; d = 1 , \; y = 5   \\
 z =  \mathrm{a} + (2 + 1 \times 5) \times x \\
 z =  \mathrm{a} + 7 \times x \\
 \end{split}
-(\#eq:F11-5)
+(\#eq:11-5)
 \end{equation}
 $$
 
-This reasoning also holds for the $y$ dimension and also means that negative interactions result in a *decrease* in slopes as the value of variables increases. This is obviously not flat and not a plane anymore, but rather a **hyperbolic parabaloid**. Sometimes these sorts of surfaces are referred to as **saddle surfaces** because they contain what's known as a **saddle point**, a point where the slopes along the x and y dimension are both equal to zero. Informally, a saddle point can be thought of as the flat spot in the middle of a shape that curves along two dimensions in a manner resembling a horse saddle. We're often going to refer to hyperbolic parabaloids as *saddles* because their full name is a bit of a mouthful, and because we are mainly interested in contrasting these with planes. However, it's important to keep in mind that hyperbolic parabaloids are one among many types of saddle surface and not the *only* type of saddle surface. 
+The inclusion of cross-product terms means that we are not modeling variation along planes anymore, but rather along **hyperbolic parabaloids**. Sometimes these sorts of surfaces are referred to as **saddle surfaces** because they contain what's known as a **saddle point**, a point where the slopes along the x and y dimension are both equal to zero. Informally, a saddle point can be thought of as the flat spot in the middle of a shape that curves along two dimensions in a manner resembling a horse saddle. We're often going to refer to hyperbolic parabaloids as *saddles* because their full name is a bit of a mouthful, and because we are mainly interested in contrasting these with planes. However, it's important to keep in mind that hyperbolic parabaloids are one among many types of saddle surface and not the *only* type of saddle surface. 
 
 The function for a hyperbolic parabaloid can be seen below, where the height of the surface is equal to the product of some parameter $d$ and its $x$ and $y$ coordinates. 
 
 $$
 \begin{equation}
 z = d \times x \times y 
-(\#eq:F11-6)
+(\#eq:11-6)
 \end{equation}
 $$
 
-So, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:F11-6). When our models include effects for $x$, $y$, *and* their interactions, we are effectively modeling a surface that combined a plane and a saddle shape, as in \@ref(eq:F11-2). In figure \@ref(fig:F11-3) we can see a comparison of a plane and two saddle shapes. In the middle row on the left we can imagine that if we were walking 'into' the plot the ground would first be sloping down left to right. However, as we proceeded into the plot the ground would gradually change so that it it sloping up from left to right further into the figure. 
+So, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:11-6). When our models include effects for $x$, $y$, *and* their interactions, we are effectively modeling a surface that combines a plane and a saddle shape, as in \@ref(eq:11-2). In figure \@ref(fig:F11-3) we can see a comparison of a plane in the top row and a saddle shape in the middle row. In the middle row on the left we can imagine that if we were walking 'into' the plot the ground would first be sloping down left to right. However, as we proceeded into the plot the ground would gradually change so that it it sloping up from left to right further into the figure. In other words, the left-to-tight slope would gradually increase as we walk further into the plot.  
 
 ```{r F11-3, fig.height = 6, fig.width = 8, fig.cap='(top row) Three perspectives of the same plane. (middle row) Three perspectives of the same saddle shape. (bottom row) Three perspectives of the sum of the plane and the saddle shape in the top two rows.', echo = FALSE, cache = TRUE}
 
@@ -190,39 +197,42 @@ persp(x, y, z, col = bmmb::cols[4],theta = 45,zlim = c(-3,5))
 
 ```
 
-We can combine a plane and a saddle, as in the bottom row of figure \@ref(fig:F11-3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. 
+We can combine a plane and a saddle, as in the bottom row of figure \@ref(fig:F11-3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. Notice that all we really did was add the term for the saddle shape to the plane in \@ref(eq:11-2). 
 
 $$
 \begin{equation}
 z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times x \times y)
-(\#eq:F11-7)
+(\#eq:11-7)
 \end{equation}
 $$
 
-When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use in the cross product term. For example, consider below where we generate two samples of 100 random Gaussian variables (`x1, x2`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated and yet their cross product (`x1x2`) is strongly correlated with both of them. This is because when variables are far from zero, the cross product between two variables will always be greater when one of the variables is greater. 
+When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use in the cross product term. For example, below where we generate two samples of 100 random Gaussian variables (`x, y`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated (-0.00099) and yet their cross product (`xy`) is strongly correlated with both of them (0.683, and 0.729). 
 
 ```{r}
 set.seed(1)
-x1 = rnorm (100,500,1)
-x2 = rnorm (100,500,1)
-x1x2 = x1*x2
+x = rnorm (100,500,1)
+y = rnorm (100,500,1)
+xy = x*y
 
-cor (cbind(x1,x2,x1x2))
+cor (cbind(x,y,xy))
 ```
 
-On the other hand, consider a situation where `x1` and `x2` were centered (`x1_c, x2_x`). Now, their cross product (`x1x2_c`) will not always be greater when either variable is greater, it will only be large when both variables have values above their mean and may be negative when even one does not. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and that lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routine whenever you plan to include interactions between these in your models. 
+This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables is greater magnitude. In other words, the value of $x \times (y+a)$ will *always* be greater than the value of $x \times y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative. 
+
+The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_x`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and that lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models. 
 
 ```{r}
-x1_c = x1 - mean (x1)
-x2_c = x2 - mean (x2)
-x1x2_c = x1_c*x2_c
+x_c = x - mean (x)
+y_c = y - mean (y)
+xy_c = x_c*y_c
 
-cor (cbind(x1_c,x2_c,x1x2_c))
+cor (cbind(x_c,y_c,xy_c))
 ```
 
 ### Data and research questions
 
-The models we fit in chapter 9 and 10 were missing an obvious and important predictor: The fundamental frequency of the speaker's voice (f0). The fundamental frequency of a sound is the main acoustic correlate of perceived pitch. We know from previous studies that, in general, speakers with lower speaking f0s tend to be identified as taller (see chapter X for a discussion of this). In this section, we're going to fit a model that tries to predict apparent height from VTL and f0, and the interaction of the two. 
+The models we fit in chapter 9 and 10 were missing an obvious and important predictor: The fundamental frequency of the speaker's voice (f0). The fundamental frequency of a sound is the main acoustic correlate of perceived pitch. We know from previous studies that, in general, speakers with lower speaking f0s tend to be identified as taller (see chapter 13 for a discussion of this). In this section, we're going to fit a model that tries to predict apparent height from VTL, f0, and the interaction of the two. 
+
 Below we load our packages and data, and center our quantitative predictors. We also scale f0 so that it has a reasonably similar magnitude as the VTL effect. Specifically, the average difference in VTL between adult females and males is about 2 cm, and the difference in f0 is about 100 Hz. This means that is we divide f0 by 100 the difference between men and women is about 1 unit, comparable to the 2 unit difference in VTL. 
   
 ```{r, warning=FALSE, message=FALSE}
@@ -246,11 +256,11 @@ Q1) What do we do with all these parameters? How do we know what to focus on and
 
 ### Description of the model
 
-We're going to begin with a model that includes all possible interactions between our predictors, and also includes listener-dependent versions of all of our 'fixed' effects predictors. Models of this sort are sometimes referred to as **maximal** models because they include all predictors, interactions, and 'random effects' supported by the data. Our model formula is:
+We're going to begin with a model that includes all possible interactions between our predictors, and also includes listener-dependent versions of all of our 'fixed' effects predictors. Models of this sort are sometimes referred to as **maximal** models because they include all predictors, interactions, and 'random effects' supported by the data. When we say 'supported by the data', what we mean is that certain parameters cannot be estimated given the data you have, thought maybe they could have been estimated in principle. For example, notice that we don't include any speaker-dependent predictors in our model (other than intercepts). This is because each speaker had a single f0 and VTL, and many were only identified as either male or female, or only as either adults or children. As a result, estimating these interactions is not *supported* by our data. Our model formula is:
 
 `height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`
 
-We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is way too long at this point. However, we can talk about all of our model coefficients and what they mean for our model. Below is an 'expanded' version of our model that spells out all of the included parameters.
+We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is too long at this point, and all of the required elements have already been presented and discussed at this point. However, we can talk about all our model coefficients and what they mean for our model. Below is an 'expanded' version of our model formula that spells out all of the included parameters.
 
 ```
 height ~ Intercept + vtl + f0 + A + G + A:G1 + vtl:f0 + vtl:A + vtl:G1 + f0:A + 
@@ -266,12 +276,14 @@ c = f0        + f0:A     + f0:G     + f0:A:G
 d = vtl:f0    + vtl:f0:A + vtl:f0:G + vtl:f0:A:G
 ```
 
-We said we weren't going to provide a formal definition of this model,but if we had the first few lines might have looked something like this: 
+Notice that there is a symmetry to the parameters for each 'dimension' in our model. Each one contains a 'main effect' term (`Intercept,A, G, A:G`), an interaction with apparent age (`A, vtl:A, f0:A, vtl:f0:A`), an interaction with apparent gender (`G, vtl:G, f0:G, vtl:f0:G`), and an interaction with apparent age *and* gender (`A:G, vtl:A:G, f0:A:G, vtl:f0:A:G`). Notice also that this relatively complex model has been built up out of parts: We discussed the decomposition of intercepts into multiple factors, as in $a$ in chapter 7. We discussed the inclusion of quantitative predictors and the decomposition of variation in these, as in $b$ in chapter 9. Now, we discuss the addition of more quantitative predictors ($c$) and the interactions between these ($d$). Effectively, we have been incrementally adding complexity to our models and from here on increasing complexity mostly consists of sticking together these basic components in more complicated manners. 
+
+We said we weren't going to provide a formal definition of this model, but if we had, the first few lines might have looked something like this: 
 
 $$
 \begin{equation}
 \begin{split}
-height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
+\mathrm{height}_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
 \mu_{[i]} = a_{[i]} +  (b_{[i]} \times \mathrm{vtl}_{[i]}) + (c_{[i]} \times \mathrm{f0}_{[i]}) + (d_{[i]} \times \mathrm{f0}_{[i]} \times \mathrm{vtl}_{[i]}) \\ \\
 \mathrm{and \; more} \ldots
 \end{split}
@@ -279,11 +291,11 @@ height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\
 \end{equation}
 $$
 
-And the lines below that would have described $a$, $b$, $c$, and $d$ as the sum of the appropriate model parameters. Notice that there is a symmetry to the parameters for each 'dimension' in our model. Each one contains a 'main effect' term (`Intercept,A, G, A:G`), an interaction with apparent age (`A, vtl:A, f0:A, vtl:f0:A`), an interaction with apparent gender (`G, vtl:G, f0:G, vtl:f0:G`), and an interaction with apparent age *and* gender (`A:G, vtl:A:G, f0:A:G, vtl:f0:A:G`). 
+And the lines below that would have described $a$, $b$, $c$, and $d$ as the sum of the appropriate model parameters. 
 
-Notice also that this relatively complex model has been built up out of parts: We discussed the decomposition of intercepts into multiple factors, as in $a$ in chapter 7. We discussed the inclusion of quantitative predictors and the decomposition of variation in these, as in $b$ in chapter 9. Now, we discuss the addition of more quantitative predictors ($c$) and the interactions between these ($d$). Effectively, we have been incrementally adding complexity to our models and from here on increasing complexity mostly consists of sticking together these basic components in more complicated manners. 
-  
 ### Fitting the model
+
+We fit our model using the code below:
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -298,7 +310,7 @@ priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
 
 model_height_vtl_f0 =  
-  brms::brm (height ~ (vtl+f0)*A*G + ((vtl+f0)*A*G|L) + (1|S), data = exp_data, 
+  brms::brm (height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S), data = exp_data, 
              chains = 4, cores = 4, warmup = 1000, iter = 5000, thin = 4, 
              prior = priors, family = "student")
 ```
@@ -311,21 +323,21 @@ model_height_vtl_f0 = bmmb::get_model ('11_model_height_vtl_f0.RDS')
 model_height_vtl_f0 = readRDS ('../models/11_model_height_vtl_f0.RDS')
 ```
 
-Normally this is around where we would discuss and interpret the characteristics of our model. We're going to leave this for chapter 13, where we present a model very similar to this in a format similar to what you might see in an academic journal. Instead, we will discuss some advantages of working with Bayesian models over some more 'traditional' (although still modern) approaches. 
+Normally this is where we would discuss and interpret the characteristics of our model. We're going to leave this for chapter 13, where we present a model very similar to this in a format similar to what you might see in an academic journal. Instead, we will discuss some advantages of working with Bayesian models over some more 'traditional' (although still modern) approaches. 
 
 ### Advantages of Bayesian multilevel models for large models
 
-At this point we have enough model components to build very large and complicated models, like the one we fit above. Traditionally, models with many predictors have presented three general problems. First, a model with 'too many' predictors may return spurious values for the 'extra' predictors. Sometimes these spurious values are difficult to distinguish from the 'real' parameters, leading to incorrect conclusions. Second, the model may not be able to fit/converge on a solutions, meaning you can't get the model coefficients. Regardless of the approach to parameter estimation, more-complicated models make it more and more difficult for any estimator to 'find' the optimal parameter values given the data. Third, it can be difficult to interpret a model with *hundreds* (or thousands) of parameters. This becomes especially problematic when considered together with problem (1), that some of these values may simply represent noise. In this section we're going to discuss how working with multilevel Bayesian models can naturally help us with problems (1) and (2) above. In the following section we will discuss how our models can also help us resolve the third problem above.  
+At this point we have enough model components to build very large and complicated models, like the one we fit above. Traditionally, models with many predictors have presented researchers with the three general problems outlined at the beginning of this chapter. In this section we're going to discuss how working with multilevel Bayesian models can help us with problems (1) and (2) above. In the following section we'll discuss how our models can also help us resolve problem (3) above.  
 
-The Bayesian models fit by `brms` have three properties that help resolve the first two problems above. First, the use of prior probabilities and shrinkage, when properly applied, tend to 'pull' weakly-supported parameter values closer to the group mean (or to zero). This can help reduce many of the problems associated with models with large numbers of parameters (cite). Second, the fact that confidence intervals are provided for all parameters helps distinguish random variation from variation that is unlikely to be zero. Third, the fact that our models do not try to find *the* best solution, but simply sample the posterior distribution, relieves much of the pressure associated with finding *the* best solution for models with large numbers of parameters. 
+The Bayesian models fit by `brms` have three properties that help minimize the first two problems above. First, the use of prior probabilities and shrinkage, when properly applied, tend to 'pull' weakly-supported parameter values closer to the group mean (or to zero). This can help reduce many of the problems associated with models with large numbers of parameters (cite). Second, the fact that credible intervals are provided for all parameters helps distinguish random variation from variation that is unlikely to be zero. Third, the fact that our models do not try to find *the* best solution, but simply sample the posterior distribution, relieves much of the pressure associated with finding *the* best solution for models with large numbers of parameters. 
 
-To this point we have not discussed the `lmer` function very much, apart from in 'Frequentist corner' at the end of some chapters. The `lmer` function (linear mixed-effects regression) is an extremely popular and extremely useful function. In general, `lmer` and an equivalent model specified in `brms` should provide reasonably similar answers when fitting the same models. However, there are some important differences between the two approaches. First, rather than provide a distribution of sample for each parameter, `lmer` returns *point estimates* representing the *best* values of parameters. This can cause a problem when parameters are bounded or grow without bound. 
+To this point, we have not discussed the `lmer` function (from the `lme4` package) very much apart from in 'Frequentist corner' at the end of some chapters. The `lmer` function (linear mixed-effects regression) is an extremely popular and extremely useful function. In general, `lmer` and an equivalent model specified in `brms` should provide reasonably similar models when fir to the same data. However, there are some important differences between the two approaches. First, rather than provide a distribution of samples for each parameter, `lmer` returns *point estimates* representing the *best* values of parameters. This can cause a problem when parameters are bounded or grow without bound. 
 
 For example, standard deviation parameters (e.g., $\sigma$) cannot be 0 or negative, but sometimes they are very, very small. So, when `lmer` tries to find the 'best' value, it can get closer, and closer, and closer to zero, leading to problems involving calculations with very small values (e.g., as $x$ approaches $0$, $1/x$ approaches $\infty$). In contrast, Bayesian models don't try to find the single 'best' value but instead collect a series of samples. As a result, the models are less likely to encounter problems when they try to estimate values that are very close to boundaries (they just 'bounce' of the boundary as they randomly sample). 
 
-A second difference between the `lmer` estimation method and that of our Bayesian multilevel models is that `lmer` doesn't use prior probabilities to estimate any of its parameters. This can cause some problems when estimating a large number of parameters without large amounts of data. In contrast, `brms` applies 'shrinkage' to all its parameters (at least in principle), which can help avoid some of the problems encountered by `lmer`. 
+A second difference between the `lmer` estimation method and that of our Bayesian multilevel models is that `lmer` doesn't use prior probabilities to estimate any of its parameters. This can cause some problems when estimating a large number of parameters without large amounts of data. In contrast, `brms` can apply shrinkage to all its parameters (at least in principle), which can help avoid some of the problems encountered by `lmer`. 
 
-We're going to compare the output of `lmer` and `brms` for the model we fit above. Just to be clear, our intention in comparing `lmer` and `brms` is not to compare different statistical *philosophies* or epistemological claims. Our aim is much, much more modest than that. We simply wish to compare `brms`, an approach that 1) uses priors, 2) provides confidence intervals, and 3) estimates based on posterior samples, to a broadly similar approach that does not (`lmer`). Below we fit a model equivalent to `model_height_vtl_f0` using `lmer`.
+We're going to compare the output of `lmer` and `brms` for the model we fit above. Just to be clear, our intention in comparing `lmer` and `brms` is not to compare different statistical *philosophies* or epistemological systems. Our aim is much, much more modest than that. We simply wish to compare `brms`, an approach that 1) uses priors, 2) provides confidence intervals, and 3) estimates based on posterior samples, to a broadly similar approach that does not (`lmer`). Below we fit a model equivalent to `model_height_vtl_f0` using `lmer`.
 
 ```{r, eval = FALSE}
 lme_model_height_vtl_f0 =
@@ -343,15 +355,6 @@ lme_model_height_vtl_f0 = readRDS ('../models/11_lme_model_height_vtl_f0.RDS')
 ```
 
 We won't show the model print statements as they are both quite large, but we compare the estimates of our fixed effects in figure \@ref(fig:F11-4). Clearly, the two approaches provide very similar estimates for the model fixed effects. That's reassuring because if results differed dramatically for approximately the same model based on the software used, we would need to think very carefully about the causes and possible meaning of these differences.
-
-Since our model has a large number of parameters we're going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height. This is a similar approach to Kusch's Region of Practical Equivalence (ROPE, cite). Rather than worrying about whether things are exactly zero or not, Kruschke suggests we can think about when things are so small that they may as well be zero. For human height, apparent and veridical, we define meaningful differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We establish this lower limit simply based off the fact that people may describe themselves as 175 cm (or 5'10.5") but rarely make distinctions smaller than that (e.g. people rarely distinguish 5'10.5" and 5'10.75"). In addition, governments, doctors and even institutions like the NBA which are extremely interested in height will rarely measure to within less than 1 cm (half an inch). As a result, although a difference of 0.1 cm may very well be consistently different from zero, in the context of apparent height it likely has little to no practical significance.
-[SB - update results below.] 
-
-We will discuss the Bayesian model fixed effects, which you can see by running `fixef(model_height_vtl_f0)`. Our model suggests non-zero slopes for our plane along the VTL (mean = 3.12, s.d. = 0.64, 95% C.I = [1.85, 4.4]) and f0 dimensions (mean = -3.52, s.d. = 1.45, 95% C.I = [-6.32, -0.63]). However, there is not much reliable evidence that the `vtl:f0` reliably affects outcomes (mean = -1.28, s.d. = 1.05, 95% C.I = [-3.32, 0.81]). This means that, overall, our responses can be predicted by a plane along f0 and VTL without curving the plane into a saddle shape. The `vtl:A1` interaction suggests a differing use of VTL based on apparent adultness (mean = -2.02, s.d. = 0.51, 95% C.I = [-3.03, -1.02]), but there do not appear to be any other meaningful interactions between VTL, f0 and the other predictors. 
-
-In terms of intercept terms (i.e. those not interacting with quantitative predictors), there is a large effect for apparent age (mean = 7.04, s.d. = 1.18, 95% C.I = [4.69, 9.35]) but no main effect for apparent gender (mean = -0.17, s.d. = 0.75, 95% C.I = [-1.63, 1.36]). However, the interaction between apparent age and apparent gender (`A1:G1`) had a 95% credible interval that did not overlap with zero and had a posterior mean value of -1.72 cm (s.d. = 0.61, 95% C.I = [-2.9, -0.5]). This indicates that although apparent gender had an average effect of about 0 cm on apparent height it may have had meaningful, but opposite, effects based on the apparent age of the speaker. 
-
-In order to interpret our predictors in the presence of interactions, we need to consider the simple effects. For example, in order to consider the `vtl:A1` interaction we need to consider the simple effect of VTL for apparent children, and then for apparent adults. This is done in the manner outlined in chapter 9 and 10 for quantitative predictors, independently for each predictor and interaction (i.e. cross-product) between predictors.  We're not going to go over the interpretation of the coefficients and the reconstruction of the simple effects here, as this will be carried out in chapter 13.  
 
 ```{r F11-4, fig.height = 3.5, fig.width = 8, fig.cap='A comparison of fixed effect estimates provided by the brms (red) and lmer (black) models. The brms intervals are the 95% credible intervals, those for lmer are twice the standard error of the parameter estimate.', echo = FALSE, cache = TRUE}
 
@@ -374,17 +377,15 @@ segments((1:15)+.2, pts-2*err_bars,(1:15)+.2, pts+2*err_bars,lwd=2,col=2)
 abline (h = c(-0.5,0.5), lty = 3, col = bmmb::cols[6],lwd=2)
 ```
 
-Figure \@ref(fig:F11-5) presents some ways in which the information provided by `lmer` and `brms` differ. In the top row we see a comparison of the 'random effects' standard deviation estimates provided by our two models, and the error terms estimated by our two models. For example, the standard deviation of the listener f0 'random effect' ($\sigma_{f0 \colon L}$) represents the amount of variation around zero between the listener-specific effects for f0 in each model. As we can see, the models provide reasonably similar standard deviation estimates for most parameters. However, note that the `brm` models provide credible intervals for all parameters, while the `lmer` model only provides point estimates for these parameters. 
+Since our model has a large number of parameters we're going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height. This is a similar approach to Kruschke's Region of Practical Equivalence (ROPE, cite). Rather than worrying about whether things are exactly zero or not, Kruschke suggests we think about when things are so small that they may as well be zero. For human height, apparent and veridical, we define meaningful differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We establish this lower limit simply based off the fact that people may describe themselves as 175 cm (or 5'10.5") but rarely make distinctions smaller than that (e.g. people rarely distinguish 5'10.5" and 5'10.75"). In addition, governments, doctors and even institutions like the NBA which are extremely interested in height will rarely measure to within less than 1 cm (half an inch). As a result, although a difference of 0.1 cm may very well be consistently different from zero, in the context of apparent height it likely has little to no practical significance.
 
-The lack of intervals on parameter estimates makes it difficult to 'rule out' variance parameters since they will *never* equal exactly zero. So, we will always have non-zero numbers for these parameters, and 'secretly' some of these are zero or nearly zero. In addition, variance components very close to zero can cause problems when estimating our models. For example, fitting our model with `lmer` resulted in the following error: 
+We will discuss the Bayesian model fixed effects, which you can see by running `fixef(model_height_vtl_f0)`. Our model suggests non-zero slopes for our plane along the VTL (mean = 3.12, s.d. = 0.64, 95% C.I = [1.85, 4.4]) and f0 dimensions (mean = -3.52, s.d. = 1.45, 95% C.I = [-6.32, -0.63]). However, there is not much evidence that the cross-product term (`vtl:f0`) has a meaningful non-zero value (mean = -1.28, s.d. = 1.05, 95% C.I = [-3.32, 0.81]). This means that our responses can be predicted by a plane along f0 and VTL without curving the plane into a saddle shape. The `vtl:A1` interaction suggests a differing use of VTL based on apparent adultness (mean = -2.02, s.d. = 0.51, 95% C.I = [-3.03, -1.02]), but there do not appear to be any other meaningful interactions between VTL, f0 and the other predictors. 
 
-`boundary (singular) fit: see help('isSingular')`
+In terms of intercept terms (i.e. those not interacting with quantitative predictors), there is a large effect for apparent age (mean = 7.04, s.d. = 1.18, 95% C.I = [4.69, 9.35]) but no main effect for apparent gender (mean = -0.17, s.d. = 0.75, 95% C.I = [-1.63, 1.36]). However, the interaction between apparent age and apparent gender (`A1:G1`) had a 95% credible interval that did not overlap with zero and had a posterior mean value of -1.72 cm (s.d. = 0.61, 95% C.I = [-2.9, -0.5]). This indicates that although apparent gender had an average effect of about 0 cm on apparent height it may have had meaningful, but opposite, effects based on the apparent age of the speaker. 
 
-Which warns us that some of the variance components we are trying to estimate are quite small. Because `brm` simply samples from the posterior and doesn't try to find *the* best model parameters, it does not run into these problems. 
+In order to interpret our predictors in the presence of interactions, we need to consider the simple effects. For example, in order to consider the `vtl:A1` interaction we need to find the simple effect of VTL for apparent children, and then for apparent adults. This is done in the manner outlined in chapter 9 for quantitative predictors, independently for each dimension (predictor or cross-product).  We're not going to go over the interpretation of the coefficients and the reconstruction of the simple effects here, as this will be carried out in chapter 13.  
 
-In addition, we can use our credible intervals to figure out which variance components are unlikely to matter: Variance components whose credible intervals are concentrated near zero. There are several such components in figure \@ref(fig:F11-5). In the *best case*, many of these components reflect a tiny amount of systematic variation in our outcomes and so are unlikely to matter much. Notice that it is difficult to predict which standard deviation parameters are distinguishable from zero based on their magnitude alone. This makes point estimates of limited utility for this purpose in the absence of intervals around our estimates.
-
-In the middle panel of figure  we see a comparison of the listener-dependent `A1` 'random effects' estimated using the two approaches. Just as with the estimates of the fixed effects in the middle panel of figure \@ref(fig:F11-4) we see a close alignment between the two. However, just as for our standard deviation terms we see that a lack of intervals around our estimates makes it difficult to compare our parameter estimates to specific values (such as zero). 
+Whereas figure \@ref(fig:F11-4) showed the similarity of our `lmer` and `brm` models, figure \@ref(fig:F11-5) presents some ways in which these models differ. In the top row we see a comparison of the 'random effects' standard deviation estimates provided by our two models, and the error terms (i.e., `sigma` or $\sigma$) estimated by our two models. For example, the standard deviation of the listener f0 'random effect' (`f0:L`, $\sigma_{f0 \colon L}$) represents the amount of variation around zero between the listener-specific effects for f0 in each model. As we can see, the models provide reasonably similar standard deviation estimates for many, if not most, parameters. However, note that the `brm` models provide credible intervals for all parameters, while the `lmer` model only provides point estimates for these.
 
 ```{r F11-5, fig.height = 6, fig.width = 8, fig.cap='Points and intervals represent means and 95% credible intervals for brms parameter estimates for `model_height_vtl_f0`. Crosses indicate point estimates provided in `lme_model_height_vtl_f0`. (top) Estimates of random effect standard deviations. (middle) Estimates for the listener dependent effects of apparent age. (bottom) Estimates of correlations between random effects.', echo = FALSE, cache = TRUE}
 
@@ -394,8 +395,9 @@ In the middle panel of figure  we see a comparison of the listener-dependent `A1
 
 Ssd = attr(VarCorr(lme_model_height_vtl_f0)[[1]],'stddev')
 Lsd = attr(VarCorr(lme_model_height_vtl_f0)[[2]],'stddev')
-lmer_vars = c(Lsd, Ssd, sigma(lme_model_height_vtl_f0))
-vars_final = bmmb::getsds(model_height_vtl_f0)
+lmer_vars = c(sigma(lme_model_height_vtl_f0), Lsd, Ssd)
+vars_final = bmmb::banova (model_height_vtl_f0, superpopulation =TRUE)
+vars_final = vars_final[vars_final$cluster != "fixefs",]
 
 layout (m=1:3, heights = c(.4,.3,.3))
 par (mar = c(7,4,.5,1))
@@ -418,38 +420,51 @@ bmmb::brmplot (corrs_brms, ylim = c(-.97,.97), las = 2, labels = "",line=FALSE,c
 abline (h=0)
 points (corrs_lme, cex=1.5,lwd=3,pch=4, col = bmmb::cols[12])
 
+
+
+
 ```
 
-Finally, in the bottom panel of figure \@ref(fig:F11-5) we compare the correlations for the listener random effects across the two models. Since there were 16 listener-dependent parameters, we needed to estimate 120 unique correlations between these parameters. As with our standard deviation parameters, `brms` gives us intervals while `lmer` returns point estimates. In addition, for the first time we see a substantial difference between the estimates provided by `lmer` and those provided by `brms`. This is likely a result of the fact that `lmer` does not apply something like partial pooling to its correlation estimates, either through the use of prior probabilities or other mechanisms. As a result, we see that the `lmer` estimates vary substantially around 0 while the `brms` estimates are all close to zero, and mostly have intervals that include zero. We see that in this case our Bayesian model protects us by: 1) Providing credible intervals for all parameters, letting us accept values of zero as likely, and 2) the LKJ prior we used for our random effect correlation matrices pulls weakly-supported correlations to zero, thereby protecting against spurious results. 
+The lack of intervals on parameter estimates makes it difficult to 'rule out' variance parameters since they will *never* equal exactly zero. So, we will always have non-zero numbers for these parameters, and 'secretly' some of these are zero or nearly zero. In addition, variance components very close to zero can cause problems when estimating our models. For example, fitting our `lmer` model resulted in the following error: 
 
-The fact that most of our correlation estimates are nearly zero not only lets us rule some out, but also focuses our attention on those correlations that *do* deviate from this pattern. For example, the third correlation from the left in the bottom panel of figure \@ref(fig:F11-5) represents the correlation between the listener-dependent intercepts and effects for apparent age. Although its 95% credible interval includes some very small values (mean = -0.38, s.d. = 0.17, 95% C.I = [-0.69, -0.01]), it seems reasonable that this correlation may in fact be negative and non-zero. In fact, we found this correlation in a previous model (section X) and also discussed why we think this correlation 'makes sense' (section X). 
+`boundary (singular) fit: see help('isSingular')`
+
+Which warns us that some of the variance components we are trying to estimate are quite small. Because `brm` simply samples from the posterior and doesn't try to find *the* best model parameters, it does not run into these problems. 
+
+We can use our credible intervals to figure out which variance components are unlikely to matter: Variance components whose credible intervals are concentrated near zero. There are several such components in figure \@ref(fig:F11-5). For example, consider the listener-dependent interaction between VTL and apparent gender `vtl:G1:L`. If this variation is non zero, in the *best case*, this component reflects a tiny amount of systematic variation in our outcomes and so is unlikely to matter much. Notice that it is difficult to predict which standard deviation parameters are distinguishable from zero based on their magnitude alone. This makes point estimates of limited utility for this purpose, in the absence of intervals around our estimates.
+
+In the middle panel of figure  we see a comparison of the listener-dependent `A1` 'random effects' estimated using the two approaches. Just as with the estimates of the fixed effects in the middle panel of figure \@ref(fig:F11-4), we see a close alignment between the two approaches. However, just as for our standard deviation terms we see that a lack of intervals around our `lmer` estimates makes it difficult to compare our parameter estimates to specific values (such as zero). 
+
+Finally, in the bottom panel of figure \@ref(fig:F11-5) we compare the correlations for the listener random effects across the two models. Since there were 16 listener-dependent parameters, we needed to estimate 120 unique correlations between these parameters. As with our standard deviation parameters, `brms` gives us intervals while `lmer` returns point estimates. In addition, for the first time we see a substantial difference between the estimates provided by `lmer` and those provided by `brms`. This is likely a result of the fact that `lmer` does not apply use partial pooling, or shrinkage, for its correlation estimates. As a result, we see that the `lmer` estimates vary substantially around 0 while the `brms` estimates are mostly close to zero and have intervals that include zero. We see that in this case our Bayesian model protects us by: 1) Providing credible intervals for all parameters, letting us accept values of zero as likely, and 2) the LKJ prior we used for our random effect correlation matrices pulls weakly-supported correlations to zero, thereby protecting against spurious results. 
+
+The fact that most of our correlation estimates are nearly zero not only lets us rule many out, but also focuses our attention on those correlations that *do* deviate from this pattern. For example, the third correlation from the left in the bottom panel of figure \@ref(fig:F11-5) represents the correlation between the listener-dependent intercepts and effects for apparent age. Although its 95% credible interval includes some very small values (mean = -0.38, s.d. = 0.17, 95% C.I = [-0.69, -0.01]), it seems reasonable that this correlation may in fact be negative and non-zero. In fact, we found this correlation in a previous model (section X) and also discussed why we think this correlation 'makes sense' (section X). 
   
 ## Bayesian Analysis of Variance
 
-The information we presented in the previous section can be used to consider which predictors, or groups of predictors, are important for understanding variation in the dependent variable. This approach becomes more and more useful as our models increase in complexity and we end up with dozens or hundreds of parameters that we then need to interpret. The framework to be presented here is outlined by by Gelman and colleagues in Gelman anova paper, Gelman and hill chapter 22, and Gelman et al BDA3 chapter. 
+The information we presented in the previous section can be used to consider which predictors, or groups of predictors, are important for understanding variation in the dependent variable. This approach becomes more and more useful as our models increase in complexity and we end up with dozens or hundreds of parameters that we then need to interpret. The framework to be presented here is outlined by by Gelman and colleagues in Gelman anova paper, Gelman and hill chapter 22, and Gelman et al BDA3 chapter (cite). 
 
-The analysis of variance (ANOVA) is a set of modeling techniques meant to help understand the components and sources of variation in a dependent variable. A 'traditional' ANOVA tries to **decompose** variation in the dependent variable into independent components so that it can relate combinations in order to carry out different statistical tests. If that statement makes no sense to you, that is because that approach is fundamentally different to the sorts of things we have been doing with our multilevel Bayesian models. We're not going to talk about a 'traditional' ANOVA in any detail here as that would involve the introduction of a *parallel universe* of statistical concepts and jargon that has not been discussed in this book. In addition, there are many excellent treatments on the subject including (cite myers and well and cite others). That being said, we can discuss how ANOVA features concepts that are very useful for Bayesian multilevel models. 
+The **analysis of variance** (**ANOVA**) is a set of modeling techniques meant to help understand the components of variation in a dependent variable. A 'traditional' ANOVA tries to **decompose** variation in the dependent variable into independent components. It then carries out different statistical tests by relating the different variance compoenents are ratios and comparing values to a reference distribution. If that statement makes no sense to you, that is because that approach is fundamentally different to the sorts of things we've been doing with our multilevel Bayesian models. We're not going to talk about a 'traditional' ANOVA in any detail here as that would involve the introduction of a *parallel universe* of statistical concepts and jargon that has not been discussed in this book. In addition, there are many excellent treatments on the subject including (cite myers and well and cite others). That being said, we can discuss how ANOVA features concepts that are very useful for Bayesian multilevel models. 
 
 At its core ANOVA consists of thinking of variation in the dependent variable as the sum of a set of **components of variation** related to the predictors in our model. For example, consider the formula for `model_four_groups` we fit in chapter 7:
 
 `height ~ C + (C|L) + (1|S)`
 
-This formula implies a model with a large number of parameters. These parameters can be thought of as consisting of 'batches' of thematically related coefficients. For example, we can think of the following batches of parameters:
+This formula implies a model with a relatively large number of parameters. These parameters can be thought of as 'batches' of thematically related coefficients. For example, we can think of the following batches of parameters:
 
-  * 3 parameters representing the fixed effects for apparent speaker category `C`.
+  * 3 parameters representing the fixed effects for apparent speaker category `C`, `C1, C2, C3`.
   * 15 parameters representing the listener-dependent intercepts. 
   * 45 (15 x 3) parameters representing the listener-dependent effects for apparent speaker category.  
   * 139 parameters representing the speaker-dependent intercepts. 
 
-We can think of the total variation in apparent height judgments as being composed of variation in each of these batches of parameters (among other things). In addition, each of these batches has a thematic or semantic link; these are not just parameters grouped at random. When we break up variation into thematically-grouped parameters, we are doing an **ANOVA-like decomposition** of variation in the dependent variable. We introduced this approach in chapter 7 without directly referring to ANOVA and have been using this approach to understand variation in our predictors in most of our models since then.  
-
-Here's what Gelman and Hill have to say about the analysis of variance in the context of multilevel models:
+Each of these batches has a thematic or semantic link; these are not just parameters grouped at random. When we break up variation into thematically-grouped parameters, we are doing an **ANOVA-like decomposition** of variation in the dependent variable. We introduced this approach in chapter 7 without directly referring to ANOVA and have been using this approach to understand variation in our predictors in most of our models since then.  Here's what Gelman and Hill have to say about the analysis of variance in the context of multilevel models:
 
 > "When moving to multilevel modeling, the key idea we want to take from the analysis of variance is the estimation of the importance of different batches of predictors (“components of variation” in ANOVA terminology). As usual, we focus on estimation rather than testing: instead of testing the null hypothesis that a variance component is zero, we estimate the standard deviation of the corresponding batch of coefficients. If this standard deviation is estimated to be small, then the source of variation is minor—we do not worry about whether it is exactly zero. In the social science and public health examples that we focus on, it can be a useful research goal to identify important sources of variation, but it is rare that anything is truly zero." (p. 490)
 
 > "the standard deviation of a set of coefficients gives a sense of their predictive importance in the model. An analysis-of-variance plot, which shows the relative scale of different variance components, can be a useful tool in understanding a model." (p. 492)
 
-Parameters that vary a lot reflect large differences in our dependent variable. These will be represented by large standard deviations. In contrast, parameters that do not vary much will be represented by small standard deviations. These parameters do not have a large effect on our data (since they do not vary much). For example, we can see in figure \@ref(fig:F11-5) that the standard deviation of listener-dependent intercepts ($\sigma_L$) is much larger than the listener-dependent interaction between VTL and apparent gender ($\sigma_{VTL \colon G \colon L}$). We can see that this directly relates to the variation of each batch of 'random effects' around zero, as shown in figure \@ref(fig:F11-6). Whether or not $\sigma_{VTL \colon G \colon L}$ is exactly zero, we can look at figure \@ref(fig:F11-6) and see that this predictor does not predict much variation in our dependent variable. As a result of this, by inspecting the standard deviations in figure \@ref(fig:F11-5) we can see that although there are a large number of predictors, only a couple are having any meaningful effect on apparent height judgments. 
+Batches of parameters that vary a lot from each other reflect large differences in our dependent variable across the parameters. These will be represented by large standard deviations. In contrast, parameters that do not vary much from each other will be represented by small standard deviations. These parameters do not have a large effect on our data (since they do not vary much). 
+
+For example, in figure \@ref(fig:F11-5) we see that the standard deviation of listener-dependent intercepts (`Intercept:L`, $\sigma_L$) is much larger than the listener-dependent interaction between VTL and apparent gender (`vtl:G1:L`, $\sigma_{VTL \colon G \colon L}$). We can see that this directly relates to the variation of each batch of 'random effects' around zero, as shown in figure \@ref(fig:F11-6). Whether or not $\sigma_{VTL \colon G \colon L}$ is *exactly* zero, we can look at figure \@ref(fig:F11-6) and see that this predictor does not predict much variation in our dependent variable. As a result of this, by inspecting the standard deviations in figure \@ref(fig:F11-5) we can see that although there are a large number of predictors, only a couple are having any meaningful effect on apparent height judgments. 
   
 ```{r F11-6, fig.height = 3, fig.width = 8, fig.cap='Listener-dependent intercepts (circles) and `vtl:G1` interactions (triangles).', echo = FALSE, cache = TRUE}
 
@@ -467,34 +482,34 @@ brmplot (ranef (model_height_vtl_f0)$L[,,"vtl:G1"], add = TRUE,
   
 Gelman and Hill distinguish two types of standard deviations for a 'random' effect with $J$ levels (p. 459) (emphasis ours):
 
-> "The **superpopulation** standard deviation, which represents the variation among the modeled probability distribution from which the were drawn, is relevant for determining the uncertainty about the value of a new group not in the original set of J." 
+> "The **superpopulation** standard deviation, which represents the variation among the modeled probability distribution from which they were drawn, is relevant for determining the uncertainty about the value of a new group not in the original set of J." 
 
 > "The **finite-population** standard deviation of the particular J values of [$\alpha_{[subj]}$] describes variation within the existing data." 
 
-So, the *finite-population* standard deviation terms reflect the variation we observe in our actual model parameters. This concept can be applied to batches of 'random' effects estimated with adaptive partial pooling and to 'fixed' effects estimated with fixed priors. The *superpopulation* standard deviation estimates correspond to the specific $\sigma_\beta$ term estimated by our model for some batch $\beta$ of 'random' effects. No analogue exists for our 'fixed' effects, and so we can only get superpopulation standard deviations for batches of parameters fit with adaptive partial pooling (i.e. 'random' effects). The authors note that (p. 464):
+So, the *finite-population* standard deviation terms reflect the variation we observe in our actual model parameters. This concept can be applied to batches of 'random' effects estimated with adaptive partial pooling and to 'fixed' effects estimated with fixed priors. For example, if your estimated parameters are -1, 0, and 1, your finite-population estimate would be directly based on these values. In contrast, the *superpopulation* standard deviation estimates correspond to the specific $\sigma_\beta$ term estimated by our model for some batch $\beta$ of 'random' effects. No analogue exists for our 'fixed' effects, and so we can only get superpopulation standard deviations for batches of parameters fit with adaptive partial pooling (i.e. 'random' effects). The authors note that (p. 464):
 
 > "The superpopulation [σ] and finite-population [s] standard deviations are not two different statistical “estimators” of a common quantity; rather, they are two different quantities that can both be estimated from the multilevel model. We can get a point estimate and uncertainty intervals for both. In general, the point estimates of σ and s will be similar to each other, but s will have less uncertainty than σ. That is, the variation is more precisely estimated for the finite population than the superpopulation. This makes sense because we have more information about the units we observe than the full population from which they are sampled."
 
 Gelman and colleagues suggest the following general process, that can be referred to as a **Bayesian analysis of variance**, or **BANOVA**:
 
-  1) Fit the model with the structure you think is required to capture the variation in the data. 
-  2) Calculate the superpopulation and finite-population standard deviations for predictors or groups of predictors. 
-  3) Make a plot comparing the magnitudes of different predictors, and of the uncertainty in the estimates. The authors refer to this as an **ANOVA plot**.
+  1) Fit the model with the structure you think is required to capture the variation in the data and answer your research questions. 
+  2) Calculate the finite-population (and/or superpopulation) standard deviations for predictors or groups of predictors. 
+  3) Make a plot comparing the magnitudes of different batches of predictors, and of the uncertainty in the estimates. The authors refer to this as an **ANOVA plot**.
   4) Us the ANOVA plot to make inferences about the relative importance of your predictors, and to guide your analysis. 
   
-We could potentially add a fifth step: 5) Refit reduced model if some components show little to no importance or variation across clusters, and if you have some compelling reason to do so. This step is not strictly necessary, and may sometimes be a bad idea, but we will consider it as a possibility. 
+We could potentially add a fifth step: 5) Refit reduced model if some components show little to no meaningful variation, and if you have some compelling reason to do so. This step is not strictly necessary, and may even be a bad idea sometimes, but we will consider it as a possibility. 
   
 ### Getting the standard deviations from our models 'manually'
 
 The superpopulation standard deviation is our model's estimate of the standard deviations of different batches of parameters. We can extract the superpopulation standard deviations using the `VarCorr` function. This function returns all sort of information about the variance and correlation parameters estimated by our model. In the second line below we specify that we only want information related to the standard deviation (`"sd"`) of our listener effects (`"L"`).
 
-```{r, cache = TRUE, collapse = TRUE, eval = FALSE, cache = TRUE}
+```{r, cache = TRUE, collapse = TRUE, eval = FALSE}
 brms::VarCorr(model_height_vtl_f0)
 
 brms::VarCorr(model_height_vtl_f0)[["L"]][["sd"]]
 ```
 
-We can also get information regarding our error standard deviation using `Varcorr` as seen below:
+We can also get information regarding our error ($\sigma$, `sigma`) using `Varcorr` as seen below:
 
 ```{r, cache = TRUE, collapse = TRUE, cache = TRUE}
 brms::VarCorr(model_height_vtl_f0)$residual$sd
@@ -503,12 +518,33 @@ brms::VarCorr(model_height_vtl_f0)$residual$sd
 The `bmmb` package contains a function called `getsds` that collects estimates of all standard deviations estimated by the model, including the error:
 
 ```{r}
-getsds (model_height_vtl_f0)
+bmmb::getsds (model_height_vtl_f0)
 ```
 
 [@@ SB from here on down is a problem, I need to come up with how to get the fixed effects and also be more consistent in saying rms vs sd, also probably providing formulas for there.]
 
-Getting the finite-sample standard deviations is a bit trickier. First, we should note that although they are called standard deviations, they are actually calculated by finding the root-mean squared error. The reason for this is that since we assume a mean of 0 for each batch of parameters we do not need to subtract the sample mean from our observations when calculating the standard deviation. If one uses sum coding, this means that the parameter values can be squared, their mean can be found, and then the square root of this is our estimate. To calculate the standard deviations of different batches of parameters you need to calculate the root-mean squared deviation for each batch, *for each sample*. This means you end up with an estimate of the finite-sample standard deviation for each set of posterior samples. The code below shows how to calculate the finite-population standard deviations for item based on the random effects parameter estimates. 
+Getting the finite-sample standard deviations is a bit trickier. First, we should note that although they are called standard deviations, they are actually calculated by finding the root-mean squared error. 
+
+The reason for this is that since we used sum coding,  we assume a mean of 0 for each batch of parameters and our parameters already reflect deviations from the mean. As a result, we do not need to subtract the sample mean from our observations when calculating the standard deviation and instead simply calculate the **root-mean-squared** (RMS) deviation for each batch of coefficients. The root-mean squared is aptly named: It is simply the (square) root of the mean square. In other words, as seen in the formula, it is the square root, of the average of a bunch of squared values. The formula for the RMS is given in \@ref(eq:11-9).
+
+$$
+\begin{equation}
+RMS = \sqrt {\sum_{i=1}^{n} x_{[i]}^2 / N}
+(\#eq:11-9)
+\end{equation}
+$$
+
+To calculate the standard deviations of different batches of parameters you need to calculate the root-mean squared deviation for each batch, *for each sample*. This means you end up with an estimate of the finite-sample standard deviation for each set of posterior samples. For example, equation \@ref(eq:11-10) has been updated to show the calculation of the RMS of the listener-dependent intercept terms ($L$) across $J$ listeners. The little $^s$ superscript indicates that each calculation is made for an individual posterior sample. As a result, the measure below will result in, for example, 4000 estimates of the RMS for $L$ given 4000 posterior samples. 
+
+$$
+\begin{equation}
+RMS^s_L = \sqrt {\sum_{j=1}^{J} (L^s_{[j]})^2 / N}
+(\#eq:11-10)
+\end{equation}
+$$
+
+
+The code below shows how to calculate the finite-population standard deviations for item based on the random effects parameter estimates. 
 
 ```{r, cache = TRUE, collapse = TRUE, eval = TRUE}
 # extract matrix representing all random effects from our model
@@ -528,7 +564,7 @@ listener_intercepts_finite
 
 For the fixed effects, we can use the absolute value of the parameters when these are each a single 'degree of freedom' (i.e. a single parameter). The code below shows how to get the fixed effects standard deviation estimates assuming that all parameters are unrelated. 
 
-```{r, cache = TRUE, collapse = TRUE, eval = TRUE, cache = TRUE}
+```{r, cache = TRUE, collapse = TRUE, eval = TRUE, echo = FALSE}
 # get individual parameter samples
 fixefs_finite = fixef(model_height_vtl_f0, summary = FALSE)
 
@@ -538,7 +574,7 @@ fixefs_finite = posterior_summary (abs (fixefs_finite))
 fixefs_finite
 ```
 
-In cases where we have batches of fixed effect predictors, the finite-sample standard deviation of these can be estimated using the same approach used for the random effects shown above: You need a matrix where each column is a batched parameter and then you find the standard deviation across each row. Finally, we can estimate the finite-sample error by getting the model residuals, and then calculating the standard deviation of the residuals for each set of samples as shown below.
+Finally, we can estimate the finite-sample error by getting the model residuals, and then calculating the standard deviation of the residuals for each set of samples as shown below.
 
 ```{r, cache = TRUE, collapse = TRUE, eval = TRUE}
 # get residuals
@@ -554,20 +590,20 @@ sigma_finite = posterior_summary (sigma_finite)
 row.names(sigma_finite) = 'sigma'
 ```
 
+In the above examples, we treated each fixed effect predictor, and the interaction of each of these with listener, as independent. This is actually appropriate for this model because all our predictors *are* conceptually distinct so that we don't really have batches of fixed effects. However, the process Gelman proposes is potentially more complicated that what we've done above. For example, imagine if we had included `C` as a predictor in our model and calculated the listener-dependent effects of `C`. This would result in the fixed effects `C1`, `C2`, and `C3`, 15 `C1:L` random effects, 15 `C2:L` random effects, and 15 `C3:L` random effects. The process described would treat each of the 3 fixed effects as independent, and also treat each batch of 15 random effects as independent. In contrast, the process described by Gelman would treat the 3 category-related fixed effects as a single batch, and the 45 category-related random effects as a single batch. 
+
+The main reason to do it the way way we've shown above is because it can be done easily for all models, and you still get very useful information from the analysis. If you do want to investigate the variation associated with entire clusters of multiple predictors at a time, please see the Gelman articles linked to above. Although the complete method is a straightforward extension of what we've discussed here, there are a few important additional details (e.g., the need to 'recover' missing parameters, the need to calculate 'degrees of freedom', etc.). 
+
 ### Using the `banova` function
 
-[@@ SB - need to fix it so that it has some way of dealing with clusters of fixed effects ]
-
-The `bmmb` package contains a function called `banova` that can get the finite-sample or superpopulation standard deviations for you. The output is a single data frame that contains a summary of the standard deviations for fixed and random effects, and the error term if the model contains one. Below we use the function to get both kinds of standard deviation, compared in 
+The `bmmb` package contains a function called `banova` that can get the finite-sample or superpopulation standard deviations for you. This function will only calculate standard deviations the 'simple' way outlined in the previous section, treating each fixed effect and each bundle of random effects as an independent batch. The output of the `banova` function is a single data frame that contains a summary of the standard deviations for fixed and random effects, and the error term if the model contains one. Below we use the function to get both kinds of standard deviation, compared in the previous section.
 
 ```{r, cache = TRUE, include = FALSE, cache = TRUE}
 banova_height_vtl_f0_finite = banova (model_height_vtl_f0, superpopulation = FALSE)
 banova_height_vtl_f0_super = banova (model_height_vtl_f0, superpopulation = TRUE)
 ```
 
-[@@ Explain anova plots properly somewhere]
-
-The output of the `banova` function can be used to make a Bayesian ANOVA plot of our model using the `banovaplot` function in the `bmmb` package. If we were to do this right after fitting the model, we would have a pretty good idea of what matters and what doesn't in our data. 
+The output of the `banova` function can be used to make a Bayesian ANOVA plot of our model using the `banovaplot` function in the `bmmb` package. An example of a 'BANOVA' plot is shown in figure \@ref(fig:F11-7). These plots compare the (absolute) values of your fixed effects, the RMS deviation of different batches of random effects, and you residual error ($\sigma$), for models that contain an error term. This is effectively the information shown in figure \@ref(fig:F11-5) save for the inclusion of the 'fixed' effects in the figure. If we were to make a BANOVA plot right after fitting our model, we would have a pretty good idea of which of our predictors are associated with meaningful variation in our dependent variable.
 
 ```{r F11-7, fig.height = 4.5, fig.width = 8, fig.cap='(top) Finite sample BANOVA plot for `model_height_vtl_f0`. (bottom) The superpopulation BANOVA plot for the same model.', echo = FALSE}
 
@@ -587,17 +623,13 @@ box()
 
 ```
 
-[@@ SB - get rid of this once issues above are fixed]
-
-The process Gelman proposes is potentially more complicated that what we've done above. For example, consider the random effects for a factor like vowel category. Imagine there are four categories, so four levels, for each of 50 listeners. The process described treats each of the 50 random effects for each vowel separately (i.e., 4 groups of 50 vowel random effects). The process described by Gelman would treat the 200 vowel random effects (across the four vowels) as one 'batch' of coefficients. This single batch would reflect all of the $Listener \colon Vowel$ interaction. The way we are approaching instead separates each $Listener \colon Vowel$ 'simple effect' and treats it separately. The main reason to do it the way way I've shown above is because it can be done easily for all models, and you get roughly equivalent information from the analysis. If you do want to investigate the variation associated with entire clusters of multiple predictors at a time, please see the Gelman articles linked to above, as there are a few important details that are not discussed here (e.g., the need to 'recover' missing parameters, the need to calculate 'degrees of freedom', etc.).
-
 ### Fitting and comparing the reduced model
 
 Our initial model formula was:
 
 `height ~ f0*vtl*A*G + (f0*vtl*A*G|L) + (f0*vtl*A*G|S)`
 
-Because we include all interactions and listener 'random effects' of these, we're basically saying that we think its possible for every predictor to affect every other predictor, and for all of this to vary in a listener-dependent manner. We might instead consider the following model formula which includes only those effects we (arbitrarily) deemed 'large enough' based on our inspection of the Bayesian ANOVA above. 
+Because we include all possible interactions between 'fixed' effects and listener 'random effects' for each predictor and interaction, we're basically saying that we think its possible for every predictor to affect every other predictor, and for all of this to vary in a listener-dependent manner. We might instead consider the following model formula which includes only those effects we (arbitrarily) deemed 'large enough' based on our inspection of the Bayesian ANOVA above. 
 
 `height ~ f0 + vtl + A*G + vtl:A1 + (f0 + vtl + A*G + vtl:A1|L) + (1|S)`
 
@@ -674,17 +706,20 @@ loo_compare (model_height_vtl_f0,model_height_vtl_f0_reduced)
 We can also consider the variance explained ($R^2$) by each model:
 
 ```{r}
+# R2 for full model
 bmmb::r2_bayes(model_height_vtl_f0)
+
+# R2 for reduced model
 bmmb::r2_bayes(model_height_vtl_f0_reduced)
 ```
 
-And see that all of the extra complexity included in our full model gains us less than 1% additional variance explained. All of this suggests that a researcher would be justified in fitting and interpreting the reduced model for their research. However, we are inclined to agree with Gelman and colleagues that there is value in fitting a model that includes all predictors and interactions supportable by our data, as long as these relate to potentially interesting research hypotheses. This is because being able to say "these parameters are near zero/show no meaningful variation" is useful information that we lose when we rely only on the reduced model. Of course, we could say something like "we fit a larger model that showed all these effects are zero but we are not presenting it here". However, if we do want to say something like this it may make sense to present the full model to the reader.
+And see that all of the extra complexity included in our full model gains us less than 1% additional variance explained. All of this suggests that a researcher would be justified in fitting and interpreting the reduced model for their research. However, we are inclined to agree with Gelman and colleagues that there is value in fitting a model that includes all predictors and interactions supportable by our data, as long as these relate to potentially interesting research hypotheses. This is because being able to say "these parameters are near zero/show no meaningful variation" is useful information that we lose when we rely only on the reduced model. Of course, we could say something like "we fit a larger model that showed all these effects are zero but we are not presenting it here so take our word for it". However, if we do want to say something like this it may make sense to present the full model to the reader.
 
 ## Fitting a multivariate logistic regression model
 
-We're now going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principle of Bayesian ANOVA (henceforth **BANOVA**) outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we'll be fitting. 
+We're going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principles of Bayesian ANOVA (henceforth **BANOVA**) outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we'll be fitting. 
 
-A logistic regression model with two quantitative predictors specifies planes (or saddles) along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1 for the dependent variable). We will refer to these surfaces as **response surfaces** because these surfaces specify the value of the response variable based on the value of our quantitative predictors. When the value on the response surface is negative, the model predicts a response of 0 at this location, and when the value of the plane is positive the model predicts a 1. When we want to know the probability expected for any given $x$ and $y$ axis location, we can transform the value on response surface using the inverse logit function. When the predicted logits are transformed to probabilities, our model defines a curved shape rather than a flat plane as seen in the bottom row of figure \@ref(fig:F11-9). 
+A logistic regression model with two quantitative predictors specifies planes (top row, figure \@ref(fig:F11-9)) along a third dimension ($z$) representing the logit of the probability of observing a 'success' (a value of 1 for the dependent variable). We will refer to these surfaces as **response surfaces** because they specify the expected value of the response variable based on the value of our quantitative predictors. When the value on the response surface is negative, the model predicts a response of 0 at this location of the predictor space. When the value of the plane is positive the model predicts a 1. When we want to know the probability expected for any given $x$ and $y$ axis location, we can transform the value of the response surface using the inverse logit function (equation X). When the predicted logits are transformed to probabilities, our model defines a curved surface (bottom row of figure \@ref(fig:F11-9)) rather than a flat plane. 
 
 ```{r F11-9, fig.height = 4, fig.width = 8, fig.cap='(top) Threee perspectives on a plane that specifies logits along its z axis. (bottom) The same plane after undergoing to antilogit transform, now expressing probabilities along the z axis.', echo = FALSE, cache = TRUE}
 
@@ -698,18 +733,18 @@ x <- y <- seq(-3, 3, length= 12)
 par (mfrow = c(2,3), mar = c(1,1,0,0), oma = c(0,0,0,0))
 
 z <- outer(x, y, f1)
-persp(x, y, z, col = bmmb::cols[3],theta = 0,zlim = c(-6.5,6.5))
-persp(x, y, z, col = bmmb::cols[3],theta = -90,zlim = c(-6.5,6.5))
-persp(x, y, z, col = bmmb::cols[3],theta = 45,zlim = c(-6.5,6.5))
+persp(x, y, z, col = bmmb::cols[14],theta = 0,zlim = c(-6.5,6.5))
+persp(x, y, z, col = bmmb::cols[14],theta = -90,zlim = c(-6.5,6.5))
+persp(x, y, z, col = bmmb::cols[14],theta = 45,zlim = c(-6.5,6.5))
 
 z <- outer(x, y, f1)
-persp(x, y, ztop(z), col = bmmb::cols[4],theta = 0,zlim = c(0,1))
-persp(x, y, ztop(z), col = bmmb::cols[4],theta = -90,zlim = c(0,1))
-persp(x, y, ztop(z), col = bmmb::cols[4],theta = 45,zlim = c(-0,1))
+persp(x, y, ztop(z), col = bmmb::cols[13],theta = 0,zlim = c(0,1))
+persp(x, y, ztop(z), col = bmmb::cols[13],theta = -90,zlim = c(0,1))
+persp(x, y, ztop(z), col = bmmb::cols[13],theta = 45,zlim = c(-0,1))
 
 ```
 
-When our models include interactions between quantitative predictors (i.e. terms representing their cross-products), our predicted values no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model. When we convert these saddle shapes to represent percentages using the antilogit function, the resulting shape can be strange, as with the bottom row of figure \@ref(fig:F11-10) which shows two non-contiguous sections associated with 'successes'. 
+When our models include interactions between quantitative predictors (i.e. the cross-product), our predicted logits will no longer vary along planes. Instead, the surface will resemble a saddle shape based on the sign of the parameter and its magnitude relative to the slopes of the relevant quantitative predictors in the model (top row, figure \@ref(fig:F11-10)). When we convert these saddle shapes to probabilities using the antilogit function, the resulting shape can be strange. For example, in the bottom row in figure \@ref(fig:F11-10), we see that saddle shapes can results in non-contiguous sections of the  associated with 'successes', with a 'canyon' in the middle associate with failures.
 
 ```{r F11-10, fig.height = 4, fig.width = 8, fig.cap='(top) Threee perspectives on a saddle shape that specifies logits along its z axis. (bottom) The same saddle shape after undergoing to antilogit transform, now expressing probabilities along the z axis.', echo = FALSE, cache = TRUE}
 
@@ -724,9 +759,9 @@ x <- y <- seq(-3, 3, length= 12)
 par (mfrow = c(2,3), mar = c(1,1,0,0), oma = c(0,0,0,0))
 
 z <- outer(x, y, f1)
-persp(x, y, z, col = bmmb::cols[5],theta = 0,zlim = c(-9.5,15.5))
-persp(x, y, z, col = bmmb::cols[5],theta = -90,zlim = c(-9.5,15.5))
-persp(x, y, z, col = bmmb::cols[5],theta = 45,zlim = c(-9.5,15.5))
+persp(x, y, z, col = bmmb::cols[10],theta = 0,zlim = c(-9.5,15.5))
+persp(x, y, z, col = bmmb::cols[10],theta = -90,zlim = c(-9.5,15.5))
+persp(x, y, z, col = bmmb::cols[10],theta = 45,zlim = c(-9.5,15.5))
 
 z <- outer(x, y, f1)
 persp(x, y, ztop(z), col = bmmb::cols[6],theta = 0,zlim = c(0,1))
@@ -737,7 +772,7 @@ persp(x, y, ztop(z), col = bmmb::cols[6],theta = 45,zlim = c(-0,1))
 
 ### Data and research questions
 
-In the code below we load our packages, set our contrasts, and load our experimental data. We also add our dependent variable, `F`, to our data frame. This variable equals 1 when the listener indicated hearing a female speaker and 0 when the listener indicated hearing a male speaker. As with our previous model we center our quantitative variables and divide f0 by 100 to make the expected regression coefficients for VTL and f0 more similar in magnitude.
+In the code below we load our packages, set our contrasts, and load our experimental data. We also add our dependent variable, `Female`, to our data frame. This variable equals 1 when the listener indicated hearing a female speaker and 0 when the listener indicated hearing a male speaker. As with our previous model we center our quantitative variables and divide f0 by 100 to make the expected regression coefficients for VTL and f0 more similar in magnitude.
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -748,9 +783,7 @@ options (contrasts = c('contr.sum','contr.sum'))
 data (exp_data)
 
 # our dependent variable
-#exp_data$F = ifelse(exp_data$G == 'f', 1, 0)
-exp_data$F = as.numeric(exp_data$G == 'f')
-
+exp_data$Female = ifelse(exp_data$G == 'f', 1, 0)
 
 exp_data$vtl_original = exp_data$vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
@@ -786,7 +819,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_vtl_f0 =
-  brm (F ~ vtl*f0*A + (vtl*f0*A|L) + (1|S), data=exp_data, 
+  brm (Female ~ vtl*f0*A + (vtl*f0*A|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -828,12 +861,13 @@ In the figure above we see a relatively complex model, with an important role fo
 Imagine a horizontal plane such that $z=0$ for all values of $x$ and $y$ in figures \@ref(fig:F11-9) and \@ref(fig:F11-10). This plane would represent an expected probability of 0.5, meaning it is the boundary between successes and failures along the $z$ axis. Our response surface will intersect with the horizontal $z=0$ plane, forming a curve at this intersection. These curves represent the division of the response surface into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the curves formed by the intersection of our response surface and the $z=0$ plane represent the *category boundary* as defined by our model.
 
 The intersection of two planes forms a straight line. Although these surfaces are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. Although the surfaces in the bottom row of figure \@ref(fig:F11-9) are not planes, the intersection of these surfaces with planes still form straight lines. However, the intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. Since saddle shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). 
-  To find the intersection of the surfaces defined by our models and the plane at $z=0$, we can use some basic algebra. We take the equation defining the general shape, including the cross-product of $x$ and $y$:
+
+To find the intersection of the surfaces defined by our models and the plane at $z=0$, we can use some basic algebra. We take the equation defining the general shape, including the cross-product of $x$ and $y$:
 
 $$
 \begin{equation}
 z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times xy)
-(\#eq:F11-5)
+(\#eq:F11-11)
 \end{equation}
 $$
 
@@ -845,7 +879,7 @@ $$
 0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (0 \times xy) \\
 y =  -(\mathrm{b} \times x - \mathrm{a}) / \mathrm{c}
 \end{split}
-(\#eq:F11-5)
+(\#eq:F11-12)
 \end{equation}
 $$
 
@@ -857,7 +891,7 @@ $$
 0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (d \times xy) \\
 y =  (-\mathrm{b} \times x - \mathrm{a}) / (d \times x + c)
 \end{split}
-(\#eq:F11-5)
+(\#eq:F11-13)
 \end{equation}
 $$
 
@@ -998,7 +1032,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_vtl_f0_reduced =
-  brm (F ~ (vtl+f0)*A + ((vtl+f0)*A|L) + (1|S), data=exp_data, 
+  brm (Female ~ (vtl+f0)*A + ((vtl+f0)*A|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -1113,6 +1147,9 @@ plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)],
       ylab="Height (inches)")
 grid()
 
+xlim = par()$usr[1:2]
+ylim = par()$usr[3:4]
+
 x = seq(-3,4,0.1)
 y = (-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced)
 polygon (c(-3,x,4),c(-3,y,-3),col="seagreen")
@@ -1169,7 +1206,7 @@ model_gender_vtl_f0$criteria$loo$estimates
 
 Based on the information above, we believe that our model falls into the second case. Our `p_loo` is only about 30% as large as our number of parameters. Although we do have more than 5 times as many observations (2085) as estimated parameters (306), the ratio of 6.81 is not much greater than 5. In addition, we *do* think there is a possibility that the model is *misspecified*. We have said repeatedly that no model can really 'prove' itself to be the 'real' model, and even that it's not totally clear what it would mean for a formalism like regression to represent the 'real' process underlying our observations. Given this, it seems that every model is 'misspecified' to some extent, making the critique of one specific model model as being misspecified somewhat odd. 
 
-However, we can say that in this context, misspecification refers to a difference between your model and reality that causes noticeable 'misbehavior' in your model. What might this misbehavior look like? We think an excellent example of this 'odd' behavior is in our hyperbolic category boundaries seen in figure \@ref(fig:F11-12). We noted at the time that these boundaries defied logic and were unlikely to represent listener behavior in this area of the parameter space. In other words, the model did not correctly reflect the underlying process we are trying to understand: Listener judgments of apparent gender based on speech acoustics and apparent speaker age.
+However, we can say that in this context, misspecification refers to a difference between your model and reality that causes noticeable 'misbehavior' in your model. What might this misbehavior look like? We think an excellent example of this 'odd' behavior is in our hyperbolic category boundaries seen in figure \@ref(fig:F11-12). We noted at the time that these boundaries defied logic and were unlikely to represent listener behavior in this area of the predictor space. In other words, the model did not correctly reflect the underlying process we are trying to understand: Listener judgments of apparent gender based on speech acoustics and apparent speaker age.
   To investigate the Pareto $\hat{k}$ estimates for our initial model, we get these using the code below:
 
 ```{r, cache = TRUE}

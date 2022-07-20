@@ -370,7 +370,7 @@ We're going to fit a model to our data that predicts the perception of adultness
 
 ### Data and research questions
 
-We're going to keep working with our experimental data, but we're going to predict a dichotomous variable: Whether a listener indicated hearing a female speaker on any given trial. We load the necessary R packages and the data, taking only those trials using the actual speaker resonance characteristics. 
+We're going to keep working with our experimental data, but we're going to predict a dichotomous variable: Whether a listener indicated hearing a female speaker on any given trial. We load the necessary R packages and the data, taking only those trials using the actual speaker resonance characteristics. We create a variable called `Female`, which will be our dependent variable. This variable equals 1 when listeners indicated hearing a female speaker and 0 when listeners indicated a male speaker. We'll predict this using a single quantitative predictor, speaker VTL, which we also center below. 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -378,7 +378,22 @@ library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
 
 data (exp_data)
+
+# our dependent variable
+exp_data$Female = as.numeric (exp_data$G == 'f')
+
+# make a copy of vtl
+exp_data$vtl_original = exp_data$vtl
+
+# center vtl
+exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
+
 ```
+
+
+
+
+
 
   - `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
 
@@ -392,18 +407,6 @@ data (exp_data)
   
 
 
-We create a variable called `F`, which will be our dependent variable. This variable equals 1 when listeners indicated hearing a female speaker and 0 when listeners indicated a male speaker. We'll predict this using a single quantitative predictor, speaker VTL, which we also center below. 
-
-```{r}
-# our dependent variable
-exp_data$F = as.numeric (exp_data$G == 'f')
-
-# make a copy of vtl
-exp_data$vtl_original = exp_data$vtl
-
-# center vtl
-exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
-```
 
 We saw in figure \@ref(fig:F10-1) that VTL is negatively related to the probability that a speaker will be identified as female. In addition, it seems that the relationship between speaker VTL and the perception of female speakers may differ based on the apparent age of the speaker. We would like to know:
 
@@ -415,7 +418,7 @@ We saw in figure \@ref(fig:F10-1) that VTL is negatively related to the probabil
 
 In order to answer the questions posed above, our model needs to represent the linear relationship between VTL and the logit of the probability of observing a female classification. It also needs to allow this linear relationship to vary between apparent children and adults. The formula for our model needs to look like this:
 
-`F ~ vtl*A + (vtl*A|L) + (1|S)`
+`Female ~ vtl*A + (vtl*A|L) + (1|S)`
 
 Where `A` represents perceived adultness, and `F` represents a response of female. Since we include the interaction between apparent age and speaker VTL, we know that we are effectively estimating two lines relating speaker VTL with apparent gender: One for apparent adults and another for apparent children. The formula above says tells our model to predict perceived femaleness using speaker VTL (centered as in the previous chapter), information about whether the speaker was identified as a child or an adult, and age-dependent use of VTL. It allows for random by-subject effects for all aforementioned predictors and random intercepts for speaker. The model would be relatively 'simple' at this point if it were dealing with normally distributed data. The prior specification we are going to use looks like this:
 
@@ -438,7 +441,7 @@ However, what if we had measured VTL in meters? Then the difference in VTL would
 $$
 \begin{equation}
 \begin{split}
-F_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
+Female_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
 p_{[i]} = \mathrm{logit}^{-1} (z_{[i]}) \\
 z_{[i]} = a_{[i]} + b_{[i]} \times \mathrm{vtl}_{[i]}  \\ 
 a_{[i]} = \mathrm{Intercept} + A1 + A1 \colon L_{[L_{[i]}]} + L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
@@ -470,7 +473,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_vtl =
-  brm (F ~ vtl*A + (vtl*A|L) + (1|S), data=exp_data, 
+  brm (Female ~ vtl*A + (vtl*A|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -609,14 +612,17 @@ As seen above, converting to a probability and then combining can lead to strang
 
 ### Using logistic models to understand classification
 
+- introduce predictor? space here.
+- territorial map is a plot of boundaries showing modal classifications in some section of the parameter space. 
+
 Our models so far have presented us with the y-intercepts of our lines, the value of the $y$ axis at $x = 0$. However, when modeling in logits we might also be interested in the **$x$ intercepts** of our lines. The $x$ intercept is the value of $x$ where *$y$ is equal to zero*, where our line crosses the horizontal x axis line at y = 0. Why do we care about this? Well, when $y = 0$, that means that the probability of classification is $0.5$. So, crossing the $x$ intercept one way means you are more likely to see a success, and crossing the other way means you are more likely to see a failure. In other words, the $x$ intercepts of logistic regression models tells us about the location of the **category boundary** between our two possible outcomes, along the continuous predictor. We can find the $x$ intercept by setting $y=0$ in our prediction equation and solving for (i.e. isolating) $x$, as seen in \@ref(eq:1015). For complicated prediction equations (and even for simple ones), you can rely on algebra solving websites easily found on the internet. Below, we see that when $y$ is equal to zero, the value of $x$ is equal to the negative intercept ($a$) divided by the slope ($b$). 
 
 $$
 \begin{equation}
 \begin{split}
-y = a + b*x \\
-0 = a + b*x \\
--a = b*x \\ 
+y = a + b \times x \\
+0 = a + b \times x \\
+-a = b \times x \\ 
 -a/b = x
 \end{split}
 (\#eq:1015)
@@ -907,7 +913,7 @@ library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
 data (exp_data)
 # our dependent variable
-exp_data$F = as.numeric (exp_data$G == 'f')
+exp_data$Female = as.numeric (exp_data$G == 'f')
 # make a copy of vtl
 exp_data$vtl_original = exp_data$vtl
 # center vtl
@@ -943,11 +949,11 @@ We're going to model the ability of listeners to discriminate the gender of spea
 
 Our model formula should minimally be:
 
-`F ~ F_v + (F_v|L) + (1|S)`
+`Female ~ F_v + (F_v|L) + (1|S)`
 
 Which predicts the response (female = 1, male = 0) as a function of the actual speaker gender (female = 1, male = -1). For this model, the intercept would reflect response bias and the `F_v` parameter would reflect sensitivity. The model formula we're actually going to use is:
 
-`F ~ F_v * A_v + (F_v*A_v|L) + (1|S)`
+`Female ~ F_v * A_v + (F_v*A_v|L) + (1|S)`
 
 Where `A_v` represents veridical adultness. All predictors in this model that do not interact with or otherwise involve `F_v`, represent bias terms. Thus, the model intercept represents overall bias and the `A_v` term reflects change in bias as a function of the veridical adultness of the speaker. All model parameters that *do* interact with or involve `F_v` reflect sensitivity. So, `F_v` represents overall sensitivity and the `F_v:A_v` interaction represents variation in sensitivity dependent on veridical age. We are going to keep using the same priors we fit for our last logistic model:
 
@@ -963,7 +969,7 @@ Our full model specification is:
 $$
 \begin{equation}
 \begin{split}
-F_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
+Female_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
 p_{[i]} = \mathrm{logistic} (z_{[i]}) \\
 z_{[i]} = a_{[i]} + b_{[i]} \times \mathrm{vtl}_{[i]}  \\ 
 a_{[i]} = \mathrm{Intercept} + A_v + A_v \colon L_{[L_{[i]}]} + L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
@@ -991,7 +997,7 @@ set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_gender_dt =
-  brm (F ~ F_v*A_v + (F_v*A_v|L) + (1|S), data=exp_data, 
+  brm (Female ~ F_v*A_v + (F_v*A_v|L) + (1|S), data=exp_data, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -1079,7 +1085,8 @@ legend (5, 11, legend =c("Sensitivity", "Bias"), pch=16,lwd=2,
 ### Answering our research questions
 
 The following verbal description of the results in figure \@ref(fig:F10-7) are based on the parameters reconstructed in `gender_dt_hypothesis`. In addition, we used the `forpaper` function, like this `forpaper(gender_dt_hypothesis)` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output. Our model suggests there is a bias towards male responses for adults (mean = -1.04, s.d. = 0.29, 95% C.I = [-1.66, -0.5]), and perhaps a slight bias towards female responses for children (mean = 0.4, s.d. = 0.32, 95% C.I = [-0.24, 1.02]). Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children. 
-  We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:F10-8)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:F10-8). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
+
+We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:F10-8)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:F10-8). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
 
 ```{r F10-8, fig.width = 8, fig.height = 3.25, fig.cap = "Distribution of boys, girls, men, and women in our speaker data (Hillenbrand et al. 1995) according to their VTL.", echo = FALSE}
 

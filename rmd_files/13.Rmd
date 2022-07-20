@@ -529,7 +529,110 @@ brmplot (ranef(gender_model)$S[,,1], col = mod_cat)
 
 
 
-## Discussion: Apparent height
+## Discussion: Apparent gender
+
+
+As a reminder, the questions we posed above were: 
+
+Q1) Do listeners use VTL, f0, and the interaction between them to determine speaker gender?
+
+Q2) Does apparent speaker age influence the use of the above mentioned acoustic cues?
+
+Q3) Is there a lot of between-speaker variation in perceptual behavior?
+
+We will base our answers to these questions on our reduced model above (`model_gender_vtl_f0_reduced`). Based on our discussion above we conclude that listeners *do* use f0 and VTL, but the jury is still out on the interaction of the two. It seems that to really get a handle on how listeners respond to the sorts of voices not included in this experiment (i.e. voices in the bottom left and top right of figure \@ref(fig:F11-13)), we would need to run an experiment with more voices in these areas of the stimulus space. Below we print a table of the fixed effects for our reduced model:
+
+```{r T11-1}
+knitr::kable(fixef(model_gender_vtl_f0_reduced), caption = "Fixed effect posterior means, error, and credible intervals for our reduced model.",digits = 2)
+```
+
+It seems that differences in apparent speaker age is associated with varying use of both VTL and f0. In each case, the effects of f0 and VTL changes are *stronger* for adults compared to children. For example, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for children ($f0 + (-A1) = 2.2 - 1.6 = 0.6$) and nearly doubling it for adults ($f0 + A1 = 2.2 + 1.6 = 3.8$). We noted in chapter 10 (section X) that slopes of larger magnitudes generally indicate steeper category boundaries and less uncertainty between categories along that dimension. In this case, the larger slope magnitudes for apparent adults likely reflect the fact that men and women are more discriminable based on their fo and VTL than boys and girls. 
+
+We can think about between-listener variation in the use of acoustics in two ways. The first involves the inspection of the superpopulation standard deviation estimates for our listener-dependent effects, presented in table \@ref(tab:T11-2). Rather than only focusing on the estimates, we can also think about whether effects have 2.5% credible intervals (relatively) far from zero, meaning they are unlikely to be very small. Only three of the effects really meet that threshold: Listener-dependent variation in the use of VTL ($\sigma_{VTL \colon L}$), and the effect of apparent age ($\sigma_{A1 \colon L}$), and speaker-dependent variation in intercepts ($\sigma_{S}$). 
+
+```{r T11-2}
+knitr::kable(bmmb::getsds (model_gender_vtl_f0_reduced), caption = "Superpopulation standard deviation estimates for our 'random' effects.")
+```
+
+We can also think about the result of this variation in terms of how this might actually affect gender classification from speech. To do this, we get listener-specific intercepts, f0 slopes, and VTL slopes. We do this separately for apparent children and apparent adults using the code below (explained in detail in section X). 
+
+```{r}
+listener_coefficients_adult = 
+  bmmb::short_hypothesis (model_gender_vtl_f0_reduced, scope="coef",group="L",
+                          c("Intercept+A1=0","vtl+vtl:A1=0","f0+f0:A1=0"))
+listener_coefficients_child = 
+  bmmb::short_hypothesis (model_gender_vtl_f0_reduced, scope="coef",group="L",
+                          c("Intercept-A1=0","vtl-vtl:A1=0","f0-f0:A1=0"))
+```
+
+Using these parameters, we can find boundaries for each listener using the equation above. We plot these in figure \@ref(fig:F11-16). We see that there is a general consensus between listeners in terms of an approximate acoustic boundary between adult males and adult females. However, there is much more variation in the boundary between boys and girls. This likely reflects the fact that the acoustic characteristics of adult men and women are generally more predictable and stable relative to children 10-12 years old. In addition, the listeners in our experiment (undergraduate University students) likely have substantially more recent experience interacting with adults than with children in that age group.   
+  
+```{r F11-16, fig.width = 8, fig.height = 5, fig.cap = "The first plot compares all category boundaries between men/women (orange) and boys/girls (blue). Subsequent plots present each listener's individual boundaries, and point colors indicate the listener's individual speaker classifications.", echo = FALSE, cache = FALSE}
+
+################################################################################
+### Figure 11-16
+################################################################################
+
+# y = (-b*x - a - z) / (dx+c)
+# fixef(model_gender_vtl_f0)
+
+tmp = bmmb::exp_data
+tmp = tmp[tmp$R=='a',]
+
+tmp$vtl_original = tmp$vtl
+tmp$vtl = tmp$vtl - mean (tmp$vtl)
+
+tmp$f0_original = tmp$f0 
+tmp$f0 = tmp$f0 - mean(tmp$f0)
+tmp$f0 = tmp$f0 / 100
+
+aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + A_v + G_v + C_v, 
+                      data = tmp, FUN = mean)
+#aggd = aggd[aggd$A_v=='a',]
+
+a = listener_coefficients_adult[1:15,1]
+b = listener_coefficients_adult[16:30,1]
+c = listener_coefficients_adult[31:45,1]
+
+ac = listener_coefficients_child[1:15,1]
+bc = listener_coefficients_child[16:30,1]
+cc = listener_coefficients_child[31:45,1]
+
+par (mar = c(.2,.2,.2,.2), oma = c(3,3,.5,.5), mfrow = c(4,4))
+
+plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C_v)], 
+      pch=16,lwd=2, xlab = "",ylab="f0 (cm)",xaxt = 'n',
+        xlim=c(-2.5,2.7),ylim=c(-1.2,1.2))
+grid()
+
+for (i in 1:15)
+  curve ((-b[i]*x - a[i]) / (c[i]), from = -3, to = 3, 
+         add = TRUE,lwd=2,col=bmmb::cols[8],xaxt='n')
+
+for (i in 1:15)
+  curve ((-bc[i]*x - ac[i]) / (cc[i]), from = -3, to = 3, 
+         add = TRUE,lwd=2,col=bmmb::cols[7],xaxt='n')
+
+for (i in 1:15){
+  xaxt = "n"
+  yaxt = "n"
+  if (i %in% 12:15) xaxt = "s"
+  if (i %in% c(4,8,12)) yaxt = "s"
+  tmpp = tmp[tmp$L==i,]
+  plot (tmpp$vtl,tmpp$f0, cex =1.2, col = bmmb::cols[2:5][factor(tmpp$C)],
+        pch=16,lwd=2, xlab = "",ylab="f0 (cm)",xaxt=xaxt,yaxt=yaxt,
+        xlim=c(-2.5,2.7),ylim=c(-1.2,1.2))
+  grid()
+  curve ((-b[i]*x - a[i]) / (c[i]), from = -5, to = 3, add = TRUE,
+         lwd=2,col=bmmb::cols[8])
+  curve ((-bc[i]*x - ac[i]) / (cc[i]), from = -5, to = 3, add = TRUE,
+         lwd=2,col=bmmb::cols[7])
+  text (-1.5,-.75,i,cex=1.5)
+}
+```
+
+
+
 
 
 

@@ -7,7 +7,7 @@ knitr::opts_chunk$set(
 
 # Varying variances, more about priors, and prior predictive checks
 
-So far our models have been a bit 'traditional' in one important way: They have featured a single error term ($\sigma$) for all conditions. This means that $\sigma$ is the same for all speakers, listeners, and conditions in our experiment. However, we might imagine a situation where one listener's responses are more widely distributed than another, resulting in a situation where $\sigma_{[n_1]} \neq \sigma_{[n_2]}$ [@@ NHS: these subscripts don't seem consistent with previous ways of indexing listeners...] for two listeners $n1$ and $n2$. In this situation, we may not want to use a single value of $\sigma$ for all listeners and may instead prefer to use a different value for each listener, e.g. $\sigma_{[i]}$ for listener $i$. In this chapter we're going to discuss models that allow for more variation in their $\sigma$ parameters. In addition, we're going to go into more detail about setting priors for our models and the use of prior predictive checks. 
+So far our models have been a bit 'traditional' in one important way: They have featured a single error term ($\sigma$) for all conditions. This means that $\sigma$ is the same for all speakers, listeners, and conditions in our experiment. However, we might imagine a situation where one listener's responses are more widely distributed than another, resulting in a situation where $\sigma_{[1]} \neq \sigma_{[2]}$ [@@ NHS: these subscripts don't seem consistent with previous ways of indexing listeners...] for two listeners $n1$ and $n2$. In this situation, we may not want to use a single value of $\sigma$ for all listeners and may instead prefer to use a different value for each listener, e.g. $\sigma_{[i]}$ for listener $i$. In this chapter we're going to discuss models that allow for more variation in their $\sigma$ parameters. In addition, we're going to go into more detail about setting priors for our models and the use of prior predictive checks. 
 
 ## Data and Research questions
 
@@ -42,11 +42,11 @@ To this point our focus has been on understanding the components that make up ou
 
 For example, based on the information in `height_data` (cite CDC), we know that 11 year-old boys and girls are about 150 cm tall, and women and men are 163 and 176 cm tall respectively, on average. This means that there is an difference of 19.5 cm ($(13+26)/2$) on average between adults and children between 11 and 12 years of age. A difference of 19.5 cm between age groups suggests about a 10 cm distance (half the group difference) between each age group and the overall intercept. In other words, if apparent height is similar to veridical height, we expect an $A$ predictor of about 10 cm in magnitude given sum coding. In contrast, we have an expected height difference of 0 cm across genders for children, and 12 cm across genders for adults for an average difference of 6 cm between males and females. This means that we expect an effect of about 3 cm for gender averaged across ages. Based on this, our prior standard deviation of 12 cm for our `b` (fixed-effects) parameters seems very reasonable. 
 
-However, imagine a situation where there was less certainty about reasonable values for our priors. This can happen for many reasons. For example, imagine you carry out a lexical decisions task where participants listen to a combination of 'real' (e.g., 'map') and 'fake' words (e.g., 'marp') and have to decide if the word they heard is 'real' or not. You divide your real words into 5 groups based on a numerical measure of their frequency (how often they tend to appear in speech). To complicate matters further, you see that your reaction times are *heavily* skewed and so decide to model the logarithm of the reaction times. What should your priors be for your frequency groups? The prior distribution of a parameter represents the expected distribution of your parameters *a priori*. So what do we think are reasonable group differences in this situation? Even in this relatively simple case, setting prior distributions using only your intuitions would require understanding plausible variation in the *logarithm* of reaction times across word groups. This may not be realistic in this cor [@@ ???] nor in many others.
+However, imagine a situation where there was less certainty about reasonable values for our priors. This can happen for many reasons. For example, imagine you carry out a lexical decisions task where participants listen to a combination of 'real' (e.g., 'map') and 'fake' words (e.g., 'marp') and have to decide if the word they heard is 'real' or not. You divide your real words into 5 groups based on a numerical measure of their frequency (how often they tend to appear in speech). To complicate matters further, you see that your reaction times are *heavily* skewed and so decide to model the logarithm of the reaction times. What should your priors be for your frequency groups? The prior distribution of a parameter represents the expected distribution of your parameters *a priori*. So what do we think are reasonable group differences in this situation? Even in this relatively simple case, setting prior distributions using only your intuitions would require understanding plausible variation in the *logarithm* of reaction times across word groups. This may not be realistic in this situation nor in many others.
 
 ### Prior predictive checks
 
-A **prior predictive check** can help understand the consequences of the prior distributions of our parameters, especially in situations where they are otherwise difficult to understand. To carry out a prior predictive check using `brms` you fit your model in the same way you normally would, except for setting `sample_prior="only"`. When you do this, your model knows to sample only from the prior, generating parameter estimates and expected values (e.g., $\mu$) based only on the prior distributions of the model parameters. The prior predictive check consists of generating fake data (i.e., $\tilde{y}$) based on the expected values [@@ NHS: does this mean the "linear predictor"/"conditional expectation function" that we talked about?] generated by the prior. Conceptually, this is very similar to a posterior predictive check (discussed in section X), save for the fact that prior predictive checks are not influenced by the model likelihood (or the data). 
+A **prior predictive check** can help understand the consequences of the prior distributions of our parameters, especially in situations where they are otherwise difficult to understand. To carry out a prior predictive check using `brms` you fit your model in the same way you normally would, except for setting `sample_prior="only"`. When you do this, your model knows to sample only from the prior, generating parameter estimates and expected values (e.g., $\mu$) based only on the prior distributions of the model parameters. The prior predictive check consists of generating fake data (i.e., $\tilde{y}$) based on linear predictors (i.e. $\mu$) simulated by sampling *only* from the prior. Conceptually, this is very similar to a posterior predictive check (discussed in section X), save for the fact that prior predictive checks are not influenced by the model likelihood (or the data). 
 
 Below we fit `model_interaction` from chapter 7 again, except this time we sample only from the prior. Imagine that we did not have much knowledge about speaker heights other than that humans tend to be between 1 and 2 meters tall. Based on this we decided to be cautious and use relatively *uninformative* priors and set all prior standard deviations to 1000 cm (10 meters). 
 
@@ -379,7 +379,11 @@ $$
 
 Before continuing, we need to talk about whether our (or your) data can realistically support the estimation of such a model. To this point we haven't discussed this much, but as our models get more and more complicated it is something we need to think about. Our model seeks to estimate five parameters for each listener ($Intercept, A1, G2, A1:G1, \sigma$) based on 139 observations for each listener. This is a reasonable ratio of observations to parameters. However, if we had only 10 observations per listener, it might not be such a good idea to fit a heteroskedastic model to our data. In general, before fitting a model that you *can* fit, it's a good idea to think whether you *should* fit it given the nature of your data and the number of observations you have overall (and in different conditions).
 
+
+
 [@@ NHS: we should maybe (probably) discuss model identifiability here, too. The number of observations vs the number of parameters is often relevant and the only thing you need to worry about, but it's not always so simple to just count up observations and model parameters. In some models, parameter can trade off against each other (I think we've probably already discussed some examples of this with the categorical variable stuff and the fact that you can't estimate coefficients for all of the levels of a factor). I suppose it's a bit of a cop-out for me to say we should do this but not just go ahead and do it, but, well, I'm kind of hung over today, so this is what I can currently muster, energy and focus wise.]
+
+[@@ SB - I might have to add a tiny section at the end of this chapter about this or something. correlation between predictors too]
 
 ## A 'simple' model: Error varies according to a single fixed effect
 
@@ -606,20 +610,18 @@ model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
                          sigma ~ A + (A|L))
 ```
 
-The full model specification is provided below: 
-
-[@@ NHS: need subscripts for the $\Sigma$ terms in the mvnormal parts of the model? these are distinct matrices, after all... Also, should the R terms for these be in the model?]
+The full model specification is provided below (omitting the 'constructions' of the $\Sigma$ terms): 
 
 $$
 \begin{equation}
 \begin{split}
-height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma_{[i]}) \\ 
+height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{[i]}) \\ 
 \mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + G1 \colon L_{[L_{[i]}]} + A1 \colon G1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
 \sigma_{[i]} = \mathrm{Intercept_{\sigma}} + A1 + A1 \colon L_{\sigma[L_{[i]}]} + L_{\sigma[L_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
-\begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \\ G1 \colon L_{[\bullet]} \\ A1 \colon G1 \colon L_{[\bullet]} \\  \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ 
+\begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \\ G1 \colon L_{[\bullet]} \\ A1 \colon G1 \colon L_{[\bullet]} \\  \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma_{L} \right) \\ 
 \\
-\begin{bmatrix} L_{\sigma[\bullet]} \\ A1 \colon L_{\sigma[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ 
+\begin{bmatrix} L_{\sigma[\bullet]} \\ A1 \colon L_{\sigma[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma_{\sigma} \right) \\ 
 \\
 S_{[\bullet]} \sim N(0,\sigma_S) \\ \\
 \mathrm{Intercept} \sim N(156,12) \\
@@ -627,7 +629,8 @@ A1 \sim N(0,12) \\
 \sigma, \sigma_L, \sigma_{A1 \colon L}, \sigma_S \sim N(0,12) \\
 \\
 \mathrm{Intercept_{\sigma}} \sim N(0,1.5) \\
-\sigma_{L_\sigma}, \sigma_{A1 \colon L_\sigma} \sim N(0,1.5) \\
+\sigma_{L_\sigma}, \sigma_{A1 \colon L_\sigma} \sim N(0,1.5) \\\\
+R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:85)
 \end{equation}
@@ -722,10 +725,13 @@ The research questions we posed above were:
   
   Q2) Does our error standard deviation vary as a function of listener?
 
-Based on the information we've already provided, we can answer these questions: Yes, yes, and yes. We think these results are reasonable based on what we know about the heights of adults and children and about the average speaker's average knowledge of the heights of adults and children. For example, we did think it was reasonable to expect that listener's height judgments would be more variable for children than for adults. We think most people have a good handle on how tall adults tend to be. Does the average person know how tall 10-12 year-old children tend to be? We don't think so. In addition, 10-12 year old can show a lot of variation in height based on differences in growth rates, which might also lead people to provide more variable estimates for the height of children. We think it also 'makes' sense that different listeners could be more or less systematic (i.e. predictable) than others, for many reasons. As for the final question, based on our discussion so far we also think its reasonable that the average rated heights for different children vary more with respect to those of adults. 
+Based on the information we've already provided, we can answer these questions: Yes, yes, and yes. We think these results are reasonable based on what we know about the heights of adults and children and about the average speaker's average knowledge of the heights of adults and children. For example, we did think it was reasonable to expect that listener's height judgments would be more variable for children than for adults. We think most people have a good handle on how tall adults tend to be. Does the average person know how tall 10-12 year-old children tend to be? We don't think so. In addition, 10-12 year olds can show a lot of variation in height based on differences in growth rates, which might also lead people to provide more variable estimates for the height of children. We think it also 'makes sense' that different listeners could be more or less systematic (i.e. predictable) than others, for many reasons. As for the final question, based on our discussion so far we also think its reasonable that the average rated heights for different children vary more with respect to those of adults. 
+
 We're going to add another, more meta, question: Which should we report? We can approach this from the perspective that the best model according to $\mathrm{elpd}$ is the 'real' model. Based on the comparison of $\mathrm{elpd}$  above, it seems that the last model we fit (`model_A_L_sigma`) is the 'best' model. Does this mean it is the 'real' model? And does it mean that this is the one we ought to report? The short answers to these questions are no and no. The fit between a model and data can't 'prove' that the model represents the 'real' relationship underlying the data. The reason for this is that there are potentially a large number of other, slightly different, models that provide just as good a fit to the data, or perhaps a better one. If the best model is the real one, how can you ever know you have the best model? Further, even if you did somehow find the best model for the data you have, how could you guarantee that it will also be the best model for the data you don't have? It's impossible to know if some new data might come along that will not fit your model as well as one of the other model, making the 'best' model contingent on the data you have seen so far.  
 
-Ok so we can't prove that our best model is the real one, fine. But its still the best one we have. Do we necessarily need to report the 'best' model? This sort of reasoning can lead to serious problems because there is almost always a better 'truer' model out there, and we often don't try to find it. For example, many people would never think to fit a heteroscedastic model and so would not even worry about reporting it. Does the existence of a hypothetical better model mean that the model they report is invalid? We don't think so. If it doesn't, then why should this be the case for the researcher that *did* think to try the heteroscedastic model? In general, we can imagine that 10 people might approach any given research question in 10 different ways, a concept sometimes referred to as researcher degrees of freedom (cite). Slight differences in model structure and data processing results in slight differences in model outputs, resulting in a sort of 'distribution' for any given result. How can a fixed underlying reality result in a distribution or results? When they are all slightly wrong. 
+Ok, so we can't prove that our best model is the real one, fine. But its still the best one we have. Do we necessarily need to report the 'best' model? This sort of reasoning can lead to serious problems because there is almost always a better 'truer' model out there, and we often don't try to find it. For example, many people would never think to fit a heteroscedastic model and so would not even worry about reporting it. Does the existence of a hypothetical better model mean that the model they report is invalid? We don't think so. If it doesn't invalidate *their* simpler model, then why should this be the case for the researcher that *did* think to try the heteroscedastic model? 
+
+In general, we can imagine that 10 people might approach any given research question in 10 different ways, a concept sometimes referred to as researcher degrees of freedom (cite). Slight differences in model structure and data processing results in slight differences in model outputs, resulting in a sort of 'distribution' for any given result. How can a fixed underlying reality result in a distribution or results? When they are all slightly wrong. 
 
 Rather than think of our models as representations of *reality*, we can think of them as mathematical implementations of our research questions. The model we report should include the information and structure that we think are necessary to represent and investigate our research questions. Using a different model can result in different results given the same data, but asking a different question can also lead to different results given then same data. When interpreting a statistical analysis, it is very useful to keep in mind that results are contingent on:
 
@@ -752,6 +758,7 @@ fixefs1[1,c(1,3,4)] = fixefs1[1,c(1,3,4)] - 159
 fixefs2[1,c(1,3,4)] = fixefs2[1,c(1,3,4)] - 159
 fixefs3[1,c(1,3,4)] = fixefs3[1,c(1,3,4)] - 159
 ```
+
 ```{r F8-6, fig.height = 4, fig.width = 8, fig.cap="(left) Comparison of fixed effect estimates and 95% credible intervals for three models. We subtracted 159 from the model intercept so that it would fit on the same scale as the other parameters. (right) Plots showing comparisons of parameter estimates for pairs of the same models presented in the left plot. Each row compares a different pair od models and each column presents a different set of parameters. The columns represent all listener random effects (left), all speaker random effects (middle), and the predictions made by each model (right).", cache = FALSE, echo = FALSE}
 
 ################################################################################
@@ -813,6 +820,7 @@ abline (0,1,col=2,lwd=1,lty=2)
 
 We can see that the differences in the fixed effects are so small as to be largely meaningless. The three models also provide nearly identical listener 'random effects' and predicted values. Based on this, if we care primarily about the fixed effects and understanding apparent height judgments, any of the three models will work equally well. Where the models differ is in their estimates of the speaker effects. The inclusion of heteroscedasticity seems to reduce the magnitude of the speaker effects relative to the homoscedastic model (`model_interaction`). If we were specifically interested in these effects then we would need to take the time to understand the source, and meaning, of these differences. Of course, the experiment we ran was not designed to investigate speaker differences, so it does not make much sense to delve to far into it in our analysis. Our experiment was designed to investigate the perception of apparent height and the role of speaker age and gender in these judgments. From this perspective, it seems that either of the three models is suitable. 
 
+
 ## Simulating our data
 
 [@@ NHS: looks like you kind of ran out of steam here...]
@@ -821,5 +829,45 @@ We can see that the differences in the fixed effects are so small as to be large
 - going to simulate multivar random effects.
 - simulate different error variances.
 - we will simulate some of our differences
+
+## Simulating data using our model parameters {#c4-simulating}
+
+Regression models break up variation in the dependent variables into component parts. One way to think about what all the numbers in our model mean is to simulate the dependent variable by building it from the individual component parts indicated by the model. Our model (`model_multilevel`) has just four components we need to include, one for every estimated parameter: The intercept, the listener-dependent intercepts ($L$), the between-listener variation ($\sigma_L$), and the within-listener variation, the error ($\sigma$).
+
+We do this in the code below. First we set the intercept to 174 cm. Then, we sample 15 random listener effects from a normal distribution, representing simulated listeners. The listener population has a mean of 0 and a standard deviation ($\sigma_L$) equal to 3.8 as indicated by our model. These effects are stored in a vector called `L_`, and they represent the values of $L$ for our different listeners. After this we create an index vector `L` that tells us which value of `L_` to apply for any given trial. This vector contains the values from 1 to 15, representing each listener, repeated 45 times each in order to simulate 45 observations from each listener. Finally, we draw our error (i.e. $\varepsilon \sim N(0,\sigma)$) based on the magnitude of `sigma` in our model. Note that the error is just 15x45 random draws from this population. Since the model contains the same value of $\sigma$ for all trials, there is no distinction between one listener and another when it comes to the magnitude of the error.
+
+```{r, collapse = TRUE}
+## don't run this line if you want a new simulated dataset. 
+set.seed(1)
+## this is the value of our intercept
+Intercept = 174
+## this is a vector of 15 listener effects
+L_ = rnorm (15, 0, 3.8 )
+## this is a vector indicating which listener produced which utterance
+L = rep (1:15, each = 45)
+## this vector contains the error
+error = rnorm (45 * 15, 0, 7)
+```
+
+After creating our components, we add the Intercept, listener effects and random error to make our fake 'replicated' data. Since this data has the same statistical properties as our real data, it should look a lot like it.
+
+```{r, collapse = TRUE}
+# the sum of an intercept, listener effects and random error makes our fake data
+height_rep = Intercept + L_[L] + error
+```
+
+Figure \@ref(fig:F4-5) we compare the results of our simulation to our real data. The are reasonably similar, which tells us that our model is a good reflection of the data.
+
+
+
+
+Below we make two data sets that are 'incomplete' with respect to the variation in our data. The first contains the intercept and noise only, the second contains the intercept and listener effects only.
+
+```{r, collapse = TRUE}
+# this fake data is missing between listener variation
+height_rep_1 = Intercept + error
+# this fake data is missing within listener variation
+height_rep_2 = Intercept +  L_[L]
+```
 
 

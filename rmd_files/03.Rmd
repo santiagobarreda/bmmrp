@@ -11,7 +11,7 @@ In this chapter we're going to start trying to answer basic research questions w
 
 ## Chapter pre-cap
 
-This chapter introduces the concept of a regression model and explains what makes regression models 'Bayesian'. Posterior probabilities are introduced as is `brms`, an R package that can be used to fit Bayesian regression models. After this, a Bayesian regression model estimating data from a single normal distribution is fit to the experimental data. Topics related to model fitting such as thinning, chains, and iterations are presented, as is the specification of prior probabilities. The interpretation of the `brm` model print statement, and the concepts of errors and residuals are also introduced. Finally,  information related to working directly with the model posterior samples is also provided, and a the log posterior density is discussed. 
+This chapter introduces the concept of a regression model and explains what makes regression models 'Bayesian'. Posterior probabilities are introduced as is `brms`, an R package that can be used to fit Bayesian regression models. After this, a Bayesian regression model estimating data from a single normal distribution is fit to the experimental data. Topics related to model fitting such as thinning, chains, and iterations are presented, as is the specification of prior probabilities. The interpretation of the `brm` model print statement, and the concepts of errors and residuals are also introduced. Finally,  information related to working directly with the model posterior samples is also provided, and the log posterior density is discussed. 
 
 ### Bold words
 
@@ -24,7 +24,7 @@ a posteriori, analytically, autocorrelation, Bayes theorem, chain, chains, coeff
 
 It's difficult to offer a precise definition for **regression** because the term is so broad, but regression models are very often models that help you understand systematic variation in the mean parameter ($\mu$) of a normal distribution. Actually, you can model variation in other parameters and use a variety of other probability distributions, and we will do so later in this book. However, for now we'll focus on models based on the normal distribution. Here is a general summary of the concepts underlying a regression that assumes normally-distributed errors: 
 
-* You have a variable you are interested in, $y$, which is a vector containing $N$ observations. We can refer to any one of these observations like this $y_{[i]}$ for the $i^{th}$ observation. Although it's a bit atypical and, strictly speaking, not necessary, we're going to put the index variables associated with trial number ($i$) in brackets like this $y_{[i]}$. This is just to make it easier to identify, and to highlight the similarity to vectors in R (e.g., `mens_height[i]`).
+* You have a variable you are interested in, $y$, which is a vector containing $J$ observations. We can refer to any one of these observations like this $y_{[i]}$ for the $i^{th}$ observation. Although it's a bit atypical and, strictly speaking, not necessary, we're going to put the index variables associated with trial number ($i$) in brackets like this $y_{[i]}$. This is just to make it easier to identify, and to highlight the similarity to vectors in R (e.g., `mens_height[i]`).
 
 * You assume that the random variation in your data is well described by a normal probability distribution cantered at $\mu$. This is a mathematical function ($\mathrm{N}(\mu,\sigma)$) that describes what is and is not probable based on two parameters. You also assume that the random variation in each observation is independent from the random variation in each other observation. This means, for example, that you can't really say why any two observations are above or below the mean.
 
@@ -375,7 +375,7 @@ y_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma)
 \end{equation}
 $$
 
-Our trial-specific mean will be constant across trials for now, but we introduce the formalism of the trial-dependent mean ($\mu_{[i]}$) now in \@ref(eq:3-14) as it will be useful in our discussion below. So, we can still present our variable as coming from a trial-specific value of $\mu$ even if we expect $\mu_{[i]}=\mu_{[j]}$ for all values of $i$ and $j$.
+Our trial-specific mean will be constant across trials for now, but we introduce the formalism of the trial-dependent mean ($\mu_{[i]}$) now in \@ref(eq:3-14) as it will be useful in our discussion below. So, we can still present our variable as coming from a trial-specific value of $\mu$ even if we expect $\mu_{[i]}=\mu_{[j]}$ for all values of $i$ and $j$ (some other number).
 
 $$
 \begin{equation}
@@ -706,14 +706,14 @@ model_thinned = bmmb::get_model ('3_model_thinned.RDS')
 model_thinned = readRDS ('../models/3_model_thinned.RDS')
 ```
 
-We inspect the model print statement and see that despite having the same number of samples as the `model_multicore`, the ESS for this model is higher than for the previous model, in particular for the `sigma` parameter.
+We inspect the model print statement and see that despite having the same number of samples as the `model_multicore`, the ESS for this model is higher than for the previous model, in particular for the `sigma` parameter. Before moving on from ESS we just want to note that it is possibly for your ESS to be *higher* than your actual (real) number of samples. This is simply due to the way that ESS is calculated and is nothing to worry about, in fact, it means that your model is sampling the posterior very efficiently. 
 
 ```{r, collapse = TRUE}
 # inspect model
 model_thinned
 ```
 
-## Specifying prior probabilities {#c3-specifying priors}
+## Specifying prior probabilities {#c3-specifying-priors}
 
 In section \@ref(c3-whats-bayes) we mentioned that in Bayesian models all estimated parameters *must* have prior probability distributions specified for them. And yet, to this point we've been fitting models without explicitly specifying prior probability distributions for the parameters. It turns out that if you don't specify prior probabilities for your parameters, `brm` will use its own default priors for parameters given the characteristics of your data. We can use the function `get_prior` in `brms` to see what the default priors are for our model, and to see which parameters in our model require priors. Of course, we should know this based on the structure of our model but this method is useful to help verify our expectations. 
 

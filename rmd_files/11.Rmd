@@ -715,7 +715,7 @@ bmmb::r2_bayes(model_height_vtl_f0_reduced)
 
 And see that all of the extra complexity included in our full model gains us less than 1% additional variance explained. All of this suggests that a researcher would be justified in fitting and interpreting the reduced model for their research. However, we are inclined to agree with Gelman and colleagues that there is value in fitting a model that includes all predictors and interactions supportable by our data, as long as these relate to potentially interesting research hypotheses. This is because being able to say "these parameters are near zero/show no meaningful variation" is useful information that we lose when we rely only on the reduced model. Of course, we could say something like "we fit a larger model that showed all these effects are zero but we are not presenting it here so take our word for it". However, if we do want to say something like this it may make sense to present the full model to the reader.
 
-## Fitting a multivariate logistic regression model
+## A logistic regression model with multiple quantitative predictors
 
 We're going to fit a logistic regression model with two quantitative predictors and an interaction between them. We're also going to inspect the model using the principles of Bayesian ANOVA (henceforth **BANOVA**) outlined in the previous section. Before continuing we want to talk briefly about the geometry of the models we'll be fitting. 
 
@@ -793,25 +793,21 @@ exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
 
-Our research questions are:
+As for our height model, we'll leave more detailed research questions for chapter 13. For now we are only interested in this general 'meta' question: 
 
-Q1) Do listeners use VTL, f0, and the interaction between them to determine speaker gender?
-
-Q2) Does apparent speaker age influence the use of the above mentioned acoustic cues?
-
-Q3) Is there a lot of between-speaker variation in perceptual behavior?
+Q1) Can we use what we've learned so far to fit and evaluate a logistic regression model with two quantitative predictors?
 
 ### Description of the model
 
-Our model formula is very much like the one we used for our model investigating the perception of femaleness in the last chapter, save for the addition of f0 and its interaction with the other predictors. Our formula will be:
+Our model formula is very much like the one we used to investigate the perception of femaleness in the last chapter, save for the addition of f0 and its interaction with the other predictors. Our formula will be:
 
-`F ~ vtl * f0 * A + (vtl * f0 * A|L) + (1|S)`
+`Female ~ vtl * f0 * A + (vtl * f0 * A|L) + (1|S)`
 
 We'll use the same priors we used for our logistic models last chapter. Since we scaled f0 so that a change of 1 corresponds to 100 Hz, a 1 unit change in f0 this value represents about the average difference in f0 between adult males and females. For this reason, we think it's reasonable to use a prior of the same magnitude as we used for our VTL parameter. We will omit our model specification since it is quite large and very similar to the presented in chapter 10 for `model_gender_vtl`. 
 
 ### Fitting and the model and applying a Bayesian ANOVA
 
-Below we fit our model:
+We fit our model with the code below:
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -836,12 +832,11 @@ model_gender_vtl_f0 = bmmb::get_model ('11_model_gender_vtl_f0.RDS')
 model_gender_vtl_f0 = readRDS ('../models/11_model_gender_vtl_f0.RDS')
 ```
 
-We can consider the model fixed effects using `brmplot` in figure \@ref(fig:F11-11). and beside that we make a BANOVA plot that compares the fixed effects, the finite-sample standard deviations for 'batches' our random effects parameters, and the residual error.
+We can inspect the model fixed effects using `brmplot` in figure \@ref(fig:F11-11). Beside that we make a BANOVA plot comparing the model fixed effects and the finite-sample standard deviations for 'batches' our random effects parameters.
 
 ```{r, include = FALSE}
 banova_gender_vtl_f0 = bmmb::banova (model_gender_vtl_f0)
 ```
-
 ```{r F11-11, fig.height = 3, fig.width = 8, fig.cap='(left) A plot showing the fixed effects estimates for `model_gender_vtl_f0`. (right) a BANOVA plot of the same model.', echo = FALSE, cache = TRUE}
 
 ################################################################################
@@ -854,36 +849,38 @@ bmmb::brmplot (brms::fixef(model_gender_vtl_f0), line = TRUE, las = 2)
 bmmb::banovaplot (banova_gender_vtl_f0, line = TRUE, las = 2)
 ```
 
-In the figure above we see a relatively complex model, with an important role for both f0 and VTL. We also see that unlike for our model predicting apparent height above, this model features a prominent f0 by VTL interaction (`vtl:f0`), and an interaction between this and apparent age (`vtl:f0:A1`). Just as with our last model, we are going to leave the interpretation of this model for chapter 14. Instead, we're going to focus on using our models to understand the classification of speakers into apparent females and apparent males.
+In the figure above we see a relatively complex model, with an important role for f0 and VTL. We also see that unlike for our model predicting apparent height above, this model features a prominent f0 by VTL interaction (`vtl:f0`), and an interaction between this and apparent age (`vtl:f0:A1`). Just as with our height model above, we will leave interpretation of this model for chapter 13. Instead, we're going to focus on using our models to understand the classification of speakers into apparent females and apparent males based on their VTL and f0.
 
 ### Categorization in two dimensions
 
-Imagine a horizontal plane such that $z=0$ for all values of $x$ and $y$ in figures \@ref(fig:F11-9) and \@ref(fig:F11-10). This plane would represent an expected probability of 0.5, meaning it is the boundary between successes and failures along the $z$ axis. Our response surface will intersect with the horizontal $z=0$ plane, forming a curve at this intersection. These curves represent the division of the response surface into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the curves formed by the intersection of our response surface and the $z=0$ plane represent the *category boundary* as defined by our model.
+Imagine a horizontal plane such that $z=0$ for all values of $x$ and $y$ in figures \@ref(fig:F11-9) and \@ref(fig:F11-10). This plane would represent an expected probability of 0.5, meaning it is the boundary between successes (1) and failures (0) along the $z$ axis. Our response surface will intersect with the horizontal $z=0$ plane, forming a curve at this intersection. These curves represent the division of the response surface into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the curves formed by the intersection of our response surface and the $z=0$ plane represent the *category boundary* along the predictor space, as defined by our model.
 
-The intersection of two planes forms a straight line. Although these surfaces are not flat, their intersection with the plane at $z=0.5$ (i.e. the plane where logit = 0) will still form straight lines. Although the surfaces in the bottom row of figure \@ref(fig:F11-9) are not planes, the intersection of these surfaces with planes still form straight lines. However, the intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. Since saddle shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). 
-
-To find the intersection of the surfaces defined by our models and the plane at $z=0$, we can use some basic algebra. We take the equation defining the general shape, including the cross-product of $x$ and $y$:
-
-$$
-\begin{equation}
-z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times xy)
-(\#eq:F11-11)
-\end{equation}
-$$
-
-First, we consider the intersection of the plane at $z=0$ and a plane defined by our model. To do this we set both $z=0$ and $d=0$, and solve for $y$ as shown below. 
+We will begin by discussing the case where the response surface is a plane, i.e., there is no cross product term in our model. The intersection of two planes forms a straight line. Although the surfaces in the bottom row of figure \@ref(fig:F11-9) are not planes, the intersection of these surfaces with planes still form straight lines. Thus, their intersection with the plane at $p=0.5$ (i.e. the plane where logit = 0) will still form straight lines. To find the intersection of our response surfaces and the plane at $z=0$, we can use some basic algebra. We take the equation defining the shape of our response and set z to zero:
 
 $$
 \begin{equation}
 \begin{split}
-0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (0 \times xy) \\
-y =  -(\mathrm{b} \times x - \mathrm{a}) / \mathrm{c}
+z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) \\
+0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y)
 \end{split}
-(\#eq:F11-12)
+(\#eq:11-11)
 \end{equation}
 $$
 
-Second, we consider the intersection of the plane at $z=0$ and the saddle shape defined by our model. To do this we set only $z=0$, and solve for $y$ again as shown below. 
+We will arbitrarily decide to draw a line that treats y as the dependent variable. To find the equation for this line we need to solve for y (i.e. isolate it on one side of the equal sign), as shown in \@ref(eq:11-12). In the interest of full disclosure, we use online algebra solving tools to solve equations like this. There is no shame in doing so, and it minimizes on the probability of an error on your part. Of course, you need to make sure the tool you use is reliable, but you can always double (or triple) check proposed solutions across different analysis methods.
+
+$$
+\begin{equation}
+\begin{split}
+0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) \\
+y =  -(\mathrm{b} \times x - \mathrm{a}) / \mathrm{c}
+\end{split}
+(\#eq:11-12)
+\end{equation}
+$$
+
+We can use the above method to calculate the category boundaries implied by a model including a cross product. The intersection between a saddle shape and the plane where $z=0$ will not be a straight line. Instead, it will be a **hyperbola** a shape that resembles a pair of parabolas that approach, but never cross an asymptote. Since saddle shapes can fall and then rise again, a surface of this kind may intersect with the plane at $z=0$ in more than one location (seen in figure \@ref(fig:F11-10)). To find the intersection of the plane at $z=0$ and a saddle shape we again set $z=0$, and solve for $y$ as shown in \@ref(eq:11-13).
+
 
 $$
 \begin{equation}
@@ -891,13 +888,11 @@ $$
 0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (d \times xy) \\
 y =  (-\mathrm{b} \times x - \mathrm{a}) / (d \times x + c)
 \end{split}
-(\#eq:F11-13)
+(\#eq:11-13)
 \end{equation}
 $$
 
-The $a, b, c$ and $d$ parameters represent the model coefficient for the intercept, VTL slope, f0 slope, and cross-product parameter respectively. We can get these for our model by adding up the correct combination of fixed effects parameters. 
-
-Below we get the samples for our fixed effects parameters from our model and add up the appropriate parameters to calculate our $a, b, c$ and $d$ parameters for apparent adults, for apparent children, and overall. In each case, we combine the necessary parameters first and then find the average across the samples of the parameter. 
+The $a, b, c$ and $d$ parameters above represent model coefficient for the intercept, VTL slope, f0 slope, and cross-product respectively. Below we get the samples for our fixed effects parameters from our model and collect the marginal or 'main effect' estimates of these parameters. These are the *overall* values of the intercept ($a$), the VTL slope ($b$), the f0 slope ($c$), and the cross product of VTL and f0 ($d$),
 
 ```{r, collapse = TRUE}
 # get fixed effect parameters
@@ -908,7 +903,11 @@ a_all = mean (samples[,"Intercept"])
 b_all = mean (samples[,"vtl"])
 c_all = mean (samples[,"f0"])
 d_all = mean (samples[,"vtl:f0"])
+```
 
+We can also add up appropriate combinations of these fixed effects to calculate separate $a, b, c$ and $d$ parameters for apparent adults and for apparent children. We show and example of this below. Note that in each case we combine the necessary parameters first and then find the average across the samples of the parameter. 
+
+```{r, collapse = TRUE}
 # get a,b,c,d coefficients for adult surface
 a_adult = mean (samples[,"Intercept"] + samples[,"A1"])
 b_adult = mean (samples[,"vtl"] + samples[,"vtl:A1"])
@@ -922,9 +921,7 @@ c_child = mean (samples[,"f0"] - samples[,"f0:A1"])
 d_child = mean (samples[,"vtl:f0"] - samples[,"vtl:f0:A1"])
 ```
 
-We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our hyperbolic (equation X) boundaries in figure \@ref(fig:F11-12). You may notice small lines in the top left corner of the left plot in the figure. When we 'zoom out' in the middle plot the figure \@ref(fig:F11-12), we see that this model actually predicts male classifications in the top left corner as well as in the bottom right corner. This is a result of the fact that our hyperbolic boundaries come in pairs, resulting from the bimodal shape seen in the bottom row of figure \@ref(fig:F11-10).
-
-In the right plot of figure \@ref(fig:F11-12) we present a *territorial map* of our stimulus space as defined by speaker VTL and f0, for apparent adults. This map tells us the expected classification of speakers into males and females given their voice f0 and VTL, and assuming that they are perceived as being adults. Unlike the territorial maps presented in the previous chapter (in figure X), the map below is defined along a two-dimensional stimulus space. In addition, although we only present one below we can make three separate maps, one for apparent children, one for apparent adults, and an overall map. 
+We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our hyperbolic (equation \@ref(eq:11-13)) boundaries in figure \@ref(fig:F11-12). You may have noticed lines in the top left corner of the left plot in the figure. When we 'zoom out' in the middle plot the same figure, we see that this model actually predicts male classifications in the top left corner as well as in the bottom right corner. This is a result of the fact that our hyperbolic boundaries come in pairs, resulting from the bimodal (i.e. two peaked) shape seen in the bottom row of figure \@ref(fig:F11-10).
 
 ```{r F11-12, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Curves indicate male/female boundaries for adults (green), children (orange), and overall (blue). (middle) The same as the left figure but zoomed out more. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space.", echo = FALSE, cache = FALSE}
 
@@ -1022,9 +1019,15 @@ points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
 
 ```
 
-The high-frequency male region suggests that speakers with a very high f0 and a very short VTL are likely to be identified as males, even for adults. Note that we don't have any speakers in these regions and so we can only guess what listeners might have done. However, common sense suggests that for adult speakers at least, speakers with a very short VTL and a very high f0 are not very likely to be identified as male. Does this matter? Yes and no. Does it matter that the earth isn't flat but our maps mostly act like it is? If it's *flat enough* in the area described by our map, then maybe not. If you're trying to find the shortest flight time between two cities, it probably does. 
+In the right plot of figure \@ref(fig:F11-12) we present a *territorial map* of our stimulus space as defined by speaker VTL and f0, for apparent adults. This map tells us the expected classification of speakers into males and females given their voice f0 and VTL, and assuming that they are perceived as being adults (broken green lines in the left and middle plots). Unlike the territorial maps presented in the previous chapter (in figure \@ref(fig:F10-5)), this map is defined along a two-dimensional stimulus space. In addition, although we only present one map in the plot, we can make three separate maps, one for apparent children, one for apparent adults, and an overall map. 
 
-So, we have to decide what our model is for. If we only want to understand behavior in the regions where we mostly have a lot of data, then the high-frequency male region probably doesn't matter. On the other hand, if we want to understand how listeners might be using this acoustic information in general, we might worry that the model predicts behavior that we think is very unlikely to be correct. In other words, we might want our model to 'make sense' even for data we don't have. If this is the case then maybe we need to drop the cross-product from our model because it results in a model that can't possibly capture what listener are doing in general. Below we fit a reduced model without the interaction between f0 and VTL. 
+The high-frequency male region suggests that speakers with a very high f0 and a very short VTL are likely to be identified as males, even for adults. Note that we don't have many speakers in these regions and so we can only guess how listeners might have responded to voices in this region. However, common sense suggests that speakers with a very short VTL and a very high f0 are not very likely to be identified as adult males. Does this matter? Yes and no. Does it matter that the earth isn't flat but our maps mostly act like it is? If it's *flat enough* in the area described by our map, then maybe not. If you're trying to find the shortest flight time between two cities, it probably does. 
+
+This suggests we should decide what our model is for. If we only want to understand behavior in the regions where we mostly have a lot of data, then the high-frequency male region probably doesn't matter. On the other hand, if we want to understand how listeners might be using this acoustic information in general, we might worry that the model predicts behavior that we think is very unlikely to be correct. In other words, we might want our model to 'make sense' even for data we don't have. 
+
+### Model selection and misspecification
+
+In the hopes of finding a model that 'makes more sense', we're going to drop he cross-product from our model. Below we fit a reduced model that is otherwise the same as our initial model, but without the interaction between f0 and VTL. 
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -1049,7 +1052,7 @@ model_gender_vtl_f0_reduced = bmmb::get_model ('11_model_gender_vtl_f0_reduced.R
 model_gender_vtl_f0_reduced = readRDS ('../models/11_model_gender_vtl_f0_reduced.RDS')
 ```
 
-And find our $a,b,c$ and $d$ parameters for our model. There is no $d$ parameter this time since there is no cross-product term. 
+We find the $a,b,c$ parameters for response plane given our model, calculating the overall (marginal) plane, a plane for apparent children, and another for apparent adults. There is no $d$ parameter this time since there is no cross-product term in this model. 
 
 ```{r, collapse = TRUE}
 # get fixed effect parameters
@@ -1071,7 +1074,10 @@ b_child_reduced = mean (samples[,"vtl"] - samples[,"vtl:A1"])
 c_child_reduced = mean (samples[,"f0"] - samples[,"f0:A1"])
 ```
 
-We use these parameters to plot the linear category boundaries in our stimulus space. Figure \@ref(fig:F11-13) compares the linear boundaries implied by our reduced model to those implied by our full model, ignoring the $d$ coefficients. We can see that in the absence of the cross-product, the boundaries for children and adults differ substantially in their slope. The change in slope indicates that f0 differences matter less for children than they do for adults. We can also see that the linear boundaries do not differ much in slope for our model that *does* include a cross-product. This is likely because either the cross-product, or the interaction of this with apparent age, is able to capture whatever difference our reduced model represents with differences in the effect of f0.  
+We use these parameters to plot the linear category boundaries in our stimulus space. Figure \@ref(fig:F11-13) compares the linear boundaries implied by our reduced model (middle) to those implied by our full model (left), ignoring the $d$ coefficients in the case of the full model. We can see that in the absence of the cross-product (middle), the boundaries for children (orange) and adults (green) differ noticeably in their slope. The change in slope indicates that f0 differences matter less for children than they do for adults. This is because since the male-female boundary is almost parallel to the y axis (f0), it is difficult to cross the boundary by moving along this axis. In general, when a boundary is parallel to an axis this means that variable is not strongly associated with category changes. If a boundary is perpendicular to an axis that means the predictor may be strongly associated with category changes. 
+
+In contrast to the reduced model, we see that the linear boundaries do not differ much in slope in our full model (left). This is likely because either the cross-product, or the interaction of this with apparent age, is able to capture whatever difference our reduced model represents with differences in the effect of f0.  
+
 
 ```{r F11-13, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Lines indicate male/female boundaries for adults (green), children (orange), and overall (blue) implied by the full model, ignoring the cross-product term. (middle) The same as the left figure but for the reduced model. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space, for the reduced model.", echo = FALSE, cache = TRUE}
 
@@ -1161,9 +1167,6 @@ points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
       col = 0)
 
 ```
-
-### Model selection and misspecification
-
 We can use cross-validation to investigate which of our two models is preferable.  
 
 ```{r, eval = FALSE, cache = TRUE}
@@ -1171,27 +1174,27 @@ model_gender_vtl_f0 = brms::add_criterion(model_gender_vtl_f0,"loo")
 model_gender_vtl_f0_reduced = brms::add_criterion(model_gender_vtl_f0_reduced,"loo")
 ```
 
-The comparison suggests that the model that includes the interaction does a better job of explaining our data, but the differences between the two models is not terribly large (about two standard errors).
+The comparison suggests the model that includes the interaction does a better job of explaining our data, but the differences between the two models is not terribly large (just under two standard errors).
 
 ```{r, eval = TRUE}
 brms::loo_compare (model_gender_vtl_f0, model_gender_vtl_f0_reduced)
 ```
 
-However, when adding the `loo` criterion to our models we got the following error message :
+However, when adding the `loo` criterion to our models we got error messages like this:
 
-`Warning: Found 201 observations with a pareto_k > 0.7 in model 'model_gender_vtl_f0'. It is recommended to set 'moment_match = TRUE' in order to perform moment matching for problematic observations.`
+`Warning: Found 205 observations with a pareto_k > 0.7 in model 'model_gender_vtl_f0'. It is recommended to set 'moment_match = TRUE' in order to perform moment matching for problematic observations.`
 
-When we add the `loo` criterion to our model, `brms` (and stan) don't actually fit a new model for every left our data point (i.e. a 'real' leave-one-out cross validation). Instead, as discussed in section X , there is a way to approximate what the model would look like it been refit without each data point. This approximation is does using something called **Pareto smoothed importance sampling** (**PSIS**). The Pareto-$\hat{k}$ (`pareto_k`) statistic is a diagnostic for this method that helps you check the assumptions underlying the leave-one-out approximation (cite, Vehtari, Gelman and Gabry, 2017). 
+When we add the `loo` criterion to our model, `brms` (and `stan`) don't actually fit a new model for every left out data point (i.e. a 'real' leave-one-out cross validation). Instead, as discussed in section X , there is a way to approximate what the model would look like had it *actually* been refit without each data point. This approximation is does using something called **Pareto smoothed importance sampling** (**PSIS**). The Pareto-$\hat{k}$ (`pareto_k`) statistic is a diagnostic for this method that helps you check the assumptions underlying the leave-one-out approximation (cite, Vehtari, Gelman and Gabry, 2017). 
 
-Essentially, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential on your parameter estimates and will have a higher value of $\hat{k}$. If an observation is *too* unusual, then the estimate of $\mathrm{elpd}$ associated with that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), values greater than 0.7 are 'bad' and values greater than 1.0 are 'very bad'. Aki Vehtari (cite webpage) outlines three general situations that cause Pareto $\hat{k}$ statistics to be large:
+Essentially, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential in your model and will have a higher value of $\hat{k}$. If an observation is *too* unusual, then the estimate of $\mathrm{elpd}$ associated with that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), values greater than 0.7 are 'bad' and values greater than 1.0 are 'very bad'. 
 
-1) p_loo, the 'effective number of parameters' (see section X) is *much smaller* than number of parameters: The model is likely to be **misspecified**. A misspecified model is one whose structure contains important differences compared to the processes being modeled.
+Before continuing we will quickly review some information previously discussed (in more detail) in section X (loo elpd parts). The number of estimated parameters in a model is the total number of parameters estimated across all fixed effects, random effects, and 'distributional' parameters such as $\sigma$ or $\nu$. We may distinguish this from the *effective* number of parameters which takes the actual flexibility of the model into account, `p_loo` when calculated using `loo`. If a model shows little variability in its random effects, its effective number of parameters may be smaller than its total number of estimated parameters. Aki Vehtari (cite webpage) outlines three general situations that cause Pareto $\hat{k}$ statistics to be large:
 
-2) p_loo is *less than* the number of parameters: If the number of parameters is relatively large relative to the number of observations (e.g. p > n/5) then the model may be too flexible, or your priors may be too weak. 
-
-3) p_loo is *greater than* the number of parameters: The model is likely to be *'badly'* misspecified. There are two situations related to this. 
+1) p_loo is *smaller* the number of estimated parameters: If the estimated number of parameters (p) is relatively large relative to the number of observations (n), e.g. p > n/5, then the model may be too flexible, or your priors may be too weak. 
+2) p_loo is *much smaller* than the number of estimated parameters: The model is likely to be **misspecified**. A misspecified model is one whose structure contains important differences compared to the processes being modeled.
+3) p_loo is *greater than* the number of parameters: The model is likely to be *'badly'* misspecified. 
   
-In each case, a posterior predictive check may help understand the issues, as can inspecting the distribution of Pareto $\hat{k}$ statistics. Below, we print the actual and effective number of parameters for our model, as well as our number of observations.
+In each case, a posterior predictive check may help understand the issues, as can inspecting the distribution of Pareto $\hat{k}$ statistics. Below, we print the actual and effective number of parameters for our full model, as well as our number of observations.
 
 ```{r}
 # number of estimated parameters
@@ -1204,10 +1207,11 @@ nrow (model_gender_vtl_f0$data)
 model_gender_vtl_f0$criteria$loo$estimates
 ```
 
-Based on the information above, we believe that our model falls into the second case. Our `p_loo` is only about 30% as large as our number of parameters. Although we do have more than 5 times as many observations (2085) as estimated parameters (306), the ratio of 6.81 is not much greater than 5. In addition, we *do* think there is a possibility that the model is *misspecified*. We have said repeatedly that no model can really 'prove' itself to be the 'real' model, and even that it's not totally clear what it would mean for a formalism like regression to represent the 'real' process underlying our observations. Given this, it seems that every model is 'misspecified' to some extent, making the critique of one specific model model as being misspecified somewhat odd. 
+Based on the information above, we believe that our model falls into the first case. Our `p_loo` is only about 30% as large as our number of parameters. Although we do have more than 5 times as many observations (2085) as estimated parameters (306), the ratio of 6.81 is not much greater than 5. In addition, we *do* think there is a possibility that the model is *misspecified*. We've said repeatedly that no model can really 'prove' itself to be the 'real' model, and even that it's not totally clear what it would mean for a formalism like regression to represent the 'real' process underlying our observations. Given this, it seems that every model is 'misspecified' to some extent, making a focus on the misspecification of this one model seem somewhat arbitrary. 
 
-However, we can say that in this context, misspecification refers to a difference between your model and reality that causes noticeable 'misbehavior' in your model. What might this misbehavior look like? We think an excellent example of this 'odd' behavior is in our hyperbolic category boundaries seen in figure \@ref(fig:F11-12). We noted at the time that these boundaries defied logic and were unlikely to represent listener behavior in this area of the predictor space. In other words, the model did not correctly reflect the underlying process we are trying to understand: Listener judgments of apparent gender based on speech acoustics and apparent speaker age.
-  To investigate the Pareto $\hat{k}$ estimates for our initial model, we get these using the code below:
+Although the above may be generally true, we can focus on misspecifications that cause noticeable 'misbehaviors' in our models. What might 'misbehaviors' look like? We think an example of this is given by the hyperbolic category boundaries seen in figure \@ref(fig:F11-12). We noted at the time that these boundaries defied logic and were unlikely to represent listener behavior in all areas of the predictor space. In other words, the model did not seem to correctly reflect the underlying process we are trying to understand: Listener judgments of apparent gender based on speech acoustics and apparent speaker age. 
+
+We can get the Pareto $\hat{k}$ estimates for our initial model using the code below:
 
 ```{r, cache = TRUE}
 pareto_k = model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k
@@ -1237,13 +1241,13 @@ legend (10, 1.4, legend=(c("boy","girl","man","woman")), col = bmmb::cols[2:5],p
         horiz = TRUE, bty = 'n',x.intersp = .8)
 ```
 
-We made posterior predictions for each model, taking the average across all posterior samples: 
+We made posterior predictions for the full model, taking the average across all posterior samples: 
 
 ```{r, cache = TRUE}
 p_preds = predict (model_gender_vtl_f0)
 ```
 
-And plot these in the left plot of figure \@ref(fig:F11-15). It's clear that the main issue seems to be for males who are predicted to be female 0%, or nearly 0%, of the time. In fact, several men were identified as women in 0% of cases. Since a probability of 0 implies, in the limit, a logit of negative infinity, the model appears to have a hard time finding reasonable values for some parameters in these cases. We considered a  boxplot of Pareto k values by speaker (not presented here) which showed that a small number of individual men were responsible for most high k values. We found that several of these men had the lowest f0 values from among our speakers. In the middle plot we present each speaker plotted according to their f0 and VTL, where point size reflects the average Pareto $\hat{k}$ value for each speaker.
+Pareto-k value are plotted according to their predicted probability of a female response in the left plot of figure \@ref(fig:F11-15). It's clear that the main issue seems to be with adult males who are predicted to be female nearly 0% of the time. In fact, in the data several men *were* identified as women in 0% of cases. Since a probability of 0 implies, in the limit, a logit of negative infinity, the model appears to have a hard time finding reasonable values for some parameters in these cases. We considered a boxplot of Pareto k values by speaker (not presented here), which revealed that a small number of individual men were responsible for most high k values. We found that these men tended to have the lowest f0 values from among our speakers. In the middle plot we present each speaker plotted according to their f0 and VTL, where point size reflects the average Pareto-k value for each speaker.
 
 ```{r F11-15, fig.width = 8, fig.height = 3, fig.cap = "(left) Pareto k estimates for data points in `model_gender_vtl_f0` plotted against the predicted probability of a female response for each data point. (middle) Adult male and female speakers plotted according to voice characteristics. Point size reflects Pareto k values. (right) A 'topographic map' of our predicted surface for adult speakers. The same points as in the middle figure. Black lines indicate female/male category boundaries (i.e. logit = 0). Red lines indicate 2-logit decreases in expected values, green lines indicate 2-logit increases in expected values.", echo = FALSE, cache = TRUE}
 
@@ -1307,110 +1311,11 @@ for (i in seq(2,62,2)){
 points(aggd[,2:1], cex = 1, col = "grey40", pch=16,lwd=2)
 ```
 
-Based on figure \@ref(fig:F11-15), we can see that the problematic male voices are those with extreme values of VTL and, in particular f0. If we think of our saddle shapes (see figure \@ref(fig:F11-10)), they can have areas where $z$ values (i.e., the dependent variable) can rise or fall extremely rapidly. For example, we can see in the right plot of figure \@ref(fig:F11-15) that the most problematic male voices were in a region that includes very high values that rise rapidly based on small differences in f0 and VTL. So, it appears that in this case we have some male speakers whose probability of being identified as female is very low, implying very negative logit values, in a region of our surface that is curved such that extremely negative predicted values are possible. Combining this with or relatively small number of observations (given the complexity/flexibility of our model) results in the very high $\hat{k}$ values seen above.
+Based on figure \@ref(fig:F11-15), we can see that the problematic male voices are those with extreme values of VTL and, in particular f0. If we think of our saddle shapes (see figure \@ref(fig:F11-10)), they can have areas where $z$ values (i.e., the dependent variable) can rise or fall extremely rapidly. For example, the right plot of figure \@ref(fig:F11-15) presents a sort of topographical map of the response surface for adults in our full model. In this sort of plot lines indicate differences in 'elevation' and lines that are close together indicate rapid rises/falls in the height of the surface. 
 
-To resolve this situation we could fit a model with tighter priors, which may have the result of providing more constrained parameter estimates. However, it may be the case that our model is simply too flexible given the amount of data we have. Independently of all of this, we are still concerned with the very basic problem that the high-frequency region associated with male responses (presented in figure \@ref(fig:F11-12)) defies common sense and is probably wrong. As a result of this, we're not going to try to 'fix' the more complicated model but simply abandon it, relying instead on the reduced model that does not include the VTL by f0 interaction. 
+We can see that the most voices with the highest Pareto-k values were in a region that includes very high values that also rise rapidly based on small differences in f0 and VTL. So, it appears that in this case we have some male speakers whose probability of being identified as female is very low, implying very negative logit values, in a region of our surface that is curved such that extremely negative predicted values are possible. Combining this with or relatively small number of observations (given the complexity/flexibility of our model) results in the very high Pareto-k values seen above.
+
+To resolve this situation we could refit the full model with tighter priors, especially since our priors are actually relatively wide and could be quite a bit narrower without likely having much of an effect on results. However, it may be the case that our full model is simply too flexible given the amount of data we have. Independently of all of this, we are still concerned with the very basic problem that the high-frequency region associated with male responses (presented in figure \@ref(fig:F11-12)) defies common sense and is probably wrong. As a result of this, we're not going to try to 'fix' the more complicated model but simply abandon it, relying instead on the reduced model that does not include the VTL by f0 interaction. We should note that our reduced model *also* had a handful of high Pareto-k values, albeit only a small number (6) and with no values near 1. We think this is a reasonable amount and are happy to use the reduced model for inference, although
+
+
   
-### Answering our research questions
-
-As a reminder, the questions we posed above in section X are: 
-
-Q1) Do listeners use VTL, f0, and the interaction between them to determine speaker gender?
-
-Q2) Does apparent speaker age influence the use of the above mentioned acoustic cues?
-
-Q3) Is there a lot of between-speaker variation in perceptual behavior?
-
-Based on our discussion above, we conclude that listeners use f0 and VTL, but the jury is still out on the interaction of the two. It seems that to really get a handle on the higher-frequency male region, we would need to run an experiment with more voices in the lower left and upper right corners of our stimulus space as arranged in the right plot of figure \@ref(fig:F11-15). Below we print a table of the fixed effects for our reduced model:
-
-```{r T11-1}
-knitr::kable(fixef(model_gender_vtl_f0_reduced), caption = "Fixed effect posterior means, error, and credible intervals for our reduced model.")
-```
-
-It seems that apparent speaker age appears to affect the use of both VTL and f0. In both cases, the effects of f0 and VTL changes are stronger for children compared to adults. In fact, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for adults (i.e. $f0 + (-A1) = 2.2 - 1.6 = 0.6$). We noted in chapter 10 that slopes of larger magnitudes generally indicate steeper category boundaries and less uncertainty between categories along that dimension. In this case, the larger magnitudes of the slopes for apparent adults for f0 and VTL likely reflect the fact that men and women were more discriminable along those dimensions than boys and girls. 
-
-We can think about between-listener variation in the use of acoustics in two ways. The first involves the inspection of the superpopulation standard deviation estimates for our listener-dependent effects, presented in table \@ref(tab:T11-2). Rather than only focusing on the estimates, we can also think about whether effects have 2.5% credible intervals (relatively) far from zero, meaning they are unlikely to be very small. Only three of the effects really meet that threshold: Listener-dependent variation in the use of VTL ($\sigma_{VTL \colon L}$), and the effect of apparent age ($\sigma_{A1 \colon L}$), and speaker-dependent variation in intercepts ($\sigma_{S}$). 
-
-```{r T11-2}
-knitr::kable(bmmb::getsds (model_gender_vtl_f0_reduced), caption = "Superpopulation standard deviation estimates for our 'random' effects.")
-```
-
-We can also think about the result of this variation in terms of how this might actually affect gender classification from speech. To do this, we get listener-specific intercepts, f0 slopes, and VTL slopes. We do this separately for apparent children and apparent adults using the code below (explained in detail in section X). 
-
-```{r}
-listener_coefficients_adult = 
-  bmmb::short_hypothesis (model_gender_vtl_f0_reduced, scope="coef",group="L",
-                          c("Intercept+A1=0","vtl+vtl:A1=0","f0+f0:A1=0"))
-listener_coefficients_child = 
-  bmmb::short_hypothesis (model_gender_vtl_f0_reduced, scope="coef",group="L",
-                          c("Intercept-A1=0","vtl-vtl:A1=0","f0-f0:A1=0"))
-```
-
-Using these parameters, we can find boundaries for each listener using the equation above. We plot these in figure \@ref(fig:F11-16). We see that there is a general consensus between listeners in terms of an approximate acoustic boundary between adult males and adult females. However, there is much more variation in the boundary between boys and girls. This likely reflects the fact that the acoustic characteristics of adult men and women are generally more predictable and stable relative to children 10-12 years old. In addition, the listeners in our experiment (undergraduate University students) likely have substantially more recent experience interacting with adults than with children in that age group.   
-  
-```{r F11-16, fig.width = 8, fig.height = 5, fig.cap = "The first plot compares all category boundaries between men/women (orange) and boys/girls (blue). Subsequent plots present each listener's individual boundaries, and point colors indicate the listener's individual speaker classifications.", echo = FALSE, cache = FALSE}
-
-################################################################################
-### Figure 11-16
-################################################################################
-
-# y = (-b*x - a - z) / (dx+c)
-# fixef(model_gender_vtl_f0)
-
-tmp = bmmb::exp_data
-tmp = tmp[tmp$R=='a',]
-
-tmp$vtl_original = tmp$vtl
-tmp$vtl = tmp$vtl - mean (tmp$vtl)
-
-tmp$f0_original = tmp$f0 
-tmp$f0 = tmp$f0 - mean(tmp$f0)
-tmp$f0 = tmp$f0 / 100
-
-aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + A_v + G_v + C_v, 
-                      data = tmp, FUN = mean)
-#aggd = aggd[aggd$A_v=='a',]
-
-a = listener_coefficients_adult[1:15,1]
-b = listener_coefficients_adult[16:30,1]
-c = listener_coefficients_adult[31:45,1]
-
-ac = listener_coefficients_child[1:15,1]
-bc = listener_coefficients_child[16:30,1]
-cc = listener_coefficients_child[31:45,1]
-
-par (mar = c(.2,.2,.2,.2), oma = c(3,3,.5,.5), mfrow = c(4,4))
-
-plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C_v)], 
-      pch=16,lwd=2, xlab = "",ylab="f0 (cm)",xaxt = 'n',
-        xlim=c(-2.5,2.7),ylim=c(-1.2,1.2))
-grid()
-
-for (i in 1:15)
-  curve ((-b[i]*x - a[i]) / (c[i]), from = -3, to = 3, 
-         add = TRUE,lwd=2,col=bmmb::cols[8],xaxt='n')
-
-for (i in 1:15)
-  curve ((-bc[i]*x - ac[i]) / (cc[i]), from = -3, to = 3, 
-         add = TRUE,lwd=2,col=bmmb::cols[7],xaxt='n')
-
-for (i in 1:15){
-  xaxt = "n"
-  yaxt = "n"
-  if (i %in% 12:15) xaxt = "s"
-  if (i %in% c(4,8,12)) yaxt = "s"
-  tmpp = tmp[tmp$L==i,]
-  plot (tmpp$vtl,tmpp$f0, cex =1.2, col = bmmb::cols[2:5][factor(tmpp$C)],
-        pch=16,lwd=2, xlab = "",ylab="f0 (cm)",xaxt=xaxt,yaxt=yaxt,
-        xlim=c(-2.5,2.7),ylim=c(-1.2,1.2))
-  grid()
-  curve ((-b[i]*x - a[i]) / (c[i]), from = -5, to = 3, add = TRUE,
-         lwd=2,col=bmmb::cols[8])
-  curve ((-bc[i]*x - ac[i]) / (cc[i]), from = -5, to = 3, add = TRUE,
-         lwd=2,col=bmmb::cols[7])
-  text (-1.5,-.75,i,cex=1.5)
-}
-```
-
-
-

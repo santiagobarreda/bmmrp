@@ -905,33 +905,31 @@ When considered as in the right plot of figure \@ref(fig:F10-6), the estimation 
 
 ### Data and research questions
 
-We're going to keep working with the data we loaded above, which we reload here for convenience. 
+We're going to keep working with the data we loaded above, which we reload here for convenience.
+
+We've talked about the 'secret' variables implicit in the use of categorical variables a couple of times (section X, X). When you have a categorical predictor with only two levels, we know that one of the levels cannot be estimated because it is the negative of the other coefficients. Numerically, this is represented by a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below we add a variable representing veridical speaker femaleness with values of 1 (for female) and -1 (for male). The reason we do this 'by hand' rather than as we've usually done it is that we need for the category coded with a 1 in our predictor (the estimated category) to be the same category coded with a 1 in the dependent variable. Creating a vector that we know equals 1 for a specific category and -1 for the other is the simplest way to be sure of this.
+
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
 library (bmmb)
 options (contrasts = c('contr.sum','contr.sum'))
 data (exp_data)
+
 # our dependent variable
 exp_data$Female = as.numeric (exp_data$G == 'f')
+
 # make a copy of vtl
 exp_data$vtl_original = exp_data$vtl
+
 # center vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
-```
 
-We've talked about the 'secret' variables implicit in the use of categorical variables a couple of times (section X, X). When you have a categorical predictor with only two levels, we know that one of the levels cannot be estimated because it is the negative of the other coefficients. Numerically, this is represented by a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below we add a variable representing veridical speaker femaleness with values of 1 (for female) and -1 (for male). The reason we do this 'by hand' rather than as we've usually done it is that we need for the category coded with a 1 in our predictor (the estimated category) to be the same category coded with a 1 in the dependent variable. Creating a vector that we know equals 1 for a specific category and -1 for the other is the simplest way to be sure of this.
-
-```{r, warning=FALSE, message=FALSE}
 exp_data$F_v = ifelse (exp_data$G_v=="f", 1,-1)
 ```
 
-We're going to model the ability of listeners to discriminate the gender of speakers from their voices. We would like to know:
 
-  Q1) How different is listeners' ability to discriminate the gender of children and adults?
-
-  Q2) Is response bias different for children and for adults?
-  
+ 
   
   - `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
  
@@ -944,6 +942,16 @@ We're going to model the ability of listeners to discriminate the gender of spea
   * `A_v`: The *veridical age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
 
 
+
+
+We're going to model the ability of listeners to discriminate the gender of speakers from their voices. We would like to know:
+
+  Q1) How different is listeners' ability to discriminate the gender of children and adults?
+
+  Q2) Is response bias different for children and for adults?
+ 
+ 
+ 
   
 ### Description of the model
 

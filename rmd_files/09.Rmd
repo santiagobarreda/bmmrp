@@ -806,7 +806,7 @@ We require some more predictors for this more complicated model. The relevant va
 
 ## Models with intercepts and slopes for each level of a grouping factor (i.e. 'random slopes')
 
-To this point we've been focusing on the geometry implied by different sorts of models. We focused on the fact that predictors that interact with our quantitative predictors are *slope* terms, while those that do not are *intercept* terms. However, the models we fit so far were not multilevel models and did not properly account for the repeated-measures nature of our data. In this section we will build a multilevel model with a single slope before considering a more complex multilevel model in the following section. 
+To this point we've been focusing on the geometry implied by different sorts of models. We focused on the fact that categorical predictors that interact with our quantitative predictors affect the *slopes* of our lines, while those that do not affect their *intercepts*. However, the models we fit so far were not multilevel models and did not properly account for the repeated-measures nature of our data. In this section we will build a multilevel model with a single slope before considering a more complex multilevel model in the following section. 
 
 ### Description of the model
 
@@ -814,7 +814,7 @@ The model we fit in the previous section had a formula that looked like this:
 
 `height ~ C + vtl + vtl:C`
 
-This means that is included an effect for VTL and category-dependent intercepts and `vtl` slopes. We noted in section 4.X that 'random effects' are simply batches of predictors that are estimated with (adaptive) partial pooling. That is, these predictors that are assumed to come from a distribution whose variance is estimated from the data. The model above contained only 'fixed' effects simply because we did not use partial pooling to estimate any of our effects. We might imagine a model like this:
+This means that it included an effect for VTL, category-dependent intercepts, and category-dependent `vtl` slopes. We noted in section X that 'random effects' are simply batches of predictors that are estimated with (adaptive) partial pooling. That is, these predictors are assumed to come from a distribution whose variance is estimated from the data. The model above contained only 'fixed' effects simply because we did not use partial pooling to estimate any of our effects. We might imagine a model like this:
 
 `height ~ L + vtl + vtl:L`
 
@@ -822,12 +822,13 @@ This model would be analogous to the model with category-dependent intercepts an
 
 `height ~ vtl + (vtl|L)`
 
-The term `(vtl|L)` indicates that we are estimating an intercept (assumed) and `vtl` parameter for every level of `L`. Remember that as discussed in section X, we treat listener as a 'random' effect not because it is inherently 'random' in a way that speaker category was not. In fact, there is no qualitative difference between `C` and `L` in our model: They are both just categorical predictors. The only reason we are treating one as 'fixed' and the other as 'random' is due to the number of levels contained by one vs. the other. We have 15 levels of listener and only four of category. In many situations your total data may comprise observations from 50 or more listeners/subjects/participants, resulting in very large numbers of parameters for any associated predictors. Partial pooling can help out-of-sample prediction and protect us against many of the problems that arise when you estimate large numbers of parameters using no-pooling. For this reason it is common practice, and recommended, to include all predictors with large (around >10) numbers of levels as 'random' effects. 
-  The model formula we're actually going to use is seen below. This model says "Apparent height is expected to vary along lines as a function of the VTL of the speaker. We expect listener-dependent variation in the intercepts and slopes of these lines and speaker dependent variation in the intercept of these lines". We include speaker-dependent intercepts but not speaker-dependent VTL slopes. Every listener heard every speaker, meaning their responses are associated with a range of VTL values. In contrast, each speaker only had a single fixed VTL value. It's impossible to calculate a slope for a single point: There are an infinite number of lines that pass through any single point. For this reason, it's impossible to calculate speaker-dependent VTL slopes for our lines, and the inclusion of a term like `(vtl|S)` would cause problems for our model fit. 
+The term `(vtl|L)` indicates that we are estimating an intercept (assumed) and `vtl` parameter for every level of `L`. Remember that as discussed in section X, we treat listener as a 'random' effect not because it is inherently 'random' in a way that speaker category was not. In fact, there is no qualitative difference between `C` and `L` in our model: They are both just categorical predictors. The only reason we are treating one as 'fixed' and the other as 'random' is due to the number of levels contained by one vs. the other. We have 15 levels of listener and only four speaker categories. In many situations, your data may comprise observations from 50 or more listeners/subjects/participants, resulting in very large numbers of parameters for any associated predictors. Treating these as 'random effects, i.e. using adaptive partial pooling to estimate them, can help out-of-sample prediction and protect us against many of the problems that arise when you estimate large numbers of parameters using no-pooling (cite). For this reason it is common practice, and recommended, to include all predictors with large (around >10) numbers of levels as 'random' effects. 
+
+The model formula we're actually going to use is seen below. This model says "apparent height is expected to vary along lines as a function of the VTL of the speaker. We expect listener-dependent variation in the intercepts and slopes of these lines and speaker dependent variation in the intercept of these lines". We include speaker-dependent intercepts but not speaker-dependent VTL slopes. This is because every listener heard every speaker, meaning their responses are associated with a range of VTL values. In contrast, each speaker only had a single fixed VTL value. It's impossible to calculate a slope for a single point as there are an infinite number of lines that pass through it. For this reason, it's impossible to calculate speaker-dependent VTL slopes for our lines, and the inclusion of a term like `(vtl|S)` would cause problems for our model. 
 
 `height ~ vtl + (vtl|L) + (1|S)`
 
-The formal specification of our model is presented in \@ref(eq:916). This is very similar to the one in \@ref(eq:915), the main difference being that our model now recognizes the repeated-measures nature of our data and estimates several of our predictors using adaptive partial pooling. The prior structure of our model should be familiar by this point, so we just want to focus a bit on the first few lines of the model. These lines say "apparent height varies according to a t distribution with an unknown expected value ($\mu$), scale and $\nu$ parameter. The expected value varies from trial to trial according to a line with an unknown intercept ($a$) and slope ($b$) with respect to VTL. The value of the intercept for a given trial is equal to the sum of the model intercept, and listener and speaker-dependent deviations from this intercept. The slope is equal to the slope 'main effect' and a listener-dependent deviation from this".   
+The formal specification of our model is presented in \@ref(eq:9-17). This is very similar to the one in \@ref(eq:9-16), the main difference being that our model now recognizes the repeated-measures nature of our data and estimates several of our predictors using adaptive partial pooling. The prior structure of our model should be familiar by this point, so we just want to focus a bit on the first few lines of the model. These lines say "apparent height varies according to a t distribution with an unknown expected value ($\mu$), scale, and $\nu$ parameter. The expected value varies from trial to trial according to a line with an unknown intercept ($a$) and slope ($b$) with respect to VTL. The value of the intercept for a given trial is equal to the sum of the model intercept, and listener and speaker-dependent deviations from this intercept. The slope is equal to the slope 'main effect' and a listener-dependent deviation from this".   
 
 $$
 \begin{equation}
@@ -846,14 +847,13 @@ VTL \sim t(3,0,12) \\
 \nu \sim gamma(2, 0.1) \\ 
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
-(\#eq:916)
+(\#eq:9-17)
 \end{equation}
 $$
 
-
 ### Fitting and interpreting the model
 
-Below we fit the our model now including listener-dependent slopes and intercepts. We call this our 'simple' model because in the following section we will be fitting one that is substantially more complex. 
+Below we fit the our model including listener-dependent slopes and intercepts. We call this our 'simple' model because in the following section we will be fitting one that is substantially more complex. 
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -885,15 +885,17 @@ We can inspect the short print statement below:
 bmmb::short_summary(model_random_slopes_simple)
 ```
 
-And see that our model contains two 'fixed' effects, the model intercept and the slope. As we know, the model 'random' effects are hidden from us but can be easily accessed in several ways (see section X). Before discussing the random effects let's compare this model to the first model we fit in this chapter, one that included only a single slope and intercept:
+And see that our model contains two 'fixed' effects, the model intercept and the slope. As we know, the model 'random' effects are hidden from us but can be easily accessed in several ways (see section X). Before discussing the random effects let's compare this model to the first model we fit in this chapter, the one that included only a single slope and intercept:
 
 ```{r}
 bmmb::short_summary(model_single_line)
 ```
 
-We can see that the intercept and VTL slopes terms closely align for the two models. This is to be expected since both represent the average intercept and slope across all listeners and are fit using the same data. What is substantially different is the credible intervals around these parameters, with these being 4-5 times wider for our model including random effects. As noted in section 4.X this is a good thing, it means our model recognizes that these estimates are based on only 15 different listeners and that the data points do not represent totally independent information. 
-  We can see from our model output that the standard deviation of listener-dependent intercepts is 3.7 cm and the standard deviation of listener dependent variation in VTL slopes was 2.8 cm. It's difficult to say whether this is 'big' or 'small' definitively, but here are some things to think about. A difference in height of 3.7 cm (about 1.5 inches) is clearly salient visually and differentiated in many social contexts. This suggests that an average difference of about this size in apparent height 'matters'. The VTL slope is 8.4 cm, meaning that the between-listener variation in this is about 1/3 the magnitude of the slope. Again, something that varies about 1/3 of its magnitude on average between listeners is likely to 'matter' for outcomes. For both of these reasons, it seems that the between-listener variation in slopes and intercepts is worth considering when trying to understand variation in apparent heights. 
-  As outlined in detail in section 5.X, we can use the `hypothesis` function to easily and conveniently recreate our listener-dependent slopes and intercept. Here, we will use the `short_hypothesis` function simply because the output is easier to deal with for our purposes. Below we set the `scope = "ranef"` and `group="L"`. This tells the function to return the listener-dependent intercept ($L_{[j]}$) and slope ($VTL \colon L_{[j]}$) 'random' effects for each level of the predictor `L`. 
+We can see that the intercept and VTL slopes terms are very similar across the two models. This is to be expected since both represent the average intercept and slope across all listeners and are fit using the same data. What is substantially different is the credible intervals around these parameters, with these being 4-5 times wider for our model including random effects. As noted in section X this is a good thing, it means our model recognizes that these estimates are based on only 15 different listeners and that each one of our data points do not represent totally independent information. 
+
+We can see from our model output that the standard deviation of listener-dependent intercepts is 3.7 cm and the standard deviation of listener dependent variation in VTL slopes was 2.8 cm. It's difficult to say whether this is 'big' or 'small' definitively, but here are some things to think about. A difference in height of 3.7 cm (about 1.5 inches) is clearly salient visually and differentiated in many social contexts. This suggests that an average difference of about this in apparent height 'matters'. The VTL slope is 8.4 cm, meaning that the between-listener variation in this is about 1/3 the magnitude of the slope. Again, something that varies about 1/3 of its magnitude on average between listeners is likely to 'matter' for outcomes. For both of these reasons, it seems that the between-listener variation in slopes and intercepts is worth considering when trying to understand variation in apparent heights. 
+
+As outlined in detail in section X, we can use the `hypothesis` function to easily and conveniently recreate our listener-dependent slopes and intercepts. Here, we will use the `short_hypothesis` function simply because the output is easier to deal with for our purposes. Below we set `scope = "ranef"` and `group="L"`. This tells the function to return the listener-dependent intercept ($L_{[j]}$) and slope ($VTL \colon L_{[j]}$) 'random' effects for each level of the predictor `L`. 
 
 ```{r}
 listener_effects = short_hypothesis(
@@ -901,8 +903,7 @@ listener_effects = short_hypothesis(
   scope = "ranef",group="L")
 ```
 
-If you inspect the output of the function you will see the familiar four-column matrix indicating parameter estimates, standard deviations and 95% credible intervals. In addition, information about the specific level of the grouping factor and the hypothesis for each row are presented in columns of the matrix. This matrix will have 30 rows representing our 15 intercept and slope random effects. The output of this function is organized so that your grouping variable varies within parameters, which are presented one at a time. Since we asked for intercepts and slopes for each level of listener (`L`), this means that the first 15 parameters represent the intercept effects for listeners one through 15, and rows 16 through 30 represent the slope effects for listeners one through 15. 
-  As can be seen above, this tells you which hypothesis is being asked in each row, and which level of your grouping variable this corresponds to. So, for example, the third row in `listener_effects`, i.e. `listener_effects[3,]` presents information about $L_{[3]}$ and the 18th row (`listener_effects[18,]`) contains information about $VTL \colon L_{[3]}$. For example, we can see below that listener 3 had an intercept -3.4 cm lower than average and a slope that was 3.5 cm greater than average. 
+If you inspect the output of the function you will see the familiar four-column matrix indicating parameter estimates, standard deviations and 95% credible intervals. Additional columns present information about the specific level of the grouping factor and the hypothesis for each row. This matrix has 30 rows representing our 15 intercept and slope random effects, one for each listener. Since we asked for intercepts and slopes for each level of listener (`L`), this means that the first 15 parameters represent the intercept effects for listeners one through 15, and rows 16 through 30 represent the slope effects for listeners one through 15. So, for example, the third row in `listener_effects`, i.e. `listener_effects[3,]` presents information about $L_{[3]}$ and the 18th row (`listener_effects[18,]`) contains information about $VTL \colon L_{[3]}$. For example, we can see below that listener 3 had an intercept -3.5 cm lower than average and a slope that was 3.4 cm greater than average. 
 
 ```{r}
 listener_effects[c(3,18),]
@@ -922,12 +923,12 @@ We can again inspect these values for listener three and see that the intercept 
 listener_coefficients[c(3,18),]
 ```
 
-In figure \@ref(fig:F9-7) we see the distribution of apparent height as a function of speaker VTL individually for each listener. Clearly, there is a general tendency shared by all listeners: Each listener-dependent line is reasonably similar to the line drawn using the 'main effects' intercept and slope terms (the broken line on the figure). However, although there are general similarities between listeners there is also noticeable between-listener variation such that the listener-specific lines do a much better job of representing each listener's behavior than the overall line. 
+In figure \@ref(fig:F9-6) we see the distribution of apparent height as a function of speaker VTL individually for each listener. Clearly, there is a general tendency shared by all listeners: Each listener-dependent line is reasonably similar to the line drawn using the 'main effects' intercept and slope terms (the broken line in each plot). However, although there are general similarities between listeners there is also noticeable between-listener variation such that the listener-specific lines do a much better job of representing each listener's behavior than the overall line. 
 
-```{r F9-7, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject. The line with matched color represents the listener-specific line. The broken black line in each plot is the average 'main effects' line.", echo = FALSE, cache=TRUE}
+```{r F9-6, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject. The line with matched color represents the listener-specific line. The broken black line in each plot is the average 'main effects' line.", echo = FALSE, cache=TRUE}
 
 ################################################################################
-### Figure 9.7
+### Figure 9.6
 ################################################################################
 
 yaxts = c('s','n','n','n','n','s','n','n','n','n','s','n','n','n','n') 
@@ -954,7 +955,7 @@ mtext (side = 2, outer = TRUE, text = "Apparent Height (cm)", line = 3)
 
 ## Models with multiple predictors for each level of a grouping factor
 
-We just fit a 'simple' multilevel model in that it contained at most a single slope and intercept term for each level of our grouping factors (i.e. speaker and listener). Now we're going to fit a more 'complex' model to our data. In chapter 7 we saw that variation between our groups could be decomposed into an effect for speaker age, and effect for speaker gender, and the interaction between those factors. Here, we're going to apply this same decomposition to the intercepts and slopes of our lines, in addition to including the potential for listener-dependent variation in all these parameters.
+We just fit a 'simple' multilevel model in that it contained at most a single slope and intercept term for each level of our grouping factors (i.e. speaker and listener). Now, we're going to fit a more 'complex' model to our data. In chapter 7 we saw that variation between our groups could be decomposed into an effect for speaker age, and effect for speaker gender, and the interaction between those factors. Here, we're going to apply this same decomposition to the intercepts and slopes of our lines, in addition to including the potential for listener-dependent variation in all these parameters.
 
 ### Description of the model
 
@@ -962,14 +963,14 @@ If we want our model to investigate the effect of apparent age and gender (and t
 
 `height ~ vtl*A*G + (vtl*A*G|L) + (1|S)`
 
-This is a very compact way of saying "include the predictors `A`, `G`, and `vtl`, and all possible interactions between them. If this formula were expanded it would look like the following:
+This is a very compact way of saying "include the predictors `A`, `G`, and `vtl`, and all possible interactions between them". If this formula were expanded it would look like this:
 
 ```
 height ~ vtl + A + G + A:G + vtl:A + vtl:G + vtl:A:G + 
         (vtl + A + G + A:G + vtl:A + vtl:G + vtl:A:G|L) + (1|S)
 ```
 
-Recall that anything interacting with a quantitative predictor affects the slope of that predictor and anything *not* interacting with any quantitative predictor affects the slope. So, we see that there is a symmetry to our design in that we are estimating the effect for `A`, `G`, and `A:G` for both our intercept and VTL slope. We also see that we are estimating listener-dependent effects for all the fixed effects in our model, but only speaker-dependent intercepts. Our formal model specification is given in \@ref(eq:917), though we omit many of the priors are as they have not changed, are taking up increasingly large amounts of space, and are specified when we fit our model below. 
+Recall that any term interacting with a quantitative predictor affects the slope of our lines and any term *not* interacting with a quantitative predictor affects the our line intercepts. So, we see that there is a symmetry to our model in that we are estimating the effect for `A`, `G`, and `A:G` for both our intercept and VTL slopes. We also see that we are estimating listener-dependent effects for all the fixed effects in our model, but only speaker-dependent intercepts. Our formal model specification is given in \@ref(eq:9-18), though we omit many of the priors are as they have not changed, are taking up increasingly large amounts of space, and are specified when we fit our model below. 
 
 $$
 \begin{equation}
@@ -985,13 +986,11 @@ VTL \colon A \colon L_{[L_{[i]}]} \\ VTL \colon G \colon L_{[L_{[i]}]} \\ VTL \c
 \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\\\
 \mathrm{and \; more} \ldots
 \end{aligned}
-(\#eq:917)
+(\#eq:9-18)
 \end{equation}
 $$
 
-[@@ SB - orders are flipped for many interactions. get it consistent in text and models throughout.]
-
-The model specification is getting unwieldy, and we may stop spelling out the full models when they get this big. However, we do think its useful to be aware of how much complexity is involved with what can be a seemingly 'small' model formula (`height ~ vtl*A*G + (vtl*A*G|L) + (1|S)`). We can see that with the exception of the speaker predictor, our $a$ and $b$ equations contain a parallel structure. The parameters represent, for intercepts and VTL slopes respectively: Main effects ($Intercept, VTL$), the effect for age ($A, A \colon VTL$), the effect for gender ($G, G \colon VTL$), the interaction between age and gender ($A \colon G, A \colon G \colon VTL$), listener-dependent intercept and slope effects ($L, VTL \colon L$), listener-dependent effects for age ($A \colon L, A \colon VTL \colon L$), listener-dependent effects for gender ($G \colon L, G \colon VTL \colon L$), and the listener-dependent interaction between age and gender ($A \colon G \colon L, A \colon G \colon VTL \colon L$). We can see above that the eight listener-dependent effects are drawn from an eight-dimensional multivariate normal distribution. Of course, this also entails estimating the correlation between each pair of dimensions resulting in 28 individual correlations for these random effects.
+The model specification is getting unwieldy, and we may stop spelling out the full models when they get this big. However, we do think its useful to be aware of how much complexity is involved in what may seem to be a short model formula (`height ~ vtl*A*G + (vtl*A*G|L) + (1|S)`). We can see that with the exception of the speaker predictor, our $a$ and $b$ equations contain a parallel structure. The parameters represent, for intercepts and VTL slopes respectively: Main effects ($Intercept, VTL$), the effect for age ($A, A \colon VTL$), the effect for gender ($G, G \colon VTL$), the interaction between age and gender ($A \colon G, A \colon G \colon VTL$), listener-dependent intercept and slope effects ($L, VTL \colon L$), listener-dependent effects for age ($A \colon L, A \colon VTL \colon L$), listener-dependent effects for gender ($G \colon L, G \colon VTL \colon L$), and the listener-dependent interaction between age and gender ($A \colon G \colon L, A \colon G \colon VTL \colon L$). We can see above that the eight listener-dependent effects are drawn from an eight-dimensional multivariate normal distribution. Of course, this also entails estimating the correlation between each pair of dimensions resulting in 28 individual correlations estimated for these random effects.
 
 ### Fitting and interpreting the model
 
@@ -1032,19 +1031,22 @@ Printing it would waste too much page space at this point, but we can make plots
 ```{r}
 # model fixed effects
 fixef_effects = fixef (model_random_slopes_complex)
+
 # model random effect standard deviations
 sds = bmmb::getsds (model_random_slopes_complex)
+
 # model random effect correlations
 correlations = bmmb::getcorrs (model_random_slopes_complex, factor="L")
 ```
 
-And plot it all using the `brmplot` function. In the left plot we see the model fixed effects, parameters that directly relate to the intercepts and slopes of our lines relating VTL to expected apparent height. In the middle plot we see the between-listener standard deviation of the fixed effects in the left plot, and the model error (sigma, $\sigma$). For example, the standard deviation of `A1` in the middle plot reflects the variation in the `A1` parameter from the left plot between our different listeners. The right plot presents the correlations of different listener random effects. For example, the `G1:Int.` correlation reflects the correlation of listener intercepts and listener `G1` effects across our different listeners. 
+And plot it all using the `brmplot` function in \@ref(fig:F9-7). In the left plot we see the model fixed effects, parameters that directly specify the intercepts and slopes of the lines relating VTL to expected apparent height. In the middle plot we see the standard deviations of the fixed effects in the left plot across listeners, and the model error (sigma, $\sigma$). For example, the standard deviation of `A1` in the middle plot reflects the variation in the `A1` parameter from the left plot between our different listeners (i.e. $\sigma_{A \colon L}$). The right plot presents the correlations of different listener random effects. For example, the `G1:Int.` correlation reflects the correlation of listener intercepts and listener `G1` effects across our different listeners. 
 
-```{r F9-8, fig.width = 8, fig.height = 3, fig.cap="(left) Estimates and 95% credible intervals for model fixed effects for `model_random_slopes_complex`.(middle) Standard deviation estimates and 95% credible intervals for listener-dependent random effects parameters. (right) Estimates and 95% credible intervals for listener random effects correlations.", echo = FALSE, cache=TRUE}
+```{r F9-7, fig.width = 8, fig.height = 3, fig.cap="(left) Estimates and 95% credible intervals for model fixed effects for `model_random_slopes_complex`.(middle) Standard deviation estimates and 95% credible intervals for listener-dependent random effects parameters. (right) Estimates and 95% credible intervals for listener random effects correlations.", echo = FALSE, cache=TRUE}
 
 ################################################################################
-### Figure 9.8
+### Figure 9.7
 ################################################################################
+
 par (mfrow = c(1,3), mar = c(10,2,1,1), oma = c(0,3,0,0))
 bmmb::brmplot (fixef_effects[-1,], las = 2, ylim = c(-3,10),cex.lab=1.3,cex.axis=1.3)
 bmmb::brmplot (sds, las = 2, ylim = c(0,10.5), yaxs='i',cex.lab=1.3,cex.axis=1.3)
@@ -1052,8 +1054,7 @@ bmmb::brmplot (correlations, las = 2, ylim = c(-1,1), yaxs='i',cex.lab=1.3,cex.a
 mtext (side=2,outer=TRUE,line=1.5,"Centimeters", adj = 0.75)
 ```
 
-The information presented in figure \@ref(fig:F9-8) provides a good outline of much of the information contained in our model. We're going to leave the interpretation of the model for the next section, where we attempt to answer our research questions. For now, we're going to think about how to use parameters to understand listener and category-dependent variation according to our model. Our parameters are similar to the model we fit in the previous chapter. That model included a decomposition of variation in intercepts according to apparent speaker age, gender, and the interaction between age and gender. Since it did not include a slope for VTL the model effectively set the slope of all VTL related predictors to zero. The model we have fit above not only includes a slope for VTL, but also models variation in this slope according to apparent speaker age, gender, and the interaction between age and gender (via interactions with the VTL predictors). 
-  We can use combinations of our parameters to predict category-dependent intercepts and slopes just as we did in section X above. This results in four lines, one for each group.
+The information presented in figure \@ref(fig:F9-7) provides a good outline of much of the information contained in our model. We're going to leave the interpretation of the model for the next section, where we attempt to answer our research questions. For now, we're going to think about how to use our model parameters to understand listener and category-dependent variation according to our model. Our parameters are similar to those of the model we fit in chapter 7. We can use combinations of our parameters to predict category-dependent intercepts and slopes just as we did in section X above. This results in four lines, one for each group.
 
 ```{r, cache = TRUE, collapse = TRUE, eval = TRUE, echo = FALSE}
 random_slopes_complex_hypothesis = bmmb::short_hypothesis (
@@ -1069,7 +1070,7 @@ random_slopes_complex_hypothesis = bmmb::short_hypothesis (
       "vtl + vtl:A1 + vtl:G1 + vtl:A1:G1 = 0")) # group 4 slope
 ```
 
-By using the `scope` and `group` coefficients (as outlined in section X), we can use nearly the same code to calculate listener-specific intercepts and slopes for each speaker category. 
+By using the `scope` and `group` coefficients appropriately, we can use nearly the same code to calculate listener-specific intercepts and slopes for each speaker category. 
 
 ```{r, cache = TRUE, collapse = TRUE}
 random_slopes_complex_hypothesis_listener = bmmb::short_hypothesis (
@@ -1086,12 +1087,12 @@ random_slopes_complex_hypothesis_listener = bmmb::short_hypothesis (
   scope = "coef",group="L")
 ```
 
-The listener-dependent, group-specific lines resulting from this are presented in figure \@ref(fig:F9-9). Two things are clear from this figure. First, there is substantial variation in lines for different categories. Second, there is substantial variation in the lines representing each category for the different speakers. In both cases, this suggests that this model is preferable to `model_random_slopes_simple` since that model included only a single intercept and VTL slope for each listener. 
+The listener-dependent, group-specific lines are presented in figure \@ref(fig:F9-8). Two things are clear from this figure. First, there is substantial variation in lines across apparent speaker categories. Second, there is substantial variation in the lines representing each category across different listeners. In both cases, this suggests that this model is preferable to `model_random_slopes_simple` since that model included only a single intercept and VTL slope for each listener. 
 
-```{r F9-9, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject.", echo = FALSE, cache=TRUE}
+```{r F9-8, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject.", echo = FALSE, cache=TRUE}
 
 ################################################################################
-### Figure 9.9
+### Figure 9.8
 ################################################################################
 
 par (mar = c(.25,.25,.25,.25), mfrow = c(3,5), oma = c(4.3,4.3,1,1))
@@ -1127,7 +1128,7 @@ mtext (side = 2, outer = TRUE, text = "Apparent Height (cm)", line = 3)
 
 ### Model selection 
 
-We can approach the question of model selection more formally by using leave one out cross-validation (discussed in section 6.X). First we add the `loo` criterion to each model:
+We can approach the question of model selection more formally by using leave one out cross-validation (discussed in chapter 8). First we add the `loo` criterion to each model:
 
 ```{r, cache = TRUE}
 model_multi_slope = brms::add_criterion(model_multi_slope,"loo")
@@ -1141,15 +1142,17 @@ And compare these across models:
 loo_compare (model_multi_slope, model_random_slopes_simple, model_random_slopes_complex)
 ```
 
-Indicating a very large advantage for our newest model with respect to the model with no random effects (`model_multi_slope`) and the model without age and gender predictors (`model_random_slopes_complex`). We can get some idea of how much the model fit changes across the models by using Bayesian $R^2$. Since $R^2$ is the proportion of variance in the dependent variable our model explains, we can use differences in $R^2$ to interpret the differences in $\mathrm{elpd}$ presented in our cross-validation above. 
+Indicating a very large advantage for our newest model with respect to the model with no random effects (`model_multi_slope`) and the model without age and gender predictors (`model_random_slopes_complex`). We can get some idea of how much the fit changes across models by using Bayesian $R^2$. Since $R^2$ is the proportion of variance in the dependent variable our model explains, we can use differences in $R^2$ to interpret the differences in $\mathrm{elpd}$ presented in our cross-validation above. 
 
 ```{r, cache = TRUE}
 bmmb::r2_bayes(model_multi_slope)
+
 bmmb::r2_bayes(model_random_slopes_simple)
+
 bmmb::r2_bayes(model_random_slopes_complex)
 ```
 
-It's clear that our most complicated model explains the most variance in our dependent variable. Based on the results of the cross-validation above, we also know that the most-complex model is justified given its expected out-of-sample prediction. In other words, the most complex model offers the best prediction and justifies its complexity. As a result, we will base our answer of the research questions on the latest, and most complicated, model we fit.
+It's clear that our most complicated model explains the most variance in our dependent variable. Based on the results of the cross-validation above, we also know that the most-complex model is justified given its expected out-of-sample prediction. In other words, the most complex model offers the best prediction *and* justifies its complexity. As a result, we will base our answer of the research questions on the latest, and most complicated, model we fit.
 
 ## Answering our research questions: Updated
 
@@ -1159,9 +1162,35 @@ The research questions we posed above are repeated below:
 
   Q2) Is the effect of VTL on apparent height affected by the apparent age and gender of the speaker?
   
-Rather than answer our research questions one by one, we're going to attempt to answer these in a narrative like we might include in an academic journal or presentation. We call this a 'narrative' because (in our opinion) the reporting of your results should not be a long list of disconnected numbers like means and credible intervals. Instead, we suggest that it is better to focus on the 'story' of the results as a whole, and to reveal this by presenting individual results (like means and credible intervals). Thinking about the overall narrative of your results can help the reader make sense of what might otherwise seem like an endless stream of disconnected results. Often things that seems clear and obvious to the researcher, who may have spent months if not years with a data set, are not clear at all to someone reading the analysis for the first time. Using your results to tell 'the story' of your data can help people understand and retain the information you present to them. 
+Rather than answer our research questions one by one, we're going to attempt to answer these in a narrative like we might include in an academic journal or presentation. We call this a 'narrative' because (in our opinion) the reporting of your results should not be a long list of disconnected numbers like means and credible intervals. Instead, we suggest that it is better to focus on the 'story' of the results as a whole, and to reveal this by presenting individual results (like means and credible intervals). Thinking about the overall narrative of your results can help the reader make sense of what might otherwise seem like an endless stream of disconnected results. Often things that seems clear and obvious to the researcher, who may have spent months if not years with a data set, are not clear at all to someone reading the analysis for the first time. Using your results to tell 'the story' of your data can help people understand and retain the information you present to them. We will return to these issues in chapter 13.
 
-Figures \@ref(fig:F9-8) and \@ref(fig:F9-9) indicates that there is age and gender-dependent variation, and an interaction between the two, in both our slopes and our intercepts. This means that the effect for speaker age varied across levels of gender, and vice versa. As discussed in section 7.X, in the presence of interactions we need to consider the *simple effects*, the effects of one predictor at a single level of another. Below, we use the `short_hypothesis` function to calculate the simple effects for age and gender for intercepts and slopes. 
+Figures \@ref(fig:F9-7) and \@ref(fig:F9-8) indicate that our model slopes and intercepts vary based on apparent age and gender, and the interaction of the two. This means that the effect for apparent speaker age varied across levels of gender, and vice versa. As discussed in section X, in the presence of interactions we need to consider the *simple effects*, the effects of one predictor at a single level of another. 
+
+The group-specific intercepts and slopes from `model_random_slopes_complex` are presented in the first and third plots in figure \@ref(fig:F9-9). The second plot in the figure presents  differences between group-specific intercepts, effectively representing different simple effects. For example, the difference between women and girls (`w-g`) represents the simple effect for age for females and the difference between  men and boys (`m-b`) represents the simple effect for age for females. The fourth plot contrasts difference group-specific slopes, representing different simple effects for the VTL slope. For example, the difference in slope between women and men (`w-m`) represents the simple effect of VTL for gender for adults and the difference between girls and boys (`g-b`) represents the simple effect of VTL for gender for children.
+
+```{r F9-9, fig.width = 8, fig.height = 3, fig.cap="(left) Group-specific intercepts from `model_random_slopes_complex`. (mid-left) Difference betwen group specific intercepts testing different simple effects. (mid-right) Group-specific slopes from `model_random_slopes_complex`. (right) Difference betwen group specific slopes testing different simple effects.", echo = FALSE, cache=TRUE}
+
+################################################################################
+### Figure 9.9
+################################################################################
+par (mfrow = c(1,4), mar = c(4,4,1,1))
+bmmb::brmplot (random_slopes_complex_hypothesis[1:4,], las = 1,cex.lab=1.3,
+               cex.axis=1.3, lab = c("b","g","m","w"), col = cols[2:5])
+bmmb::brmplot (simple_effects[1:4,], las = 2,cex.lab=1.3,cex.axis=1.3,
+               lab = c("w-g","m-b","w-m","g-b"), col = cols[6:9])
+
+bmmb::brmplot (random_slopes_complex_hypothesis[5:8,], las = 1,cex.lab=1.3,
+               cex.axis=1.3, lab = c("b","g","m","w"), col = cols[2:5])
+bmmb::brmplot (simple_effects[5:8,], las = 2,cex.lab=1.3,cex.axis=1.3,
+               lab = c("w-g","m-b","w-m","g-b"), col = cols[6:9])
+
+```
+
+As seen in figure \@ref(fig:F9-9), the simple effects are the differences between levels of one predictor at a specific level of another predictor. Based on our simple effects we can say that the effect for speaker age is large, and somewhat greater for male (`m-b`) than female (`w-g`) speakers. Based on the simple effects for gender within levels of age we can say the perceived femaleness is associated with shorter apparent speakers for adults (`w-m`), but no consistent difference for children (`g-b`). 
+
+We can use the same approach to discuss the simple effects for VTL slope (fourth plot in figure \@ref(fig:F9-9). The only simple effect that has a value that seems reliably different from zero and likely to not be trivially small is the difference between women and girls (`w-g`). This simple effect indicates that the effect for VTL was substantially smaller for women than for girls. Overall, our results indicate that apparent age had a larger effect on apparent height judgments than apparent gender. In addition, VTL effects were larger for younger speakers, and in particular for girls. 
+
+Below, we use the `short_hypothesis` function to calculate the simple effects for age and gender for intercepts and slopes. 
 
 ```{r, cache = TRUE, collapse = TRUE}
 simple_effects = bmmb::short_hypothesis (
@@ -1177,33 +1206,13 @@ simple_effects = bmmb::short_hypothesis (
       "2*(vtl:G1 - vtl:A1:G1) = 0")) # VTL difference by gender for children
 ```
 
-The estimated simple effects are presented in table \@ref(tab:T81). 
+The estimated simple effects are presented in table \@ref(tab:T81). In each case, we double the value of the effect so that these reflect differences between groups rather than the difference between the group and the main effect. 
 
-```{r T81}
+```{r T9-1}
 knitr::kable (simple_effects, caption="Information regarding estimated simple effects for `model_random_slopes_complex` calculated in `simple_effects`.", digits = 2)
 ```
 
-And compared to group-specific intercepts and slopes in figure \@ref(fig:F9-10). The first and third plots in figure \@ref(fig:F9-10) represent group-specific intercepts and slopes from our latest model (`model_random_slopes_complex`). The second plot contrasts difference group-specific intercepts, effectively representing different simple effects. For example, the difference between women and girls (`w-g`) represents the simple effect for age for females and the difference between  men and boys (`m-b`) represents the simple effect for age for females. The fourth plot contrasts difference group-specific slopes, representing different simple effects for the VTL slope. For example, the difference in slope between women and men (`w-m`) represents the simple effect of VTL for gender for adults and the difference between girls and boys (`g-b`) represents the simple effect of VTL for gender for children.
 
-```{r F9-10, fig.width = 8, fig.height = 3, fig.cap="(left) Group-specific intercepts from `model_random_slopes_complex`. (mid-left) Difference betwen group specific intercepts testing different simple effects. (mid-right) Group-specific slopes from `model_random_slopes_complex`. (right) Difference betwen group specific slopes testing different simple effects.", echo = FALSE, cache=TRUE}
-
-################################################################################
-### Figure 9.10
-################################################################################
-par (mfrow = c(1,4), mar = c(4,4,1,1))
-bmmb::brmplot (random_slopes_complex_hypothesis[1:4,], las = 1,cex.lab=1.3,
-               cex.axis=1.3, lab = c("b","g","m","w"), col = cols[2:5])
-bmmb::brmplot (simple_effects[1:4,], las = 2,cex.lab=1.3,cex.axis=1.3,
-               lab = c("w-g","m-b","w-m","g-b"), col = cols[6:9])
-
-bmmb::brmplot (random_slopes_complex_hypothesis[5:8,], las = 1,cex.lab=1.3,
-               cex.axis=1.3, lab = c("b","g","m","w"), col = cols[2:5])
-bmmb::brmplot (simple_effects[5:8,], las = 2,cex.lab=1.3,cex.axis=1.3,
-               lab = c("w-g","m-b","w-m","g-b"), col = cols[6:9])
-
-```
-
-As seen in figure \@ref(fig:F9-10), the simple effects consist of the differences between groups along one dimension *within* a specific dimension of the other variable. Based on our simple effects we can say that the effect for speaker age is large, and somewhat greater for male (`m-b`) than female (`w-g`) speakers. Based on the simple effects for gender within levels of age we can say the perceived femaleness is associated with shorter apparent speakers for adults (`w-m`), but no consistent difference for children (`g-b`). We can use the same approach to discuss the simple effects for VTL slope (fourth plot in figure \@ref(fig:F9-10)). The only simple effect that has a value that seems reliably different from zero and likely to not be trivially small is the difference between women and girls (`w-g`). This simple effect indicates that the effect for VTL was substantially smaller for women than for girls. Overall our results indicate that apparent age had a larger effect on apparent height judgments than apparent gender. In addition, VTL effects were larger for younger speakers, and in particular for girls. 
 
 
 

@@ -1037,6 +1037,7 @@ At this point, the connection between CDFs and ordinal regressions may be clear:
 
 In figure \@ref(fig:F12-12), the boundaries and distributions from figure \@ref(fig:F12-11) have been rotated clockwise 90 degrees so that our latent variable (the arbitrarily named 'bigness') varies along the x axis. The distributions presented in the figure have means of 28, 32, 36, and scales of 1. The probabilities in each subsection of each plot represent the predicted probability of observing size group responses of 1, 2, and 3 for each distribution. These probabilities were calculated based on the area under the curve of the distributions falling between different intervals of the latent variable space. 
 
+
 ```{r F12-12, fig.height = 3.5, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
 ################################################################################
@@ -1112,15 +1113,19 @@ This conceptualization of our model leads to both **hard** and **soft** classifi
 We load our packages and data below. We also add a new variable, `SG` (size group), which will act as our dependent variable. This variable represents children with a 1, adult women with a 2, and adult males with a 3. We don't need to do anything special to make this variable 'ordinal', but we are using three consecutive integers to represent the categories to make things simpler. After this, we process our quantitative predictors in the same way as in the previous chapters.
 
 ```{r, warning=FALSE, message=FALSE}
+
 library (brms)
 library (bmmb)
 data (exp_data)
 
+
 # new dependent variable: Size Group
-exp_data$SG = 0
-exp_data$SG[exp_data$C=='b' | exp_data$C=='g'] = 1
-exp_data$SG[exp_data$C=='w'] = 2
-exp_data$SG[exp_data$C=='m'] = 3
+SG = 0
+SG[exp_data$C=='g'] = 1
+SG[exp_data$C=='b'] = 1
+SG[exp_data$C=='w'] = 2
+SG[exp_data$C=='m'] = 3
+exp_data$SG = SG
 
 # preparation of quantitative predictors as in previous chapters
 exp_data$vtl_original = exp_data$vtl
@@ -1130,6 +1135,7 @@ exp_data$f0_original = exp_data$f0
 exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
+
 
 We're going to keep our research questions relatively simple this time, as this is mostly a demonstration of an ordinal regression analysis: 
 
@@ -1297,14 +1303,14 @@ In this case our prediction results in a three dimensional matrix where response
 
 ```{r}
 # see first six for the first category
-head (predictions[,,1])
+head (predictions_latent[,,1])
 ```
 
 If we consider only the first element of the second dimension (columns), we can get the expected value for each observing for each category, for the first six observations.
 
 ```{r}
 # see first six for each category
-head (predictions[,1,])
+head (predictions_latent[,1,])
 ```
 
 We can use the expected value for the latent variable calculated manually above (`mu`), combined with the model thresholds, to calculate the expected probability that the observation will belong to each category. 
@@ -1321,16 +1327,16 @@ head (predictions_manual)
 Again, we can see that this approach results in the same values as those calculated with the `fitted` function. 
 
 ```{r}
-cor (predictions[,1,1],predictions_manual[,1])
-cor (predictions[,1,2],predictions_manual[,2])
-cor (predictions[,1,3],predictions_manual[,3])
+cor (predictions_latent[,1,1],predictions_manual[,1])
+cor (predictions_latent[,1,2],predictions_manual[,2])
+cor (predictions_latent[,1,3],predictions_manual[,3])
 ```
 
-Below we find the maximum value across each row of our predictions, representing the *hasrd*, categorical prediction for each observation.  
+Below we find the maximum value across each row of our predictions, representing the *hard*, categorical prediction for each observation.  
 
 
 ```{r}
-SG_hat = apply (predictions[,1,],1,which.max)
+SG_hat = apply (predictions_latent[,1,],1,which.max)
 SG_hat_manual = apply (predictions_manual,1,which.max)
 ```
 
@@ -1368,6 +1374,13 @@ model_ordinal_disc = brms::brm (model_formula, data=exp_data, family="cumulative
                      brms::set_prior("lkj_corr_cholesky (2)", class = "cor")),
            control = list(adapt_delta = 0.99))
 ```
+```{r, eval = FALSE}
+model_ordinal_disc = bmmb::get_model ("12_model_ordinal_disc.RDS")
+```
+```{r, include = FALSE}
+#  saveRDS (model_ordinal_disc, "../models/12_model_ordinal_disc.RDS")
+model_ordinal_disc = readRDS ("../models/12_model_ordinal_disc.RDS")
+```
 
 We can see that our model summary:
 
@@ -1387,7 +1400,6 @@ head(listener_disc)
 Since these values are the logarithm of the discrimination, to get the logistic scale parameter we need to exponentiate and then invert the parameter estimate to get the scale. We do this inside the hypothesis function so that we summarize after manipulating (rather than exponentiating and inverting our summary).
 
 ```{r}
-
 listener_disc = 
   short_hypothesis (model_ordinal_disc, 
                     "1/exp(disc_Intercept)=0", group="L",scope="coef")
@@ -1451,9 +1463,6 @@ for (i in 1:15){
 }
 
 ```
-
-
-
 
 ### Answering our research questions
 

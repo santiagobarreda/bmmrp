@@ -612,7 +612,7 @@ As seen above, converting to a probability and then combining can lead to strang
 
 ### Using logistic models to understand classification
 
-- introduce predictor? space here.
+- introduce stimulus? space here.
 - territorial map is a plot of boundaries showing modal classifications in some section of the parameter space. 
 
 Our models so far have presented us with the y-intercepts of our lines, the value of the $y$ axis at $x = 0$. However, when modeling in logits we might also be interested in the **$x$ intercepts** of our lines. The $x$ intercept is the value of $x$ where *$y$ is equal to zero*, where our line crosses the horizontal x axis line at y = 0. Why do we care about this? Well, when $y = 0$, that means that the probability of classification is $0.5$. So, crossing the $x$ intercept one way means you are more likely to see a success, and crossing the other way means you are more likely to see a failure. In other words, the $x$ intercepts of logistic regression models tells us about the location of the **category boundary** between our two possible outcomes, along the continuous predictor. We can find the $x$ intercept by setting $y=0$ in our prediction equation and solving for (i.e. isolating) $x$, as seen in \@ref(eq:1015). For complicated prediction equations (and even for simple ones), you can rely on algebra solving websites easily found on the internet. Below, we see that when $y$ is equal to zero, the value of $x$ is equal to the negative intercept ($a$) divided by the slope ($b$). 
@@ -772,8 +772,8 @@ Our last model modeled the probability that a listener would respond female, und
 $$
 \begin{equation}
 \begin{split}
-H = P(F=1 | G_v= \mathrm{f} \,) \\
-FA = P(F=1 | G_v= \mathrm{m} \, )
+H = P(Female=1 | G_v= \mathrm{f} \,) \\
+FA = P(Female=1 | G_v= \mathrm{m} \, )
 \end{split}
 (\#eq:1016)
 \end{equation}
@@ -782,14 +782,14 @@ $$
 We also calculate the overall hit and false alarm rates for our data with the code below:
 
 ```{r, eval = FALSE}
-H = mean(exp_data$F[exp_data$G_v == "f"])
-FA = mean(exp_data$F[exp_data$G_v == "m"])
+H = mean(exp_data$Female[exp_data$G_v == "f"])
+FA = mean(exp_data$Female[exp_data$G_v == "m"])
 ```
 
 Or more simply using: 
 
 ```{r, collapse = TRUE}
-tapply(exp_data$F, exp_data$G_v, mean)
+tapply(exp_data$Female, exp_data$G_v, mean)
 ```
 
 **Sensitivity** is defined as the difference between a listeners hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no discrimination at all: They perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are identifying 90% of *people*, including men, as women. 
@@ -842,13 +842,13 @@ We can find the hit and false alarm rates by finding the average of our `F` vari
 
 ```{r, collapse = TRUE}
 # hit and false alarm rate, overall
-tapply (exp_data$F, exp_data$G_v, mean)
+tapply (exp_data$Female, exp_data$G_v, mean)
 
 # hit and false alarm rate, for adult
-tapply (adults$F, adults$G_v, mean)
+tapply (adults$Female, adults$G_v, mean)
 
 # hit and false alarm rate, for children
-tapply (children$F, children$G_v, mean)
+tapply (children$Female, children$G_v, mean)
 ```
 
 Figure \@ref(fig:F10-6) presents these probabilities, in addition to their logit values. Overall we see a balanced case with hits and false alarms equally spaced around 0 logits, representing the zero bias case. When it comes to adults, the false alarm rate is lower than the hit rate is high, resulting in a negative value of $b$. This means that listeners were more likely to respond male than female for adult speakers. We also see that hits and false alarm rates are more separated for adults, indicating a higher value of $d$ (i.e. sensitivity). For children, we see largely the opposite pattern: Hits were more likely than false alarms, indicating a positive bias (and more female responses). In addition, the distance between hits and false alarm rates was much smaller than for adults indicating a substantially reduced sensitivity. 
@@ -862,9 +862,9 @@ Figure \@ref(fig:F10-6) presents these probabilities, in addition to their logit
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 
-p1 = (tapply (exp_data$F, exp_data$G_v, mean))
-p2 = (tapply (adults$F, adults$G_v, mean))
-p3 = (tapply (children$F, children$G_v, mean))
+p1 = (tapply (exp_data$Female, exp_data$G_v, mean))
+p2 = (tapply (adults$Female, adults$G_v, mean))
+p3 = (tapply (children$Female, children$G_v, mean))
 
 plot (c(1,1), p1, type = 'b', pch=16, xlim = c(0.8,3.2), ylim = c(0,1),
       ylab= "P(F==1)", col=c(1,1),xaxt='n',xlab='')
@@ -881,9 +881,9 @@ axis (side=1,at=1:3, labels=c("All","Adults","Chidren"))
 
 legend (2.3, 0.9, legend=c("H","FA"),col=c(3,2),pch=16,bty='n',pt.cex=1.3)
 
-p1 = bmmb::logit (tapply (exp_data$F, exp_data$G_v, mean))
-p2 = bmmb::logit (tapply (adults$F, adults$G_v, mean))
-p3 = bmmb::logit (tapply (children$F, children$G_v, mean))
+p1 = bmmb::logit (tapply (exp_data$Female, exp_data$G_v, mean))
+p2 = bmmb::logit (tapply (adults$Female, adults$G_v, mean))
+p3 = bmmb::logit (tapply (children$Female, children$G_v, mean))
 
 plot (c(1,1), p1, type = 'b', pch=16, xlim = c(0.8,3.2), ylim = c(-4,2.5),
       ylab= "logit (P(F==1))", col=c(1,1),xaxt='n',xlab='')

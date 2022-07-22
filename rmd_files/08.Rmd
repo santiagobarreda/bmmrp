@@ -113,7 +113,7 @@ p_check (pp_mildly_informative, samples = seq(1,4000,length.out=10), xlim = c(-1
 p_check (pp_informative, samples = seq(1,4000,length.out=10), xlim = c(-100,400))
 ```
 
-It is difficult to *prove* that such a wide prior is 'bad', and in fact some authors recommend the use of very uninformative priors (@cite krushcke). However, it is difficult to deny that a prior that results in prior predictions that are more in line with our domain knowledge is generally better for at least two reasons. First, more informative priors can help the model converge on credible parameter values, especially for complicated models with many parameters. Second, more informative priors can help improve out-of-sample prediction by providing actual information about plausible parameter values for our model. Basically, no fancy statistical model is going to convince anyone that 50 meters tall is a plausible apparent height for human speakers because human speakers are simply not nearly that tall. As a result, a model that acts as if 50 meters is a plausible apparent height for human speakers is likely to offer worse out-of-sample prediction than a model that correctly assigns little to no prior belief to this range of apparent heights. For a more in-depth discussion on the role and function of prior probabilities in multilevel Bayesian models see  (@cite gelman prior). Below we again sample from the prior using the setting we've been using so far, and that we used in the previous chapter. 
+It is difficult to *prove* that such a wide prior is 'bad', and in fact some authors recommend the use of very uninformative priors (cite krushcke). However, it's difficult to deny that a prior that results in prior predictions that are more in line with our domain knowledge is generally better for at least two reasons. First, more informative priors can help the model converge on credible parameter values, especially for complicated models with many parameters. Second, more informative priors can help improve out-of-sample prediction by providing actual information about plausible parameter values for our model. Basically, no fancy statistical model is going to convince anyone that 50 meters tall is a plausible apparent height for human speakers because human speakers are simply not nearly that tall. As a result, a model that acts as if 50 meters is a plausible apparent height for human speakers is likely to offer worse out-of-sample prediction than a model that correctly assigns little to no prior belief to this range of apparent heights. For a more in-depth discussion on the role and function of prior probabilities in multilevel Bayesian models see  (cite gelman prior). Below we again sample from the prior using the setting we've been using so far, and that we used in the previous chapter. 
 
 ```{r, eval = FALSE, warnings=FALSE,error=FALSE}
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
@@ -185,7 +185,7 @@ model_mildly_informative = bmmb::get_model ("8_model_mildly_informative.RDS")
 model_conservative = bmmb::get_model ("8_model_conservative.RDS")
 ```
 
-And use the `brmplot` function to compare the fixed effects estimates for the three models. As can be seen, there is little to no difference in parameter estimates or the credible intervals around them as a function of our prior probabilities. This is in part due to the large amount of data we have, and to the fact that our model is fairly simple relative to the information contained in our data. However, there does appear to be a small reduction in the `A1` parameter as we decrease the value of the prior standard deviation of our fixed effects parameters.  
+And use `brmplot` to compare the fixed effects estimates for the three models. As can be seen, there is little to no difference in parameter estimates or the credible intervals around them as a function of our prior probabilities. This is in part due to the large amount of data we have, and to the fact that our model is fairly simple relative to the information contained in our data. However, there does appear to be a small reduction in the `A1` parameter as we decrease the value of the prior standard deviation of our fixed effects parameters.  
 
 ```{r, eval = FALSE, include = FALSE}
 priors = c(brms::set_prior("student_t(3,156, 1000)", class = "Intercept"),
@@ -352,7 +352,7 @@ axis (side = 1, at = seq(1.5,29.5,2), labels = 1:15,cex.axis = 1.3)
 mtext (side=2, line = 0.3,outer = TRUE, "Residuals (in centimeters)")
 ```
 
-To this point our models have all looked something like \@ref(eq:81), with the generic predictors $x_n$. In these models $\mu$ got a subscript because it varied from trial to trial and was being predicted, but $\sigma$ has never received a subscript because it hasn't varied in our models.  
+To this point our models have all looked something like \@ref(eq:8-1), with the generic predictors $x_n$. In these models $\mu$ got a subscript because it varied from trial to trial and was being predicted, but $\sigma$ has never received a subscript because it hasn't varied in our models.  
 
 $$
 \begin{equation}
@@ -360,11 +360,11 @@ $$
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\ 
 \mu_{[i]} = \mathrm{x}_1 + \mathrm{x}_2+ \dots + \mathrm{x}_n \\ 
 \end{split}
-(\#eq:81)
+(\#eq:8-1)
 \end{equation}
 $$
 
-Instead, we can fit models that helps us understand systematic variation in both the mean *and* the $\sigma$ parameters in our model. We can imagine this by adding a subscript to $\sigma$ and predicting its value from trial to trial using predictors, as seen in \@ref(eq:82). We've given these predictors little $\sigma$ subscripts just to distinguish them conceptually from those predicting $\mu$, but they could be the same predictors used to understand $\mu$ or a different set of predictors. 
+Instead, we can fit models that helps us understand systematic variation in both the mean *and* the $\sigma$ parameters in our model. We can imagine this by adding a subscript to $\sigma$ and predicting its value from trial to trial using predictors, as seen in \@ref(eq:8-2). We've given these predictors little $\sigma$ subscripts just to distinguish them conceptually from those predicting $\mu$, but they could be the same predictors used to understand $\mu$ or a different set of predictors. 
 
 $$
 \begin{equation}
@@ -373,12 +373,11 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{[i]}) \\
 \mu_{[i]} = \mathrm{x}_1 + \mathrm{x}_2+ \dots + \mathrm{x}_n \\ 
 \sigma_{[i]} = \mathrm{x}_{\sigma1} + \mathrm{x}_{\sigma2} + \dots + \mathrm{x}_{\sigma n} \\ \\ 
 \end{split}
-(\#eq:82)
+(\#eq:8-2)
 \end{equation}
 $$
 
 Before continuing, we need to talk about whether our (or your) data can realistically support the estimation of such a model. To this point we haven't discussed this much, but as our models get more and more complicated it is something we need to think about. Our model seeks to estimate five parameters for each listener ($Intercept, A1, G2, A1:G1, \sigma$) based on 139 observations for each listener. This is a reasonable ratio of observations to parameters. However, if we had only 10 observations per listener, it might not be such a good idea to fit a heteroskedastic model to our data. In general, before fitting a model that you *can* fit, it's a good idea to think whether you *should* fit it given the nature of your data and the number of observations you have overall (and in different conditions).
-
 
 
 [@@ NHS: we should maybe (probably) discuss model identifiability here, too. The number of observations vs the number of parameters is often relevant and the only thing you need to worry about, but it's not always so simple to just count up observations and model parameters. In some models, parameter can trade off against each other (I think we've probably already discussed some examples of this with the categorical variable stuff and the fact that you can't estimate coefficients for all of the levels of a factor). I suppose it's a bit of a cop-out for me to say we should do this but not just go ahead and do it, but, well, I'm kind of hung over today, so this is what I can currently muster, energy and focus wise.]
@@ -426,11 +425,11 @@ R \sim \mathrm{LKJCorr} (2) \\
 \mathrm{Intercept_{\sigma}} \sim t(3, 0,1.5) \\
 A1_\sigma \sim t(3, 0,1.5) \\
 \end{split}
-(\#eq:83)
+(\#eq:8-3)
 \end{equation}
 $$
 
-This model is quite large, but it only contains five new (or modified) lines compared to model presented in \@ref(eq:78). These lines are presented in \@ref(eq:84). First, our model now uses a trial-specific error term for trial $i$ ($\sigma_{[i]}$), whereas it previously always used a constant standard deviation. Second, we are now modeling this trial-specific $\sigma$ parameter using an intercept specific to our sigma term ($Intercept_{\sigma}$), and a deviation from this base on apparent age ($A1_{\sigma}$). Finally, in the last two lines, we specify the prior for our sigma intercept, and for the \sigma related effect for apparent age. In a sense, the model expressed in \@ref(eq:83) is effectively the model in \@ref(eq:78), with the additional structure in \@ref(eq:84) added to it. 
+This model is quite large, but it only contains five new (or modified) lines compared to model presented in \@ref(eq:78). These lines are presented in \@ref(eq:8-4). First, our model now uses a trial-specific error term for trial $i$ ($\sigma_{[i]}$), whereas it previously always used a constant standard deviation. Second, we are now modeling this trial-specific $\sigma$ parameter using an intercept specific to our sigma term ($Intercept_{\sigma}$), and a deviation from this base on apparent age ($A1_{\sigma}$). Finally, in the last two lines, we specify the prior for our sigma intercept, and for the \sigma related effect for apparent age. In a sense, the model expressed in \@ref(eq:8-3) is effectively the model in \@ref(eq:7-8), with the additional structure in \@ref(eq:8-4) added to it. 
 
 $$
 \begin{equation}
@@ -440,7 +439,7 @@ height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma_{[i]}) \\
 \mathrm{Intercept_{\sigma}} \sim t(3, 0,1.5) \\
 A1_\sigma \sim t(3, 0,1.5) \\
 \end{split}
-(\#eq:84)
+(\#eq:8-4)
 \end{equation}
 $$
 
@@ -632,7 +631,7 @@ A1 \sim N(0,12) \\
 \sigma_{L_\sigma}, \sigma_{A1 \colon L_\sigma} \sim N(0,1.5) \\\\
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
-(\#eq:85)
+(\#eq:8-5)
 \end{equation}
 $$
 
@@ -830,7 +829,7 @@ We can see that the differences in the fixed effects are so small as to be large
 - simulate different error variances.
 - we will simulate some of our differences
 
-## Simulating data using our model parameters {#c4-simulating}
+## Simulating data using our model parameters {#c8-simulating}
 
 Regression models break up variation in the dependent variables into component parts. One way to think about what all the numbers in our model mean is to simulate the dependent variable by building it from the individual component parts indicated by the model. Our model (`model_multilevel`) has just four components we need to include, one for every estimated parameter: The intercept, the listener-dependent intercepts ($L$), the between-listener variation ($\sigma_L$), and the within-listener variation, the error ($\sigma$).
 
@@ -856,12 +855,7 @@ After creating our components, we add the Intercept, listener effects and random
 height_rep = Intercept + L_[L] + error
 ```
 
-Figure \@ref(fig:F4-5) we compare the results of our simulation to our real data. The are reasonably similar, which tells us that our model is a good reflection of the data.
-
-
-
-
-Below we make two data sets that are 'incomplete' with respect to the variation in our data. The first contains the intercept and noise only, the second contains the intercept and listener effects only.
+WBelow we make two data sets that are 'incomplete' with respect to the variation in our data. The first contains the intercept and noise only, the second contains the intercept and listener effects only.
 
 ```{r, collapse = TRUE}
 # this fake data is missing between listener variation

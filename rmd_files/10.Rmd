@@ -4,13 +4,14 @@ knitr::opts_chunk$set(
   dpi = 300, dev = "jpeg", collapse=TRUE
 )
 ```
+
 # Logistic regression and signal detection theory models
 
 In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. We will focus on dichotomous (i.e. binary) outcomes for now, though the ideas presented will be extended to the modeling of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial data (unordered categories such as English, French and Spanish) in later chapters. 
 
 ## Dichotomous variables and data
 
-The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable. For a model predicting apparent height using speaker VTL, this would mean that the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:101). We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of VTL. In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we are interested in. What we mean by this is that the values along our line are the actual values of our dependent variable that we expect to observe for a given value of VTL. 
+The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable. For a model predicting apparent height using speaker VTL, this would mean that the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:10-1). We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of VTL. In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we are interested in. What we mean by this is that the values along our line are the actual values of our dependent variable that we expect to observe for a given value of VTL. 
 
 $$
 \begin{equation}
@@ -19,7 +20,7 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mu_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]} \\
 \dots 
 \end{split}
-(\#eq:101)
+(\#eq:10-1)
 \end{equation}
 $$
 
@@ -87,7 +88,7 @@ points (aggd$vtl, logit(aggd[,5]), cex =2, pch=16,lwd=2,
 mtext (side=1,text="Centered VTL (cm)", outer = TRUE, line = 1.5)
 ```
 
-Plotting ones and zeros against speaker VTL is not very informative and suggests using a line to directly predict dichotomous data is very, very wrong. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. Relatedly, it suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, when this simply is not the case. We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal zero. When we do this, we obtain the probability of observing a female response (see section X) for each speaker. The distribution of these probabilities with respect to speaker VTL is presented in the bottom left plot of figure \@ref(fig:F10-1). We can update \@ref(eq:101) so that our line now models the probability of observing one of our outcomes rather than our outcomes directly. This is presented in \@ref(eq:102).
+Plotting ones and zeros against speaker VTL is not very informative and suggests using a line to directly predict dichotomous data is very, very wrong. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. Relatedly, it suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, when this simply is not the case. We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal zero. When we do this, we obtain the probability of observing a female response (see section X) for each speaker. The distribution of these probabilities with respect to speaker VTL is presented in the bottom left plot of figure \@ref(fig:F10-1). We can update \@ref(eq:10-1) so that our line now models the probability of observing one of our outcomes rather than our outcomes directly. This is presented in \@ref(eq:10-2).
 
 $$
 \begin{equation}
@@ -95,11 +96,11 @@ $$
 p_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]}  \\
 \dots
 \end{split}
-(\#eq:102)
+(\#eq:10-2)
 \end{equation}
 $$
 
-The $p$ parameter can't be used with a normal distribution to generate dichotomous data, as we did in \@ref(eq:101). A normal distribution will generate continuous variation symmetrically distributed about its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only exactly two different values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
+The $p$ parameter can't be used with a normal distribution to generate dichotomous data, as we did in \@ref(eq:10-1). A normal distribution will generate continuous variation symmetrically distributed about its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only exactly two different values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
   The **binomial distribution** models the number of successes in a group of dichotomous outcomes. This distribution has two parameters: The probability of a success ($p$) and the number of trials ($n$). For example, if you were playing basketball and you took 5 free throws and made 3 (3/5=0.6), then your variable value is 3, the $p$ parameter suggested by your data is 0.6 and the $n$ parameter is 5. If you use this distribution, you are treating all 5 trials as a single observation. This means that your data is 3 (our of five) and not 0, 1, 1, 0, and 1 or whatever. In this case, another 5 shots would constitute one more 'observation' summarized by the total number of successes.
   The **Bernoulli distribution** models individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). In this case, if you took 5 free throws and made 3 (3/5=0.6), you would still describe the data using a $p$ parameter of 0.6. However, with this distribution, you would model each 5 trial as a separate observation (e.g., 1,1,1,0,0) so there is no $n$ parameter (it is always 1). In this situation 5 more shots would be treated as another 5 individual observations.
   Below we generate random binomial variables (R doesn't specifically make Bernoulli variables) using the `rbinom` function. The `rbinom` function takes parameters in this order `number of observations, batch size, probability of success`. Below, we first generate a single Bernoulli variable (a **Bernoulli trial**), and then ten variables with the same probability of success. 
@@ -138,7 +139,7 @@ So, when we have a binary outcome variable and are talking about individual tria
 ## Generalizing our linear models
 
 Figure \@ref(fig:F10-1) shows the probability of observing a classification of 'adult' (i.e., 'man' or 'woman') for each speaker as a function of their VTL. Clearly, the perception of femaleness is related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs (who are likely also shorter in height) as female. 
-  Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:102) and in the bottom left plot of figure \@ref(fig:F10-1). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that an effect causes an increase in probability of 0.2. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. This means an effect can't have the same magnitude given different underlying probabilities, which is a problem since our model parameter values are static. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
+  Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:10-2) and in the bottom left plot of figure \@ref(fig:F10-1). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that an effect causes an increase in probability of 0.2. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. This means an effect can't have the same magnitude given different underlying probabilities, which is a problem since our model parameter values are static. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
 
 ### Link functions and the generalized linear model
 
@@ -150,7 +151,7 @@ Our regression models consist of a bunch of component parts stuck together. Earl
   
   3) Use the *transformed* parameter in the data generating distribution, for example $y \sim \mathrm{Bernoulli}(p)$. This is the random component.
   
-The models we have been fitting so far featured what's known as the **identity** link function. The identity link function is basically a function that does nothing, the input equals the output like $\mu = f(\mu)$. Using the identity link function is equivalent to modeling the $\mu$ parameter directly in our prediction equation. Our model predicts a dichomotous variable $F$ that equals 1 when listeners responded female and 0 when listeners responded male. Since it needs to model a continuous value and map this to a probability (bounded by 0 and 1), we will need to include a function that links probabilities to some continuous value. We can include the intermediate link function step into our description of our prediction of apparent height as in \@ref(\eq:103). 
+The models we have been fitting so far featured what's known as the **identity** link function. The identity link function is basically a function that does nothing, the input equals the output like $\mu = f(\mu)$. Using the identity link function is equivalent to modeling the $\mu$ parameter directly in our prediction equation. Our model predicts a dichomotous variable $F$ that equals 1 when listeners responded female and 0 when listeners responded male. Since it needs to model a continuous value and map this to a probability (bounded by 0 and 1), we will need to include a function that links probabilities to some continuous value. We can include the intermediate link function step into our description of our prediction of apparent height as in \@ref(\eq:10-3). 
 
 $$
 \begin{equation}
@@ -160,11 +161,11 @@ p_{[i]} = f(\theta_{[i]}) \\
 \theta_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]} \\ 
 ...
 \end{split}
-(\#eq:103)
+(\#eq:10-3)
 \end{equation}
 $$
 
-The presentation in \@ref(\eq:103) clearly separates our model into a random component, a link function, and a systematic component. The **generalized linear model** is the extension of this general framework to dependent variables that use a wide range of link functions and random components. 
+The presentation in \@ref(\eq:10-3) clearly separates our model into a random component, a link function, and a systematic component. The **generalized linear model** is the extension of this general framework to dependent variables that use a wide range of link functions and random components. 
 
 ### Logits 
 
@@ -173,7 +174,7 @@ The presentation in \@ref(\eq:103) clearly separates our model into a random com
 $$
 \begin{equation}
 \mathrm{odds}_{success} = \frac{N_{successes}}{N_{failures}}
-(\#eq:103b)
+(\#eq:10-3b)
 \end{equation}
 $$
 
@@ -182,18 +183,18 @@ Odds of 3/1 indicate that success is three times as likely as a failure. We can 
 $$
 \begin{equation}
 \mathrm{Probability}_{success} = \frac{N_{successes}}{N_{failures} + N_{successes}} = \frac{N_{successes}}{N_{total}}
-(\#eq:103c)
+(\#eq:10-3c)
 \end{equation}
 $$
 
 `probability = total number of successes / (total number of successes + total number of failures`)
 
-So, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). We can define odds in a more formal manner by expressing them in terms of the probability of a success($p$) and the probability of a failure ($1-p$) as in \@ref(eq:104).
+So, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). We can define odds in a more formal manner by expressing them in terms of the probability of a success($p$) and the probability of a failure ($1-p$) as in \@ref(eq:10-4).
 
 $$
 \begin{equation}
 \mathrm{odds} = p / (1-p)
-(\#eq:104)
+(\#eq:10-4)
 \end{equation}
 $$
 
@@ -204,7 +205,7 @@ $$
 \begin{split}
 \mathrm{logit}(p) = \log (p / (1-p)) \\
 \mathrm{logit}(p) = \log (p) - \log(1-p)
-(\#eq:105)
+(\#eq:10-5)
 \end{split}
 \end{equation}
 $$
@@ -219,31 +220,31 @@ Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those to
   
 ### The logistic link function
 
-Our logistic regression models express predictions in logits, and our data generating distributions (Bernoulli or binomial) require a parameter $p$ that represents a probability. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this is called the **logistic function**, or sometimes the **antilogit function**. The logistic function is presented in \@ref(eq:106), for values of $z$ ranging continuously from positive to negative infinity, where $e$ is the mathematical constant that serves as the base for natural logarithms.
+Our logistic regression models express predictions in logits, and our data generating distributions (Bernoulli or binomial) require a parameter $p$ that represents a probability. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this is called the **logistic function**, or sometimes the **antilogit function**. The logistic function is presented in \@ref(eq:10-6), for values of $z$ ranging continuously from positive to negative infinity, where $e$ is the mathematical constant that serves as the base for natural logarithms.
 
 $$
 \begin{equation}
 P(y=1)=\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
-(\#eq:106)
+(\#eq:10-6)
 \end{equation}
 $$
 
 The function above may seem inscrutable, but it is in fact very scrutable. First, note its structural similarity to the way that we convert counts of outcomes to probabilities presented in equation above. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success. The odds can be thought of as the ratio of the number of successes to the number of failures observed in some number of trials. As a result, $e^z$ can be thought of as the expected number of observed successes in a given situation. Based on the similarity to equation above, it seems as though we are fixing the expected 'count' of failures at 1, and this is in fact what logistic regression does. This is because for $N$ trials if you have $S$ successes then you *must* have $N-S$ failures. This means that the odds (or probabilities) of successes *and* failures cannot both be independently estimated. We ran into a similar problem previously when we discussed contrasts in chapter 5, and our discussion of why all levels of a factor cannot be independently estimated. Logistic regression arbitrarily sets the number of failures to 1 for all values of the dependent variables. This has no effect on the behavior of the function but does make the value of $e^z$ easily interpretable. For example odds of 3/1, 9/3, and 15/5 all mean the same thing, but imply different values of $e^z$ (i.e. $\log(3), \log(9), \log(12)$). By fixing the 'count' of failures at 1, we can say that the odds of a success is $e^z/1$ and the odds of a failure is $1/e^z$, knowing only a single value ($z$). 
-  Thinking of $z$ as the logarithm of the expected number of successes relative to 1 expected failure may help interpret logits. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:107).
+  Thinking of $z$ as the logarithm of the expected number of successes relative to 1 expected failure may help interpret logits. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:10-7).
 
 $$
 \begin{equation}
 \frac{e^{0}}{1 + e^{0}}=\frac{1}{1 + 1}=0.5
-(\#eq:107)
+(\#eq:10-7)
 \end{equation}
 $$
 
-When $z$ is a negative value, $e^{-z}$ will be a fraction between 0 and 1. Obviously, this means that a success is less likely than a failiure in these cases since we have fixed the number of failures at 1. For example if $z=-3$ then $e^{z}=e^{-3}=0.05$. This means that when $z<0$, we expect probabilities between 0.0 and 0.5, as in \@ref(eq:108).
+When $z$ is a negative value, $e^{-z}$ will be a fraction between 0 and 1. Obviously, this means that a success is less likely than a failiure in these cases since we have fixed the number of failures at 1. For example if $z=-3$ then $e^{z}=e^{-3}=0.05$. This means that when $z<0$, we expect probabilities between 0.0 and 0.5, as in \@ref(eq:10-8).
 
 $$
 \begin{equation}
 \frac{e^{-3}}{1 + e^{-3}}=\frac{0.05}{1 + 0.05}=0.05
-(\#eq:108)
+(\#eq:10-8)
 \end{equation}
 $$
 
@@ -252,7 +253,7 @@ On the other hand, when $z$ is positive, $e^{z}$ will be a number greater than 1
 $$
 \begin{equation}
 \frac{e^3}{1 + e^{3}}=\frac{20.1}{1 + 20.1}=0.95
-(\#eq:109)
+(\#eq:10-9)
 \end{equation}
 $$
 
@@ -291,7 +292,7 @@ p_{[i]} = \mathrm{logit}^{-1}(z_{[i]}) \\
 z_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]} \\ 
 ...
 \end{split}
-(\#eq:1010)
+(\#eq:10-10)
 \end{equation}
 $$
 
@@ -300,16 +301,16 @@ We could put the prediction equation directly inside the logistic function:
 $$
 \begin{equation}
 p = \mathrm{logit}^{-1}(Intercept + VTL \times \mathrm{vtl}) =  \frac{e^{(Intercept + VTL \times \mathrm{vtl})}}{1 + e^{(Intercept + VTL \times \mathrm{vtl})}}
-(\#eq:1011)
+(\#eq:10-11)
 \end{equation}
 $$
 
-And even put all of \@ref(eq:1011) inside the Bernoulli distribution directly as in \@ref(eq:1012).
+And even put all of \@ref(eq:10-11) inside the Bernoulli distribution directly as in \@ref(eq:10-12).
 
 $$
 \begin{equation}
 F \sim \mathrm{Bernoulli} \left (\frac{e^{(Intercept + VTL \times \mathrm{vtl})}}{1 + e^{(Intercept + VTL \times \mathrm{vtl})}} \right ) 
-(\#eq:1012)
+(\#eq:10-12)
 \end{equation}
 $$
 
@@ -454,7 +455,7 @@ Intercept \sim t(3, 0, 3) \\
 A1, VTL, A1 \colon VTL \sim t(3, 0, 3) \\
 \sigma_{L}, \sigma_{A \colon L}, \sigma_{VTL \colon L} , \sigma_{A  \colon VTL \colon L}  \sim t(3, 0, 3) \\ R \sim \mathrm{LKJCorr} (2)
 \end{split}
-(\#eq:1013)
+(\#eq:10-13)
 \end{equation}
 $$
 
@@ -584,7 +585,7 @@ The most important thing to remember when interpreting the coefficients of a log
 $$
 \begin{equation}
 f(x+y) = f(x) + f(y) 
-(\#eq:1014)
+(\#eq:10-14)
 \end{equation}
 $$
 
@@ -615,7 +616,7 @@ As seen above, converting to a probability and then combining can lead to strang
 - introduce stimulus? space here.
 - territorial map is a plot of boundaries showing modal classifications in some section of the parameter space. 
 
-Our models so far have presented us with the y-intercepts of our lines, the value of the $y$ axis at $x = 0$. However, when modeling in logits we might also be interested in the **$x$ intercepts** of our lines. The $x$ intercept is the value of $x$ where *$y$ is equal to zero*, where our line crosses the horizontal x axis line at y = 0. Why do we care about this? Well, when $y = 0$, that means that the probability of classification is $0.5$. So, crossing the $x$ intercept one way means you are more likely to see a success, and crossing the other way means you are more likely to see a failure. In other words, the $x$ intercepts of logistic regression models tells us about the location of the **category boundary** between our two possible outcomes, along the continuous predictor. We can find the $x$ intercept by setting $y=0$ in our prediction equation and solving for (i.e. isolating) $x$, as seen in \@ref(eq:1015). For complicated prediction equations (and even for simple ones), you can rely on algebra solving websites easily found on the internet. Below, we see that when $y$ is equal to zero, the value of $x$ is equal to the negative intercept ($a$) divided by the slope ($b$). 
+Our models so far have presented us with the y-intercepts of our lines, the value of the $y$ axis at $x = 0$. However, when modeling in logits we might also be interested in the **$x$ intercepts** of our lines. The $x$ intercept is the value of $x$ where *$y$ is equal to zero*, where our line crosses the horizontal x axis line at y = 0. Why do we care about this? Well, when $y = 0$, that means that the probability of classification is $0.5$. So, crossing the $x$ intercept one way means you are more likely to see a success, and crossing the other way means you are more likely to see a failure. In other words, the $x$ intercepts of logistic regression models tells us about the location of the **category boundary** between our two possible outcomes, along the continuous predictor. We can find the $x$ intercept by setting $y=0$ in our prediction equation and solving for (i.e. isolating) $x$, as seen in \@ref(eq:10-15). For complicated prediction equations (and even for simple ones), you can rely on algebra solving websites easily found on the internet. Below, we see that when $y$ is equal to zero, the value of $x$ is equal to the negative intercept ($a$) divided by the slope ($b$). 
 
 $$
 \begin{equation}
@@ -625,7 +626,7 @@ y = a + b \times x \\
 -a = b \times x \\ 
 -a/b = x
 \end{split}
-(\#eq:1015)
+(\#eq:10-15)
 \end{equation}
 $$
 
@@ -775,7 +776,7 @@ $$
 H = P(Female=1 | G_v= \mathrm{f} \,) \\
 FA = P(Female=1 | G_v= \mathrm{m} \, )
 \end{split}
-(\#eq:1016)
+(\#eq:10-16)
 \end{equation}
 $$
 
@@ -793,21 +794,21 @@ tapply(exp_data$Female, exp_data$G_v, mean)
 ```
 
 **Sensitivity** is defined as the difference between a listeners hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no discrimination at all: They perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are identifying 90% of *people*, including men, as women. 
-  There are potentially many ways to measure sensitivity. For example, we could just subtract the hit rate form the false alarm rate. This is not the best idea for all the same reasons that we do not base our linear models based on probabilities. One of the most common measures of sensitivity is $d'$ ('d-prime') which is calculated as in \@ref(eq:1017). 
+  There are potentially many ways to measure sensitivity. For example, we could just subtract the hit rate form the false alarm rate. This is not the best idea for all the same reasons that we do not base our linear models based on probabilities. One of the most common measures of sensitivity is $d'$ ('d-prime') which is calculated as in \@ref(eq:10-17). 
 
 $$
 \begin{equation}
 d' = z(H) - z(FA)
-(\#eq:1017)
+(\#eq:10-17)
 \end{equation}
 $$
 
-Where $z(p)$ represents a function that converts a proportion to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression. Probit models are basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function rather than the logistic link function. Probit models are straightforward to implement but will not be discussed here. The reason for this is that the logistic function effectively performs the same function as the $z(p)$ function above, meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:1018). 
+Where $z(p)$ represents a function that converts a proportion to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression. Probit models are basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function rather than the logistic link function. Probit models are straightforward to implement but will not be discussed here. The reason for this is that the logistic function effectively performs the same function as the $z(p)$ function above, meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:10-18). 
 
 $$
 \begin{equation}
 d = \mathrm{logit}(H) - \mathrm{logit}(FA)
-(\#eq:1018)
+(\#eq:10-18)
 \end{equation}
 $$
 
@@ -817,16 +818,16 @@ In all of the examples we've given so far, hit rates and false alarm rates have 
 $$
 \begin{equation}
 c' = -\frac{1}{2} \, [logit(H) + logit(FA)]
-(\#eq:1017)
+(\#eq:10-17)
 \end{equation}
 $$
 
-For historical reasons, in signal detection theory a negative criterion (negative bias) is associated with more positive responses and a positive criterion (positive bias) is associated with more negative responses. Note however that the calculation of $c'$ in \@ref(eq:1017) includes negating the mean of the logit of hits and false alarm rates. As a result, this definition of bias involves a double negative which unnecessarily complicates things for many purposes: A higher average hit/false alarm rate it *negatively* related to the criterion, which is itself *negatively* related to outcomes. We think it is important to be aware of this convention but do not necessarily feel bound to follow it. We're going to divert from detection theory somewhat and simply define a bias measure $b$ as the negative of the criterion, as seen in \@ref(eq:1018). 
+For historical reasons, in signal detection theory a negative criterion (negative bias) is associated with more positive responses and a positive criterion (positive bias) is associated with more negative responses. Note however that the calculation of $c'$ in \@ref(eq:10-17) includes negating the mean of the logit of hits and false alarm rates. As a result, this definition of bias involves a double negative which unnecessarily complicates things for many purposes: A higher average hit/false alarm rate it *negatively* related to the criterion, which is itself *negatively* related to outcomes. We think it is important to be aware of this convention but do not necessarily feel bound to follow it. We're going to divert from detection theory somewhat and simply define a bias measure $b$ as the negative of the criterion, as seen in \@ref(eq:10-18). 
 
 $$
 \begin{equation}
 b = -c' = \frac{1}{2} \, [logit(H) - logit(FA)]
-(\#eq:1018)
+(\#eq:10-18)
 \end{equation}
 $$
 
@@ -901,7 +902,7 @@ abline (h = 0)
 ```
 
 When considered as in the right plot of figure \@ref(fig:F10-6), the estimation of hit and false alarm rates is very similar to the two-group models described in chapter 5. In chapter 5 we estimated the effect of apparent adultness on apparent height. In that model we had two 'groups' of data: Trials where a listener indicated hearing an adult and trials where listeners indicated hearing a child. Our model predicted apparent height given the apparent age of the speaker. Since we used sum coding, the intercept in our model was the average of the two group means and the effect for age was equal to 1/2 the distance between the group means. 
-  Here, we have two groups: Trials where the speaker was *actually* a female and trials where it was not. Our model predicts the logit of the probability of a female response given the veridical gender of the speaker. The probability of a female response when the speaker is actually female corresponds to the hit rate, i.e. $P(F=1 | G_v= \mathrm{f} \,)$, as in \@ref(eq:1016). Conversely, since the probability of a female response when the speaker is actually male corresponds to the false alarm rate, that means that the group associated with actual male speakers represents our false alarm rate (i.e. $P(F=1 | G_v= \mathrm{f} \,)$. Since we are using sum coding, the intercept in our model is the average of the two group means and so is a measure of *bias* (since it is equal to $b$ and $-c'$, see \@ref(eq:1017) and \@ref(eq:1018)). The effect for our group predictor, in this case the group separation based on veridical gender, will equal 1/2 the distance between the hit and false alarm rates. This means that our predictor in this case will equal $d/2$, meaning that the slope for veridical gender is related to *sensitivity*.
+  Here, we have two groups: Trials where the speaker was *actually* a female and trials where it was not. Our model predicts the logit of the probability of a female response given the veridical gender of the speaker. The probability of a female response when the speaker is actually female corresponds to the hit rate, i.e. $P(F=1 | G_v= \mathrm{f} \,)$, as in \@ref(eq:10-16). Conversely, since the probability of a female response when the speaker is actually male corresponds to the false alarm rate, that means that the group associated with actual male speakers represents our false alarm rate (i.e. $P(F=1 | G_v= \mathrm{f} \,)$. Since we are using sum coding, the intercept in our model is the average of the two group means and so is a measure of *bias* (since it is equal to $b$ and $-c'$, see \@ref(eq:10-17) and \@ref(eq:10-18)). The effect for our group predictor, in this case the group separation based on veridical gender, will equal 1/2 the distance between the hit and false alarm rates. This means that our predictor in this case will equal $d/2$, meaning that the slope for veridical gender is related to *sensitivity*.
 
 ### Data and research questions
 
@@ -991,13 +992,13 @@ A, VTL, A \colon VTL \sim t(3, 0, 3) \\
 \sigma_{L}, \sigma_{A_v \colon L}, \sigma_{F_v \colon L} , \sigma_{A_v  \colon F_v \colon L}  \sim t(3, 0, 3) \\ 
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
-(\#eq:1019)
+(\#eq:10-19)
 \end{equation}
 $$
 
 ### Fitting and interpreting the model
 
-Below is the function call we need to fit the model described in \@ref(eq:1019). Note that it is simply a logistic regression model, just one with a specific structure. 
+Below is the function call we need to fit the model described in \@ref(eq:10-19). Note that it is simply a logistic regression model, just one with a specific structure. 
 
 ```{r, eval = FALSE}
 # Fit the model yourself

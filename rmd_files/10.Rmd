@@ -7,11 +7,11 @@ knitr::opts_chunk$set(
 
 # Logistic regression and signal detection theory models
 
-In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. We will focus on dichotomous (i.e. binary) outcomes for now, though the ideas presented will be extended to the modeling of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial data (unordered categories such as English, French and Spanish) in later chapters. 
+In this chapter we're going to start talking about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. In this chapter we will focus on dichotomous (i.e. binary) outcomes, though the ideas presented will be extended to the modeling of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial data (unordered categories such as English, French and Spanish) in chapter 12. 
 
 ## Dichotomous variables and data
 
-The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable. For a model predicting apparent height using speaker VTL, this would mean that the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:10-1). We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of VTL. In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we are interested in. What we mean by this is that the values along our line are the actual values of our dependent variable that we expect to observe for a given value of VTL. 
+The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable ($\mu$). For a model predicting apparent height using speaker VTL, this means that the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:10-1). 
 
 $$
 \begin{equation}
@@ -24,8 +24,7 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \end{equation}
 $$
 
-Unlike quantitative variables, **dichotomous** variables can only take on only one of two possible discrete outcomes. We can easily think of many examples of this kind of data, for example something that is wrong or right, someone who is either male or female, or someone who is an adult or a child. None of these cases are meant to suggest that reality is this simple, for example that males and females are two discrete and internally homogeneous classes that fully explain variation in human gender. Instead we are simply discussing things like gender when it is *coded* as a dichotomous variable so that it has only two possible values (i.e. male or female). 
-  When your variable has only two categorical outcomes, you need to find a way to represent these numerically. One way to do this is to code one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way and should be based on what 'makes sense' given the analysis at hand. In our case we will assign 1 to cases where listeners identified a speaker as female, thereby associating female responses with 'successes'. The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right panel of figure \@ref(fig:F10-1). 
+We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of VTL. In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we're interested in. What we mean by this is that the values along our line are the actual values of our dependent variable that we expect to observe for a given value of VTL. 
 
 ```{r F10-1, fig.width = 8, fig.height = 5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -88,7 +87,13 @@ points (aggd$vtl, logit(aggd[,5]), cex =2, pch=16,lwd=2,
 mtext (side=1,text="Centered VTL (cm)", outer = TRUE, line = 1.5)
 ```
 
-Plotting ones and zeros against speaker VTL is not very informative and suggests using a line to directly predict dichotomous data is very, very wrong. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. Relatedly, it suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, when this simply is not the case. We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal zero. When we do this, we obtain the probability of observing a female response (see section X) for each speaker. The distribution of these probabilities with respect to speaker VTL is presented in the bottom left plot of figure \@ref(fig:F10-1). We can update \@ref(eq:10-1) so that our line now models the probability of observing one of our outcomes rather than our outcomes directly. This is presented in \@ref(eq:10-2).
+Unlike quantitative variables, **dichotomous** variables can only take on only one of two possible discrete values. We can easily think of many examples of this kind of data, for example something that is wrong or right, someone who is either male or female, or someone who is an adult or a child. None of these cases are meant to suggest that reality is this simple. For example, males and females are two discrete and internally homogeneous classes that fully explain variation in human sex or gender. Despite this, gender can be *coded* as a dichotomous variable so that it has only two possible values (i.e. male or female). 
+
+When your variable has only two categorical outcomes, you need to find a way to represent these numerically. One way to do this is to code one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way and should be based on what 'makes sense' given the analysis at hand. In our case we will define a new variable called `Female` and assign 1 to cases where listeners identified a speaker as female thereby associating female responses with 'successes'. 
+
+The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right plot of figure \@ref(fig:F10-1). Plotting ones and zeros against speaker VTL is not very informative and suggests that using a line to directly predict dichotomous data leads to strange outcomes. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. It also suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, when this also can't occur. 
+
+We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal zero. When we do this, we obtain the probability ($p$) of observing a female response (see section X) for each speaker. The distribution of these probabilities with respect to speaker VTL is presented in the bottom left plot of figure \@ref(fig:F10-1). We can leave \@ref(eq:10-1) aside and instead use \@ref(eq:10-2) which models the probability of observing a female response rather than the 1 and 0 responses directly.
 
 $$
 \begin{equation}
@@ -100,10 +105,13 @@ p_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]}  \\
 \end{equation}
 $$
 
-The $p$ parameter can't be used with a normal distribution to generate dichotomous data, as we did in \@ref(eq:10-1). A normal distribution will generate continuous variation symmetrically distributed about its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only exactly two different values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
-  The **binomial distribution** models the number of successes in a group of dichotomous outcomes. This distribution has two parameters: The probability of a success ($p$) and the number of trials ($n$). For example, if you were playing basketball and you took 5 free throws and made 3 (3/5=0.6), then your variable value is 3, the $p$ parameter suggested by your data is 0.6 and the $n$ parameter is 5. If you use this distribution, you are treating all 5 trials as a single observation. This means that your data is 3 (our of five) and not 0, 1, 1, 0, and 1 or whatever. In this case, another 5 shots would constitute one more 'observation' summarized by the total number of successes.
-  The **Bernoulli distribution** models individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). In this case, if you took 5 free throws and made 3 (3/5=0.6), you would still describe the data using a $p$ parameter of 0.6. However, with this distribution, you would model each 5 trial as a separate observation (e.g., 1,1,1,0,0) so there is no $n$ parameter (it is always 1). In this situation 5 more shots would be treated as another 5 individual observations.
-  Below we generate random binomial variables (R doesn't specifically make Bernoulli variables) using the `rbinom` function. The `rbinom` function takes parameters in this order `number of observations, batch size, probability of success`. Below, we first generate a single Bernoulli variable (a **Bernoulli trial**), and then ten variables with the same probability of success. 
+The $p$ parameter can't be used with a normal distribution to generate dichotomous data. A normal distribution will generate continuous variation symmetrically around its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only exactly two different values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
+
+The **binomial distribution** generates a set of dichotomous outcomes. This distribution has two parameters: The probability of a success ($p$) and the number of trials ($n$). For example, if you were playing basketball and you took 5 free throws and made 3 (3/5=0.6), then the $p$ parameter suggested by your data is 0.6 and the $n$ parameter is 5. If you use this distribution, you are treating all 5 trials as a single observation. This means that your data is 3 (out of five) and not 0, 1, 1, 0, and 1 (or whatever). In this case, another 5 shots would constitute one more 'observation' summarized by the total number of successes.
+
+The **Bernoulli distribution** generates individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). In this case, if you took 5 free throws and made 3 (3/5=0.6), you would still describe the data using a $p$ parameter of 0.6. However, with this distribution, you would model each of the 5 trials as a separate observation (e.g., 1,1,1,0,0) so there is no $n$ parameter (it's always 1). In this situation 5 more shots would be treated as another 5 individual observations.
+
+Below we generate random binomial variables (R doesn't specifically make Bernoulli variables) using the `rbinom` (random binomial) function. The `rbinom` function takes parameters in this order `number of observations, batch size, probability of success`. Below, we first generate a single Bernoulli variable (a **Bernoulli trial**), and then ten variables with the same probability of success. 
 
 ```{r, collapse = TRUE}
 # a single trial, probability of 0.5
@@ -113,7 +121,7 @@ rbinom (1,1,.5)
 rbinom (10,1,.5)
 ```
 
-Below, we compare the data generated by the Bernoulli and the binomial distributions. In the top row we get a single number, the total number of successes in the trials. We don't get any information about what happened on any individual trial. In the bottom row we do get information about what happened on each individual trial.  
+Below, we compare the data generated by the Bernoulli and the binomial distributions. In the top row we get a single number, the total number of successes in the trials. We don't get any information about what happened on any individual trial. In the bottom row we do get information about what happens on each individual trial.  
 
 ```{r, collapse = TRUE}
 # a single batch of 10 trials, probability of 0.5
@@ -123,11 +131,12 @@ rbinom (1,10,.5)
 rbinom (10,1,.5)
 ```
 
-Unlike the normal distribution, these distributions do not generate data with values near their mean. Instead, they generate sequences of 1s and 0s whose average is expected to *converge* on the $p$ parameter of the distribution as the number of observations approaches infinity. For example, below we generate sequences of a dichotomous variable with a $p$ parameter of 0.5. In each case, the estimate of the probability of the distribution gets closer as the length of the sample gets longer. 
+Unlike the normal distribution, the above distributions do not generate data with values near their mean. Instead, they generate sequences of 1s and 0s whose average is expected to *converge* on the $p$ parameter as the number of observations approaches infinity. For example, below we generate sequences of a dichotomous variable with a $p$ parameter of 0.5. In each case, the estimate of the probability of the distribution gets closer as the length of the sample gets longer. 
 
-
-```{r, collapse = TRUE}
+```{r, include = FALSE}
 set.seed (1)
+```
+```{r, collapse = TRUE}
 mean (rbinom (10,1,.5)) # the mean of 10 observations
 mean (rbinom (100,1,.5))  # the mean of 100 observations
 mean (rbinom (1000,1,.5))  # the mean of 1000 observations
@@ -138,25 +147,28 @@ So, when we have a binary outcome variable and are talking about individual tria
 
 ## Generalizing our linear models
 
-Figure \@ref(fig:F10-1) shows the probability of observing a classification of 'adult' (i.e., 'man' or 'woman') for each speaker as a function of their VTL. Clearly, the perception of femaleness is related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs (who are likely also shorter in height) as female. 
-  Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:10-2) and in the bottom left plot of figure \@ref(fig:F10-1). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that an effect causes an increase in probability of 0.2. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. This means an effect can't have the same magnitude given different underlying probabilities, which is a problem since our model parameter values are static. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
+The bottom left plot in figure \@ref(fig:F10-1) shows the probability of observing a classification of 'female' for each speaker as a function of their VTL. Clearly, the perception of femaleness is negatively related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs (who are likely also shorter in height) as female. 
+
+Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:10-2) and in the bottom left of figure \@ref(fig:F10-1). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that a predictor is associated with an increase in probability of 0.2 per unit change. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. This means an effect can't have the same magnitude given different underlying probabilities, which is a problem since our model slopes are static. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
 
 ### Link functions and the generalized linear model
 
-Our regression models consist of a bunch of component parts stuck together. Early on we discussed two general parts: The random components and the systematic component (see section X). The systematic component predicts variation in expected values using shapes like lines and planes. For example, our regression models so far have used equations to predict values of $\mu$. The random component specifies how our data randomly varies around the expected value. For our models so far we have assumed Gaussian (or t) distributed data since we have been modeling quantitative dependent variables. Generalized linear models expand on these concepts by introducing what are know as **link functions**. A link function allows you to *link* variation in a parameter to variation in straight lines. When you rely on link function modeling becomes a three step process like this:
+Our regression models consist of a bunch of component parts stuck together. Early on we discussed two general parts: The random components and the systematic component (see section X). The systematic component predicts variation in expected values using shapes like lines and planes. For example, our regression models so far have used equations to predict values of $\mu$. The random component specifies how our data randomly varies around the expected value. For our models so far we have assumed Gaussian (or t) distributed data since we have been modeling quantitative dependent variables. Generalized linear models expand on these concepts by introducing what are know as **link functions**. 
 
-  1) Predict variation of expected values along straight lines (or related shapes), for example $\theta  = a + b \times x$. This is the systematic component.
+A link function takes some parameter you are interested in, e.g. $p$ and transforms it so that the *transformed* value can be modeled along straight lines. When you rely on link functions, modeling becomes a three step process like this:
 
-  2) Transform the parameter using a link function, for example $p = f(\theta)$. 
+  1) Predict the variation of expected values along straight lines (or related shapes), for example $\theta  = a + b \times x$. This is the systematic component.
+  2) Transform the parameter using a link function. For example, given link function $f$ we can transform our expected value $\theta$ to $p$ like so: $p = f(\theta)$. 
+  3) Use the *transformed* parameter ($p$) in the data generating distribution. For example $y \sim \mathrm{Bernoulli}(p)$. This is the random component.
   
-  3) Use the *transformed* parameter in the data generating distribution, for example $y \sim \mathrm{Bernoulli}(p)$. This is the random component.
-  
-The models we have been fitting so far featured what's known as the **identity** link function. The identity link function is basically a function that does nothing, the input equals the output like $\mu = f(\mu)$. Using the identity link function is equivalent to modeling the $\mu$ parameter directly in our prediction equation. Our model predicts a dichomotous variable $F$ that equals 1 when listeners responded female and 0 when listeners responded male. Since it needs to model a continuous value and map this to a probability (bounded by 0 and 1), we will need to include a function that links probabilities to some continuous value. We can include the intermediate link function step into our description of our prediction of apparent height as in \@ref(\eq:10-3). 
+We can see that our link function literally *links* our systematic and random components. The models we've been fitting so far featured what's known as the **identity** link function. The identity link function is basically a function that does nothing, the input equals the output like $\mu = f(\mu)$. Using the identity link function is equivalent to modeling the $\mu$ parameter directly in our prediction equation. This works for the mean parameter of the normal distribution actually *can* vary continuously from positive to negative infinity. However, it doesn't work for the Bernoulli or binomial distributions since $p$ must fall between 0 and 1.
+
+The model we're interested in needs to predict a dichotomous variable ($Female$) that equals 1 when listeners responded female and 0 when listeners responded male. Since it needs to model a continuous value and map this to a probability (bounded by 0 and 1), we'll need to include a function that maps a continuous predicted value to a probability bounded by 0 and 1. We include the intermediate step involving the link function $f$ in our description in \@ref(\eq:10-3). 
 
 $$
 \begin{equation}
 \begin{split}
-\mathrm{F}_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
+\mathrm{Female}_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
 p_{[i]} = f(\theta_{[i]}) \\
 \theta_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]} \\ 
 ...
@@ -165,16 +177,52 @@ p_{[i]} = f(\theta_{[i]}) \\
 \end{equation}
 $$
 
-The presentation in \@ref(\eq:10-3) clearly separates our model into a random component, a link function, and a systematic component. The **generalized linear model** is the extension of this general framework to dependent variables that use a wide range of link functions and random components. 
+The presentation in \@ref(\eq:10-3) separates our model into a random component, a link function, and a systematic component. Each of these components play a crucial role in our ability to build regression models that predict dichotomous variables. The random component is the distribution underlying the data level error in our data. This component helps us account for that fact that our observations are not perfectly predictable given our independent variables, despite the fact that we think they may be systematically related. The systematic component allows us to make predictions about variability in the dependent variable using combinations of our predictors. The link function lets us use lines to model variation in parameters even when these may not vary in an unbounded manner (i.e. from $-\infty$ to $+\infty$). 
+
+This conceptualization of regression models is often referred to as the **generalized linear model**. The generalized linear model allows the user to change the random component and/or link function as appropriate to model a wide range of data. It is called the 'generalized' linear model because it represents the extrapolation of principles related to the prediction of quantitative variables coming from a normal distribution to a more general case. For more information on the generalized linear model see (cite). 
+
+## Logistic Regression
+
+**Logistic regression** is an approach to regression for predicting a dichotomous dependent variable. In terms of the components of the generalized linear model outlined above, logistic regression assumes a Bernoulli distribution for the random component (discussed above), and the *inverse logit* or *antilogit* function (discussed below) as its link function. The systematic components still consists of linear combinations of our independent variables, i.e., adding them up after multiplying by their respective model coefficients. A general description of logistic regression is given in \@ref(eq:10-4). 
+
+
+$$
+\begin{equation}
+\begin{split}
+y_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
+p_{[i]} = \mathrm{logit}^{-1}(\theta_{[i]}) \\
+\theta_{[i]} = Intercept + \beta_1 \times \mathrm{x}_{1[i]} + \dots + 
+\beta_k \times \mathrm{x}_{k[i]}\\ 
+...
+\end{split}
+(\#eq:10-4)
+\end{equation}
+$$
+
+The information in \@ref(eq:10-4) says the following: Our data ($y$) is a Bernoulli-distributed dichotomous variable with a $p$ parameter that varies on each trial. The $p$ parameter is the output of the inverse logit ($\mathrm{logit}^{-1}$) applied to our *linear predictor* $\theta$ (see section X). The linear predictor is assumed to be the sum of an intercept and the weighted combination of our predictors for predictors $x_1$ to $x_k$ and weights $\beta_1$ to $\beta_k$. 
+
+
+
+We noted above that if you code successes and failures as 1 and 0 and find the average of a series of observations, you find the probability of observing a success in your observations. 
+
+
+Actually though, we are estimating the *expected value* of *femaleness* for every individual speaker because the expected . 
+
+Recall that for discrete variables, the expected value is equal to the sum of the product of possible outcomes times the probability of observing that outcome. Imagine a voice that was rated 10 times resulting in a responses of 1,1,0,1,0,0,1,1,1,1, where 1 represents female. The expected 
+
+
+
+
+
 
 ### Logits 
 
-**Logits** are log-odds, the logarithm of the odds of a success. The odds of a success is defined as:
+We will to discuss the inverse logit function in detail, however, to talk about this link function we need to model dichotomous data, it helps to talk about *logits* first. **Logits** are log-odds, the logarithm of the odds of a success. The odds of a success is defined as:
 
 $$
 \begin{equation}
 \mathrm{odds}_{success} = \frac{N_{successes}}{N_{failures}}
-(\#eq:10-3b)
+(\#eq:10-4)
 \end{equation}
 $$
 
@@ -183,29 +231,29 @@ Odds of 3/1 indicate that success is three times as likely as a failure. We can 
 $$
 \begin{equation}
 \mathrm{Probability}_{success} = \frac{N_{successes}}{N_{failures} + N_{successes}} = \frac{N_{successes}}{N_{total}}
-(\#eq:10-3c)
+(\#eq:10-5)
 \end{equation}
 $$
 
 `probability = total number of successes / (total number of successes + total number of failures`)
 
-So, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). We can define odds in a more formal manner by expressing them in terms of the probability of a success($p$) and the probability of a failure ($1-p$) as in \@ref(eq:10-4).
+So, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). We can define odds in a more formal manner by expressing them in terms of the probability of a success($p$) and the probability of a failure ($1-p$) as in \@ref(eq:10-6).
 
 $$
 \begin{equation}
 \mathrm{odds} = p / (1-p)
-(\#eq:10-4)
+(\#eq:10-6)
 \end{equation}
 $$
 
-Odds are still bounded by zero so they don't work for linear modeling, but if we take the *logarithm* of the odds we get a *logit*: A value that extends continuously from positive to negative infinity. This is because logarithms represent the space from 0 to 1 with values from $-\infty$ to 0, and values from 1 to $+\infty$ with values from 0 to $+\infty$. We can calculate the logit of a probability with either of the two equivalent calculations:
+Odds are still bounded by zero so they don't work for linear modeling, but if we take the *logarithm* of the odds we get a *logit*, the log odds, and these *can* take on values from positive to negative infinity. This is because logarithms represent the space from 0 to 1 with values from $-\infty$ to 0, and values from 1 to $+\infty$ with values from 0 to $+\infty$. We can calculate the logit of a probability in either of the two following ways:
 
 $$
 \begin{equation}
 \begin{split}
 \mathrm{logit}(p) = \log (p / (1-p)) \\
 \mathrm{logit}(p) = \log (p) - \log(1-p)
-(\#eq:10-5)
+(\#eq:10-7)
 \end{split}
 \end{equation}
 $$
@@ -216,7 +264,7 @@ The `bmmb` package contains a function that calculates logits from probabilities
 bmmb::logit
 ```
 
-Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. Our logistic regression models are going to express expected values in *logits*. Our lines will describe continuous changes in logits as a function of our predictors, and our intercepts will describe shifts on the values of logits across different categories. 
+Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those values to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. Our logistic regression models are going to express expected values in *logits*. Our lines will describe continuous changes in logits as a function of our predictors, and our intercepts will describe shifts on the values of logits across different categories. 
   
 ### The logistic link function
 
@@ -230,7 +278,8 @@ P(y=1)=\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
 $$
 
 The function above may seem inscrutable, but it is in fact very scrutable. First, note its structural similarity to the way that we convert counts of outcomes to probabilities presented in equation above. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success. The odds can be thought of as the ratio of the number of successes to the number of failures observed in some number of trials. As a result, $e^z$ can be thought of as the expected number of observed successes in a given situation. Based on the similarity to equation above, it seems as though we are fixing the expected 'count' of failures at 1, and this is in fact what logistic regression does. This is because for $N$ trials if you have $S$ successes then you *must* have $N-S$ failures. This means that the odds (or probabilities) of successes *and* failures cannot both be independently estimated. We ran into a similar problem previously when we discussed contrasts in chapter 5, and our discussion of why all levels of a factor cannot be independently estimated. Logistic regression arbitrarily sets the number of failures to 1 for all values of the dependent variables. This has no effect on the behavior of the function but does make the value of $e^z$ easily interpretable. For example odds of 3/1, 9/3, and 15/5 all mean the same thing, but imply different values of $e^z$ (i.e. $\log(3), \log(9), \log(12)$). By fixing the 'count' of failures at 1, we can say that the odds of a success is $e^z/1$ and the odds of a failure is $1/e^z$, knowing only a single value ($z$). 
-  Thinking of $z$ as the logarithm of the expected number of successes relative to 1 expected failure may help interpret logits. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:10-7).
+
+Thinking of $z$ as the logarithm of the expected number of successes relative to 1 expected failure may help interpret logits. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:10-7).
 
 $$
 \begin{equation}
@@ -319,7 +368,8 @@ There is no particular reason to do this, apart from the fact that it directly i
 ### Building intuitions about logits
 
 The logistic (and logit) functions are **non linear** functions. In the simplest sense this means that the relationships they form between $x$ and $y$ variables, when plotted, do not form straight lines. In the left plot below we see a situation where a predictor $x$ is linearly related to the logit of some probability $p$. However, after applying the logistic function to our logit values, our predictor no longer enters into a linear relationship with the dependent variable. Another consequences of the non-linearity of these transformations is that a given unit increase in logits does not always equal the same increase in probabilities (and vice versa). In general,  logits closer to zero tend to map small changes in logits to large changes in probability, while logits with a larger magnitude tend to map larger and larger differences to smaller and smaller changes in probabilities. 
-  The non-linear relationship between probabilities and logits is evident in both plots in figure \@ref(fig:F10-3). In the left plot we see horizontal lines that represent equal differences in probability (0.1 change per line). These lines are closer together closer to $y=0$, which shows that the same change in logits results in larger probability changes when values are closer to zero. In the right side of the plot we see that the slope of the curve actually changes, increasing in value as $p$ approaches 0, and then decreasing again as it crosses it. In both cases, this behavior is because this curve must approach but never actually reach 0 and 1, and as a result the slope will continuously decrease as probabilities apporach these bounds.      
+
+The non-linear relationship between probabilities and logits is evident in both plots in figure \@ref(fig:F10-3). In the left plot we see horizontal lines that represent equal differences in probability (0.1 change per line). These lines are closer together closer to $y=0$, which shows that the same change in logits results in larger probability changes when values are closer to zero. In the right side of the plot we see that the slope of the curve actually changes, increasing in value as $p$ approaches 0, and then decreasing again as it crosses it. In both cases, this behavior is because this curve must approach but never actually reach 0 and 1, and as a result the slope will continuously decrease as probabilities apporach these bounds.      
 
 ```{r F10-3, fig.width = 8, fig.height = 3, fig.cap = "(left) A line relating some predictor to logits. (right) A sigmoid curve expressing the probability associated with each value along the line in the left. Horizontal lines are placed every 0.1 probability units from 0.1 to 0.9 probability.", echo = FALSE}
 
@@ -351,7 +401,8 @@ rbind ( (seq (0.1,.9,.1)),
 ```
 
 We can think about the cause of this behavior by returning to our basketball free throw analogy. Imagine that you keep track of you free throw practice in basketball. You sink 500/1000 free throws, giving you a 0.5 probability of success. Now imagine you take a further 100 and sink them all. Now your probability of success is 600/1100, meaning your amazing streak has increased your probability to 0.54. However, suppose that you had been a 900/1000 shooter, with a probability of 0.9. If you had the same streak of 100 baskets, you would only have increased your probability to 90.1 (1000/1100). 
-  We can see that 'the same' increase results in a large increase in one probability (0.5 -> 0.54, almost 10%) and a minuscule change in another (0.9 -> 0.901, about 0.1%). Basically, as you approach 0 and 1 it gets harder to make large changes in your probabilities. The result of this is that a given logit difference will equal a large probability difference near 0 logits, and a smaller probability difference as the underlying logit values are further from 0. Here are some useful things to keep in mind when interpreting logits: 
+
+We can see that 'the same' increase results in a large increase in one probability (0.5 -> 0.54, almost 10%) and a minuscule change in another (0.9 -> 0.901, about 0.1%). Basically, as you approach 0 and 1 it gets harder to make large changes in your probabilities. The result of this is that a given logit difference will equal a large probability difference near 0 logits, and a smaller probability difference as the underlying logit values are further from 0. Here are some useful things to keep in mind when interpreting logits: 
 
   * 50% is 0. Positive means more likely to be a success, negative means more likely to be a failure. 
   
@@ -367,11 +418,11 @@ Here is one final thing to keep in mind: you **must** combine your model paramet
 
 ## Logistic regression with one quantitative predictor
 
-We're going to fit a model to our data that predicts the perception of adultness using logistic regression.
+In the previous chapter we tried to predict apparent height using speaker VTL, apparent age and apparent gender.This time, we're going to try to predict the perception of *femaleness* based on speaker VTL an apparent age, using a logistic regression.
 
 ### Data and research questions
 
-We're going to keep working with our experimental data, but we're going to predict a dichotomous variable: Whether a listener indicated hearing a female speaker on any given trial. We load the necessary R packages and the data, taking only those trials using the actual speaker resonance characteristics. We create a variable called `Female`, which will be our dependent variable. This variable equals 1 when listeners indicated hearing a female speaker and 0 when listeners indicated a male speaker. We'll predict this using a single quantitative predictor, speaker VTL, which we also center below. 
+Below we load the necessary R packages and the data. We create a new variable called `Female` which will be our dependent variable. This variable equals 1 when listeners indicated hearing a female speaker and 0 when listeners indicated a male speaker. We'll predict this using a single quantitative predictor, speaker VTL, which we also center below. 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -385,33 +436,21 @@ exp_data$Female = as.numeric (exp_data$G == 'f')
 
 # make a copy of vtl
 exp_data$vtl_original = exp_data$vtl
-
 # center vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
-
 ```
 
+The variables from our data frame that will be used in this model are: 
 
-
-
-
-
-  - `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
-
+  * `L`: A number from 1-15 indicating which *listener* responded to the trial, being treated as a character. 
   * `S`: A number from 1-139 indicating which *speaker* produced the trial stimulus. 
-
   * `vtl`: An estimate of the speaker's *vocal-tract length* in centimeters. 
-
   * `G`: The *apparent gender* of the speaker indicated by the listener, `f` (female) or `m` (male). 
-
   * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
-  
-
-
 
 We saw in figure \@ref(fig:F10-1) that VTL is negatively related to the probability that a speaker will be identified as female. In addition, it seems that the relationship between speaker VTL and the perception of female speakers may differ based on the apparent age of the speaker. We would like to know:
 
-  Q1) What is the relationship between speaker VTL and the perception of female speakers?
+  Q1) What is the relationship between speaker VTL and the perception of femaleness?
 
   Q2) Does the relationship between VTL and apparent speaker gender vary in an age-dependent manner?
 
@@ -1128,10 +1167,6 @@ We can also potentially explain the changes in response bias that we saw in our 
 table (adults$C_v, adults$C)
 ```
 
-## Simulating our data
-
-- return to an oldie
-- done with traditional comparisons, point about equivalence has been made. 
-- we will simulate some of our differences
+## Exercises
 
 

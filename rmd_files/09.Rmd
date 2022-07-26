@@ -78,8 +78,8 @@ In figure \@ref(fig:F9-1) we plot the average apparent height for each token aga
 ### Figure 9.1
 ################################################################################
 
-library (bmmb)
-data (exp_data)
+#library (bmmb)
+#data (exp_data)
 options (contrasts = c('contr.sum','contr.sum'))
 
 tmp = as.numeric(exp_data$L) * 0 
@@ -91,11 +91,11 @@ for (i in c(15,2,1,14,3,13,4,12,5,6,11,10,8,7,9)){
 exp_data$L = tmp
 
 Cs = c('b','g','m','w')[apply (table (exp_data$S, exp_data$C), 1, which.max)]
-aggd = aggregate (height ~ vtl + S, data = exp_data, FUN=mean)
+aggd = aggregate (height ~ vtl_original + S, data = exp_data, FUN=mean)
 aggd$Cs = Cs
 
 par (mfrow = c(1,3), mar = c(4,.5,.1,.5), oma = c(1,4,1,1))
-plot (height ~ vtl, data = aggd, ylim = c(135,185),xlim = c(11,16.5), 
+plot (height ~ vtl_original, data = aggd, ylim = c(135,185),xlim = c(11,16.5), 
       pch=16,col=yellow, xlab="", ylab = "Height (cm)") 
 abline (h = mean (aggd$height), col=deepgreen, lwd=4)
 grid()
@@ -106,7 +106,7 @@ mtext (side=2,text="Apparent Height (cm)", cex = 1, outer = FALSE, line = 3)
 #abline (h = tapply (aggd$height, factor(aggd$C), mean), col=cols[c(4,5,3,6)], lwd=4)
 
 #par (mfrow = c(1,2), mar = c(4,4,1,1))
-plot (height ~ vtl, data = aggd, pch=16,col=yellow, cex=1, ylim = c(135,185),
+plot (height ~ vtl_original, data = aggd, pch=16,col=yellow, cex=1, ylim = c(135,185),
       yaxt='n', xlab = "Vocal-tract Length (cm)",cex.lab=1.3) 
 abline (h= mean (aggd$height), col=deepgreen, lwd=3)
 grid()
@@ -120,9 +120,9 @@ for (i in seq(11.25,16,1.25)){
   lines (i+x-.1,y, lwd=2, col=lavender)
 }
 
-plot (height ~ vtl, data = aggd, pch=16,col=yellow, cex=1, ylim = c(135,185),
+plot (height ~ vtl_original, data = aggd, pch=16,col=yellow, cex=1, ylim = c(135,185),
       yaxt='n',xlab="") 
-abline (lm(height ~ vtl,data=aggd)$coefficients,col=deepgreen,lwd=3); 
+abline (lm(height ~ vtl_original,data=aggd)$coefficients,col=deepgreen,lwd=3); 
 #abline (h=162, col=deepgreen, lwd=3)
 grid()
 
@@ -217,22 +217,19 @@ There's one more thing to discuss before fitting our model, and that is the util
 ### Figure 9.2
 ################################################################################
 
-vtlo = exp_data$vtl
-vtl = exp_data$vtl - mean(exp_data$vtl)
-
 #single_line_model_coefficients = fixef (single_line_model)[,1]
 
-cffs = lm(height~vtlo, data = exp_data)$coefficients
+cffs = lm(height~vtl_original, data = exp_data)$coefficients
 
 par (mfrow = c(1,3), mar = c(4,2,1,1), oma = c(2,3,0,0))
 
-plot (height ~ vtlo, data = exp_data, pch=16,col=4,xlim = c(-3,20),
+plot (height ~ vtl_original, data = exp_data, pch=16,col=4,xlim = c(-3,20),
       ylim=c(40,200), xlab="VTL (cm)",cex.lab=1.3);
 abline (cffs,col=2,lwd=3); 
 abline (h=mean(exp_data$height), v=0, lty=3)
 mtext (side=2, text="Apparent Height (cm)", line = 3)
 
-cffs = lm(height~vtlo, data = exp_data)$coefficients
+cffs = lm(height~vtl_original, data = exp_data)$coefficients
 plot (height ~ vtlo, data = exp_data, pch=16,col=4,xlim = c(10,17),
       ylim=c(100,200), xlab="VTL (cm)",cex.lab=1.3);
 abline (cffs,col=2,lwd=3); 
@@ -931,7 +928,7 @@ listener_coefficients[c(3,18),]
 
 In figure \@ref(fig:F9-6) we see the distribution of apparent height as a function of speaker VTL individually for each listener. Clearly, there is a general tendency shared by all listeners: Each listener-dependent line is reasonably similar to the line drawn using the marginal intercept and slope terms (the broken line in each plot). However, although there are general similarities between listeners there is also noticeable between-listener variation such that the listener-specific lines do a much better job of representing each listener's behavior than the overall line. 
 
-```{r F9-6, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject. The line with matched color represents the listener-specific line. The broken black line in each plot is the average 'main effects', average line.", echo = FALSE, cache=TRUE}
+```{r F9-6, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject. The line with matched color represents the listener-specific line. The broken black line in each plot is the average 'main effects', average line.", echo = FALSE, cache=FALSE}
 
 ################################################################################
 ### Figure 9.6
@@ -940,7 +937,7 @@ In figure \@ref(fig:F9-6) we see the distribution of apparent height as a functi
 yaxts = c('s','n','n','n','n','s','n','n','n','n','s','n','n','n','n') 
 xaxts = c('n','n','n','n','n','n','n','n','n','n','s','s','s','s','s')
           
-cffs = brms::fixef( model_random_slopes_simple)[,1]
+cffs = brms::fixef(model_random_slopes_simple)[,1]
 par (mar = c(.25,.25,.25,.25), mfrow = c(3,5), oma = c(4.3,4.3,1,1))
 for (i in 1:15){
   tmp = exp_data[exp_data$L == i,]
@@ -1095,7 +1092,7 @@ random_slopes_complex_hypothesis_listener = bmmb::short_hypothesis (
 
 The listener-dependent, group-specific lines are presented in figure \@ref(fig:F9-8). Two things are clear from this figure. First, there is substantial variation in lines across apparent speaker categories. Second, there is substantial variation in the lines representing each category across different listeners. In both cases, this suggests that this model is preferable to `model_random_slopes_simple` since that model included only a single intercept and VTL slope for each listener. 
 
-```{r F9-8, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject.", echo = FALSE, cache=TRUE}
+```{r F9-8, fig.width = 8, fig.height = 5, fig.cap="Each plot shows responses from a single subject.", echo = FALSE, cache=FALSE}
 
 ################################################################################
 ### Figure 9.8

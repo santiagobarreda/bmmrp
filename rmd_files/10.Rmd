@@ -1038,7 +1038,7 @@ In chapter 9 we discussed how the mode representation above separates our line p
 
 ### Fitting and interpreting the model
 
-Below is the function call we need to fit the model described in \@ref(eq:10-19). Note that it is simply a logistic regression model, just one with a specific structure. 
+Below is the function call we need to fit the model described in \@ref(eq:10-22). Note that it is simply a logistic regression model, just one with a specific structure as discussed above. 
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -1082,9 +1082,10 @@ gender_dt_hypothesis = bmmb::short_hypothesis (
                  "2*(F_v - F_v:A_v1) = 0")) # child sensitivity
 ```
 
-We plot these biases and sensitivities as in figure \@ref(fig:F10-7) below. We also include the listener-dependent biases in the adult and child condition. Since we've covered how to easily recover these previously (in sections X and X) we only provide a single example below.
+We plot these biases and sensitivities in the left plot of figure \@ref(fig:F10-7). We also compare listener-dependent biases and sensitivity for veridical adults and children. Since we've covered how to easily recover these previously (in sections X and X) we only provide a single example below.
 
 ```{r, eval = FALSE}
+# listener-dependent biases for veridical adults
 biases_adult = bmmb::short_hypothesis (
   model_gender_dt,
   hypothesis = c("Intercept+A_v1 = 0"),group="L", scope="coef")
@@ -1133,10 +1134,17 @@ legend (5, 11, legend =c("Sensitivity", "Bias"), pch=16,lwd=2,
 
 ### Answering our research questions
 
-The following verbal description of the results in figure \@ref(fig:F10-7) are based on the parameters reconstructed in `gender_dt_hypothesis`. In addition, we used the `forpaper` function, like this `forpaper(gender_dt_hypothesis)` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output. Our model suggests there is a bias towards male responses for adults (mean = -1.04, s.d. = 0.29, 95% C.I = [-1.66, -0.5]), and perhaps a slight bias towards female responses for children (mean = 0.4, s.d. = 0.32, 95% C.I = [-0.24, 1.02]). Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children. 
+The following verbal description of the results in figure \@ref(fig:F10-7) are based on the biases and sensitivities reconstructed in `gender_dt_hypothesis`, presented in \@ref(tab:T10-1). Our model suggests  a bias towards male responses for adults , and perhaps a slight bias towards female responses for children. Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. Based on figure \@ref(fig:F10-7) We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children.
 
-We can understand the difference in sensitivity  between veridical children and veridical adults by considering the distribution of boys and girls, and women and men, with respect to an acoustic variable like VTL (as in figure \@ref(fig:F10-8)). As we saw with the model we fit earlier in the chapter (`model_gender_vtl`), listeners as more likely to identify a speaker with longer VTL as male. Let's assume that the distribution of VTL in the larger population is similar to this, that listeners are more or less familiar with the information presented in figure \@ref(fig:F10-8). Imagine a listener encounters a speaker with a 15 cm VTL. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an adult male. More generally, we can say that the gender of adults is easier to discriminate because of the larger difference along some acoustic dimensions by adult males and females. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl. As a result, it is more difficult to distinguish the gender of children, and we can reasonably expect sensitivity to decrease. 
+```{r T10-1}
+tmp_hyp = gender_dt_hypothesis[,1:4]
+rownames(tmp_hyp) = c("Overall Bias","Adult Bias","Child Bias","Overall Sensitivity","Adult Sensitivity","Child Sensitivity")
 
+knitr::kable (tmp_hyp, digits=2)
+```
+
+We will assume that: 1) Speaker VTL is a useful clue in the discrimination of male and female speakers, and 2) The distribution of VTL between our speaker categories in the whole population is roughly the same as in our data. If we do this, we can potentially understand the difference in sensitivity between veridical children and veridical adults. Consider the distribution of speaker VTL across boys and girls, and women and men in figure \@ref(fig:F10-8). Imagine a listener encounters a speaker with a VTL of 15 cm. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an male. Because of the lack of overlap along VTL for adult males and females, there are many values of VTL that are plausible for adult males that are implausible for adult females. As a result, adult men and women will be easier to discriminate along the VTL dimension. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl, and the same could be said for most VTL values for boys and girls. As a result, it will clearly be more difficult to distinguish the gender of children along the VTL dimension and we can reasonably expect sensitivity to decrease.
+ 
 ```{r F10-8, fig.width = 8, fig.height = 3.25, fig.cap = "Distribution of boys, girls, men, and women in our speaker data (Hillenbrand et al. 1995) according to their VTL.", echo = FALSE}
 
 ################################################################################
@@ -1162,10 +1170,10 @@ legend (13.8,1.2,legend = c("b","g","m","w"),col=bmmb::cols[2:5],
 
 ```
 
-We can also potentially explain the changes in response bias that we saw in our results. Below we see a table showing speaker categorizations for adult males and females. We see that men are rarely confused with girls or women (22 out of 675 trials, 3.2%). In contrast, women are confused with males in 13% of cases, and specifically confused with boys in 11% of cases. This is likely because adult males tend to have substantially longer VTLs than women and girls, but the VTLs of adult females and younger boys overlap somewhat. So, it seems that the bias towards male responses for adults may result from the easy identification of adult male voices, and the potential confusability between adult women and younger males.
+We can also potentially explain the changes in response bias that we saw in our results. Below we see a table showing categorizations for adult males and females. We see that men are rarely confused with girls or women (18 out of 675 trials, 2.7%). In contrast, women are confused with males in 15% (100/675) of cases, and specifically confused with boys in 14% (97/675) of cases. This is likely because adult males tend to have substantially longer VTLs than women and girls, but the VTLs of adult females and younger boys overlap somewhat. Recall that a response bias is simply an increase in responses for that category. Since men and women are balanced in our sample, if adult males tend to be identified as male almost always and adult females are sometimes confused with younger males, this will necessarily result in a 'bias' towards male responses. 
 
 ```{r}
-table (adults$C_v, adults$C)
+xtabs ( ~ adults$C_v + adults$C)
 ```
 
 ## Exercises

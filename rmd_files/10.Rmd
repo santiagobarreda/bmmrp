@@ -7,7 +7,7 @@ knitr::opts_chunk$set(
 
 # Logistic regression and signal detection theory models
 
-In this chapter we're going to start talking about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. In this chapter we will focus on dichotomous (i.e. binary) outcomes, though the ideas presented will be extended to the modeling of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial data (unordered categories such as English, French and Spanish) in chapter 12. 
+To this point we've only discussed the prediction of quantitative variables. In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. For now we will focus on dichotomous (i.e. binary) outcomes, however, the ideas presented will be extended to the modeling of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial (unordered categories such as English, French and Spanish) data in chapter 12. 
 
 ## Dichotomous variables and data
 
@@ -16,15 +16,15 @@ The models we fit in chapter 9 featured linear relationships between our predict
 $$
 \begin{equation}
 \begin{split}
-height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
-\mu_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]} \\
+\mathrm{height}_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
+\mu_{[i]} = \mathrm{Intercept} + VTL \times \mathrm{vtl}_{[i]} \\
 \dots 
 \end{split}
 (\#eq:10-1)
 \end{equation}
 $$
 
-We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of VTL. In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we're interested in. What we mean by this is that the values along our line are the actual values of our dependent variable that we expect to observe for a given value of VTL. 
+We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of vocal-tract length (VTL). In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we're interested in. What we mean by this is that the values along our line are the actual values we expect to observe for a given value of VTL. 
 
 ```{r F10-1, fig.width = 8, fig.height = 5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -87,31 +87,33 @@ points (aggd$vtl, logit(aggd[,5]), cex =2, pch=16,lwd=2,
 mtext (side=1,text="Centered VTL (cm)", outer = TRUE, line = 1.5)
 ```
 
-Unlike quantitative variables, **dichotomous** variables can only take on only one of two possible discrete values. We can easily think of many examples of this kind of data, for example something that is wrong or right, someone who is either male or female, or someone who is an adult or a child. None of these cases are meant to suggest that reality is this simple. For example, males and females are two discrete and internally homogeneous classes that fully explain variation in human sex or gender. Despite this, gender can be *coded* as a dichotomous variable so that it has only two possible values (i.e. male or female). 
+Unlike quantitative variables, **dichotomous** variables can only take on only one of two possible discrete values. We can easily think of many examples of this kind of data, for example something that is wrong or right, someone who is either male or female, or someone who is an adult or a child. None of these examples are meant to suggest that reality is this simple. For example, males and females are not two discrete and internally homogeneous classes that fully explain variation in human sex or gender. Obviously, variation in human age and development is more complicated than adult or child. Despite this, gender and age can be *coded* as a dichotomous variable so that they have only two possible values within the context of our model. In a sense, this decision is just as artificial as assuming that apparent height and VTL relate perfectly along a line, assuming that our errors are normally distributed and so on. Despite this, we can use our model to look for statistical associations between the dependent variable and our predictors *given the structure of our model*, that is, based on the simplifying assumptions we have made in order to turn an infinitely complicated reality into a regression model with a small number of parameters.
 
-When your variable has only two categorical outcomes, you need to find a way to represent these numerically. One way to do this is to code one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way and should be based on what 'makes sense' given the analysis at hand. In our case we will define a new variable called `Female` and assign 1 to cases where listeners identified a speaker as female thereby associating female responses with 'successes'. 
+When your variable has only two categorical outcomes (within the context of your model), you need to find a way to represent these numerically. The way this is usually done is by coding one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way (it will flip the sign on most coefficients) and can be based on what 'makes sense' given the analysis at hand. In our case we will define a new variable called `Female` and assign 1 to cases where listeners identified a speaker as female, thereby associating female responses with 'successes'. 
 
-The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right plot of figure \@ref(fig:F10-1). Plotting ones and zeros against speaker VTL is not very informative and suggests that using a line to directly predict dichotomous data leads to strange outcomes. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. It also suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, when this also can't occur. 
+The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right plot of figure \@ref(fig:F10-1). Plotting ones and zeros against speaker VTL is not very informative, in addition, using a line to directly predict dichotomous data leads to strange outcomes. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. It also suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, which is also impossible. 
 
-We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal zero. When we do this, we obtain the probability ($p$) of observing a female response (see section X) for each speaker. The distribution of these probabilities with respect to speaker VTL is presented in the bottom left plot of figure \@ref(fig:F10-1). We can leave \@ref(eq:10-1) aside and instead use \@ref(eq:10-2) which models the probability of observing a female response rather than the 1 and 0 responses directly.
+We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal 0. When we do this, we obtain the probability ($p$) of observing a female response (see section X) for each speaker. The $p$ parameter can't be used with a normal distribution to generate dichotomous data. A normal distribution will generate continuous variation symmetrically around its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only exactly two different values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
+
+The **binomial distribution** generates a set of dichotomous outcomes. This distribution has two parameters: The probability of a success ($p$) and the number of trials ($n$). For example, if you were playing basketball and you took 5 free throws and made 3 (3/5=0.6), then the $p$ parameter suggested by your data is 0.6 and the $n$ parameter is 5. If you use this distribution, you are treating all 5 trials as a single observation. This means that your data is 3 (out of five) and not 0, 1, 1, 0, and 1 (or whatever). In this case, another 5 shots would constitute one more 'observation' summarized by the total number of successes. 
+
+The **Bernoulli distribution** generates individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). In this case, if you took 5 free throws and made 3 (3/5=0.6), you would still describe the data using a $p$ parameter of 0.6. However, with this distribution, you would model each of the 5 trials as a separate observation (e.g., 1,1,1,0,0) so there is no $n$ parameter (it's always 1). In this situation 5 more shots would be treated as another 5 individual observations.
+
+Imagine you have ten observations from a Bernoulli variable and you observe 6 ones and 4 zeros. This suggests a probability of observing a success, $p$, of 0.6 (6/10). The expected value ($\mathbb{E}$ of a discrete variable is the sum of the values it can take times the probability of each value. For a Bernoulli variable this is relatively simple to calculate as it involves the addition of only two values. In \@ref(eq:10-2), we see that to find the expected value of a Bernoulli variable we multiply the probability of a success ($p$) times one, probability of a failure ($1-p$) times zero, and add the two. Since the probability of failures is multiplied by zero, the expected value of the Bernoulli variable is simply equal to $p$. The same reasoning holds for binomial variables save for the fact that a single observation of a binomial variables is equal to $n$ Benoulli trials. As a result, the expected value of the binomial distribution is $np$.
 
 $$
 \begin{equation}
 \begin{split}
-p_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]}  \\
-\dots
+\mathbb{E}(y_{[i]}) = \sum_{i=1}^{2} y_{[i]} P(y_{[i]}) \\
+\mathbb{E}(y_{[i]}) = (1 \times p)+(0 \times (1-p)) \\
+(1 \times 0.6)+(0 \times 0.4)=0.6 \\
 \end{split}
 (\#eq:10-2)
 \end{equation}
 $$
 
-The $p$ parameter can't be used with a normal distribution to generate dichotomous data. A normal distribution will generate continuous variation symmetrically around its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only exactly two different values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
 
-The **binomial distribution** generates a set of dichotomous outcomes. This distribution has two parameters: The probability of a success ($p$) and the number of trials ($n$). For example, if you were playing basketball and you took 5 free throws and made 3 (3/5=0.6), then the $p$ parameter suggested by your data is 0.6 and the $n$ parameter is 5. If you use this distribution, you are treating all 5 trials as a single observation. This means that your data is 3 (out of five) and not 0, 1, 1, 0, and 1 (or whatever). In this case, another 5 shots would constitute one more 'observation' summarized by the total number of successes.
-
-The **Bernoulli distribution** generates individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). In this case, if you took 5 free throws and made 3 (3/5=0.6), you would still describe the data using a $p$ parameter of 0.6. However, with this distribution, you would model each of the 5 trials as a separate observation (e.g., 1,1,1,0,0) so there is no $n$ parameter (it's always 1). In this situation 5 more shots would be treated as another 5 individual observations.
-
-Below we generate random binomial variables (R doesn't specifically make Bernoulli variables) using the `rbinom` (random binomial) function. The `rbinom` function takes parameters in this order `number of observations, batch size, probability of success`. Below, we first generate a single Bernoulli variable (a **Bernoulli trial**), and then ten variables with the same probability of success. 
+Below we generate random binomial variables (R doesn't specifically make Bernoulli variables) using the `rbinom` (random binomial) function. The `rbinom` function takes parameters in this order `number of observations, batch size, probability of success`. Below, we generate a single Bernoulli variable (a **Bernoulli trial**) and then ten variables with the same probability of success. 
 
 ```{r, collapse = TRUE}
 # a single trial, probability of 0.5
@@ -121,7 +123,7 @@ rbinom (1,1,.5)
 rbinom (10,1,.5)
 ```
 
-Below, we compare the data generated by the Bernoulli and the binomial distributions. In the top row we get a single number, the total number of successes in the trials. We don't get any information about what happened on any individual trial. In the bottom row we do get information about what happens on each individual trial.  
+We can compare the data generated by the Bernoulli and the binomial distributions. In the top row we get a single number, the total number of successes in the trials. We don't get any information about what happened on any individual trial. In the bottom row we do get information about what happens on each individual trial.  
 
 ```{r, collapse = TRUE}
 # a single batch of 10 trials, probability of 0.5
@@ -131,7 +133,9 @@ rbinom (1,10,.5)
 rbinom (10,1,.5)
 ```
 
-Unlike the normal distribution, the above distributions do not generate data with values near their mean. Instead, they generate sequences of 1s and 0s whose average is expected to *converge* on the $p$ parameter as the number of observations approaches infinity. For example, below we generate sequences of a dichotomous variable with a $p$ parameter of 0.5. In each case, the estimate of the probability of the distribution gets closer as the length of the sample gets longer. 
+So, when we have a dichotomous dependent variable and are interested in predicting individual trials, we use a Bernoulli distribution and our data model is $y \sim \mathrm{Bernoulli} (p)$. When our dependent variable consists of groups of Bernoulli trials treated as a single unit we can use a binomial distribution. If this is the case our data model looks like this $y \sim \mathrm{Binomial} (p, n)$, and keep in mind $n$ is *data* and not an estimated parameter.
+
+Before moving on we want to note that unlike the normal distribution, the above distributions do not generate individual data points near their expected value $p$. Instead, they generate sequences of 1s and 0s whose sample estimate of $p$ is expected to be close to its true underlying value hypothetically, given a large enough sample. For example, below we generate sequences of a dichotomous variables with a true $p$ of 0.5. In each case, the estimate of $p$ gets closer to the true value as the length of the sample gets longer. In the case of a single observation, the estimate will almost always be wrong. 
 
 ```{r, include = FALSE}
 set.seed (1)
@@ -143,45 +147,40 @@ mean (rbinom (1000,1,.5))  # the mean of 1000 observations
 mean (rbinom (100000,1,.5))  # the mean of 100000 observations
 ```
 
-So, when we have a binary outcome variable and are talking about individual trials, we model it as being generated by a Bernoulli distribution. This distribution has a single parameter $p$ so that our data model is $y \sim \mathrm{Bernoulli} (p)$. Unlike normally distributed data, there are only two outcomes (0 and 1) and the value of $p$ *must* be between 0 and 1. 
-
 ## Generalizing our linear models
 
-The bottom left plot in figure \@ref(fig:F10-1) shows the probability of observing a classification of 'female' for each speaker as a function of their VTL. Clearly, the perception of femaleness is negatively related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making the correct association between speaker gender and VTL and identifying speakers with shorter VTLs (who are likely also shorter in height) as female. 
+The bottom left plot in figure \@ref(fig:F10-1) shows the probability of observing a classification of 'female' for each speaker as a function of their vocal-tract length (VTL). Clearly, the perception of femaleness is negatively related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making association between speaker gender and VTL seen in the data, they are more likely to classify speakers with shorter VTLs (who are likely also shorter in height) as female. 
 
-Unfortunately, we can't actually directly model variation in $p$ using lines as suggested in \@ref(eq:10-2) and in the bottom left of figure \@ref(fig:F10-1). This is because probabilities are bounded by zero and one, whereas our lines are not. This causes several problems. For example. Imagine we find that a predictor is associated with an increase in probability of 0.2 per unit change. If a group has a baseline probability of 0.9, its probability cannot increase by 0.2. This means an effect can't have the same magnitude given different underlying probabilities, which is a problem since our model slopes are static. Ideally, we could model something that varies continuously along lines, but still allows us to predict variation in our $p$ parameter and dichotomous outcomes. 
+We can't directly model variation in $p$ using lines as shown in the bottom left plot of figure \@ref(fig:F10-1). There are many reasons for this but the main one is that using lines to model $p$ causes problems near 0 and 1. For example, imagine a predictor is associated with an increase in probability of 0.2 per unit change in the predictor. If the Intercept is 0.7, a two unit increase in the predictor is associated with a probability of 1.1, which is not possible. This suggests that a curve with a constant slope (e.g. a line) is fundamentally ill-suited to predict a bounded variable like probability. 
 
-Our regression models consist of a bunch of component parts stuck together. Early on we discussed two general parts: The random components and the systematic component (see section X). The systematic component predicts variation in expected values using shapes like lines and planes. For example, our regression models so far have used equations to predict values of $\mu$. The random component specifies how our data randomly varies around the expected value. For our models so far we have assumed Gaussian (or t) distributed data since we have been modeling quantitative dependent variables. Generalized linear models expand on these concepts by introducing what are know as **link functions**. 
+The above seems problematic, after all, this is a book about linear regression models and we're saying lines are no good for modeling variation in probabilities. The solution to this is to remember that our regression models consist of a bunch of component parts stuck together. Early on we discussed two general parts: The random components and the systematic component (see section X). The systematic component predicts variation in expected values using shapes like lines and planes. The random component specifies how our data randomly varies around the expected value. We can add a third component to this called a **link function**, a function that takes some parameter you are interested in (e.g. $p$) and transforms it so that the *transformed* value can be modeled along straight lines. When you rely on link functions, modeling becomes a three step process like this:
 
-A link function takes some parameter you are interested in, e.g. $p$ and transforms it so that the *transformed* value can be modeled along straight lines. When you rely on link functions, modeling becomes a three step process like this:
-
-  1) Predict the variation of expected values along straight lines (or related shapes), for example $\theta  = a + b \times x$. This is the systematic component.
-  2) Transform the parameter using a link function. For example, given link function $f$ we can transform our expected value $\theta$ to $p$ like so: $p = f(\theta)$. 
+  1) Predict the variation of expected values ($\theta$) along straight lines (or related shapes), for example $\theta  = a + b \times x$. This is the systematic component, and $\theta$ is linearly related to the predictor $x$.
+  2) Transform $\theta$ using a link function. For example, given the link function $f$ we can transform our expected value $\theta$ to $p$ like so: $p = f(\theta)$. The transformed parameter may no longer be linearly related to the dependent variable $x$ or the linear predictor $\theta$.
   3) Use the *transformed* parameter ($p$) in the data generating distribution. For example $y \sim \mathrm{Bernoulli}(p)$. This is the random component.
   
-We can see that our link function literally *links* our systematic and random components. The models we've been fitting so far featured what's known as the **identity** link function. The identity link function is basically a function that does nothing, the input equals the output like $\mu = f(\mu)$. Using the identity link function is equivalent to modeling the $\mu$ parameter directly in our prediction equation. This works for the mean parameter of the normal distribution actually *can* vary continuously from positive to negative infinity. However, it doesn't work for the Bernoulli or binomial distributions since $p$ must fall between 0 and 1.
+We can see that our link function literally *links* our systematic and random components: The random component does not *directly* use the information in the systematic component. The models we've been fitting so far featured what's known as the **identity** link function. The identity link function is basically a function that does nothing, the input equals the output like $\mu = f(\mu)$. Using the identity link function is equivalent to modeling $\mu$ directly in our prediction equation. This works for the mean parameter of the normal distribution because it actually can vary continuously from positive to negative infinity as lines do. However, it doesn't work for the Bernoulli or binomial distributions since $p$ must fall between 0 and 1.
 
-The model we're interested in needs to predict a dichotomous variable ($Female$) that equals 1 when listeners responded female and 0 when listeners responded male. Since it needs to model a continuous value and map this to a probability (bounded by 0 and 1), we'll need to include a function that maps a continuous predicted value to a probability bounded by 0 and 1. We include the intermediate step involving the link function $f$ in our description in \@ref(\eq:10-3). 
+The model we're interested in needs to model a dichotomous variable ($Female$) that equals 1 when listeners responded female and 0 when listeners responded male. We'll need to include a function ($f()$) that maps a continuous predicted value ($\theta$) to a probability ($p$) bounded by 0 and 1. We present this in \@ref(\eq:10-3). 
 
 $$
 \begin{equation}
 \begin{split}
 \mathrm{Female}_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
 p_{[i]} = f(\theta_{[i]}) \\
-\theta_{[i]} = Intercept + VTL \times \mathrm{vtl}_{[i]} \\ 
-...
+\theta_{[i]} = \mathrm{Intercept} + VTL \times \mathrm{vtl}_{[i]} \\ 
 \end{split}
 (\#eq:10-3)
 \end{equation}
 $$
 
-The presentation in \@ref(\eq:10-3) separates our model into a random component, a link function, and a systematic component. Each of these components play a crucial role in our ability to build regression models that predict dichotomous variables. The random component is the distribution underlying the data level error in our data. This component helps us account for that fact that our observations are not perfectly predictable given our independent variables, despite the fact that we think they may be systematically related. The systematic component allows us to make predictions about variability in the dependent variable using combinations of our predictors. The link function lets us use lines to model variation in parameters even when these may not vary in an unbounded manner (i.e. from $-\infty$ to $+\infty$). 
+The presentation in \@ref(\eq:10-3) separates our model into a random component, a link function, and a systematic component. Each of these components play a crucial role in our ability to build regression models that predict dichotomous variables. The random component is the distribution underlying the data level error in our dependent variable. This component helps us account for that fact that our observations are not perfectly predictable given our independent variables. The systematic component allows us to make predictions about variability in the dependent variable using combinations of our predictors. The link function lets us use lines to model variation in parameters even when these may not vary in an unbounded manner (i.e. from $-\infty$ to $+\infty$). 
 
-This conceptualization of regression models is often referred to as the **generalized linear model**. The generalized linear model allows the user to change the random component and/or link function as appropriate to model a wide range of data. It is called the 'generalized' linear model because it represents the extrapolation of principles related to the prediction of quantitative variables coming from a normal distribution to a more general case. For more information on the generalized linear model see (cite). 
+This division of regression models into three discrete components is often referred to as the **generalized linear model**. The generalized linear model allows the user to change the random component and/or link function as appropriate to model a wide range of data. It's called the 'generalized' linear model because it represents the extrapolation of principles related to the prediction of quantitative variables coming from a normal distribution to the general case. For more information on the generalized linear model see (cite). 
 
 ## Logistic Regression
 
-**Logistic regression** is an approach to regression for predicting a dichotomous dependent variable. In terms of the components of the generalized linear model outlined above, logistic regression assumes a Bernoulli distribution for the random component (discussed above), and the *inverse logit* or *antilogit* function as its link function ($\mathrm{logit}^{-1}$, discussed below). The systematic components still consists of linear combinations of our independent variables, i.e., adding them up after multiplying by their respective model coefficients. A general description of logistic regression with a single quantitative predictor is given in \@ref(eq:10-4). 
+**Logistic regression** is an approach to regression for predicting a dichotomous dependent variable. In terms of the components of the generalized linear model outlined above, logistic regression assumes a Bernoulli distribution for the random component, and the *inverse logit* or *antilogit* function ($\mathrm{logit}^{-1}$, discussed below) as its link function. The systematic components still consists of linear combinations of our independent variables, i.e., adding them up after multiplying by their respective model coefficients, as it has in previous chapters. A general description of logistic regression with a single quantitative predictor is given in \@ref(eq:10-4). 
 
 $$
 \begin{equation}
@@ -189,15 +188,12 @@ $$
 y_{[i]} \sim \mathrm{Bernoulli}(p_{[i]}) \\
 p_{[i]} = \mathrm{logit}^{-1}(z_{[i]}) \\
 z_{[i]} = Intercept + \beta \times \mathrm{x}_{[i]} \\
-...
 \end{split}
 (\#eq:10-4)
 \end{equation}
 $$
 
-The information in \@ref(eq:10-4) says the following: Our data ($y$) is a Bernoulli-distributed dichotomous variable with a $p$ parameter that varies on each trial. The $p$ parameter is the output of the inverse logit ($\mathrm{logit}^{-1}$) applied to our *linear predictor* $z$ (see section X). The linear predictor is assumed to be the sum of an intercept and product of the independent variable and its slope parameter. 
-
-We noted above that if you code successes and failures as 1 and 0 and find the average of a series of observations, you find the probability ($p$) of observing a success in your observations. The 'average' of the observations is also, obviously, the sample mean. Recall that for discrete variables, the expected value can be estimated using the sample mean. This applies to out dichotomous variables just as it does to our quantitative variables. As a result, when we average dichotomous variables to estimate $p$, we are also estimating the expected value of the Bernoulli distribution. Thus, we can see that logistic regression features the prediction of expected values ($p$) just like our regressions in previous chapter (e.g. $\mu$ for a normal model). However, logistic regression doesn't model $p$ directly but instead models the *logit* of the expected value. 
+The information in \@ref(eq:10-4) says the following: Our data ($y$) is a Bernoulli-distributed dichotomous variable with a $p$ parameter that varies on each trial. The $p$ parameter is the output of the inverse logit ($\mathrm{logit}^{-1}$) applied to our linear predictor $z$ (see section X). The linear predictor is assumed to be the sum of an intercept and product of the independent variable and its slope parameter. We noted above that $p$ is the the expected value of the Bernoulli distribution. Thus, we can see that logistic regression features the prediction of expected values ($p$) just like our regressions in previous chapter (e.g. $\mu$ for a normal model). However, logistic regression doesn't model $p$ directly but instead models the *logit* of the expected value, $z$.
 
 ### Logits 
 
@@ -205,7 +201,7 @@ We noted above that if you code successes and failures as 1 and 0 and find the a
 
 $$
 \begin{equation}
-\mathrm{odds}_{success} = \frac{N_{successes}}{N_{failures}}
+\mathrm{odds}_{\mathrm{success}} = \frac{N_{\mathrm{success}}}{N_{\mathrm{failures}}}
 (\#eq:10-5)
 \end{equation}
 $$
@@ -214,14 +210,12 @@ Odds of 3/1 indicate that success is three times as likely as a failure. We can 
 
 $$
 \begin{equation}
-\mathrm{Probability}_{success} = \frac{N_{successes}}{N_{failures} + N_{successes}} = \frac{N_{successes}}{N_{total}}
+\mathrm{Probability}_{\mathrm{success}} = \frac{N_{\mathrm{success}}}{N_{\mathrm{failures}} + N_{\mathrm{success}}} = \frac{N_{\mathrm{success}}}{N_{\mathrm{total}}}
 (\#eq:10-6)
 \end{equation}
 $$
 
-`probability = total number of successes / (total number of successes + total number of failures`)
-
-So, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). We can define odds in a more formal manner by expressing them in terms of the probability of a success($p$) and the probability of a failure ($1-p$) as in \@ref(eq:10-7).
+So, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). We can define odds in a more formal manner by expressing them in terms of the probability of a success, $p$, and the probability of a failure, $1-p$, as in \@ref(eq:10-7).
 
 $$
 \begin{equation}
@@ -230,7 +224,16 @@ $$
 \end{equation}
 $$
 
-Odds are still bounded by zero so they don't work for linear modeling, but if we take the *logarithm* of the odds we get a *logit*, the log odds, and these *can* take on values from positive to negative infinity. This is because logarithms represent the space from 0 to 1 with values from $-\infty$ to 0, and values from 1 to $+\infty$ with values from 0 to $+\infty$. We can calculate the logit of a probability in either of the two following ways:
+Odds are still bounded by zero on the lower end so they still can't be modeled using lines, however, if we take the *logarithm* of the odds we get a **logit**, the log odds. Unlike odds, logits *can* take on values from positive to negative infinity. This is because, for a variable x logarithms represent the values of x between 0 to 1 with values of log(x) from $-\infty$ to 0, and values of x from 1 to $+\infty$ with values of log(x) from 0 to $+\infty$ (see section X logarithms). You can see this relationship by running the code below.
+
+```{r, eval=FALSE}
+# this plot compares x and log (x). Note that log(x)<0 when x<1
+curve (log(x), xlim = c(0,10),n=1000,lwd=2,col=4)
+abline (v = 1, lwd=2,col=2)
+abline (h=0,v=0, lty=3,col="grey",lwd=3)
+```
+
+We can calculate the logit of a probability in either of the two following ways:
 
 $$
 \begin{equation}
@@ -242,17 +245,17 @@ $$
 \end{equation}
 $$
 
-Equation \@ref(eq:10-7) is sometimes called the **logit function** because it turns probabilities into logits. The `bmmb` package contains a function that carries out the logit function (`logit`). We can see how this function works below, and see that it takes the second approach to calculate logits. 
+Equation \@ref(eq:10-8) is sometimes called the **logit function** because it turns probabilities into logits. The `bmmb` package contains a function that carries out this transformation (`logit`). We can see how this function works below, and see that it takes the second approach to calculate logits. Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those values to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. 
 
 ```{r}
 bmmb::logit
 ```
 
-Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those values to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. Our logistic regression models are going to express expected values in *logits*. Our lines will describe continuous changes in logits as a function of our predictors, and our intercepts will describe shifts on the values of logits across different categories. 
-  
 ### The inverse logit link function
 
-Our logistic regression models express predictions in logits, and our data generating distribution (Bernoulli) requires a parameter $p$ that is bounded by 0 and 1. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this for logistic regression is called the standard **logistic function**, the **antilogit function**, or the **inverse function**. We refer to it as the inverse logit rather than the logistic function for two reasons. First, to avoid confusion with the logistic distribution, which will be discussed in chapter 12. Second, to highlight the fact that it is the inverse of the logit, that it *undoes* the logit transform. The inverse logit function is presented in \@ref(eq:10-9), for logit (i.e. log odds) values, $z$, ranging continuously from positive to negative infinity. The symbol $e$ represents the mathematical constant that serves as the base for natural logarithms (Euler's number, 2.718...).
+Logistic regression models express expected values in *logits*. Our lines will describe continuous changes in logits as a function of our predictors, and our intercepts will describe shifts on the values of logits across different categories. However, our data generating distribution (Bernoulli) requires a parameter $p$ that is bounded by 0 and 1. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this for logistic regression is called the standard **logistic function**, the **antilogit function**, or the **inverse logit function**. We will refer to it as the inverse logit rather than the logistic function for two reasons. First, to avoid confusion with the logistic distribution, which will be discussed in chapter 12. Second, to highlight the fact that it is the inverse of the logit, that it *undoes* the logit transform. 
+
+The inverse logit function is presented in \@ref(eq:10-9), for logit (i.e. log odds) values, $z$, ranging continuously from positive to negative infinity. The symbol $e$ represents the mathematical constant that serves as the base for natural logarithms (Euler's number, 2.718...) so that $e(x)$ is equal to $\exp(x)$.
 
 $$
 \begin{equation}
@@ -261,11 +264,11 @@ P(y=1)=\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
 \end{equation}
 $$
 
-The inverse logit function may seem inscrutable, but it is in fact very scrutable. First, note its structural similarity to the conversion of counts of outcomes to probabilities presented in equation \@ref(eq:10-6). Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success (since exponentiation 'undoes' log transforms). The odds are a ratio of the number of successes to the number of failures observed (or expected) for some number of trials. As a result, $e^z$ can be *thought of* as the expected number successes relative to some number of failures. How many failures?
+The inverse logit function may seem inscrutable, but it is in fact very scrutable. First, note its structural similarity to equation \@ref(eq:10-6) which presents the conversion of counts of successes and failures to probabilities. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success (since exponentiation 'undoes' log transforms). The odds are a ratio of the number of successes to the number of failures observed (or expected) for some number of trials. As a result, $e^z$ can be *thought of* as the expected number successes relative to some number of failures. How many failures?
 
-In equation \@ref(eq:10-6) we see that the left term in the denominator represents the number of failures. Based on this, it seems as though we're fixing the expected 'count' of failures at 1, and this is in fact what the inverse logit function does. This is because for $N$ trials if you have $S$ successes then you *must* have $N-S$ failures. This means that the odds (or probabilities) of successes *and* failures cannot both be independently estimated. We ran into a similar problem previously when we discussed contrasts in chapter 5, and our discussion of why all levels of a factor cannot be independently estimated. To resolve this issue, logistic regression only estimates the probability of successes and not of failures. However, we still need a number of successes in order to turn odds into probabilities. To resolve this issue, the inverse logit function effectively fixes the number of failures to 1 for all cases. 
+In equation \@ref(eq:10-6) we see that the left term in the denominator represents the number of failures. Based on this, it seems as though in \@ref(eq:10-9) we're fixing the expected 'count' of failures at 1, and this is in fact what the inverse logit function does. This is necessary because for $n$ trials if you have $S$ successes then you *must* have $n-S$ failures. This means that the odds (or probabilities) of successes *and* failures cannot both be independently estimated. We ran into a similar problem previously when we discussed contrasts in chapter 5 and our discussion of why all levels of a factor cannot be independently estimated. To resolve this issue, logistic regression only estimates the odds of successes and not of failures. However, we still need a number of successes in order to turn odds into probabilities. To resolve this issue, the inverse logit function fixes the number of failures to 1 for all cases. 
 
-Thinking of $z$ as the logarithm of the expected number of successes relative to 1 expected failure may help interpret logits and understand the inverse logit function. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:10-10).
+Thinking of $e^z$ as the expected number of successes relative to 1 expected failure may help interpret logits and understand the inverse logit function. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:10-10).
 
 $$
 \begin{equation}
@@ -278,7 +281,7 @@ When $z$ is a negative value, $e^{-z}$ will be a fraction between 0 and 1. Obvio
 
 $$
 \begin{equation}
-\frac{e^{-3}}{1 + e^{-3}}=\frac{0.05}{1 + 0.05}=0.05
+\frac{e^{-3}}{1 + e^{-3}}=\frac{0.05}{1 + 0.05}=0.0474
 (\#eq:10-11)
 \end{equation}
 $$
@@ -287,12 +290,14 @@ On the other hand, when $z$ is positive, $e^{z}$ will be a number greater than 1
 
 $$
 \begin{equation}
-\frac{e^3}{1 + e^{3}}=\frac{20.1}{1 + 20.1}=0.95
+\frac{e^3}{1 + e^{3}}=\frac{20.1}{1 + 20.1}=0.953
 (\#eq:10-12)
 \end{equation}
 $$
 
-In Figure \@ref(fig:F10-2) we draw a line with a slope of one and an intercept of 0 (i.e., $y = x$). We can imagine that this line defines expected values in *logits* as a function of some predictor x. In the middle panel, we've applied the inverse logit function to the line so that $\mathrm{logit}^{-1}(y) = x$. This results in what's known as a **sigmoid curve** relating our x and y variables. If we apply the logit function to this sigmoid curve, the result is a return of our original line. Thus, we can see that the logit and inverse logit transformation can be applied over and over to go back and forth between a probability or logit representation of the same information. 
+Notice also that the inverse logit function can't actually generate values of 1 or 0 for real numbered value of $z$. This is because no matter how large the value of $z$ gets, the denominator will always be 1 greater. This sets the upper range of the inverse logit at 1. No matter how negative the value of $z$ gets, exponentiating the value will always result in a number greater than 0. As a result, \@ref(eq:10-12) will always provide values greater than 0.
+
+In Figure \@ref(fig:F10-2) we draw a line with a slope of one and an intercept of 0 (i.e., y=x). We can imagine that this line defines expected values in *logits* as a function of some predictor x. In the middle panel, we've applied the inverse logit function to the line so that $\mathrm{logit}^{-1}(y) = x$. This results in what's known as a **sigmoid curve** relating our x and y variables. If we apply the logit function to this sigmoid curve, the result is a return of our original line again. Thus, we can see that the logit and inverse logit transformation can be applied over and over to go back and forth between a probability or logit representation of the same information. 
 
 ```{r F10-2, fig.width = 8, fig.height = 3, fig.cap = "(left) A plot of a line with a slope of 1 and intercept of 0. We can treat the y-axis as logits. (middle) The result of applying the inverse logit function to every point of the line in the left plot. (right) Calculating the logit of each value specified on the curve in the middle turns our sigmoid curve back to a line.", echo = FALSE}
 
@@ -317,9 +322,9 @@ plot (x,logit(antilogit (y)), type = 'l',lwd=2, col=lavender, xlim=c(-7,7),
 abline (h=0,v=seq(-8,8,2),lty=3)
 ```
 
-In chapter 9 we mentioned that when you do a linear regression you effectively model the data as being generated by distributions that slide along lines, generating normally distributed data along the way (see figure \@ref(fig:F9-1)). Logistic regression leads to an analogous but slightly different interpretation. In logistic regression you model the data as a Bernoulli distribution sliding along the sigmoid curve above, generating a ratio of 1s to 0s based on the value of $p$ specified by the curve. 
+In chapter 9 we mentioned that when you do a linear regression you effectively model the data as being generated by distributions that slide along lines, generating data along the way (see figure \@ref(fig:F9-1)). Logistic regression leads to an analogous but slightly different interpretation. In logistic regression you model the data as a Bernoulli distribution sliding along a sigmoid curve, generating a ratio of 1s to 0s based on the value of $p$ specified by the curve. 
 
-The second and this lines in \@ref(eq:10-4) represent the model link function and systematic component, respectively. We can skip the middleman ($z$) and just put the prediction equation directly inside the inverse logit function as in \@ref(eq:10-13).
+The second and third lines in \@ref(eq:10-4) represent the model link function and systematic component, respectively. We can skip the middleman ($z$) and just put the prediction equation directly inside the inverse logit function as in \@ref(eq:10-13).
 
 $$
 \begin{equation}
@@ -341,60 +346,55 @@ There is no particular reason to do this, apart from the fact that it directly i
 
 ### Building intuitions about logits and related functions
 
-The logit and inverse logit functions are **non linear** functions. In the simplest sense this means that the relationships they form between x and y variables, when plotted, do not form straight lines.  The non-linear relationship between probabilities and logits is evident in both plots in figure \@ref(fig:F10-3). In the left plot below we see a situation where a predictor x is linearly related to the logit of some probability $p$. However, after applying the inverse logit function to our logit values, our predictor no longer enters into a linear relationship with the dependent variable.
+The logit and inverse logit functions are **non linear** functions. In the simplest sense this means that the relationships they form between x and y variables, when plotted, do not form straight lines. Figure \@ref(fig:F10-3) shows some consequences of this. In the left plot we see that the predictor x and $p$ are literally not related by a line. The sigmoid curve relating $p$ and x reflects the changing relationship between logits and probabilities: The slope is very shallow for large negative logit values but increases in value as x approaches 0. It then begins to decrease again as the values of x become large again. This behavior allows the sigmoid curve in the figure to extend from positive infinity to negative infinity without ever crossing 1 and 0: As logit values become arbitrarily large in magnitude, the slope of the sigmoid curve becomes arbitrarily small in magnitude to the point where it is *effectively* parallel to the x axis. 
 
-In the left plot we see horizontal lines that represent equal differences in probability (0.1 change per line). These lines are closer together when logits have a small magnitude and further when logits are large. This is a consequence of the non-linearity of the transforms: A one unit change in probabilities/logits does not always map to the same size of change in the other value. In general, small changes when logits are close to zero map to large changes in probabilities, while larger changes in logits with large magnitudes tend to map to small changes in probabilities. 
-
-We can see the changing relationship between logits and probabilities reflected in the changing slope of the sigmoid curve in the right of figure \@ref(fig:F10-3). The slope is very shallow for large negative logit values but increases in value as x approaches 0. It then begins to decrease again as the values of x become large again. This behavior allows the sigmoid curve in the figure to extend from positive infinity to negative infinity without ever crossing 1 and 0: As logit values become arbitrarily large in magnitude, the slope of the sigmoid curve becomes arbitrarily small in magnitude to the point where it is *effectively* parallel to the x axis. 
-
-```{r F10-3, fig.width = 8, fig.height = 3, fig.cap = "(left) A line relating some predictor to logits. (right) A sigmoid curve expressing the probability associated with each value along the line in the left. Horizontal lines are placed every 0.1 probability units from 0.1 to 0.9 probability.", echo = FALSE}
+```{r F10-3, fig.width = 8, fig.height = 3, fig.cap = "(left) A sigmoid curve expressing the probability associated with each value along the line in the left. Horizontal lines are placed every 0.1 probability units from 0.1 to 0.9 probability. (right) A line relating some predictor to logits.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.3
 ################################################################################
 
-x = seq (-3,3,.01)
+x = seq (-3.5,3.5,.01)
 y = x
 
 par (mfrow = c(1,2), mar=c(4,4,1,1))
-plot (x,y, type = 'l',lwd=3, col=deepgreen, xlim=c(-3,3),xlab="Predictor (x)",
-      ylab = "Logits (log (p) - log(1-p))")
-abline (h=logit(seq(0.1,0.9,.1)),v=c(-9:9),lty=3)
-abline (h = 0, lwd=2)
 
 plot (x,antilogit (y), type = 'l',lwd=3, col=darkorange, xlim=c(-3,3),
-      xlab="Predictor (x)",ylab="Probability")
+      xlab="Predictor (x)",ylab="Probability", ylim = c(0,1),yaxs='i',xaxs='i')
 abline (h=seq(0,1,.1),v=(-9:9),lty=3)
 abline (h = 0.5, lwd=2)
 
+plot (x,y, type = 'l',lwd=3, col=deepgreen, xlim=c(-3,3),xlab="Predictor (x)",
+      ylab = "Logit (Probability)",yaxs='i',xaxs='i')
+abline (h=logit(seq(0.1,0.9,.1)),v=c(-9:9),lty=3)
+abline (h = 0, lwd=2)
+
 ```
 
-We can check what the logit values are for a set of probabilities using the `logit` function. The top row below contains a sequence of probabilities and the bottom row shows equivalent logits. Notice that the difference between 0.5 and 0.6 is 0.4 logits, but the difference between 0.7 and 0.9 is about 0.8 logits. Meanwhile the difference between 0.9 and 1 is infinity.
+In the left plot in the figure we the relationship between the logit of the probability and our predictor. We can see the consequences of the changing relationship between logits and probabilities by looking at the horizontal lines in the plot. These lines represent equal differences in probability (0.1 change per line). The lines are closer together when logits have a small magnitude and further when logits are large. This is a consequence of the non-linearity of the transforms: A one unit change in probabilities/logits does not always map to the same size of change in the other value. In general, small changes when logits are close to zero map to large changes in probabilities, while larger changes in logits with large magnitudes tend to map to small changes in probabilities. 
+
+We can check the logit values are for a set of probabilities using the `logit` function. The top row below contains a sequence of probabilities and the bottom row shows equivalent logits. Notice that the difference between 0.5 and 0.6 is 0.4 logits, but the difference between 0.7 and 0.9 is about 0.8 logits. Meanwhile the difference between 0.9 and 1 is infinity.
 
 ```{r, collapse = TRUE}
 rbind ( (seq (0.1,.9,.1)), 
         round ( logit (seq (0.1,0.9,.1)) , 3) )
 ```
 
-We can think about the cause of this behavior by thinking about some situation where you're trying to improve a probability. Imagine that you keep track of your free throw in basketball practice. You sink 500/1000 free throws, giving you a 0.5 probability of success. Now imagine you take a further 100 shots and sink them all. Now your probability of success is 600/1100, meaning your amazing streak has increased your probability to 0.54. However, suppose that you had been a 900/1000 shooter, with a probability of 0.9. If you had the same streak of 100 baskets, you would only have increased your probability to 90.1 (1000/1100). This change is *forty* times smaller than the change when you begin at 0.5.
+We can think about the cause of this behavior by thinking about some situation where you're trying to improve a probability. Imagine that you keep track of your free throws in basketball practice. You sink 500/1000 free throws, giving you a 0.5 probability of success. Now imagine you take a further 100 shots and sink them all. Now your probability of success is 600/1100, meaning your amazing streak has increased your probability to 0.54. However, suppose that you had been a 900/1000 shooter, a probability of 0.9 of success. If you had the same streak of 100 made baskets you would only increase your probability to 0.901 (1000/1100). This change is *forty* times smaller than the change when you begin at 0.5 (0.001/0.040).
 
-We can see that 'the same' increase results in a large increase in one probability (0.5 -> 0.54, almost 10%) and a minuscule change in another (0.9 -> 0.901, about 0.1%). Basically, as you approach 0 and 1 it gets harder to make large changes in your probabilities. The result of this is that a given logit difference will equal a large probability difference near 0 logits, and a smaller probability difference as the underlying logit values are further from 0. Here are some useful things to keep in mind when interpreting logits: 
+We can see that 'the same' increase in made baskets results in a large increase in one probability (0.5 -> 0.54, almost 10%) and a minuscule change in another (0.9 -> 0.901, about 0.1%). Basically, as you approach 0 and 1 it gets harder to make large changes in your probabilities. The result of this is that a given logit difference will equal a large probability difference near 0 logits, and a smaller probability difference as the underlying logit values are further from 0. Here are some useful things to keep in mind when interpreting logits, in no particular order: 
 
-  * 50% is 0. Positive means more likely to be a success, negative means more likely to be a failure. 
-  
+  * a probability of 0.5 is 0 logits. Positive logits means more likely to be a success, negative logits means more likely to be a failure. 
   * -3 and 3 are 4.7% and 95.2%. Basically -3 and 3 logits are useful bounds for "very likely 1" and "very likely 0". 
-  
   * Since a logit of 3 translates to a $p$ of about 0.95, all of the space between +3 and infinity logits represents the probability space between 0.95 and 1, while logits between 0 and 3 represent the space from 0.5 to 0.95.
-  
   * Logits far beyond 3 might not have much practical significance. A logit of 4 is a probability of 0.982 and a logit of 6 is 0.997. For many purposes, probabilities of 0.95, 0.98, and 0.99 are nearly interchangeable. Also, it is very difficult to distinguish 95%, 98%, and 99% in practice since by definition, you will be observing very few mistakes to distinguish the two.
-  
   * Effects can be considered important or not based on how far they get you along -3 to 3 (or -4 to 4). Basically, anything in the +1 range is very likely to matter, while effects smaller than 0.1 or so are likely having only small effects on outcomes.
   
-Here is one final thing to keep in mind about logits: You **must** combine your model parameters as logits **before** transforming them into probabilities. This will be discussed in more detail in section X. 
+Here is one final thing to keep in mind about logits: You **must** combine your model parameters as logits **before** transforming them into probabilities. This is due the fact that the inverse logit function is non-linear and will be discussed in more detail in section X. 
 
 ## Logistic regression with one quantitative predictor
 
-In the previous chapter we tried to predict apparent height using speaker VTL, apparent age and apparent gender. Here, we're going to predict the perception of femaleness, i.e., the identification of the speaker as female, based on speaker VTL an apparent age and using a logistic regression.
+In the previous chapter we tried to predict apparent height using speaker VTL, apparent age, and apparent gender. Here, we're going to predict the perception of femaleness, i.e., the identification of the speaker as female, based on speaker VTL an apparent age and using a logistic regression.
 
 ### Data and research questions
 
@@ -522,7 +522,7 @@ We see that the model looks just like all our previous models except for three m
   2) The top of the model now indicates `Family: bernoulli` and `Links: mu = logit`. 
   3) The absence of the `Family-Specific` parameter section of the model where `sigma` and `nu` (i.e., $\sigma$ and $\nu$) were usually found.
 
-In chapter 9 we talked about the geometry of models that include a single quantitative predictor, categorical predictors, and their interactions. Essentially, these sorts of models result in a set of lines, an overall line and another line for each level of the categorical predictor interacting with the quantitative predictor. Since our model includes effects for apparent age (`A1`), VTL (`vtl`), and their interaction (`vtl:A1`), our model can be thought of as three lines: The overall (main effects) line, the line for apparent adult speakers, and the line for apparent child speakers. We can recover the parameters for these three lines by adding the appropriate model coefficients together using the hypothesis function. Since `A1` (and related parameters) represent the adult group and we are using sum coding, the effect for children is represented by subtracting, rather than adding, the relevant parameters (i.e. `Intercept - A1` to find the child intercept). 
+In chapter 9 we talked about the geometry of models that include a single quantitative predictor, categorical predictors, and their interactions. Essentially, these sorts of models result in a set of lines, one overall 'main effects' line, and another line for each level of the categorical predictor interacting with the quantitative predictor. Since our model includes effects for apparent age (`A1`), VTL (`vtl`), and their interaction (`vtl:A1`), our model can be thought of as three lines: The overall (main effects) line, the line for apparent adult speakers, and the line for apparent child speakers. We can recover the parameters for these three lines by adding the appropriate model coefficients together using the hypothesis function. Since `A1` (and related parameters) represent the adult group and we are using sum coding, the effect for children is represented by subtracting, rather than adding, the relevant parameters (i.e. `Intercept - A1` to find the child intercept). 
 
 ```{r, cache = TRUE, collapse = TRUE}
 gender_vtl_hypothesis = bmmb::short_hypothesis (
@@ -600,7 +600,7 @@ fixef (model_gender_vtl)
 
 The most important thing to remember when interpreting the coefficients of a logistic model is that positive coefficients push us towards a 1 response ('female'), while negative values push us towards a 0 response ('male'). A predicted value of exactly 0 means the outcome is 50/50. The model intercept is the value of the line when VTL=0. Since we centered our VTL predictor, our positive intercept suggests a speaker with an average VTL (13.4 cm) was more likely to be classified as female (with a probability of 0.67 (`antilogit(0.71)`). The effect for perceived adultness (`A1`) is positive, indicating that a speaker with an average VTL is more likely to be identified as a woman when the speaker is also thought to be an adult. The negative effect for VTL tells us that as VTL increases, we are *less* likely to observe a 'female' response and *more* likely to observe a 'male' response. The interaction between VTL and age is negative, meaning this slope is even more negative when the speaker is thought to be an adult. This is evident in figure \@ref(fig:F10-4) where the line for apparent adults has a much steeper slope then the line for apparent children. In addition, the magnitude of the slope increases/decreases by more than 50% since the VTL parameter is -3.6 and the interaction is -1.76.
 
-We can interpret our model entirely in the logit space, focusing on the geometry of our models and interpreting our intercept and lope terms just as we did above and in the previous chapter. However, if we want to think of our model parameters in terms of probabilities (rather than logits), we need to combine parameter values first, and then carry out the inverse logit function on the logit values. It is absolutely essential that the operations be done in this order because the inverse logit function is not an **additive** function. Earlier we noted that the logit (and inverse logit) are non linear. One of the characteristics of non-linear transformations is that they are *not* additive. A function, $f(x)$, is additive if the following property holds:
+We can interpret our model entirely in the logit space, focusing on the geometry of our models and interpreting our intercept and slope terms just as we did above and in the previous chapter. However, if we want to think of our model parameters in terms of probabilities (rather than logits), we need to combine parameter values first, and then carry out the inverse logit function on the logit values. It is absolutely essential that the operations be done in this order because the inverse logit function is not an **additive** function. Earlier we noted that the logit (and inverse logit) are non linear. One of the characteristics of non-linear transformations is that they are *not* additive. A function, $f(x)$, is additive if the following property holds:
 
 $$
 \begin{equation}
@@ -609,7 +609,7 @@ f(x+y) = f(x) + f(y)
 \end{equation}
 $$
 
-This means that adding two things and putting them into the function provides the same results as passing them individually through the function and adding them up after. For example imagine our function is $f(x)=x \times 2$. We put in $3+2$ (i.e. $5$) and get $10$ out. We then put in $3$ and $2$ individually, get $6$ and $4$ out, add them up and get $10$ again. Based on this we say that our function is *additive*. As noted above, the inverse logit function is *not* additive. For example, consider the intercept for the adult line, the value of the line when VTL is equal to zero. We can see in figure \@ref(fig:F10-4) that the intercept of the adult (teal) line is about 3 logits. First let's consider the meaning of the `Intercept` and `A1` coefficients:
+This means that adding two things and putting them into the function provides the same results as passing them individually through the function and adding them up after. For example imagine our function is $f(x)=x \times 2$. We put in $3+2$ (i.e. $5$) and get $10$ out. We then put in $3$ and $2$ individually, get $6$ and $4$ out, add them up and get $10$ again. Based on this we say that our function is *additive*. As noted above, the inverse logit function is not. For example, let's consider the meaning of the `Intercept` and `A1` coefficients:
 
 ```{r}
 # model intercept
@@ -619,9 +619,9 @@ antilogit (0.86)
 antilogit (2.65)
 ```
 
-The intercept reflects the logit of the probability of a female response, overall, when VTL was 0. This intercept can be interpreted in isolation, is is not a difference or a parameter indicating a rate of change. As a result, the probability of 0.7 (`antilogit (0.86)`) *can* be interpreted in isolation. But what does 0.934 represent? Nothing useful, actually. 
+The intercept reflects the logit of the probability of a female response, overall, when VTL was 0. This intercept can be interpreted in isolation, ts is not a difference or a parameter indicating a rate of change. As a result, the probability of 0.7 (`antilogit (0.86)`) *can* be interpreted in isolation. But what does 0.934 represent? Nothing useful, actually. 
 
-The `A1` parameter reflects the difference in logits (2.65) between perceiving a female speaker at 0 VTL overall compared to when listeners indicated hearing an adult. However, since this is a *difference* it needs to be combined with a baseline number in order to be interpreted. For example if I saw "that group was 3 seconds faster" you know need to know "faster than what?" in order to get the speed of the faster group. So, in order to get the log odds (and probability) of observing a female response given some apparent age, we need to combine the `Intercept` and `A1` parameters, and then turn this into a probability using the inverse logit function. Since the inverse logit transform is not additive, we will not get the same output if we combines these parameters and then transform versus transform and then combine. See \@ref(eq:10-15) and compare to \@ref(eq:10-14).
+The `A1` parameter reflects the difference in logits (2.65) between perceiving a female speaker at 0 VTL overall compared to when listeners indicated hearing an adult. However, since this is a *difference* it needs to be combined with a baseline number in order to be interpreted. For example if I say "that group was 3 seconds faster" you know need to know "faster than what?" in order to know the speed of the group. So, in order to get the log odds (and probability) of observing a female response given some apparent age, we need to combine the `Intercept` and `A1` parameters, and then turn this into a probability using the inverse logit function. Since the inverse logit transform is not additive, we will not get the same output if we combines these parameters and then transform versus transform and then combine. See \@ref(eq:10-15) and compare to \@ref(eq:10-14).
 
 $$
 \begin{equation}

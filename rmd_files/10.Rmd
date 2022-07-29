@@ -7,26 +7,25 @@ knitr::opts_chunk$set(
 
 # Logistic regression and signal detection theory models
 
-To this point we've only discussed the prediction of quantitative variables. In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. For now we will focus on dichotomous (i.e. binary) outcomes, however, the ideas presented will be extended to the modeling of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial (unordered categories such as English, French and Spanish) data in chapter 12. 
+To this point we've only discussed the prediction of quantitative variables that can take on a large number of values and are MEASURED on an interval (or ratio) scale. In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. For now we will focus on dichotomous (i.e. binary) outcomes, however, the ideas presented will be extended to the prediction of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial (unordered categories such as English, French and Spanish) data in chapter 12. In the second half of the chapter we will discuss how logistic regression models can be used to investigate the discrimination of categories, and response bias, using signal detection theory. 
 
 ## Dichotomous variables and data
 
-The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable ($\mu$). For a model predicting apparent height using speaker VTL, this means that the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:10-1). 
+The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable ($\mu$). For a model predicting apparent height using speaker VTL, this means the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:10-1). 
 
 $$
 \begin{equation}
 \begin{split}
 \mathrm{height}_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
-\mu_{[i]} = \mathrm{Intercept} + VTL \times \mathrm{vtl}_{[i]} \\
-\dots 
+\mu_{[i]} = \mathrm{Intercept} + VTL \times \mathrm{vtl}_{[i]} 
 \end{split}
 (\#eq:10-1)
 \end{equation}
 $$
 
-We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of vocal-tract length (VTL). In this model the actual observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our expected values *directly* model the values we're interested in. What we mean by this is that the values along our line are the actual values we expect to observe for a given value of VTL. 
+We can see an example of a linear relationship in the top left plot of figure \@ref(fig:F10-1) where expected apparent height ($\mu$) varies along a line as a function of vocal-tract length (VTL). In this model, the observations we collect are assumed to be normally distributed around the expected value (the line) in a random manner. Importantly, our predicted values *directly* model the values we're interested in. What we mean by this is that the values along our line are the actual apparent heights we expect to observe for a given value of VTL. 
 
-```{r F10-1, fig.width = 8, fig.height = 5, fig.cap = "(left) Average perceived height for each speaker as a function of average f0. (middle) The same relationship as the left but only males are plotted. (right) Only females are plotted.", echo = FALSE, message = FALSE, warning = FALSE}
+```{r F10-1, fig.width = 8, fig.height = 5, fig.cap = "(top left) Average apparent height for each speaker as a function of speaker VTL. (top right) Each response plotted according to speaker VTL, female responses were given a value of 1, male responses 0. (bottom left) Probability of a female response as a function of speaker VTL. (bottom right) Logit of the probability of a female response as a function of speaker VTL, calculated using the `logit` function.", echo = FALSE, message = FALSE, warning = FALSE}
 
 ################################################################################
 ### Figure 10.1
@@ -51,7 +50,7 @@ par (mfrow = c(2,2), mar = c(2,4,1,1), oma = c(3,1,0,0))
 
 plot (aggd$vtl, aggd$height, cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(130,185),xlab = "",
-      ylab="Height (inches)",cex.lab=1.3,cex.axis=1.3)
+      ylab="Apparent height (inches)",cex.lab=1.3,cex.axis=1.3)
 grid()
 abline (lm(aggd$height~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, aggd$height, cex =2, pch=16,lwd=2,
@@ -60,13 +59,15 @@ points (aggd$vtl, aggd$height, cex =2, pch=16,lwd=2,
 legend (.8,165, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
         col = cols[2:5], bty='n',pch=16,pt.cex=2)
 
-plot (exp_data$vtl, exp_data$G=='f', cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
+plot (exp_data$vtl, exp_data$G=='f', cex =2, col = cols[c(2:5)][factor(aggd$C_v)], yaxt='n',
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-.1,1.1),xlab = "",
-      ylab="P(G  = 'f')",cex.lab=1.3,cex.axis=1.3)
+      ylab="G == 'f'",cex.lab=1.3,cex.axis=1.3)
 grid()
 abline (lm(aggd[,5]~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, aggd[,5], cex =2, pch=16,lwd=2,
       col = cols[c(4,6)][aggd$group])
+abline (h=.5)
+axis (side=2, at=0:1)
 
 plot (aggd$vtl, aggd[,5], cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-.1,1.1),xlab = "",
@@ -75,6 +76,7 @@ grid()
 abline (lm(aggd[,5]~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, aggd[,5], cex =2, pch=16,lwd=2,
       col = cols[c(4,6)][aggd$group])
+abline (h=.5)
 
 plot (aggd$vtl, logit(aggd[,5]), cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-6.1,6.1),xlab = "",
@@ -83,23 +85,28 @@ grid()
 abline (lm(logit(aggd[,5])~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, logit(aggd[,5]), cex =2, pch=16,lwd=2,
       col = cols[c(4,6)][aggd$group])
+abline (h=0)
 
 mtext (side=1,text="Centered VTL (cm)", outer = TRUE, line = 1.5)
 ```
 
-Unlike quantitative variables, **dichotomous** variables can only take on only one of two possible discrete values. We can easily think of many examples of this kind of data, for example something that is wrong or right, someone who is either male or female, or someone who is an adult or a child. None of these examples are meant to suggest that reality is this simple. For example, males and females are not two discrete and internally homogeneous classes that fully explain variation in human sex or gender. Obviously, variation in human age and development is more complicated than adult or child. Despite this, gender and age can be *coded* as a dichotomous variable so that they have only two possible values within the context of our model. In a sense, this decision is just as artificial as assuming that apparent height and VTL relate perfectly along a line, assuming that our errors are normally distributed and so on. Despite this, we can use our model to look for statistical associations between the dependent variable and our predictors *given the structure of our model*, that is, based on the simplifying assumptions we have made in order to turn an infinitely complicated reality into a regression model with a small number of parameters.
+Unlike quantitative variables, **dichotomous** variables can only take on two different values, and these are not measured on an interval scale. We can easily think of many examples of this kind of data, for example something that is wrong or right, someone who is either male or female, or someone who is an adult or a child. None of these examples are meant to suggest that reality is this simple. For example, males and females are not two discrete and internally homogeneous classes that fully explain variation in human sex or gender. Obviously, variation in human age and development is more complicated than adult or child. And, in fact, the world also tends to be more complicated than wrong or right. Despite this, things like gender and age can be *coded* as dichotomous variables so that they have only two possible values within the context of our model.
 
-When your variable has only two categorical outcomes (within the context of your model), you need to find a way to represent these numerically. The way this is usually done is by coding one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way (it will flip the sign on most coefficients) and can be based on what 'makes sense' given the analysis at hand. In our case we will define a new variable called `Female` and assign 1 to cases where listeners identified a speaker as female, thereby associating female responses with 'successes'. 
+The decision to represent these groups of speakers using binary variables is just as artificial as assuming that apparent height and VTL relate perfectly along a line, assuming that our errors are normally distributed and so on. Despite this, we can use our models to look for statistical associations between the dependent variable and our predictors *given the structure of our model*, that is, based on the simplifying assumptions we have made in order to turn an infinitely complicated reality into a regression model with a small number of parameters. 
+
+When your variable has only two categorical outcomes (within the context of your model), you need to find a way to represent these numerically. The way this is usually done is by coding one category as 1 (a 'success') and the other as 0 (a 'miss'). The designation of one category as 1 and the other as 0 will not affect your analysis in any meaningful way (it will flip the sign of most coefficients) and can be based on what 'makes sense' given the analysis at hand. In our case we will define a new variable called `Female` and assign 1 to cases where listeners identified a speaker as female, thereby associating female responses with 'successes'. Keep in mind, this variable does not reflect whether the speaker *was* female but that the listener *thought* the speaker was female. 
 
 The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right plot of figure \@ref(fig:F10-1). Plotting ones and zeros against speaker VTL is not very informative, in addition, using a line to directly predict dichotomous data leads to strange outcomes. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. It also suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, which is also impossible. 
 
-We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal 0. When we do this, we obtain the probability ($p$) of observing a female response (see section X) for each speaker. The $p$ parameter can't be used with a normal distribution to generate dichotomous data. A normal distribution will generate continuous variation symmetrically around its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only exactly two different values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
+We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal 0. When we do this, we obtain the probability ($p$) of observing a female response for each speaker. Why does this work? Imagine you are playing basketball and keep track of 1000 free throws over several practices. Imagine you sink 753 of these shots, and let's assume that this represents your actual ability fairly well. You consider these 1000 shots observations of the variable "successful free throw" which equals 1 when you make it and 0 when you don't. If you add up all your made shots (753) and divide by the total number of observations (1000), you can conclude that there is a 0.753 (753/1000) probability of you sinking a free throw. 
+
+The $p$ parameter can't be used with a normal distribution to generate dichotomous data. A normal distribution generates continuous variation symmetrically around its mean. Instead, we need a distribution that takes a parameter like $p$ and generates variable with only two possible values. The two distributions most commonly used to model dichotomous variables are the binomial distribution and the Bernoulli distribution.
 
 The **binomial distribution** generates a set of dichotomous outcomes. This distribution has two parameters: The probability of a success ($p$) and the number of trials ($n$). For example, if you were playing basketball and you took 5 free throws and made 3 (3/5=0.6), then the $p$ parameter suggested by your data is 0.6 and the $n$ parameter is 5. If you use this distribution, you are treating all 5 trials as a single observation. This means that your data is 3 (out of five) and not 0, 1, 1, 0, and 1 (or whatever). In this case, another 5 shots would constitute one more 'observation' summarized by the total number of successes. 
 
 The **Bernoulli distribution** generates individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). In this case, if you took 5 free throws and made 3 (3/5=0.6), you would still describe the data using a $p$ parameter of 0.6. However, with this distribution, you would model each of the 5 trials as a separate observation (e.g., 1,1,1,0,0) so there is no $n$ parameter (it's always 1). In this situation 5 more shots would be treated as another 5 individual observations.
 
-Imagine you have ten observations from a Bernoulli variable and you observe 6 ones and 4 zeros. This suggests a probability of observing a success, $p$, of 0.6 (6/10). The expected value ($\mathbb{E}$ of a discrete variable is the sum of the values it can take times the probability of each value. For a Bernoulli variable this is relatively simple to calculate as it involves the addition of only two values. In \@ref(eq:10-2), we see that to find the expected value of a Bernoulli variable we multiply the probability of a success ($p$) times one, probability of a failure ($1-p$) times zero, and add the two. Since the probability of failures is multiplied by zero, the expected value of the Bernoulli variable is simply equal to $p$. The same reasoning holds for binomial variables save for the fact that a single observation of a binomial variables is equal to $n$ Benoulli trials. As a result, the expected value of the binomial distribution is $np$.
+Imagine you have ten observations from a Bernoulli variable and you observe 6 ones and 4 zeros. This suggests a probability of observing a success, $p$, of 0.6 (6/10). The expected value ($\mathbb{E}$) of a discrete variable is the sum of the values it can take times the probability of each value. For a Bernoulli variable this is relatively simple to calculate as it involves the addition of only two values. In \@ref(eq:10-2), we see that to find the expected value of a Bernoulli variable we multiply the probability of a success ($p$) times one, probability of a failure ($1-p$) times zero, and add the two. Since the probability of failures is multiplied by zero, the expected value of the Bernoulli variable is simply equal to $p$. The same reasoning holds for binomial variables save for the fact that a single observation of a binomial variable is equal to $n$ Bernoulli trials. As a result, the expected value of the binomial distribution is $np$.
 
 $$
 \begin{equation}
@@ -112,8 +119,7 @@ $$
 \end{equation}
 $$
 
-
-Below we generate random binomial variables (R doesn't specifically make Bernoulli variables) using the `rbinom` (random binomial) function. The `rbinom` function takes parameters in this order `number of observations, batch size, probability of success`. Below, we generate a single Bernoulli variable (a **Bernoulli trial**) and then ten variables with the same probability of success. 
+Below we generate random binomial variables using the `rbinom` (random binomial) function. We use this function because base R doesn't specifically make Bernoulli variables, and they are equivalent if n=1. The `rbinom` function takes parameters in this order `number of observations, batch size, probability of success`. Below, we generate a single Bernoulli variable (a **Bernoulli trial**) and then ten variables with the same probability of success. 
 
 ```{r, collapse = TRUE}
 # a single trial, probability of 0.5
@@ -135,10 +141,10 @@ rbinom (10,1,.5)
 
 So, when we have a dichotomous dependent variable and are interested in predicting individual trials, we use a Bernoulli distribution and our data model is $y \sim \mathrm{Bernoulli} (p)$. When our dependent variable consists of groups of Bernoulli trials treated as a single unit we can use a binomial distribution. If this is the case our data model looks like this $y \sim \mathrm{Binomial} (p, n)$, and keep in mind $n$ is *data* and not an estimated parameter.
 
-Before moving on we want to note that unlike the normal distribution, the above distributions do not generate individual data points near their expected value $p$. Instead, they generate sequences of 1s and 0s whose sample estimate of $p$ is expected to be close to its true underlying value hypothetically, given a large enough sample. For example, below we generate sequences of a dichotomous variables with a true $p$ of 0.5. In each case, the estimate of $p$ gets closer to the true value as the length of the sample gets longer. In the case of a single observation, the estimate will almost always be wrong. 
+Before moving on we want to note that unlike the normal distribution, the Bernoulli and binomial distributions do not generate individual data points near their expected value $p$. Instead, they generate sequences of 1s and 0s whose sample estimate of $p$ is expected to be close to its underlying value *hypothetically* given a large enough sample. For example, below we generate sequences of a dichotomous variables with a true $p$ of 0.5. In each case, the estimate of $p$ gets closer to the true value as the length of the sample gets longer. 
 
 ```{r, include = FALSE}
-set.seed (1)
+set.seed (7)
 ```
 ```{r, collapse = TRUE}
 mean (rbinom (10,1,.5)) # the mean of 10 observations
@@ -149,19 +155,17 @@ mean (rbinom (100000,1,.5))  # the mean of 100000 observations
 
 ## Generalizing our linear models
 
-The bottom left plot in figure \@ref(fig:F10-1) shows the probability of observing a classification of 'female' for each speaker as a function of their vocal-tract length (VTL). Clearly, the perception of femaleness is negatively related to speaker VTL: As VTL increases the probability of observing a female response decreases. This is not surprising as, in general, taller speakers tend to have longer VTLs and female speakers tend to be shorter than male speakers. So, listeners appear to be making association between speaker gender and VTL seen in the data, they are more likely to classify speakers with shorter VTLs (who are likely also shorter in height) as female. 
+The bottom left plot in figure \@ref(fig:F10-1) shows the probability of observing a classification of 'female' for each speaker as a function of their vocal-tract length (VTL). We can see that the perception of femaleness is negatively related to speaker VTL: As VTL increases the probability of observing a female response decreases. Despite this, we can't directly model variation in $p$ using lines as shown in the figure. There are many reasons for this but the main one is that using lines to model $p$ causes problems near 0 and 1. For example, imagine a predictor is associated with an increase in probability of 0.2 per unit change in the predictor. If the Intercept is 0.7, a two unit increase in the predictor is associated with a probability of 1.1, which is not possible. This suggests that a curve with a constant slope (e.g. a line) is fundamentally ill-suited to predict a bounded variable like probability. 
 
-We can't directly model variation in $p$ using lines as shown in the bottom left plot of figure \@ref(fig:F10-1). There are many reasons for this but the main one is that using lines to model $p$ causes problems near 0 and 1. For example, imagine a predictor is associated with an increase in probability of 0.2 per unit change in the predictor. If the Intercept is 0.7, a two unit increase in the predictor is associated with a probability of 1.1, which is not possible. This suggests that a curve with a constant slope (e.g. a line) is fundamentally ill-suited to predict a bounded variable like probability. 
+The above seems problematic, after all, so far this book has been about linear regression models and we're saying lines are no good for modeling variation in probabilities. The solution to this is to remember that our regression models consist of a bunch of components stuck together. Early on we discussed two general parts: The random components and the systematic component (see section X). The systematic component predicts variation in expected values using shapes like lines and planes. The random component specifies how our data randomly varies around the expected value. We can add a third component to this called a **link function**, a function that takes some parameter you're interested in (e.g. $p$) and transforms it so that the *transformed* value can be modeled along straight lines. When you rely on link functions, modeling becomes a three step process like this:
 
-The above seems problematic, after all, this is a book about linear regression models and we're saying lines are no good for modeling variation in probabilities. The solution to this is to remember that our regression models consist of a bunch of component parts stuck together. Early on we discussed two general parts: The random components and the systematic component (see section X). The systematic component predicts variation in expected values using shapes like lines and planes. The random component specifies how our data randomly varies around the expected value. We can add a third component to this called a **link function**, a function that takes some parameter you are interested in (e.g. $p$) and transforms it so that the *transformed* value can be modeled along straight lines. When you rely on link functions, modeling becomes a three step process like this:
-
-  1) Predict the variation of expected values ($\theta$) along straight lines (or related shapes), for example $\theta  = a + b \times x$. This is the systematic component, and $\theta$ is linearly related to the predictor $x$.
-  2) Transform $\theta$ using a link function. For example, given the link function $f$ we can transform our expected value $\theta$ to $p$ like so: $p = f(\theta)$. The transformed parameter may no longer be linearly related to the dependent variable $x$ or the linear predictor $\theta$.
+  1) Predict variation in expected values ($\theta$) along straight lines (or related shapes), for example $\theta  = a + b \times x$. This is the systematic component, and $\theta$ is linearly related to the predictor $x$.
+  2) Transform $\theta$ using a link function. For example, given the link function $f$ we can transform our expected value $\theta$ to $p$ like so: $p = f(\theta)$. The transformed parameter ($p$) may no longer be linearly related to the dependent variable $x$ or the linear predictor $\theta$.
   3) Use the *transformed* parameter ($p$) in the data generating distribution. For example $y \sim \mathrm{Bernoulli}(p)$. This is the random component.
   
 We can see that our link function literally *links* our systematic and random components: The random component does not *directly* use the information in the systematic component. The models we've been fitting so far featured what's known as the **identity** link function. The identity link function is basically a function that does nothing, the input equals the output like $\mu = f(\mu)$. Using the identity link function is equivalent to modeling $\mu$ directly in our prediction equation. This works for the mean parameter of the normal distribution because it actually can vary continuously from positive to negative infinity as lines do. However, it doesn't work for the Bernoulli or binomial distributions since $p$ must fall between 0 and 1.
 
-The model we're interested in needs to model a dichotomous variable ($Female$) that equals 1 when listeners responded female and 0 when listeners responded male. We'll need to include a function ($f()$) that maps a continuous predicted value ($\theta$) to a probability ($p$) bounded by 0 and 1. We present this in \@ref(\eq:10-3). 
+This suggests that we'll need to include a function ($f()$) that maps some continuous predicted value ($\theta$) to a probability ($p$), as in \@ref(\eq:10-3). 
 
 $$
 \begin{equation}
@@ -174,13 +178,15 @@ p_{[i]} = f(\theta_{[i]}) \\
 \end{equation}
 $$
 
-The presentation in \@ref(\eq:10-3) separates our model into a random component, a link function, and a systematic component. Each of these components play a crucial role in our ability to build regression models that predict dichotomous variables. The random component is the distribution underlying the data level error in our dependent variable. This component helps us account for that fact that our observations are not perfectly predictable given our independent variables. The systematic component allows us to make predictions about variability in the dependent variable using combinations of our predictors. The link function lets us use lines to model variation in parameters even when these may not vary in an unbounded manner (i.e. from $-\infty$ to $+\infty$). 
+The presentation in \@ref(\eq:10-3) separates our model into a random component, a link function, and a systematic component. Each of these components play a crucial role in our ability to build regression models that predict dichotomous variables. The random component is the distribution underlying the data level error in our dependent variable. This component helps us account for that fact that our observations are not perfectly predictable given our independent variables, and that they can only equal 1 and 0. The systematic component allows us to make predictions about variability in the dependent variable using combinations of our predictors. The link function lets us use lines to model variation in parameters even when these may not vary in an unbounded manner (i.e. from $-\infty$ to $+\infty$). 
 
-This division of regression models into three discrete components is often referred to as the **generalized linear model**. The generalized linear model allows the user to change the random component and/or link function as appropriate to model a wide range of data. It's called the 'generalized' linear model because it represents the extrapolation of principles related to the prediction of quantitative variables coming from a normal distribution to the general case. For more information on the generalized linear model see (cite). 
+This division of regression models into three discrete components is referred to as the **generalized linear model**. The generalized linear model allows the user to change the random component and/or link function as appropriate to model a wide range of data. It's called the 'generalized' linear model because it represents the extrapolation of principles related to the prediction of quantitative variables coming from a normal distribution to the general case. For more information on the generalized linear model see (cite). 
 
 ## Logistic Regression
 
-**Logistic regression** is an approach to regression for predicting a dichotomous dependent variable. In terms of the components of the generalized linear model outlined above, logistic regression assumes a Bernoulli distribution for the random component, and the *inverse logit* or *antilogit* function ($\mathrm{logit}^{-1}$, discussed below) as its link function. The systematic components still consists of linear combinations of our independent variables, i.e., adding them up after multiplying by their respective model coefficients, as it has in previous chapters. A general description of logistic regression with a single quantitative predictor is given in \@ref(eq:10-4). 
+**Logistic regression** is an approach to regression for predicting dichotomous dependent variables. We are going to focus on modeling Bernoulli data (i.. e. individual dichotomous variables), in this chapter as it is most common. However, most of the information presented here directly applies to binomial regression and binomial regression is simple to carry out using `brms`.
+
+Logistic regression assumes a Bernoulli distribution for the random component, and the *inverse logit* or function ($\mathrm{logit}^{-1}$, discussed below) as its link function. The systematic components still consists of linear combinations of our independent variables, i.e., adding them up after multiplying by their respective model coefficients, as it has in previous chapters. A general description of logistic regression with a single quantitative predictor is given in \@ref(eq:10-4). 
 
 $$
 \begin{equation}
@@ -193,11 +199,11 @@ z_{[i]} = Intercept + \beta \times \mathrm{x}_{[i]} \\
 \end{equation}
 $$
 
-The information in \@ref(eq:10-4) says the following: Our data ($y$) is a Bernoulli-distributed dichotomous variable with a $p$ parameter that varies on each trial. The $p$ parameter is the output of the inverse logit ($\mathrm{logit}^{-1}$) applied to our linear predictor $z$ (see section X). The linear predictor is assumed to be the sum of an intercept and product of the independent variable and its slope parameter. We noted above that $p$ is the the expected value of the Bernoulli distribution. Thus, we can see that logistic regression features the prediction of expected values ($p$) just like our regressions in previous chapter (e.g. $\mu$ for a normal model). However, logistic regression doesn't model $p$ directly but instead models the *logit* of the expected value, $z$.
+The information in \@ref(eq:10-4) says the following: Our data ($y$) is a Bernoulli-distributed dichotomous variable with a $p$ parameter that varies on each trial. The $p$ parameter is the output of the inverse logit ($\mathrm{logit}^{-1}$) applied to our linear predictor $z$. The linear predictor is assumed to be the sum of an intercept and product of the independent variable and its slope parameter. We noted above that $p$ is the the expected value of the Bernoulli distribution. Thus, we can see that logistic regression predicts expected values ($p$) just like our regressions in previous chapters (e.g. $\mu$ for a normal model). However, logistic regression doesn't model $p$ directly but instead models the *logit* of the expected value, $z$.
 
 ### Logits 
 
-**Logits** are log-odds, the logarithm of the odds of a success. The odds of a success is defined as:
+**Logits** are log-odds, the logarithm of the odds of a success. The odds of a success are defined as:
 
 $$
 \begin{equation}
@@ -206,16 +212,7 @@ $$
 \end{equation}
 $$
 
-Odds of 3/1 indicate that success is three times as likely as a failure. We can turn this into a probability with the following calculation:
-
-$$
-\begin{equation}
-\mathrm{Probability}_{\mathrm{success}} = \frac{N_{\mathrm{success}}}{N_{\mathrm{failures}} + N_{\mathrm{success}}} = \frac{N_{\mathrm{success}}}{N_{\mathrm{total}}}
-(\#eq:10-6)
-\end{equation}
-$$
-
-So, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). We can define odds in a more formal manner by expressing them in terms of the probability of a success, $p$, and the probability of a failure, $1-p$, as in \@ref(eq:10-7).
+For example, odds of 3/1 indicate that success is three times as likely as a failure. We can also define odds by expressing them in terms of the probability of a success, $p$, and the probability of a failure, $1-p$, as in \@ref(eq:10-7).
 
 $$
 \begin{equation}
@@ -224,10 +221,19 @@ $$
 \end{equation}
 $$
 
-Odds are still bounded by zero on the lower end so they still can't be modeled using lines, however, if we take the *logarithm* of the odds we get a **logit**, the log odds. Unlike odds, logits *can* take on values from positive to negative infinity. This is because, for a variable x logarithms represent the values of x between 0 to 1 with values of log(x) from $-\infty$ to 0, and values of x from 1 to $+\infty$ with values of log(x) from 0 to $+\infty$ (see section X logarithms). You can see this relationship by running the code below.
+We can turn odds into probabilities with the following calculation. For example, odds of 3/1 imply a probability of 0.25 (3 / (3+1)). 
+
+$$
+\begin{equation}
+\mathrm{P}(\mathrm{success}) = \frac{N_{\mathrm{success}}}{N_{\mathrm{failures}} + N_{\mathrm{success}}} = \frac{N_{\mathrm{success}}}{N_{\mathrm{total}}}
+(\#eq:10-6)
+\end{equation}
+$$
+
+Odds are still bounded by zero on the lower end so they still can't be modeled using lines, however, if we take the *logarithm* of the odds we get a **logit**, the log odds. Unlike odds, logits *can* take on values from positive to negative infinity. This is because, for variable x, logarithms represent the values of x between 0 and 1 with values of log(x) from $-\infty$ to 0. Values of x from 1 to $+\infty$ are represented by values of log(x) from 0 to $+\infty$ (see section X logarithms). You can see this relationship by running the code below.
 
 ```{r, eval=FALSE}
-# this plot compares x and log (x). Note that log(x)<0 when x<1
+# this plot compares x and log (x). Note that log(x)<0 when x<1.
 curve (log(x), xlim = c(0,10),n=1000,lwd=2,col=4)
 abline (v = 1, lwd=2,col=2)
 abline (h=0,v=0, lty=3,col="grey",lwd=3)
@@ -245,17 +251,19 @@ $$
 \end{equation}
 $$
 
-Equation \@ref(eq:10-8) is sometimes called the **logit function** because it turns probabilities into logits. The `bmmb` package contains a function that carries out this transformation (`logit`). We can see how this function works below, and see that it takes the second approach to calculate logits. Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those values to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. 
+Equation \@ref(eq:10-8) is sometimes called the **logit function** because it turns probabilities into logits. The `bmmb` package contains a function that carries out this transformation (`logit`). We can see below that this function takes the second approach to calculate logits. 
 
 ```{r}
 bmmb::logit
 ```
 
+Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those values to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. The effect of this can be seen in the bottom right plot of figure \@ref(fig:F10-1) for several speakers classified as female 100% or 0% of the time. 
+
 ### The inverse logit link function
 
-Logistic regression models express expected values in *logits*. Our lines will describe continuous changes in logits as a function of our predictors, and our intercepts will describe shifts on the values of logits across different categories. However, our data generating distribution (Bernoulli) requires a parameter $p$ that is bounded by 0 and 1. This means that the link function for our logistic regression models needs to convert logits to probabilities. The function that does this for logistic regression is called the standard **logistic function**, the **antilogit function**, or the **inverse logit function**. We will refer to it as the inverse logit rather than the logistic function for two reasons. First, to avoid confusion with the logistic distribution, which will be discussed in chapter 12. Second, to highlight the fact that it is the inverse of the logit, that it *undoes* the logit transform. 
+Logistic regression models express expected values in *logits*. The lines represented by these models describe continuous changes in logits as a function of the predictors, and intercepts represent shifts in the values of logits across different situations. However, our data generating distribution (Bernoulli) requires a parameter $p$ that is bounded by 0 and 1. This means that the link function for logistic regression needs to convert logits to probabilities. The function that does this is called the **logistic function**, the **antilogit function**, or the **inverse logit function**. We will refer to it as the inverse logit function to highlight the fact that it is the inverse of the logit, that it *undoes* the logit transform. 
 
-The inverse logit function is presented in \@ref(eq:10-9), for logit (i.e. log odds) values, $z$, ranging continuously from positive to negative infinity. The symbol $e$ represents the mathematical constant that serves as the base for natural logarithms (Euler's number, 2.718...) so that $e(x)$ is equal to $\exp(x)$.
+The inverse logit function is presented in \@ref(eq:10-9), for logit (i.e. log odds) values, $z$, ranging continuously from positive to negative infinity. The symbol $e$ represents the mathematical constant (Euler's number, 2.718...) that serves as the base for natural logarithms and for the exponential function so that $\exp(z)=e^z$.
 
 $$
 \begin{equation}
@@ -264,9 +272,9 @@ P(y=1)=\mathrm{logit}^{-1}(z) = \frac{e^{z}}{1 + e^{z}}
 \end{equation}
 $$
 
-The inverse logit function may seem inscrutable, but it is in fact very scrutable. First, note its structural similarity to equation \@ref(eq:10-6) which presents the conversion of counts of successes and failures to probabilities. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success (since exponentiation 'undoes' log transforms). The odds are a ratio of the number of successes to the number of failures observed (or expected) for some number of trials. As a result, $e^z$ can be *thought of* as the expected number successes relative to some number of failures. How many failures?
+The inverse logit function may seem inscrutable, but it is in fact very scrutable. First, note its structural similarity to equation \@ref(eq:10-6) which describes the conversion of counts of successes and failures to probabilities. Recall that $z$ is the log-odds of observing a 'success', meaning that $e^z$ is the odds of observing of a success (since exponentiation 'undoes' log transforms). The odds are a ratio of the number of successes to the number of failures observed (or expected) for some number of trials. As a result, $e^z$ can be *thought of* as the expected number successes relative to some number of failures. How many failures?
 
-In equation \@ref(eq:10-6) we see that the left term in the denominator represents the number of failures. Based on this, it seems as though in \@ref(eq:10-9) we're fixing the expected 'count' of failures at 1, and this is in fact what the inverse logit function does. This is necessary because for $n$ trials if you have $S$ successes then you *must* have $n-S$ failures. This means that the odds (or probabilities) of successes *and* failures cannot both be independently estimated. We ran into a similar problem previously when we discussed contrasts in chapter 5 and our discussion of why all levels of a factor cannot be independently estimated. To resolve this issue, logistic regression only estimates the odds of successes and not of failures. However, we still need a number of successes in order to turn odds into probabilities. To resolve this issue, the inverse logit function fixes the number of failures to 1 for all cases. 
+In equation \@ref(eq:10-6) we see that the left term in the denominator represents the number of failures. Based on this, it seems as though in \@ref(eq:10-9) we're fixing the expected 'count' of failures at 1, and this is effectively what the inverse logit function does. This is necessary because for $n$ trials if you have $S$ successes then you *must* have $n-S$ failures. This means that the odds (or probabilities) of successes *and* failures cannot both be independently estimated. We ran into similar constraints when we discussed contrasts in chapter 5, and our discussion of why all levels of a factor cannot be independently estimated. To resolve this issue, logistic regression only estimates the odds of successes and not of failures. However, we still need a number of failures in order to turn odds into probabilities. To resolve this issue, the inverse logit function fixes the number of failures to 1 for all cases. 
 
 Thinking of $e^z$ as the expected number of successes relative to 1 expected failure may help interpret logits and understand the inverse logit function. For example, since $e^0=1$ a logit of 0 means we expect 1 success compared to 1 failure. This results in $p=0.5$ for a logit of 0, as shown in \@ref(eq:10-10).
 
@@ -277,7 +285,7 @@ $$
 \end{equation}
 $$
 
-When $z$ is a negative value, $e^{-z}$ will be a fraction between 0 and 1. Obviously, this means that a success is less likely than a failure in these cases since we have fixed the number of failures at 1. For example if $z=-3$ then $e^{z}=e^{-3}=0.05$. This means that when $z<0$, we expect probabilities between 0.0 and 0.5, as in \@ref(eq:10-11).
+When $z$ is a negative value, $e^{-z}$ will be a fraction between 0 and 1. Obviously, this means that a success is less likely than a failure in these cases since we've fixed the number of failures at 1. For example if $z=-3$ then $e^{z}=e^{-3}=0.05$. This means that when $z<0$, we expect probabilities between 0.0 and 0.5, as in \@ref(eq:10-11).
 
 $$
 \begin{equation}
@@ -295,7 +303,7 @@ $$
 \end{equation}
 $$
 
-Notice also that the inverse logit function can't actually generate values of 1 or 0 for real numbered value of $z$. This is because no matter how large the value of $z$ gets, the denominator will always be 1 greater. This sets the upper range of the inverse logit at 1. No matter how negative the value of $z$ gets, exponentiating the value will always result in a number greater than 0. As a result, \@ref(eq:10-12) will always provide values greater than 0.
+Notice also that the inverse logit function can't actually generate values of 1 or 0 for real numbered value of $z$. This is because no matter how large the value of $z$ gets, the denominator will always be 1 greater. This sets the upper range of the inverse logit at 1. On the other hand, no matter how negative the value of $z$ gets, exponentiating the value will always result in a number greater than 0 since this function cannot only generate positive non zero values. As a result, \@ref(eq:10-12) will also always provide values greater than 0.
 
 In Figure \@ref(fig:F10-2) we draw a line with a slope of one and an intercept of 0 (i.e., y=x). We can imagine that this line defines expected values in *logits* as a function of some predictor x. In the middle panel, we've applied the inverse logit function to the line so that $\mathrm{logit}^{-1}(y) = x$. This results in what's known as a **sigmoid curve** relating our x and y variables. If we apply the logit function to this sigmoid curve, the result is a return of our original line again. Thus, we can see that the logit and inverse logit transformation can be applied over and over to go back and forth between a probability or logit representation of the same information. 
 
@@ -322,7 +330,7 @@ plot (x,logit(antilogit (y)), type = 'l',lwd=2, col=lavender, xlim=c(-7,7),
 abline (h=0,v=seq(-8,8,2),lty=3)
 ```
 
-In chapter 9 we mentioned that when you do a linear regression you effectively model the data as being generated by distributions that slide along lines, generating data along the way (see figure \@ref(fig:F9-1)). Logistic regression leads to an analogous but slightly different interpretation. In logistic regression you model the data as a Bernoulli distribution sliding along a sigmoid curve, generating a ratio of 1s to 0s based on the value of $p$ specified by the curve. 
+In chapter 9 we mentioned that when you do a linear regression you effectively model the data as being generated by distributions that slide along lines, 'producing' data along the way (see figure \@ref(fig:F9-1)). Logistic regression leads to an analogous but slightly different interpretation. In logistic regression you model the data as a Bernoulli distribution sliding along a sigmoid curve (middle panel, figure \@ref(fig:F10-2)), generating a ratio of 1s to 0s based on the value of $p$ specified by the curve. 
 
 The second and third lines in \@ref(eq:10-4) represent the model link function and systematic component, respectively. We can skip the middleman ($z$) and just put the prediction equation directly inside the inverse logit function as in \@ref(eq:10-13).
 
@@ -333,7 +341,7 @@ p = \mathrm{logit}^{-1}(Intercept + \beta \times x_{[i]}) =  \frac{e^{(Intercept
 \end{equation}
 $$
 
-We can then take this and put all of inside the Bernoulli distribution directly as in \@ref(eq:10-14).
+We can then the inverse logit function and put it directly inside the Bernoulli distribution, as in \@ref(eq:10-14).
 
 $$
 \begin{equation}
@@ -342,13 +350,15 @@ F \sim \mathrm{Bernoulli} \left (\frac{e^{(Intercept + \beta \times x_{[i]})}}{1
 \end{equation}
 $$
 
-There is no particular reason to do this, apart from the fact that it directly illustrates that our link function really does *link* our prediction equation ($Intercept + VTL \times \mathrm{vtl}$) and our data distribution (Bernoulli). 
+There's no particular reason to do this, apart from the fact that it illustrates that our link function really does *link* our prediction equation ($Intercept + VTL \times \mathrm{vtl}$) and our data distribution (Bernoulli). 
 
-### Building intuitions about logits and related functions
+### Building intuitions about logits and the inverse logit function
 
-The logit and inverse logit functions are **non linear** functions. In the simplest sense this means that the relationships they form between x and y variables, when plotted, do not form straight lines. Figure \@ref(fig:F10-3) shows some consequences of this. In the left plot we see that the predictor x and $p$ are literally not related by a line. The sigmoid curve relating $p$ and x reflects the changing relationship between logits and probabilities: The slope is very shallow for large negative logit values but increases in value as x approaches 0. It then begins to decrease again as the values of x become large again. This behavior allows the sigmoid curve in the figure to extend from positive infinity to negative infinity without ever crossing 1 and 0: As logit values become arbitrarily large in magnitude, the slope of the sigmoid curve becomes arbitrarily small in magnitude to the point where it is *effectively* parallel to the x axis. 
+The logit and inverse logit functions are **non linear** functions. In the simplest sense this means that the relationships they form between x and y variables, when plotted, do not form straight lines. In our case, this means that when compare logits and their associated probabilities we will not see a straight line. 
 
-```{r F10-3, fig.width = 8, fig.height = 3, fig.cap = "(left) A sigmoid curve expressing the probability associated with each value along the line in the left. Horizontal lines are placed every 0.1 probability units from 0.1 to 0.9 probability. (right) A line relating some predictor to logits.", echo = FALSE}
+The sigmoid curve in the left plot of figure \@ref(fig:F10-3) reveals a changing relationship between logits and probabilities: The slope is very shallow for large negative logit values but increases in value as the curve approaches 0. The slope then begins to decrease again as the logit values become large again. This behavior allows the sigmoid curve in the figure to extend from positive infinity to negative infinity without ever crossing 1 and 0: As logit values become arbitrarily large in magnitude, the slope of the sigmoid curve becomes arbitrarily small in magnitude to the point where it is effectively parallel to the x axis on both ends of the curve. 
+
+```{r F10-3, fig.width = 8, fig.height = 3, fig.cap = "(left) A sigmoid curve expressing the probability associated with each logit value along the x axis. Horizontal lines are placed every 0.1 from 0.1 to 0.9 probability. (right) A line relating some predictor to logits. Horizontal lines are placed every 0.1 from 0.1 to 0.9 probability.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.3
@@ -360,37 +370,37 @@ y = x
 par (mfrow = c(1,2), mar=c(4,4,1,1))
 
 plot (x,antilogit (y), type = 'l',lwd=3, col=darkorange, xlim=c(-3,3),
-      xlab="Predictor (x)",ylab="Probability", ylim = c(0,1),yaxs='i',xaxs='i')
+      xlab="Logit",ylab="Probability", ylim = c(0,1),yaxs='i',xaxs='i')
 abline (h=seq(0,1,.1),v=(-9:9),lty=3)
 abline (h = 0.5, lwd=2)
 
-plot (x,y, type = 'l',lwd=3, col=deepgreen, xlim=c(-3,3),xlab="Predictor (x)",
-      ylab = "Logit (Probability)",yaxs='i',xaxs='i')
+plot (x,y, type = 'l',lwd=3, col=deepgreen, xlim=c(-3,3),xlab="Predictor",
+      ylab = "Logit",yaxs='i',xaxs='i')
 abline (h=logit(seq(0.1,0.9,.1)),v=c(-9:9),lty=3)
 abline (h = 0, lwd=2)
 
 ```
 
-In the left plot in the figure we the relationship between the logit of the probability and our predictor. We can see the consequences of the changing relationship between logits and probabilities by looking at the horizontal lines in the plot. These lines represent equal differences in probability (0.1 change per line). The lines are closer together when logits have a small magnitude and further when logits are large. This is a consequence of the non-linearity of the transforms: A one unit change in probabilities/logits does not always map to the same size of change in the other value. In general, small changes when logits are close to zero map to large changes in probabilities, while larger changes in logits with large magnitudes tend to map to small changes in probabilities. 
+In the right plot of figure \@ref(fig:F10-3) we see the relationship between the logit of the probability and our predictor. We can see the consequences of the changing relationship between logits and probabilities by looking at the horizontal lines in the plot. These lines represent equal differences in probability (0.1 change per line). The lines are closer together when logits have a small magnitude and further when logits are large. This is a consequence of the non-linearity of the transforms: A one unit change in probabilities/logits does not always map to the same size of change in the other value. In general, small changes when logits are close to zero map to large changes in probabilities, while larger changes in logits with large magnitudes tend to map to small changes in probabilities. As noted above, this is reflected in the changing slope of the sigmoid curve in the left panel.
 
-We can check the logit values are for a set of probabilities using the `logit` function. The top row below contains a sequence of probabilities and the bottom row shows equivalent logits. Notice that the difference between 0.5 and 0.6 is 0.4 logits, but the difference between 0.7 and 0.9 is about 0.8 logits. Meanwhile the difference between 0.9 and 1 is infinity.
+The top row below contains a sequence of probabilities and the bottom row shows equivalent logits. Notice that the difference between 0.5 and 0.6 is 0.4 logits, but the difference between 0.7 and 0.9 is about 1.35 logits. Meanwhile the difference between 0.9 and 1 is infinity.
 
 ```{r, collapse = TRUE}
 rbind ( (seq (0.1,.9,.1)), 
-        round ( logit (seq (0.1,0.9,.1)) , 3) )
+        round ( logit (seq (0.1,0.9,.1)) , 2) )
 ```
 
-We can think about the cause of this behavior by thinking about some situation where you're trying to improve a probability. Imagine that you keep track of your free throws in basketball practice. You sink 500/1000 free throws, giving you a 0.5 probability of success. Now imagine you take a further 100 shots and sink them all. Now your probability of success is 600/1100, meaning your amazing streak has increased your probability to 0.54. However, suppose that you had been a 900/1000 shooter, a probability of 0.9 of success. If you had the same streak of 100 made baskets you would only increase your probability to 0.901 (1000/1100). This change is *forty* times smaller than the change when you begin at 0.5 (0.001/0.040).
+We can think about the cause of this behavior by thinking about some situation where you're trying to change a probability. Imagine that you keep track of your free throws in basketball practice. You sink 500/1000 free throws, giving you a 0.5 probability of success. Now imagine you take a further 100 shots and sink them all. Now your probability of success is 600/1100, meaning your amazing streak has increased your probability to 0.54. However, suppose that you had been a 900/1000 shooter, a probability of 0.9 of success. If you had the same streak of 100 made baskets you would only increase your probability to 0.901 (1000/1100). This change is *forty* times smaller than the change when you begin at 0.5 (0.001/0.040).We can see that 'the same' increase in made baskets results in a large increase in one probability (0.5 to 0.54, almost 10%) and a minuscule change in another (0.9 to 0.901, about 0.1%). Basically, as you approach 0 and 1 it gets harder to make large changes in your probabilities. 
 
-We can see that 'the same' increase in made baskets results in a large increase in one probability (0.5 -> 0.54, almost 10%) and a minuscule change in another (0.9 -> 0.901, about 0.1%). Basically, as you approach 0 and 1 it gets harder to make large changes in your probabilities. The result of this is that a given logit difference will equal a large probability difference near 0 logits, and a smaller probability difference as the underlying logit values are further from 0. Here are some useful things to keep in mind when interpreting logits, in no particular order: 
+Here are some useful things to keep in mind when interpreting logits, in no particular order: 
 
   * a probability of 0.5 is 0 logits. Positive logits means more likely to be a success, negative logits means more likely to be a failure. 
   * -3 and 3 are 4.7% and 95.2%. Basically -3 and 3 logits are useful bounds for "very likely 1" and "very likely 0". 
   * Since a logit of 3 translates to a $p$ of about 0.95, all of the space between +3 and infinity logits represents the probability space between 0.95 and 1, while logits between 0 and 3 represent the space from 0.5 to 0.95.
-  * Logits far beyond 3 might not have much practical significance. A logit of 4 is a probability of 0.982 and a logit of 6 is 0.997. For many purposes, probabilities of 0.95, 0.98, and 0.99 are nearly interchangeable. Also, it is very difficult to distinguish 95%, 98%, and 99% in practice since by definition, you will be observing very few mistakes to distinguish the two.
+  * Logits far beyond 3 might not have much practical significance. A logit of 4 is a probability of 0.982 and a logit of 6 is 0.997. For many purposes, probabilities of 0.95, 0.98, and 0.99 are nearly interchangeable. Also, it is very difficult to distinguish 95%, 98%, and 99% in practice since, by definition, you will be observing very few cases of 0 but these are the only way to distinguish the two.
   * Effects can be considered important or not based on how far they get you along -3 to 3 (or -4 to 4). Basically, anything in the +1 range is very likely to matter, while effects smaller than 0.1 or so are likely having only small effects on outcomes.
   
-Here is one final thing to keep in mind about logits: You **must** combine your model parameters as logits **before** transforming them into probabilities. This is due the fact that the inverse logit function is non-linear and will be discussed in more detail in section X. 
+Here is one final thing to keep in mind about logits: You **must** combine your model parameters as logits **before** transforming them into probabilities. This is due the fact that the inverse logit function is non-linear, and will be discussed in more detail in section X. 
 
 ## Logistic regression with one quantitative predictor
 
@@ -436,7 +446,7 @@ In order to answer the questions posed above, our model needs to represent the l
 
 `Female ~ vtl*A + (vtl*A|L) + (1|S)`
 
-Where `A` represents perceived adultness, and `F` represents a response of female. The formula above says tells our model to predict perceived femaleness using speaker VTL (centered as in the previous chapter), information about whether the speaker was identified as a child or an adult, and age-dependent use of VTL. Since we include the interaction between apparent age and speaker VTL, we know that we are effectively estimating two lines relating speaker VTL with apparent gender: One for apparent adults and another for apparent children. Our formula also allows for random by-listener effects for all predictors and random intercepts for speaker. This model would be relatively 'simple' at this point if it were dealing with normally distributed data. The prior specification we're going to use looks like this:
+The formula above says tells our model to predict perceived femaleness using speaker VTL (centered as in the previous chapter), information about whether the speaker was identified as a child or an adult, and age-dependent use of VTL. Since we include the interaction between apparent age and speaker VTL, we are effectively estimating two lines relating speaker VTL with apparent gender: One for apparent adults and another for apparent children. Our formula also includes by-listener effects for all predictors and by-speaker intercepts. This model would be relatively 'simple' at this point if it were dealing with normally distributed data. The prior specification we're going to use looks like this:
 
 ```{r}
 prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -445,15 +455,13 @@ prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
                  set_prior("lkj_corr_cholesky (2)", class = "cor"))
 ```
 
-You'll notice that we're using priors with a standard deviation of 3 across the board. This is because logit values of 3, 6, and 9 correspond to probabilities of 0.9526, 0.9975, and 0.9999 (`antilogit(c(3,6,9))`) respectively. So, a prior with a standard deviation of 3 suggests we expect group differences, or a one-unit change in VTL, have the potential to change probabilities from 50% to 95% (a difference of 3 logits), and conceivably a complete flip in probabilities from 0.0025 (-6 logits) to 0.9975 (6 logits), a difference of 12 logits. 
-
-We think it's plausible that apparent age may, for example, change an expected probability from 50% to 95%. In terms of continuous predictors like VTL, the important thing to keep in mind is that the slope estimated for a predictor depends on the unit of measurement. For example, below we see the average VTL in centimeters for each speaker category. We can see that the average difference between men and women is about 2 cm. If we assume that people at the averages are classified correctly more often than not, this means that the logit of the probability of observing a female response for adult at 15 cm may be about -3, and the logit of the same at 13 cm may be about 3. Thus, we might expect a slope of about 3 logits per 1 cm change in VTL with respect to the perception of female speakers. 
+You'll notice that we're using priors with a standard deviation of 3 across the board. This is because logit values of 3, 6, and 9 correspond to probabilities of 0.9526, 0.9975, and 0.9999 (`antilogit(c(3,6,9))`) respectively. So, a prior with a standard deviation of 3 suggests we expect group differences, or a one-unit change in VTL, have the potential to change probabilities from 50% to 95% (a difference of 3 logits). We think it's plausible that apparent age may, for example, change an expected probability from 50% to 95%. In terms of continuous predictors like VTL, the important thing to keep in mind is that the slope estimated for a predictor depends on the unit of measurement for that predictor. For example, below we see the average VTL in centimeters for each speaker category. 
 
 ```{r}
 tapply (exp_data$vtl_original, exp_data$C_v, mean)
 ```
 
-However, what if we had measured VTL in meters? Then the difference in VTL would be only 0.02, meaning that the model slope would now have to be 300 in order to change from -3 to 3 in only 0.02 units of change ($300 = 6/0.02$). So, the same underlying data can result in dramatically different slope magnitudes based on the amount of variation you see in your data at that scale. Based on this we can see that is is important to think about the amount of variation there is in your quantitative predictors and how this might relate to the probabilities you are modeling. 
+We can see that the average difference between men and women is about 2 cm. If we assume that people at the averages are classified correctly more often than not, this means that the logit of the probability of observing a female response for adult at 15 cm may be about -3, and the logit of the same at 13 cm may be about 3. Thus, we might expect a slope of about 3 logits per 1 cm change in VTL with respect to the perception of female speakers. However, what if we had measured VTL in meters? Then the difference in VTL would be only 0.02, meaning that the model slope would now have to be 300 in order to change from -3 to 3 in only 0.02 units of change ($300 = 6/0.02$). Based on this we can see that it's important to think about the amount of variation there is in your quantitative predictors and how this might relate to the probabilities you are modeling when setting your priors. 
 
 Our full model specification, omitting the deterministic construction of the covariance matrix $\Sigma$ (as usual), is:
 
@@ -477,7 +485,7 @@ A1, VTL, A1 \colon VTL \sim t(3, 0, 3) \\
 \end{equation}
 $$
 
-The main differences compared to our previous models are the lack of terms related to $\sigma$, the inclusion of a link function, and the reliance on a Bernoulli rather than Normal distribution. In plain English, this model could be read like: 
+The main differences compared to our previous models are the lack of terms related to $\sigma$, the inclusion of a link function, and the reliance on a Bernoulli rather than the normal or t distributions at the data level. In plain English, this model could be read like: 
 
 > We're treating our femaleness judgments (1 or 0 for female or male) as coming from a Bernoulli distribution with a probability that varies trial to trial. The *logit of the probability* ($z$) varies along lines. The lines are specified by intercepts and slopes that vary trom trial to trial, and there is a single continuous predictor (speaker VTL). The intercept of these lines vary based on an overall intercept, an effect for apparent age ($A1$), listener-specific effects for apparent age ($A1 \colon L$), listener-specific deviations ($L$), and speaker-specific deviations (S). The slope of these lines vary based on an overall slope ($VTL$, the main effect), deviations based on apparent age ($VTL \colon A1$), listener-specific deviations ($VTL \colon L$), and listener-specific interactions between apparent age and VTL ($A1 \colon VTL \colon A1$)). 
 
@@ -522,7 +530,7 @@ We see that the model looks just like all our previous models except for three m
   2) The top of the model now indicates `Family: bernoulli` and `Links: mu = logit`. 
   3) The absence of the `Family-Specific` parameter section of the model where `sigma` and `nu` (i.e., $\sigma$ and $\nu$) were usually found.
 
-In chapter 9 we talked about the geometry of models that include a single quantitative predictor, categorical predictors, and their interactions. Essentially, these sorts of models result in a set of lines, one overall 'main effects' line, and another line for each level of the categorical predictor interacting with the quantitative predictor. Since our model includes effects for apparent age (`A1`), VTL (`vtl`), and their interaction (`vtl:A1`), our model can be thought of as three lines: The overall (main effects) line, the line for apparent adult speakers, and the line for apparent child speakers. We can recover the parameters for these three lines by adding the appropriate model coefficients together using the hypothesis function. Since `A1` (and related parameters) represent the adult group and we are using sum coding, the effect for children is represented by subtracting, rather than adding, the relevant parameters (i.e. `Intercept - A1` to find the child intercept). 
+In chapter 9 we talked about the geometry of models that include a single quantitative predictor, a categorical predictor with several levels, and the interaction of the two. Essentially, these models result in a set of lines, one overall 'main effects' line, and another line for each level of the categorical predictor interacting with the quantitative predictor. Since our model includes effects for apparent age (`A1`), VTL (`vtl`), and their interaction (`vtl:A1`), our model can be thought of as three lines relating VTL to the logit of the probability of observing a female response: The overall (main effects) line, the line for apparent adult speakers, and the line for apparent child speakers. We can recover the parameters for these three lines by adding the appropriate model coefficients together using the hypothesis function. Since `A1` (and related parameters) represent the adult group and we are using sum coding, the effect for children is represented by subtracting, rather than adding, the relevant parameters (i.e. `Intercept - A1` to find the child intercept). 
 
 ```{r, cache = TRUE, collapse = TRUE}
 gender_vtl_hypothesis = bmmb::short_hypothesis (
@@ -537,9 +545,9 @@ gender_vtl_hypothesis = bmmb::short_hypothesis (
 gender_vtl_hypothesis
 ```
 
-These parameters can be used to plot lines predicting the logit of the probability of a female response given speaker VTL. The left plot of figure \@ref(fig:F10-4) presents the overall 'main effects' line and the age-dependent lines, compared to our data. We can see that our age-dependent lines follow the data much better than the single average line does. In the right plot of \@ref(fig:F10-4) we see what happens when we apply the inverse logit transform on the lines (and points) in the left plot of the figure. The result is a set of sigmoid curves representing expected variation in the $p$ parameter of a Bernoulli distribution as a function of speaker VTL. These curves are a better fit for our probabilities than the lines we originally used in figure \@ref(fig:F10-1), and also do not ever result in values below zero or above one. 
+These parameters can be used to plot lines predicting the logit of the probability of a female response given speaker VTL. The left plot of figure \@ref(fig:F10-4) presents the overall 'main effects' line and the age-dependent lines, compared to our data. We can see that our age-dependent lines follow the data much better than the single average line does. In the right plot of figure \@ref(fig:F10-4) we see what happens when we apply the inverse logit transform on the lines (and points) in the left plot of the figure. The result is a set of sigmoid curves representing expected variation in the $p$ parameter of a Bernoulli distribution as a function of speaker VTL. These curves are a better fit for our probabilities than the lines we originally used in figure \@ref(fig:F10-1), and also do not ever result in values below zero or above one. 
 
-```{r F10-4, fig.width = 8, fig.height = 3, fig.cap = "(left) Line indicating linear relationship between f0 and the logit of the probability of an adult response. (middle) Same as the left but only males are plotted. (middle) Same as the middle but only females are plotted.", echo = FALSE, cache = TRUE}
+```{r F10-4, fig.width = 8, fig.height = 3, fig.cap = "(left) Lines indicating linear relationship between VTL and the logit of the probability of a female response. (middle) Same as the left but only males are plotted. (middle) Same as the middle but only females are plotted.", echo = FALSE, cache = TRUE}
 
 ################################################################################
 ### Figure 10.4
@@ -559,14 +567,14 @@ par (mfrow = c(1,2), mar = c(3,4,1,1))
 plot (aggd$vtl, logit(aggd[,5]), cex =2, ylim = c(-5,5),xlab="",
       ylab = "Logit (P(F==1))", col = cols[c(2:5)][mod_cat],pch=16,
       lwd=2, xlim =range (exp_data$vtl))
-abline (h=0,lty=3)
 grid()
+abline (h=0,lty=3)
 curve ( (cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = 1, lwd=4)
 curve ( (cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = coral, lwd=4, lty=3)
+        col = bmmb::cols[10], lwd=4, lty=1)
 curve ( (cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = teal, lwd=4, lty=3)
+        col = bmmb::cols[14], lwd=4, lty=1)
 
 legend (0.8,4.5, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
         col = cols[2:5], bty='n',pch=16,pt.cex=1.5)
@@ -580,27 +588,29 @@ abline (h=.50,lty=3)
 curve ( antilogit(cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = 1, lwd=4)
 curve ( antilogit(cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = coral, lwd=4, lty=3)
+        col = bmmb::cols[10], lwd=4, lty=1)
 curve ( antilogit(cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = teal, lwd=4, lty=3)
+        col = bmmb::cols[14], lwd=4, lty=1)
 
 legend (-2,-1, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
         col = cols[3:6], bty='n',pch=1,pt.cex=1.5)
 
+mtext (side=1, text = "Centered VTL (cm)", outer = TRUE, cex = 1, line=-1)
 
-mtext (side=1, text = "VTL (cm)", outer = TRUE, cex = 1, line=-1)
+legend (0.8,.9, legend = c("Overall","Adult","Child"),lwd=5,
+        col = c(1,bmmb::cols[c(14,10)]), bty='n')
 
 ```
 
-We can now consider the values of our fixed effect parameters:
+Let's discuss the values of our fixed effect parameters:
 
-```{r, cache = TRUE}
+```{r}
 fixef (model_gender_vtl)
 ```
 
-The most important thing to remember when interpreting the coefficients of a logistic model is that positive coefficients push us towards a 1 response ('female'), while negative values push us towards a 0 response ('male'). A predicted value of exactly 0 means the outcome is 50/50. The model intercept is the value of the line when VTL=0. Since we centered our VTL predictor, our positive intercept suggests a speaker with an average VTL (13.4 cm) was more likely to be classified as female (with a probability of 0.67 (`antilogit(0.71)`). The effect for perceived adultness (`A1`) is positive, indicating that a speaker with an average VTL is more likely to be identified as a woman when the speaker is also thought to be an adult. The negative effect for VTL tells us that as VTL increases, we are *less* likely to observe a 'female' response and *more* likely to observe a 'male' response. The interaction between VTL and age is negative, meaning this slope is even more negative when the speaker is thought to be an adult. This is evident in figure \@ref(fig:F10-4) where the line for apparent adults has a much steeper slope then the line for apparent children. In addition, the magnitude of the slope increases/decreases by more than 50% since the VTL parameter is -3.6 and the interaction is -1.76.
+The most important thing to remember when interpreting the coefficients of a logistic model is that positive coefficients push us towards a 1 response ('female'), while negative values push us towards a 0 response ('male'). A predicted value of exactly 0 means the outcome is 50/50. The model intercept is the value of the line when VTL=0. Since we centered our VTL predictor, our positive intercept suggests a speaker with an average VTL (13.4 cm) was more likely to be classified as female (with a probability of 0.67 (`antilogit(0.71)`). The effect for perceived adultness (`A1`) is positive indicating that a speaker with an average VTL is more likely to be identified as a woman when the speaker is also thought to be an adult. The negative effect for VTL tells us that as VTL increases, we are *less* likely to observe a 'female' response and *more* likely to observe a 'male' response. The interaction between VTL and age is negative, meaning this slope is even more negative when the speaker is thought to be an adult. This is evident in figure \@ref(fig:F10-4) where the line for apparent adults has a much steeper slope then the line for apparent children. In addition, the magnitude of the slope increases/decreases by more than 50% since the VTL parameter is -3.6 and the interaction is -1.76.
 
-We can interpret our model entirely in the logit space, focusing on the geometry of our models and interpreting our intercept and slope terms just as we did above and in the previous chapter. However, if we want to think of our model parameters in terms of probabilities (rather than logits), we need to combine parameter values first, and then carry out the inverse logit function on the logit values. It is absolutely essential that the operations be done in this order because the inverse logit function is not an **additive** function. Earlier we noted that the logit (and inverse logit) are non linear. One of the characteristics of non-linear transformations is that they are *not* additive. A function, $f(x)$, is additive if the following property holds:
+We can interpret our model entirely in the logit space, focusing on the geometry of our models and interpreting our intercept and slope terms just as we did above and in the previous chapter. However, if we want to think of our model parameters in terms of probabilities (rather than logits), we need to combine parameters as logits first, and then carry out the inverse logit function on these values. It is absolutely essential that the operations be done in this order because the inverse logit function is not an **additive** function. Earlier we noted that the logit (and inverse logit) are non linear. One of the characteristics of non-linear transformations is that they are *not* additive. A function, $f(x)$, is additive if the following property holds:
 
 $$
 \begin{equation}
@@ -609,7 +619,7 @@ f(x+y) = f(x) + f(y)
 \end{equation}
 $$
 
-This means that adding two things and putting them into the function provides the same results as passing them individually through the function and adding them up after. For example imagine our function is $f(x)=x \times 2$. We put in $3+2$ (i.e. $5$) and get $10$ out. We then put in $3$ and $2$ individually, get $6$ and $4$ out, add them up and get $10$ again. Based on this we say that our function is *additive*. As noted above, the inverse logit function is not. For example, let's consider the meaning of the `Intercept` and `A1` coefficients:
+This means that adding two things and putting them into the function provides the same results as passing them individually through the function and adding them up after. For example imagine our function is $f(x)=x \times 2$. We put in $3+2$ (i.e. $5$) and get $10$ out. We then put in $3$ and $2$ individually, get $6$ and $4$ out, add them up and get $10$ again. Based on this we say that our function appears to be *additive*. As noted above, the inverse logit function is not. For example, let's consider the meaning of the `Intercept` and `A1` coefficients:
 
 ```{r}
 # model intercept
@@ -619,7 +629,7 @@ antilogit (0.86)
 antilogit (2.65)
 ```
 
-The intercept reflects the logit of the probability of a female response, overall, when VTL was 0. This intercept can be interpreted in isolation, ts is not a difference or a parameter indicating a rate of change. As a result, the probability of 0.7 (`antilogit (0.86)`) *can* be interpreted in isolation. But what does 0.934 represent? Nothing useful, actually. 
+The intercept reflects the logit of the probability of a female response, overall, when VTL was 0. This intercept can be interpreted in isolation since it is not a difference or a parameter indicating a rate of change. As a result, the probability of 0.7 (`antilogit (0.86)`) *can* be interpreted in isolation. But what does 0.934 represent? Nothing useful, actually. 
 
 The `A1` parameter reflects the difference in logits (2.65) between perceiving a female speaker at 0 VTL overall compared to when listeners indicated hearing an adult. However, since this is a *difference* it needs to be combined with a baseline number in order to be interpreted. For example if I say "that group was 3 seconds faster" you know need to know "faster than what?" in order to know the speed of the group. So, in order to get the log odds (and probability) of observing a female response given some apparent age, we need to combine the `Intercept` and `A1` parameters, and then turn this into a probability using the inverse logit function. Since the inverse logit transform is not additive, we will not get the same output if we combines these parameters and then transform versus transform and then combine. See \@ref(eq:10-15) and compare to \@ref(eq:10-14).
 
@@ -631,7 +641,7 @@ $$
 \end{equation}
 $$
 
-Since they are not equal, only one can be correct. Our model is combining parameters as logits, and therefor the appropriate way to consider our parameters is by also combining them as logits. So, in order to turn the `A1` effect into a probability it first needs to be combined with the intercept as a logit, and *then* converted using the inverse logit function. As seen below, converting to a probability and then combining can lead to strange outcomes: 1.64 is not even a valid probability. When we combine first and then convert, we see that the result is a reasonable probability that matches what we see in figure \@ref(fig:F10-4) (i.e. 0.97 is a plausible value for the value of the adult line at x=0). 
+Since they are not equal, only one can be correct. Our model combines parameters as logits, and therefore the appropriate way to consider our parameters is by also combining them as logits. So, in order to turn the `A1` effect into a probability it first needs to be combined with the intercept as a logit, and *then* converted using the inverse logit function. As seen below, converting to a probability and then combining can lead to strange outcomes: 1.64 is not even a valid probability. When we combine first and then convert, we see that the result is a reasonable probability that matches what we see in figure \@ref(fig:F10-4) (i.e. 0.97 is a plausible value for the value of the adult line at x=0). 
 
 
 ```{r}
@@ -642,11 +652,13 @@ antilogit (0.86) + antilogit (2.65)
 antilogit (0.86 + 2.65)
 ```
 
-The same reasoning applies to the interpretation of logistic slopes. Our slope tells us that for every unit change in VTL we expect a 3.6 logit increase/decrease in our expected values. We cannot convert this to probabilities and then multiply this by VTL to predict probabilities. For example, the difference from 0 to 3.6 logits results in a change from 0.5 to 0.97 in probability. We may be inclined to say that our VTL slope suggests an increase of 0.47 in probabilities (0.97-0.5) for every one unit change in VTL. Obviously, this will not work since it suggests a difference in probability of 1.41 for a VTL difference of 3 cm. As a result, slopes can only be interpreted as reflecting consistent changes in the *logit* of a probability, and not in the probability itself. 
+The same reasoning applies to the interpretation of slopes in logistic regression models. Our slope tells us that for every unit change in VTL we expect a 3.6 logit increase/decrease in our expected values. We cannot convert this to probabilities and then multiply this by VTL to predict probabilities. For example, the difference from 0 to 3.6 logits results in a change from 0.5 to 0.97 in probability. We may be inclined to say that our VTL slope suggests an increase of 0.47 in probabilities (0.97-0.5) for every unit change in VTL. Obviously, this will not work since it suggests a difference in probability of 1.41 for a VTL difference of 3 cm. As a result, slopes in logistic models can only be interpreted as reflecting consistent changes in the *logit* of a probability, and not in the probability itself. 
 
 ### Using logistic models to understand classification
 
-Our models so far have presented us with the y-intercepts of our lines, the value of the y axis at x=0. However, when modeling in logits we might also be interested in the **x intercepts** of our lines. The x intercept is the value of x where *y is equal to zero*, where our line crosses the horizontal x axis line at y=0. Why do we care about this? Well, when y=0, that means that the probability of classification is 0.5. So, crossing the x intercept one way means you are more likely to see a success, and crossing the other way means you are more likely to see a failure. In other words, the x intercepts of logistic regression models tells us about the location of the **category boundary** between our two possible outcomes, along the x axis (i.e. for values of our quantitative predictor). We can find the x intercept by setting y=0 in our prediction equation and solving for (i.e. isolating) x, as seen in \@ref(eq:10-16). For complicated prediction equations (and even for simple ones), you can rely on algebra solving websites easily found on the internet. Below, we see that when $y$ is equal to zero, the value of $x$ is equal to the negative intercept ($a$) divided by the slope ($b$). 
+Our models so far have presented us with the y-intercepts of our lines, the value of the y axis at x=0. However, when modeling in logits we might also be interested in the **x intercepts** of our lines. The x intercept is the value of x where *y is equal to zero*, the point where our line crosses the horizontal x axis. Why do we care about this? Consider any of the predictions lines in the left plot in figure \@ref(fig:F10-4). When these lines have positive values we know a female response is expected and when these lines have a negative value we know that a male response is expected. Imagine a vertical line placed at the x axis intercept. This line would represents the **category boundary** between our two possible outcomes along the x axis, according to our model. Crossing the the x intercept one way along the x axis means one category is more likely, and crossing the other way means the other category is more likely. 
+
+We can find the x intercept by setting y=0 in our prediction equation and solving for (i.e. isolating) x, as in \@ref(eq:10-16). For complicated prediction equations (and even for simple ones), you can rely on algebra solving websites easily found on the internet. Below, we see that when y is equal to zero, the value of x is equal to the negative intercept ($a$) divided by the slope ($b$). 
 
 $$
 \begin{equation}
@@ -660,13 +672,13 @@ y = a + b \times x \\
 \end{equation}
 $$
 
-We can use the equation above to calculate our category boundary between male and female classifications. For example, based on the numbers in our printout of the fixed effects above, we expect that the overall category boundary is at $-(a/b) = -(0.86 / -3.59) = -0.24$. However, remember that to do arithmetic operations on, or otherwise combine, our parameters, we have to use the original samples and not the summaries (see section X for a discussion on this). There are generally two ways we can do this. The first is by directly combining the fixed effects samples as necessary. First we get the unsummarized fixed effects samples:
+We can use the equation above to calculate our predicted boundary between between male and female classifications. For example, based on the numbers in our printout of the fixed effects above, we expect that the overall category boundary is at $-(a/b) = -(0.86 / -3.59) = -0.24$. However, remember that to do arithmetic operations on, or otherwise combine, our parameters, we have to use the original samples and not the summaries (see section X for a discussion on this). There are generally two ways we can do this. The first is by directly combining the fixed effects samples as necessary. First we get the unsummarized fixed effects samples:
 
 ```{r}
 samples = fixef (model_gender_vtl, summary = FALSE)
 ```
 
-Then we can divide the column representing the overall intercept by the column representing the overall slope. The result is a vector of individual samples from the posterior distribution of the x intercept of the line, i.e. the category boundary along the VTL dimension. We refer to specific columns by using the same names seen in the print statement for the fixed effects. To find the x intercept for the adult and child lines we combine parameters in the same way as when we found the age-dependent lines above.  
+Then we divide the column representing the overall intercept by the column representing the overall slope. The result is a vector of individual samples from the posterior distribution of the x intercept of the line, i.e. the category boundary along the VTL dimension. We refer to specific columns by using the same names seen in the print statement for the fixed effects. To find the x intercept for the adult and child lines we combine parameters in the same way as when we found the age-dependent lines above.  
 
 ```{r, collapse = TRUE}
 # calculate overall boundary = -a/b
@@ -681,7 +693,7 @@ boundary_children = -(samples[,"Intercept"] - samples[,"A1"]) /
   (samples[,"vtl"] - samples[,"vtl:A1"])
 ```
 
-We can stick the vectors representing boundaries together and summarize them as seen below. We can see that the overall boundary is nearly exactly what we predicted using the fixed effect summaries above.
+We can stick the vectors representing boundaries together and summarize them as seen below. We see that the overall boundary is close to what we predicted using the fixed effect summaries above.
 
 ```{r, cache = TRUE, collapse = TRUE}
 boundaries = posterior_summary (
@@ -689,10 +701,11 @@ boundaries = posterior_summary (
 boundaries
 ```
 
-However, our boundaries are expressed relative to a mean VTL of zero. If we want them expressed relative to the true mean we need to add it back in. This might seem to violate our many (repeated) warnings about summarizing before combining. Just keep in mind we are not combining parameters here, we're just adding a single number to *all* our summaries, which is equivalent to adding a single number to all of our samples. Adding a single number to all samples is equivalent to adding that number to the sample means and all individual quantiles, but will have no effect on any variance-related measures. When we add the original mean VTL back to our summary we see the category boundaries relative to values of VTL in the range of our real speakers. 
+Our boundaries are expressed relative to a mean VTL of zero. If we want them expressed relative to the true mean we need to add it back in. We can do this for our mean estimate and for our credible intervals too, and it is not necessary for the standard error. This might seem to violate our many (repeated) warnings about summarizing before combining. Why does this work? Because adding a number to all samples raises/lowers the sample mean and all the quantiles exactly by that number. As a result, adding that number to the mean and/or quantiles after calculating them has exactly the same effect. As for the standard error, adding a value to observations does not affect their variances so they remain unchanged. Below we add the original mean VTL back to our summary (excluding the standard error), and we see the category boundaries relative to values of VTL in the range of our real speakers. 
 
 ```{r}
-boundaries + mean (exp_data$vtl_original)
+# omit standard error column
+boundaries[,-2] + mean (exp_data$vtl_original)
 ```
 
 The second way to find boundaries is to use the pre-calculated line parameters we found in the previous section. We get the samples from our hypothesis object using the `attr` function as seen below. The individual samples underlying each hypothesis are stored as attributes so that these are not printed out every time the summary is. 
@@ -718,11 +731,11 @@ boundaries = posterior_summary (
 boundaries + mean (exp_data$vtl_original)
 ```
 
-These boundaries are presented with our data in figure \@ref(fig:F10-5). The right plot divides the VTL dimension between sections associated with female classifications and sections associated with male classifications, overall, and based on apparent age. The right plot below can be thought of as representing a **stimulus space**, a space indicating variation in our experimental stimuli along one or more dimensions. We say *a* stimulus space and not *the* stimulus space because there may be many ways to consider variation in the stimuli, and this is just one of them. In this case, the only dimension we're considering is VTL and all of our speakers can be placed along this dimension. In the right plot of figure \@ref(fig:F10-5) the y axis doesn't matter since this is a unidimensional representation.
+These boundaries are presented with our data in figure \@ref(fig:F10-5). The right plot divides the VTL dimension between sections associated with female classifications, sections associated with male classifications, and overall, and based on apparent age. The right plot below can be thought of as representing a **stimulus space**, a space indicating variation in our experimental stimuli along one or more dimensions. We say *a* stimulus space and not *the* stimulus space because there may be many ways to consider variation in the stimuli, and this is just one of them. In this case, the only dimension we're considering is VTL and all of our speakers can be placed along this dimension. In the right plot of figure \@ref(fig:F10-5) the y axis doesn't matter since this is a unidimensional representation.
 
-We can divide the stimulus space into different regions associated with different expected responses. We do this by finding the boundary and then finding which 'region' of the space corresponds to which response category. In our case, since VTL is negative for all of our groups we know that larger VTL values correspond to more male responses. As a result, VTL values greater than the boundary must correspond to the male category. Figure \@ref(fig:F10-5) show three divisions of our stimulus space based on our three boundaries above. We can see in each case that the category boundary falls at the y intercept corresponding to each line in the left plot of the same figure. Nearey (cite) promoted the use of these figures for perceptual modeling, and referred to these as **territorial maps**. Territorial maps divide a stimulus space into regions (or territories) based on the most probable response based on a model. These maps have a very simple and useful interpretation: Stimuli falling in a category's 'territory' is expected to be categorized as members of that category, on average. 
+We can divide the stimulus space into different regions associated with different expected outcomes of our dependent variable. We do this by finding the boundary and then finding which 'region' of the space corresponding to each response category. In our case, since VTL is negative for all of our groups we know that larger VTL values correspond to more male responses. As a result, VTL values greater than the boundary must correspond to the male category. Figure \@ref(fig:F10-5) show three divisions of our stimulus space based on our three boundaries we calculated above. We can see in each case that the category boundary falls at the x intercept corresponding to each line in the left plot of the same figure. Nearey (cite) promoted the use of figures of this kind for perceptual modeling, and referred to these as **territorial maps**. Territorial maps divide a stimulus space into regions (or territories) based on the most probable outcome in that region based on the model. These maps have a very simple and useful interpretation: Stimuli falling in a category's 'territory' is expected to be categorized as a members of that category, on average. 
 
-```{r F10-5, fig.width = 8, fig.height = 3, fig.cap = "(left) Points represent individual speakers in our data based on their VTL and the logit of the probability that they were identified as female. Lines indicate the overall relationship (black), the relationship expected for apparent children, and that expected for apparent adults. Vertical lines indicate each line's x-intercept. (right) Territorial maps implied by each line presented in the left plot. Each map divides the VTL dimension into 'territories' associated with male and female responses.", echo = FALSE}
+```{r F10-5, fig.width = 8, fig.height = 3, fig.cap = "(left) Points represent individual speakers in our data based on their VTL and the logit of the probability that they were identified as female. Lines indicate the overall relationship (black), the relationship expected for apparent children (green), and that expected for apparent adults (pink). Vertical lines indicate each line's x-intercept. (right) Territorial maps implied by each line presented in the left plot. Each map divides the VTL dimension into 'territories' associated with male and female responses.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.5
@@ -739,6 +752,8 @@ aggd$C_v = factor(aggd$C_v)
 
 cffs = gender_vtl_hypothesis[,1]
 
+bounds = boundaries[,1]
+
 par (mfrow = c(1,2), mar = c(4.1,4.1,1,1))
 layout (mat = matrix(c(1,2,1,3,1,4,1,5),4,2,byrow=TRUE))
 
@@ -753,30 +768,33 @@ abline (h=0,lty=3)
 curve ( (cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), add = TRUE, 
         col = 1, lwd=3)
 curve ( (cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = bmmb::coral, lwd=4, lty=3)
+        col = bmmb::cols[10], lwd=4, lty=1)
 curve ( (cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = bmmb::teal, lwd=4, lty=3)
+        col = bmmb::cols[14], lwd=4, lty=1)
 
-legend (0.8,4.5, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
+legend (0.8,4.7, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
+        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5,cex=1.5)
 
-abline (v = c(0.21,.59,-.87), col = c(1,bmmb::teal,bmmb::coral))
+abline (v = c(0.24,.655,-.99), col = c(1,bmmb::cols[14],bmmb::cols[10]),
+        lwd=2,lty=3)
 
 par (mar = c(.5,.5,.5,.5))
 
-bound = -0.87
+bound = bounds[3]
 plot (0,xlim = c(-2,2),ylim=c(0,1),xaxt='n',yaxt='n',type='n')
 rect(-3, -1, bound, 2, col=bmmb::cols[3])
 rect(bound, -1, 3, 2, col=bmmb::cols[2])
 text (c(-1.5,1.2),c(0.5,0.5), c("Girl","Boy"), cex = 2, col = 0)
+abline (v = bounds[3], lwd = 4, col = bmmb::cols[10])
 
-bound = 0.21
+bound = bounds[1]
 plot (0,xlim = c(-2,2),ylim=c(0,1),xaxt='n',yaxt='n',type='n')
 rect(-3, -1, bound, 2, col=bmmb::cols[8])
 rect(bound, -1, 3, 2, col=bmmb::cols[7])
 text (c(-1.5,1.2),c(0.5,0.5), c("Female","Male"), cex = 2, col = 0)
+abline (v = bounds[1], lwd = 3, col = 1)
 
-bound = .59
+bound = bounds[2]
 plot (0,xlim = c(-2,2),ylim=c(0,1),yaxt='n',type='n',
       cex.axis = 1.3, xaxt = 'n')
 rect(-3, -1, bound, 2, col=bmmb::cols[5])
@@ -784,6 +802,7 @@ rect(bound, -1, 3, 2, col=bmmb::cols[4])
 text (c(-1.5,1.2),c(0.5,0.5), c("Woman","Man"), cex = 2, col = 0)
 axis (at = -2:2, labels = (-2:2) + muvtl, 
       cex.axis = 1.3, side=1)
+abline (v = bounds[2], lwd = 4, col = bmmb::cols[14])
 
 mtext (side=1, "VTL (cm)", line = 3)
 
@@ -791,8 +810,7 @@ mtext (side=1, "VTL (cm)", line = 3)
 
 We can think about the characteristics of our fixed effects parameters, and our age-dependent lines, in terms of what they mean for classification of speakers as female or male. It can be useful to think about category boundaries when interpreting logits because our model parameters can be interpreted as shifts in these boundaries. For example, our model intercept estimate was 0.86, and the effect for perceived adultness (`A1`) was 2.65. If we consider lines with fixed slopes, the effect of shifts in the y intercept on classification can be understood in terms of the slope of the line. Since our line has a downward (negative) slope along VTL, raising the $y$-intercept has the effect of moving our x intercept the the 'right' towards higher values of VTL. In other words, the positive intercept shift associated with perceived adultness increases the category boundary between apparent male and female speakers along the VTL dimension. If the slope of our line had been positive the associations would be reversed: Positive y intercept shifts would lead to a 'leftward' motion of the category boundary. 
 
-Increasing the magnitude of our slopes (positive or negative) does not *necessarily* affect the location of the category boundary. Sometimes, there can be compensatory change in the y intercept such that the x intercept remains unchanged. In general, we can say that two lines with unequal slopes but equal x intercepts differ in terms of how 'categorical' or 'fuzzy' classifications tend to be. This is because a steeper slope gets from high probabilities to low probabilities (or vice versa) faster, and therefore has a smaller ambiguous region relative to a slope with a smaller magnitude. For example, the points representing women and men are further apart along VTL than boys and girls. This means they are more separable along this dimension, and this is represented in the model by the steeper slope for speakers judged to be adults. 
-
+Increasing the magnitude of our slopes (positive or negative) does not *necessarily* affect the location of the category boundary. Sometimes there can be compensatory change in the y intercept such that the x intercept remains unchanged. In general, we can say that two lines with unequal slopes but equal x intercepts differ in terms of how 'categorical' or 'fuzzy' classifications tend to be. This is because a steeper slope gets from high probabilities to low probabilities (or vice versa) faster, and therefore has a smaller ambiguous region relative to a slope with a smaller magnitude. For example, the points representing women and men are further apart along VTL than boys and girls. This means they are more separable along this dimension, and this is represented in the model by the steeper slope for speakers judged to be adults. 
 When lines differ in both slopes and intercepts, the effect on classification boundaries needs to be considered on a case by case basis. However, in general it is quite straightforward: One only needs to imagine the effects on our lines and the locations where they will cross zero. In figure \@ref(fig:F10-4), we can see that the intercept and slope differences between speakers identified as male and female both serve to increase the boundary between and expected female or male response based on speaker VTL. 
 
 ### Answering our research question
@@ -802,23 +820,23 @@ We can answer our research questions based on our model above:
   Q1) What is the relationship between speaker VTL and the perception of femaleness?
   Q2) Does the relationship between VTL and apparent speaker gender vary in an age-dependent manner?
 
-Speaker VTL is negatively related to the perception of femaleness with a slope of -3.59 logits per unit change in cm (s.d. = 0.39, 95% C.I = [-4.41, -2.88])). This effect increased by about 50% when listeners thought the speaker was an adult and decreased by about 50% when listeners thought the listener was a child (mean = 2.65, s.d. = 0.35, 95% C.I = [2.01, 3.39]). Our results do indicate that the relationship between VTL and apparent femaleness varies as a function of the apparent age of the speaker. These differences can be understood in terms of the information presented in figure \@ref(fig:F10-5) and, in particular, the territorial maps presented in the right plot. In the plot we see that when listeners thought the speaker was a child, the boundary between male and female speakers is at a lower value of VTL (12.4 cm based on our calculations above), which makes sense given that children are smaller overall. When the listener thinks the speaker is an adult, a higher value of VTL (14.0 cm) is required to trigger a male response. 
+Speaker VTL is negatively related to the perception of femaleness with a slope of -3.59 logits per unit change in cm (s.d. = 0.39, 95% C.I = [-4.41, -2.88])). This effect increased by about 50% when listeners thought the speaker was an adult and decreased by about 50% when listeners thought the listener was a child (mean = 2.65, s.d. = 0.35, 95% C.I = [2.01, 3.39]). Our results do indicate that the relationship between VTL and apparent femaleness varies as a function of the apparent age of the speaker. These differences can be understood in terms of the information presented in figure \@ref(fig:F10-5) and, in particular, the territorial maps presented in the right plot. In the plot we see that when listeners thought the speaker was a child, the boundary between male and female speakers is at a lower value of VTL (12.4 cm based on our calculations above), which makes sense given that children are smaller overall. When the listener thinks the speaker is an adult, a higher value of VTL (14.0 cm) is required to predict a male response. 
 
 We think this model reflects behavior that 'makes sense' for human listeners. Research suggests that listeners more or less 'know' how different sorts of people sound as evidenced by their ability to classify speakers by age, size, and gender. If this is true, listeners need to know that younger speakers have shorter VTLs than older speakers. Necessarily, if there is a category boundary between male and female responses for both adults and children, the one between boys and girls *must* be lower along the VTL dimension than the boundary between men and women. In the absence of this, the model would not result in the accurate classification of stimuli. For example, the overall category boundary in figure \@ref(fig:F10-5) would result in the expectation of female classifications for *all* the boys in our sample since they all fall to the left of this line (i.e. in the 'female' territory in the overall territorial map). 
 
 ## Measuring sensitivity and bias
 
-Our last model modeled the probability that a listener would respond female, under certain conditions. What it didn't really tell us much about was the extent to which listeners were able to correctly distinguish male and female voices. To do that, we have to carry out an analysis using principles developed in signal detection theory. Whole books can (and have) been written on this topic, and we are only going to deal with it very superficially here. Our intention is to show how *sensitivity* and *bias* (to be discussed momentarily) can be estimated with signal detection theory models implemented using logistic regression. The implementation used here is described in DeCarlo (1998, cite), and a thorough introduction to detection theory more can be found in (cite macmillan and creelman). 
+Previously we considered the probability that a listener would respond female based on speaker vocal-tract length (VTL) and apparent age. What it didn't really tell us much about was the extent to which listeners were able to correctly identify male and female voices. To do that, we have to carry out an analysis using principles developed in signal detection theory. Whole books can (and have) been written on this topic, and we are only going to deal with it very superficially here. Our intention is to show how *sensitivity* and *bias* (to be discussed momentarily) can be estimated with signal detection theory models implemented using logistic regression. The implementation used here is described in DeCarlo (1998, cite), and a thorough introduction to detection theory more can be found in (cite macmillan and creelman). 
 
-Imagine we want to know how well listeners can identify cases when the speaker is a female. To do this we might just calculate the percent of trials in which a speaker was female and was also identified as being female. However, imagine a listener identifies 100% of speakers as female, both male and female speakers. If we only measure accuracy on female speaker trials this speaker would appear to perform perfectly. However, obviously, if they also think 100% of male speakers sound female then they show no ability to distinguish male and female speakers. Clearly, we need a measure that considers the ability to detect female speakers when they *are* there, but also to know when a female speaker is *not* speaking. So, we see that actually detecting the presence of a signal means accurately detecting its presence *and* its absence. 
+Imagine we want to know how well listeners can identify cases when the speaker is a female. To do this we might just calculate the percent of trials in which a speaker was female and was also identified as being female. However, imagine a listener identifies 100% of male and female speakers as female. If we only measure accuracy on female speaker trials this speaker would appear to perform perfectly. However, obviously, if they also think 100% of male speakers sound female then they show no ability to distinguish male and female speakers. Clearly, we need a measure that considers whether listeners can detect when female speakers are *not* there, in addition to being able to identify when they are. 
 
-First, we need to define some terminology. Consider the general case where the listener is trying to identify some signal or characteristic (e.g., femaleness), and the signal is either present or it is not. We define the **hit rate** ($H$) as the probability that a listener will say the speaker is female when it is, and the **false alarm rate** ($FA$) as the probability that the listener will identify the speaker as female when it was not. We present this below for our data where $F$ (`Female`) is our vector indicating whether the listener indicated hearing a male (0) or female speaker (1), and $G_v$ is a vector (`G_v`) that indicates whether the speaker's veridical gender was male (`m`) or female (`f`).      
+First, we need to define some terminology. Consider the general case where the listener is trying to identify some signal or characteristic (e.g., femaleness), and the signal is either present or it is not. We define the **hit rate** ($\mathrm{H}$) as the probability that a listener will say the speaker is female when they are. The **false alarm rate** ($\mathrm{FA}$) is the probability that the listener will identify the speaker as female when they were not. We present this below for our data where $Female$ is our vector indicating whether the listener indicated hearing a male (0) or female speaker (1), and $G_v$ is a vector (`G_v`) that indicates whether the speaker's veridical gender was male (`m`) or female (`f`).      
 
 $$
 \begin{equation}
 \begin{split}
-H = P(Female=1 | G_v= \mathrm{f} \,) \\
-FA = P(Female=1 | G_v= \mathrm{m} \, )
+\mathrm{H} = P(Female=1 | G_v= \mathrm{f} \,) \\
+\mathrm{FA} = P(Female=1 | G_v= \mathrm{m} \, )
 \end{split}
 (\#eq:10-17)
 \end{equation}
@@ -837,9 +855,9 @@ Or more simply using:
 tapply(exp_data$Female, exp_data$G_v, mean)
 ```
 
-**Sensitivity** is defined as the difference between a listener's hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no discrimination at all: They perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are identifying 90% of *people*, including men, as women. 
+**Sensitivity** is the ability to discriminate categories, and is defined as the difference between a listener's hit rate and their false alarm rate. If the hit rate is 1 and the false alarm rate is 0, this listener exhibits perfect discrimination: They can identify all females as females and identify *no* males as female. If a person has a hit rate of 0.5 and a false alarm rate of 0.5 it means they show no sensitivity at all, their hit and false alarm rates are equal. This person would perform as well as someone who was not even listening to the stimuli. However, a person with a hit rate of 0.9 and a false alarm rate of 0.9 *also* show no sensitivity, even though they are identifying 90% of women as women. The reason for this is that they are identifying 90% of *people*, including men, as women. 
   
-There are potentially many ways to measure sensitivity. For example, we could just subtract the hit rate form the false alarm rate. However, this is not the best idea for many of the same reasons that we do not base our linear models directly on probabilities. One of the most common measures of sensitivity is $d'$ ('d-prime') which is calculated as in \@ref(eq:10-17). 
+There are potentially many ways to measure sensitivity. For example, we could just subtract the hit rate form the false alarm rate. However, this is not the best idea for many of the same reasons that we do not base our linear models directly on probabilities. One of the most common measures of sensitivity is $d'$ ('d-prime'), which is calculated as in \@ref(eq:10-17). 
 
 $$
 \begin{equation}
@@ -848,7 +866,7 @@ d' = \phi(H) - \phi(FA)
 \end{equation}
 $$
 
-Where $\phi(p)$ is a function that converts a proportion to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression. Probit models are basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function (see section X) rather than the logistic link function. Probit models are straightforward to implement but will not be discussed here. The reason for this is that the inverse logit function effectively performs the same function as the $\phi(p)$ function above, meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:10-18). 
+Where $\phi(p)$ is a function that converts a proportion (or probability) to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression, which is basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function (see section X) rather than the inverse logit link function. The inverse logit function effectively performs the same function as $\phi(p)$ in \@ref(eq:10-17), meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:10-18). 
 
 $$
 \begin{equation}
@@ -857,9 +875,9 @@ d = \mathrm{logit}(H) - \mathrm{logit}(FA)
 \end{equation}
 $$
 
-In most of the examples we've given so far, hit rates and false alarm rates have been balanced around probabilities of 0.5. This is equivalent to balancing out around values of 0 logits. When hits and false alarms balance out like this, this means that errors were equally likely to occur on both male and female speaker rounds. For example, a hit rate of 0.9 means listeners made a mistake on 10% of female trials, and a false alarm rate of 0.1 indicates the same thing for male trials. What if they don't balance out? 
+In most of the examples we've given so far, hit rates and false alarm rates have been balanced around probabilities of 0.5. This is equivalent to balancing out around values of 0 logits. When hits and false alarms balance out like this, this means that errors were equally likely to occur on both male and female speaker rounds. For example, a hit rate of 0.9 means listeners made a mistake on 10% of female trials, and a false alarm rate of 0.1 indicates the same error rate for male trials. But what if they don't balance out? 
 
-Imagine a situation where a listener identifies 100% of females as female (hit rate = 1) and 50% of men as females (false alarm rate = 0.5). This seems to suggest that they make no mistakes on female trials but are only performing at chance for male trials. How would this be possible? In order to do well on female trials they need to know the speaker is a female, but if they know the speaker is female, they also know the speaker is *not* male. So, why do they perform so poorly on the male trials? Rather than indicating differential performance for the two categories, a lack of balance across hits and false alarms indicates **response bias**, the tendency to select one category more than another. In this case, the listener would show not an increased performance for female trials, but rather a bias towards identifying speakers as female. A common way to measure bias is using what is called a **criterion** defined as the negative of the average of the transformed hit and false alarm rates. Since we are using logits we call this $c'$ to distinguish it from the $c$ criterion measured using a probit model (DeCarlo 1998? cite). 
+Imagine a situation where a listener identifies 100% of females as female (hit rate = 1) and 50% of men as females (false alarm rate = 0.5). This seems to suggest that they make no mistakes on female trials but are only performing at chance for male trials. How could this be possible? In order to do well on female trials they need to know the speaker is female (obviously). But if they know when speakers are female so well, they also know when the speaker is *not* male equally well. So, why do they perform so poorly on the male trials? Rather than indicating differential performance across the two categories, a lack of balance across hits and false alarms indicates **response bias**, the tendency to select one category more than another. In this case, the listener does not show an increased ability to identify female speakers but rather a bias towards identifying speakers as female. A common way to measure bias is using what is called a **criterion** defined as the negative of the average of the transformed hit and false alarm rates. Since we are using logits we call this $c'$ to distinguish it from the $c$ criterion measured using a probit model (DeCarlo 1998? cite). 
 
 $$
 \begin{equation}
@@ -868,7 +886,7 @@ c' = -\frac{1}{2} \, [logit(H) + logit(FA)]
 \end{equation}
 $$
 
-For historical reasons, in signal detection theory a negative criterion (negative bias) is associated with more positive responses and a positive criterion (positive bias) is associated with more negative responses. Note however that the calculation of $c'$ in \@ref(eq:10-17) includes negating the mean of the logit of hits and false alarm rates. As a result, this definition of bias involves a double negative which unnecessarily complicates things for many purposes: A higher average hit/false alarm rate it *negatively* related to the criterion, which is itself *negatively* related to outcomes. We think it is important to be aware of this convention but do not necessarily feel bound to follow it. As a result, we're going to divert from detection theory somewhat and simply define a bias measure $b$ as the negative of the criterion, as seen in \@ref(eq:10-18). 
+For historical reasons, in signal detection theory a negative criterion (negative bias) is associated with more positive responses and a positive criterion (positive bias) is associated with more negative responses. Note however that the calculation of $c'$ in \@ref(eq:10-17) includes negating the mean of the logit of the hit and false alarm rates. As a result, this definition of bias involves a double negative which unnecessarily complicates things for many purposes: A higher average hit/false alarm rate it *negatively* related to the criterion, which is itself *negatively* related to outcomes. We think it's important to be aware of this convention but do not feel bound to follow it. As a result, we're going to divert from detection theory somewhat and simply define a bias measure $b$ as the negative of the criterion, as seen in \@ref(eq:10-18). 
 
 
 $$
@@ -878,9 +896,7 @@ b = -c' = \frac{1}{2} \, [logit(H) - logit(FA)]
 \end{equation}
 $$
 
-When defined in this way we see that increasing values of $b$ simply reflects the tendency for both hits and false alarm rates to increase, while negative bias reflects the tendency of both hits and false alarm rates to decrease. For our data, a positive bias would indicate an increased tendency to identify speakers as female (since this was the variable coded with a 1) while a negative bias would indicate an increased probability of a male response. 
-
-As an example, let's consider the detection of femaleness in our speaker's voices. We're going to consider how sensitivity and bias varies according to the veridical (not apparent) age of the speakers. Below we divide our data into trials involving (veridical) children and trials involving (veridical) adult speakers.
+When defined in this way we see that increasing values of $b$ simply reflects the tendency for both hits and false alarm rates to increase, while negative bias reflects the tendency of both hits and false alarm rates to decrease. For our data, a positive bias would indicate an increased tendency to identify speakers as female (since this was the variable coded with a 1) while a negative bias would indicate an increased probability of a male response. As an example, let's consider the detection of femaleness in our speaker's voices. We're going to consider how sensitivity and bias varies according to the veridical (not apparent) age of the speakers. Below we divide our data into trials involving (veridical) children and trials involving (veridical) adult speakers.
 
 ```{r}
 adults = exp_data[exp_data$A_v == "a",]
@@ -902,7 +918,7 @@ tapply (children$Female, children$G_v, mean)
 
 Figure \@ref(fig:F10-6) presents these probabilities in addition to their logit values. We see the balanced (zero bias) case across all speakers with hits and false alarms equally spaced around 0 logits. For veridical adults, the false alarm rate is lower than the hit rate is high, resulting in a negative value of $b$. This means that listeners were more likely to respond male than female for adult speakers. We also see that hits and false alarm rates are more separated for adults, indicating a higher value of $d$ (i.e. sensitivity). For children, we see largely the opposite pattern: Hits were more likely than false alarms indicating a positive bias (and more female responses). In addition, the distance between hits and false alarm rates was much smaller than for adults indicating a substantially reduced sensitivity and ability to discriminate male and female speakers. 
 
-```{r F10-6, fig.width = 8, fig.height = 3, fig.cap = "(left) Hits and false alarm rates for the detection of speaker 'femaleness', averaged across all listeners. (right) Same as in the left plot, except as a logit. The black point represents the average of hits and false alarms.", echo = FALSE}
+```{r F10-6, fig.width = 8, fig.height = 3, fig.cap = "(left) Hits and false alarm rates for the detection of speaker 'femaleness', averaged across all listeners. (right) Same as in the left plot, except as logits of the rates. The black point represents the average of hits and false alarms ($b$) and the distance between the green and red points reflects sensitivity ($d$).", echo = FALSE}
 
 ################################################################################
 ### Figure 10.6
@@ -949,17 +965,15 @@ axis (side=1,at=1:3, labels=c("All","Adults","Chidren"))
 abline (h = 0)
 ```
 
-When considered as in the right plot of figure \@ref(fig:F10-6), the estimation of hit and false alarm rates is very similar to the two-group models described in chapter 5. In chapter 5 we estimated the effect of apparent adultness on apparent height. In that model we had two 'groups' in our data: Trials where a listener indicated hearing an adult and trials where listeners indicated hearing a child. So. our model predicted apparent height given the apparent age of the speaker. Since we used sum coding, the intercept in our model was the average of the two group means and the effect for age was equal to 1/2 the distance between the group means. 
+When considered as in the right plot of figure \@ref(fig:F10-6), the estimation of hit rates, false alarm rates, and their average, is very similar to the two-group models described in chapter 5. In chapter 5 we estimated the effect of apparent adultness on apparent height. In that model we had two 'groups' in our data: Trials where a listener indicated hearing an adult and trials where listeners indicated hearing a child. So. our model predicted apparent height given the apparent age of the speaker. Since we used sum coding, the intercept in our model was the average of the two group means and the effect for age was equal to 1/2 the distance between the group means. 
 
-Here, we have two groups: Trials where the speaker was *actually* a female and trials where it was not. Our model predicts the logit of the probability of a female response given the veridical gender of the speaker. The probability of a female response when the speaker is actually female corresponds to the hit rate, i.e. $P(Female=1 | G_v= \mathrm{f} \,)$, as in \@ref(eq:10-17). Conversely, since the probability of a female response when the speaker is actually male corresponds to the false alarm rate, that means that the probability of a female response for actual male speakers represents our false alarm rate (i.e. $P(Female=1 | G_v= \mathrm{f} \,)$. Since we are using sum coding, the intercept in our model is the average of the two group means and so is a measure of *bias* (since it is equal to $b$ and $-c'$, see \@ref(eq:10-20) and \@ref(eq:10-21)). The effect for our group predictor, in this case the group separation based on veridical gender, will equal 1/2 the distance between the hit and false alarm rates. This means that our predictor in this case will equal $d/2$, meaning that the effect for veridical gender is related to *sensitivity*.
+Here, we have two groups: Trials where the speaker was *actually* a female and trials where it was not. Our model predicts the logit of the probability of a female response given the veridical gender of the speaker. The probability of a female response when the speaker is actually female corresponds to the hit rate, i.e. $P(Female=1 | G_v= \mathrm{f} \,)$, as in \@ref(eq:10-17). Conversely, since the probability of a female response when the speaker is actually male corresponds to the false alarm rate, that means that the probability of a female response for actual male speakers represents our false alarm rate (i.e. $P(Female=1 | G_v= \mathrm{f} \,)$. Since we are using sum coding, the intercept in our model is the average of the two group means and so is a measure of *bias* (since it is equal to $b$ and $-c'$, see \@ref(eq:10-21) and \@ref(eq:10-21)). The effect for our group predictor, in this case the group separation based on veridical gender, will equal 1/2 the distance between the hit and false alarm rates. This means that our predictor in this case will equal $d/2$, meaning that the effect for veridical gender is related to *sensitivity*.
 
-Before continuing, we will to highlight and extremely important property of these models. Any parameter interacting with the predictor indicating *veridical category*, in this case `F_v` reflects variation in sensitivity. This is because it is variation in the effect for this predictor that reflects the separation between hits and false alarms. As a result, things that make the `F_v` effect change in our models necessarily reflect variation in sensitivity. In contrast, and predictor that does *not* interact with veridical category affects biases and not discrimination. This is because anything that does not affect the separation of hits and false alarms cannot affect discrimination. Instead, parameters that do not interact with the veridical category predictor change both hits and false alarms and reflect changes in bias. 
+Before continuing, we want to highlight and extremely important property of these models. Any parameter interacting with the predictor indicating *veridical category*, in this case `F_v` reflects variation in sensitivity. This is because it is variation in the effect for this predictor that reflects the separation between hits and false alarms. As a result, things that make the `F_v` effect change in our models reflect variation in sensitivity. In contrast, any predictor that does *not* interact with veridical category affects biases and not discrimination. This is because anything that does not affect the separation of hits and false alarms cannot affect discrimination. Instead, parameters that do not interact with the veridical category predictor change both hits and false alarms, and therefore reflect changes in bias. 
 
 ### Data and research questions
 
-We're going to keep working with the data we loaded above, which we reload below for convenience. We will also center our VTL predictor and create a new predictor representing veridical gender. To represent veridical gender in our model we're going to do something new, were going to directly specify one of the 'secret' numerical variables our models have been relying on all along (see section X, X). When you have a categorical predictor with only two levels, one of the levels cannot be estimated because it is the negative of the other coefficient. When using sum coding, this is represented numerically using a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below, we add a variable representing veridical speaker femaleness (`F_v`) with values of 1 (for female) and -1 (for male). 
-
-We do this 'by hand', rather than automatically as we've usually done it, for two reasons. First, as will be discussed below, we need the category coded with a 1 in our predictor (the estimated category) to be the same category coded with a 1 in the dependent variable. Creating a vector that we know equals 1 for a specific category and -1 for the other is a simple way to be sure of this. Second, we do this as a pedagogical device to highlight the fact that, for factors with two levels, a categorical predictor is effectively a 'slope' indicated the difference between groups expected for a 1 unit change in some predictor. In our case our groups have values of -1 and 1 resulting in a difference of 2 between groups for our fake predictor. This is why, in the two group case, the difference between groups is equal to twice the value of the estimated parameter (i.e. the real difference is two fake units). In any case, representing a two factor predictor using -1 for one group and 1 for the other is mathematically identical to sum coding that factor, and we will simply be treating the `F_v` as a sum coded factor in the discussion below. 
+We're going to keep working with the data we loaded above, which we reload below for convenience. We also center our VTL predictor and create a new predictor representing veridical gender. To represent veridical gender in our model we're going to do something new, were going to directly specify one of the 'secret' numerical variables our models have been relying on all along (see section X, X). When you have a categorical predictor with only two levels, the coefficient representing one of the levels cannot be estimated because it is the negative of the other coefficient. When using sum coding, this is represented numerically using a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below, we add a variable representing veridical speaker femaleness (`F_v`) with values of 1 (for female) and -1 (for male). 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -978,6 +992,8 @@ exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 # create veridical gender predictor 
 exp_data$F_v = ifelse (exp_data$G_v=="f", 1,-1)
 ```
+
+We do this 'by hand', rather than using a factor as we've usually done it, for two reasons. First, as will be discussed below, we need the category coded with a 1 in our predictor (the estimated category) to be the same category coded with a 1 in the dependent variable. Creating a vector that we know equals 1 for a specific category and -1 for the other is a simple way to be sure of this. Second, we do this as a pedagogical device to highlight the fact that, for factors with two levels, a categorical predictor is effectively a 'slope' indicating the difference between groups expected for a 1 unit change in our fake predictor. In our case our groups have values of -1 and 1 resulting in a difference of 2 between groups for our fake predictor. This is why, in the two group case, the difference between groups is equal to twice the value of the estimated parameter (i.e. the real difference is two fake units). In any case, representing a factor with two levels using -1 for one group and 1 for the other has the same effects as sum coding that factor, and we will simply be treating the `F_v` as a sum coded factor in the discussion below. 
 
 The variables from our data frame involved in this analysis are:
   
@@ -1000,7 +1016,7 @@ Our model formula should minimally be:
 
 Which predicts the response (female = 1, male = 0) as a function of the actual speaker gender (female = 1, male = -1). Again, note the similarity to the two group models we fit in chapter 5. For this model, the intercept would reflect response bias and the `F_v` parameter would reflect sensitivity. The model formula we're actually going to use look like this:
 
-`Female ~ F_v * A_v + (F_v*A_v|L) + (1|S)`
+`Female ~ F_v + A_v + F_v:A_v + (F_v + A_v + F_v:A_v|L) + (1|S)`
 
 Where `A_v` represents veridical adultness. As noted above, all predictors in these sorts of models that do not interact with `F_v` represent bias terms. Thus, the model intercept represents overall bias and the `A_v` term reflects changes in bias as a function of the veridical adultness of the speaker. All model parameters that *do* interact with `F_v` reflect sensitivity. So, `F_v` represents overall sensitivity and the `F_v:A_v` interaction represents variation in sensitivity dependent on veridical age. We're going to keep using the same priors we fit for our last logistic model:
 
@@ -1082,7 +1098,7 @@ gender_dt_hypothesis = bmmb::short_hypothesis (
                  "2*(F_v - F_v:A_v1) = 0")) # child sensitivity
 ```
 
-We plot these biases and sensitivities in the left plot of figure \@ref(fig:F10-7). We also compare listener-dependent biases and sensitivity for veridical adults and children. Since we've covered how to easily recover these previously (in sections X and X) we only provide a single example below.
+We plot these biases and sensitivities in the left plot of figure \@ref(fig:F10-7). We also compare listener-dependent biases and sensitivities for veridical adults and children. Since we've covered how to easily recover these 'random effects' previously (in sections X and X) we only provide a single example below.
 
 ```{r, eval = FALSE}
 # listener-dependent biases for veridical adults
@@ -1093,9 +1109,9 @@ biases_adult = bmmb::short_hypothesis (
 
 ```{r F10-7, fig.width = 8, fig.height = 3, fig.cap = "(left) Average bias and sensitivity and the 'simple effects' of bias and sensitivity across levels of veridical adultness. (middle) Bias and sensitivity for adult speakers, presented individually for each listener. (right) Bias and sensitivity for child speakers, presented individually for each listener.", echo = FALSE}
 
-################################################################################
+#############################################################################
 ### Figure 10.7
-################################################################################
+#############################################################################
 
 biases1 = bmmb::short_hypothesis (
   model_gender_dt,
@@ -1134,7 +1150,7 @@ legend (5, 11, legend =c("Sensitivity", "Bias"), pch=16,lwd=2,
 
 ### Answering our research questions
 
-The following verbal description of the results in figure \@ref(fig:F10-7) are based on the biases and sensitivities reconstructed in `gender_dt_hypothesis`, presented in \@ref(tab:T10-1). Our model suggests  a bias towards male responses for adults , and perhaps a slight bias towards female responses for children. Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. Based on figure \@ref(fig:F10-7) We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children.
+The following verbal description of the results in figure \@ref(fig:F10-7) are based on the biases and sensitivities reconstructed in `gender_dt_hypothesis`, presented in \@ref(tab:T10-1). Our model suggests a bias towards male responses for adults , and perhaps a slight bias towards female responses for children. Speaker femaleness appeared to be discriminable for both adults and children, although sensitivity was substantially larger for adults. Based on figure \@ref(fig:F10-7) We can also say that all listeners were able to discriminate male and female adult speakers, and most (but not all) were able to do this for children.
 
 ```{r T10-1}
 tmp_hyp = gender_dt_hypothesis[,1:4]
@@ -1143,9 +1159,9 @@ rownames(tmp_hyp) = c("Overall Bias","Adult Bias","Child Bias","Overall Sensitiv
 knitr::kable (tmp_hyp, digits=2)
 ```
 
-We will assume that: 1) Speaker VTL is a useful clue in the discrimination of male and female speakers, and 2) The distribution of VTL between our speaker categories in the whole population is roughly the same as in our data. If we do this, we can potentially understand the difference in sensitivity between veridical children and veridical adults. Consider the distribution of speaker VTL across boys and girls, and women and men in figure \@ref(fig:F10-8). Imagine a listener encounters a speaker with a VTL of 15 cm. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an male. Because of the lack of overlap along VTL for adult males and females, there are many values of VTL that are plausible for adult males that are implausible for adult females. As a result, adult men and women will be easier to discriminate along the VTL dimension. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl, and the same could be said for most VTL values for boys and girls. As a result, it will clearly be more difficult to distinguish the gender of children along the VTL dimension and we can reasonably expect sensitivity to decrease.
+We can potentially understand the difference in sensitivity between veridical children and veridical adults if we assume that: 1) Speaker VTL is a useful clue in the discrimination of male and female speakers, and 2) The distribution of VTL between our speaker categories in the whole population is roughly the same as in our data. Consider the distribution of speaker VTL across boys and girls, and women and men in figure \@ref(fig:F10-8). Imagine a listener encounters a speaker with a VTL of 15 cm. This value is typical for an adult male but *extremely* unlikely for an adult female. As a result, a speaker with a VTL of 15 cm is very likely to be an male. Because of the lack of overlap along VTL for adult males and females, there are many values of VTL that are plausible for adult males that are implausible for adult females. As a result, adult men and women will be easier to discriminate along the VTL dimension. In contrast, the boy and girl distributions largely overlap. This means a VTL of 12 cm could plausibly be either a boy or a girl, and the same could be said for most VTL values for boys and girls. As a result, it will clearly be more difficult to distinguish the gender of children along the VTL dimension and we can reasonably expect sensitivity to be smaller than it is for adults.
  
-```{r F10-8, fig.width = 8, fig.height = 3.25, fig.cap = "Distribution of boys, girls, men, and women in our speaker data (Hillenbrand et al. 1995) according to their VTL.", echo = FALSE}
+```{r F10-8, fig.width = 8, fig.height = 3.25, fig.cap = "Distribution of boys, girls, men, and women in our speaker data (Hillenbrand et al. 1995) according to their vocal-tract length.", echo = FALSE}
 
 ################################################################################
 ### Figure 10.8
@@ -1170,7 +1186,7 @@ legend (13.8,1.2,legend = c("b","g","m","w"),col=bmmb::cols[2:5],
 
 ```
 
-We can also potentially explain the changes in response bias that we saw in our results. Below we see a table showing categorizations for adult males and females. We see that men are rarely confused with girls or women (18 out of 675 trials, 2.7%). In contrast, women are confused with males in 15% (100/675) of cases, and specifically confused with boys in 14% (97/675) of cases. This is likely because adult males tend to have substantially longer VTLs than women and girls, but the VTLs of adult females and younger boys overlap somewhat. Recall that a response bias is simply an increase in responses for that category. Since men and women are balanced in our sample, if adult males tend to be identified as male almost always and adult females are sometimes confused with younger males, this will necessarily result in a 'bias' towards male responses. 
+We can also potentially explain the changes in response bias that we saw in our results based on figure \@ref(fig:F10-8). Below we see a table showing categorizations for adult males and females. We see that men are rarely confused with girls or women (18 out of 675 trials, 2.7%). In contrast, women are confused with males in 15% (100/675) of cases, and specifically confused with boys in 14% (97/675) of cases. This is likely because adult males tend to have substantially longer VTLs than women and girls, but the VTLs of adult females and younger boys overlap somewhat. Recall that a response bias is simply an increase in responses for that category overall. Since men and women are balanced in our sample, if adult males tend to be identified as male almost always and adult females are sometimes confused with younger males, this will necessarily result in a 'bias' towards male responses. 
 
 ```{r}
 xtabs ( ~ adults$C_v + adults$C)

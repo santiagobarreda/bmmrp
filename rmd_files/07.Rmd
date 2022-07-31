@@ -81,9 +81,9 @@ In the last two chapters we discussed the inclusion of a single factor with two 
 
 `height ~ C + (C|L) + (1|S)`
 
-Where `C` is the apparent speaker category indicated by the listener for each trial, a factor with four levels (see above). Since we include `C` on the left-hand-side of the pipe of `L`, we know that we are estimating the category by listener interaction using adaptive partial pooling (see section X). At this point we have to make a decision regarding how we represent our models in more formal notation, and striking a balance between readability and models that are directly analogous to the output in R. 
+Where `C` is the apparent speaker category indicated by the listener for each trial, a factor with four levels (see above). Since we include `C` on the left-hand-side of the pipe of `L`, we know that we are estimating the category by listener interaction using adaptive partial pooling (see section \@ref(c4-partial-pooling)). At this point we have to make a decision regarding how we represent our models in more formal notation, and striking a balance between readability and models that are directly analogous to the output in R. 
 
-Each level of the category predictor that we are estimating needs to be represented by a model parameter. Since we are using sum coding for all our factors (see section X), our model will estimate three of the four group effects, omitting the alphabetically last level (in this case woman). As a result, the formula above is analogous to:
+Each level of the category predictor that we are estimating needs to be represented by a model parameter. Since we are using sum coding for all our factors (see section \@ref(c5-sum-coding)), our model will estimate three of the four group effects, omitting the alphabetically last level (in this case woman). As a result, the formula above is analogous to:
  
 `height ~ C1 + C2 + C3 + (C1 + C2 + C3|L) + (1|S)`
 
@@ -396,7 +396,7 @@ Below we compare our recreated group means with our average height judgment for 
 tapply (exp_data$height, exp_data$C, mean)
 ```
 
-## Using our models to predict
+## Using our models to predict {#c7-posterior-prediction}
 
 So far we've been working with very simple models and so we haven't worried very much about how well they *fit*, or represent our data. Our reconstruction of the group means above suggests our current model may have some issues, and that we should be concerned about its ability to accurately capture the patterns in the data. So far we've only been discussing modeling in one direction, going from data to abstract, reduced representations (i.e. regression models). However, it's also worth considering going in the other direction, from the abstraction representation back towards data. 
 
@@ -497,7 +497,7 @@ boxplot (y_hat[2,] ~ exp_data$C, ylim = c(100,205), col = cols[2:5],
          main = "Prediction: With RE",xlab = "", ylab="")
 ```
 
-## Interactions and interaction plots
+## Interactions and interaction plots {c7-interactions-and-plots}
 
 We can think of a single effect representing a difference between groups/conditions/levels as a slope. For example, in the left panel in figure \@ref(fig:F7-7) we plot mean apparent height for apparent females and males at arbitrary x-axis locations. The difference in the group means is 6 cm (females 157 cm, males 163 cm). We can use any arbitrary x axis distance to calculate slopes, as long as we are consistent. However, there are obvious practical advantages to choosing to calculate these slopes over the arbitrary 'distance' of 1. To do this, we can imagine that we plot the first level (female) at 0 and successive levels at sequential integer values along the x axis (i.e. 1, 2, 3, ...). When we do this, the line formed by joining the averages of these groups has a slope of 6 (i.e., it rises 6 cm from 0 to 1, from one group to another, for a slope of 5/1). 
 
@@ -733,7 +733,8 @@ We can see in the short model summary above that we've estimated four standard d
 
 We can now focus on the fixed effects (`Population-Level Effects`), of which there are four: An intercept, two main effects terms and an interaction. The interaction term is just another element of your prediction equation intended to help explain variation that can't be predicted by the independent effects of the other predictors in the model. If there is no interaction in your data, then the value of the interaction terms will be close to zero and your model will look just as if you had not even included the interaction at all. A look at the model output above indicates that our interaction is much smaller than the age effect, but not much smaller than the gender effect. This suggests it has the potential to influence our conclusions about gender more than our conclusions about age.
   
-Why is there only a single interaction? Basically for the same reason that we can only estimate a single effect for apparent age and gender (i.e., linear dependence, discussed in section X). The number of levels of a factor that you can estimate is generally one fewer than the number of levels in the factor. For interaction terms, the number of parameters you can estimate is equal to (number of levels of factor A - 1)x(number of levels of factor B - 1) for two factors. Since each of our factors have two levels, we can only estimate one parameter, $(2-1) \times (2-1)=1$. 
+Why is there only a single interaction? Basically for the same reason that we can only estimate a single effect for apparent age and gender (i.e., linear dependence, discussed in section \@ref(c5-contrasts)). The number of levels of a factor that you can estimate is generally one fewer than the number of levels in the factor. For interaction terms, the number of parameters you can estimate is equal to (number of levels of factor A - 1)x(number of levels of factor B - 1) for two factors. Since each of our factors have two levels, we can only estimate one parameter, $(2-1) \times (2-1)=1$. 
+
 The `A1:G1` term can be read aloud as "the effect of `A1` given (conditional on) the level of `G1`". For individual factors, our models cannot estimate `A2` because `-A1 = A2`. For interactions between factors with two levels, the model cannot estimate `A2:G1` because `-A1:G1 = A2:G1`. For interactions between factors with two levels, every time you want to change `A1` or `G1` to `A2` or `G2` you flip the sign of the `A1:G1` term instead. As a result, going left to right and changing one level at a time we get `A1:G1 = -A2:G1 = A2:G2  = -A1:G2`, which is precisely why we can't estimate more than one interaction for this model. Why does this happen? Looking at how interaction plots are built up out of main effects and interactions may help illustrate the reason for this. 
 
 Figure \@ref(fig:F7-9) presents an example of how our interaction plot can be built up from the components in our fixed effects above, and is very useful for understanding the geometry of main effects and interactions. In (a) we see that the intercept lifts up a line from 0 to the level of the overall mean apparent height of 158 cm. Then, the effect for `A1` (adult, +11 cm) and `-A1` (children, -11 cm) are added to this value, causing the separation between the lines indicating a 'main effect' for adultness. Notice that the lines are parallel with respect to each other, and also parallel to the x-axis. This is because we have not added an effect for gender, which will be indicated as a slope along the x axis. In (b) we see the addition of the gender effect: `G1` (female, -2.8 cm), and `-G1` (male, 2.8 cm). Notice that the effect is added to one end of each line segment and subtracted from the other end of the line segment. Panel (c) shows the addition of all of the effects shown in the top row, the result of a model that includes both main effects but the same non-zero slope for both lines (i.e. no interaction yet). In (e) we add the gender interaction `A1:G1`, which was -1.6 cm. 

@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
 
 To this point we've only discussed the prediction of quantitative variables that can take on a large number of values and are MEASURED on an interval (or ratio) scale. In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. For now we will focus on dichotomous (i.e. binary) outcomes, however, the ideas presented will be extended to the prediction of ordinal (ordered categories such as in 1st, 2nd, 3rd), and multinomial (unordered categories such as English, French and Spanish) data in chapter 12. In the second half of the chapter we will discuss how logistic regression models can be used to investigate the discrimination of categories, and response bias, using signal detection theory. 
 
-## Dichotomous variables and data
+## Dichotomous variables and data {#c10-dichotomous}
 
 The models we fit in chapter 9 featured linear relationships between our predictor and the expected value of the dependent variable ($\mu$). For a model predicting apparent height using speaker VTL, this means the $\mu$ parameter of a normal distribution slides along straight lines as in \@ref(eq:10-1). 
 
@@ -157,7 +157,7 @@ mean (rbinom (100000,1,.5))  # the mean of 100000 observations
 
 The bottom left plot in figure \@ref(fig:F10-1) shows the probability of observing a classification of 'female' for each speaker as a function of their vocal-tract length (VTL). We can see that the perception of femaleness is negatively related to speaker VTL: As VTL increases the probability of observing a female response decreases. Despite this, we can't directly model variation in $p$ using lines as shown in the figure. There are many reasons for this but the main one is that using lines to model $p$ causes problems near 0 and 1. For example, imagine a predictor is associated with an increase in probability of 0.2 per unit change in the predictor. If the Intercept is 0.7, a two unit increase in the predictor is associated with a probability of 1.1, which is not possible. This suggests that a curve with a constant slope (e.g. a line) is fundamentally ill-suited to predict a bounded variable like probability. 
 
-The above seems problematic, after all, so far this book has been about linear regression models and we're saying lines are no good for modeling variation in probabilities. The solution to this is to remember that our regression models consist of a bunch of components stuck together. Early on we discussed two general parts: The random components and the systematic component (see section X). The systematic component predicts variation in expected values using shapes like lines and planes. The random component specifies how our data randomly varies around the expected value. We can add a third component to this called a **link function**, a function that takes some parameter you're interested in (e.g. $p$) and transforms it so that the *transformed* value can be modeled along straight lines. When you rely on link functions, modeling becomes a three step process like this:
+The above seems problematic, after all, so far this book has been about linear regression models and we're saying lines are no good for modeling variation in probabilities. The solution to this is to remember that our regression models consist of a bunch of components stuck together. Early on we discussed two general parts: The random components and the systematic component (see section \@ref(c3-what-is-reg)). The systematic component predicts variation in expected values using shapes like lines and planes. The random component specifies how our data randomly varies around the expected value. We can add a third component to this called a **link function**, a function that takes some parameter you're interested in (e.g. $p$) and transforms it so that the *transformed* value can be modeled along straight lines. When you rely on link functions, modeling becomes a three step process like this:
 
   1) Predict variation in expected values ($\theta$) along straight lines (or related shapes), for example $\theta  = a + b \times x$. This is the systematic component, and $\theta$ is linearly related to the predictor $x$.
   2) Transform $\theta$ using a link function. For example, given the link function $f$ we can transform our expected value $\theta$ to $p$ like so: $p = f(\theta)$. The transformed parameter ($p$) may no longer be linearly related to the dependent variable $x$ or the linear predictor $\theta$.
@@ -230,7 +230,7 @@ $$
 \end{equation}
 $$
 
-Odds are still bounded by zero on the lower end so they still can't be modeled using lines, however, if we take the *logarithm* of the odds we get a **logit**, the log odds. Unlike odds, logits *can* take on values from positive to negative infinity. This is because, for variable x, logarithms represent the values of x between 0 and 1 with values of log(x) from $-\infty$ to 0. Values of x from 1 to $+\infty$ are represented by values of log(x) from 0 to $+\infty$ (see section X logarithms). You can see this relationship by running the code below.
+Odds are still bounded by zero on the lower end so they still can't be modeled using lines, however, if we take the *logarithm* of the odds we get a **logit**, the log odds. Unlike odds, logits *can* take on values from positive to negative infinity. This is because, for variable x, logarithms represent the values of x between 0 and 1 with values of log(x) from $-\infty$ to 0. Values of x from 1 to $+\infty$ are represented by values of log(x) from 0 to $+\infty$ (see section \@ref(c2-logarithms)). You can see this relationship by running the code below.
 
 ```{r, eval=FALSE}
 # this plot compares x and log (x). Note that log(x)<0 when x<1.
@@ -259,7 +259,7 @@ bmmb::logit
 
 Note that when $p$ is equal to 1 or 0, the function arbitrarily changes those values to 0.99 and 0.01. Since $\log(0) = -\infty$, the logit of probabilities of 0 and 1 are positive and negative infinity respectively. Infinite logit values are not useful for us (and can't be plotted), so the `logit` function sets extreme (but manageable) values for probabilities of 0 and 1. The effect of this can be seen in the bottom right plot of figure \@ref(fig:F10-1) for several speakers classified as female 100% or 0% of the time. 
 
-### The inverse logit link function
+### The inverse logit link function {#c10-inverse-logit}
 
 Logistic regression models express expected values in *logits*. The lines represented by these models describe continuous changes in logits as a function of the predictors, and intercepts represent shifts in the values of logits across different situations. However, our data generating distribution (Bernoulli) requires a parameter $p$ that is bounded by 0 and 1. This means that the link function for logistic regression needs to convert logits to probabilities. The function that does this is called the **logistic function**, the **antilogit function**, or the **inverse logit function**. We will refer to it as the inverse logit function to highlight the fact that it is the inverse of the logit, that it *undoes* the logit transform. 
 
@@ -400,7 +400,7 @@ Here are some useful things to keep in mind when interpreting logits, in no part
   * Logits far beyond 3 might not have much practical significance. A logit of 4 is a probability of 0.982 and a logit of 6 is 0.997. For many purposes, probabilities of 0.95, 0.98, and 0.99 are nearly interchangeable. Also, it is very difficult to distinguish 95%, 98%, and 99% in practice since, by definition, you will be observing very few cases of 0 but these are the only way to distinguish the two.
   * Effects can be considered important or not based on how far they get you along -3 to 3 (or -4 to 4). Basically, anything in the +1 range is very likely to matter, while effects smaller than 0.1 or so are likely having only small effects on outcomes.
   
-Here is one final thing to keep in mind about logits: You **must** combine your model parameters as logits **before** transforming them into probabilities. This is due the fact that the inverse logit function is non-linear, and will be discussed in more detail in section X. 
+Here is one final thing to keep in mind about logits: You **must** combine your model parameters as logits **before** transforming them into probabilities. This is due the fact that the inverse logit function is non-linear, and will be discussed in more detail in section \@ref(c10-fitting-1). 
 
 ## Logistic regression with one quantitative predictor
 
@@ -491,7 +491,7 @@ The main differences compared to our previous models are the lack of terms relat
 
 > The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of 0 of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, A, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
 
-### Fitting and interpreting the model
+### Fitting and interpreting the model {#c10-fitting-1}
 
 We're going to fit the model outlined above. Below is the function call we need to run the model described in \@ref(eq:10-13):
 
@@ -654,7 +654,7 @@ antilogit (0.86 + 2.65)
 
 The same reasoning applies to the interpretation of slopes in logistic regression models. Our slope tells us that for every unit change in VTL we expect a 3.6 logit increase/decrease in our expected values. We cannot convert this to probabilities and then multiply this by VTL to predict probabilities. For example, the difference from 0 to 3.6 logits results in a change from 0.5 to 0.97 in probability. We may be inclined to say that our VTL slope suggests an increase of 0.47 in probabilities (0.97-0.5) for every unit change in VTL. Obviously, this will not work since it suggests a difference in probability of 1.41 for a VTL difference of 3 cm. As a result, slopes in logistic models can only be interpreted as reflecting consistent changes in the *logit* of a probability, and not in the probability itself. 
 
-### Using logistic models to understand classification
+### Using logistic models to understand classification {#c10-classification}
 
 Our models so far have presented us with the y-intercepts of our lines, the value of the y axis at x=0. However, when modeling in logits we might also be interested in the **x intercepts** of our lines. The x intercept is the value of x where *y is equal to zero*, the point where our line crosses the horizontal x axis. Why do we care about this? Consider any of the predictions lines in the left plot in figure \@ref(fig:F10-4). When these lines have positive values we know a female response is expected and when these lines have a negative value we know that a male response is expected. Imagine a vertical line placed at the x axis intercept. This line would represents the **category boundary** between our two possible outcomes along the x axis, according to our model. Crossing the the x intercept one way along the x axis means one category is more likely, and crossing the other way means the other category is more likely. 
 
@@ -672,7 +672,7 @@ y = a + b \times x \\
 \end{equation}
 $$
 
-We can use the equation above to calculate our predicted boundary between between male and female classifications. For example, based on the numbers in our printout of the fixed effects above, we expect that the overall category boundary is at $-(a/b) = -(0.86 / -3.59) = -0.24$. However, remember that to do arithmetic operations on, or otherwise combine, our parameters, we have to use the original samples and not the summaries (see section X for a discussion on this). There are generally two ways we can do this. The first is by directly combining the fixed effects samples as necessary. First we get the unsummarized fixed effects samples:
+We can use the equation above to calculate our predicted boundary between between male and female classifications. For example, based on the numbers in our printout of the fixed effects above, we expect that the overall category boundary is at $-(a/b) = -(0.86 / -3.59) = -0.24$. However, remember that to do arithmetic operations on, or otherwise combine, our parameters, we have to use the original samples and not the summaries (see section \@ref(c5-manipulating-random-effects) for a discussion on this). There are generally two ways we can do this. The first is by directly combining the fixed effects samples as necessary. First we get the unsummarized fixed effects samples:
 
 ```{r}
 samples = fixef (model_gender_vtl, summary = FALSE)
@@ -866,7 +866,7 @@ d' = \phi(H) - \phi(FA)
 \end{equation}
 $$
 
-Where $\phi(p)$ is a function that converts a proportion (or probability) to a z-score (a standard normal Gaussian variable, see section X). Models estimating $d'$ can be implemented with Probit regression, which is basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function (see section X) rather than the inverse logit link function. The inverse logit function effectively performs the same function as $\phi(p)$ in \@ref(eq:10-17), meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:10-18). 
+Where $\phi(p)$ is a function that converts a proportion (or probability) to a z-score (a standard normal variable, see section \@ref(c2-standard-normal)). Models estimating $d'$ can be implemented with Probit regression, which is basically analogous to logistic regression save for the fact that they rely on the cumulative Gaussian link function (see section \@ref(c12-cumulative-density)) rather than the inverse logit link function. The inverse logit function effectively performs the same function as $\phi(p)$ in \@ref(eq:10-17), meaning that logistic regression can be used to estimate $d$ (rather than $d'$). We define $d$ as the difference between the logit of the hit rate and the logit of the false alarm rate as in \@ref(eq:10-18). 
 
 $$
 \begin{equation}
@@ -973,7 +973,9 @@ Before continuing, we want to highlight and extremely important property of thes
 
 ### Data and research questions
 
-We're going to keep working with the data we loaded above, which we reload below for convenience. We also center our VTL predictor and create a new predictor representing veridical gender. To represent veridical gender in our model we're going to do something new, were going to directly specify one of the 'secret' numerical variables our models have been relying on all along (see section X, X). When you have a categorical predictor with only two levels, the coefficient representing one of the levels cannot be estimated because it is the negative of the other coefficient. When using sum coding, this is represented numerically using a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below, we add a variable representing veridical speaker femaleness (`F_v`) with values of 1 (for female) and -1 (for male). 
+We're going to keep working with the data we loaded above, which we reload below for convenience. We also center our VTL predictor and create a new predictor representing veridical gender. To represent veridical gender in our model we're going to do something new, were going to directly specify one of the 'secret' numerical variables our models have been relying on all along (for example, see sections \@ref(c5-description-1), \@ref(c7-description-1)). 
+
+When you have a categorical predictor with only two levels, the coefficient representing one of the levels cannot be estimated because it is the negative of the other coefficient. When using sum coding, this is represented numerically using a predictor that equals 1 for one group (the estimated parameter) and -1 for the other group. Below, we add a variable representing veridical speaker femaleness (`F_v`) with values of 1 (for female) and -1 (for male). 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)

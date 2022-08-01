@@ -112,12 +112,34 @@ z_1 = 0 + 0 \times x_1 + 0 \times x_2 + \dots + 0 \times x_k \\
 \end{equation}
 $$
 
-When we carried out logistic regression, the variable $z$ was refereed to as a logit. Sometimes the $z_j$ values involved in multinomial regression are called **multinomial logits** to highlight their similarity to the dichotomous logit. Sometimes these values are referred to as the **score** for each category. The score is somewhat vaguely defined, in part because there are many ways to think about what the score is and means. One way to think of the score is that it is a *latent variable* associated with each category that relates to the probability of observing that category given the values of the dependent variables.
+When we carried out logistic regression, the variable $z$ was refereed to as a logit. Sometimes the $z_j$ values involved in multinomial regression are called **multinomial logits** to highlight their similarity to the dichotomous logit. More often, these values are referred to as the **score** for each category. The 'meaning' of the score is somewhat vaguely defined, in part because there are many ways to think about it. One way to think of the score is that it is a *latent variable* associated with each category that relates to the probability of observing that category given the values of the dependent variables.
 
-**Latent variables** are variables that are inferred mathematically using some statistical model, but are not measured directly. For example, in our logistic regression model in chapter 10 we predicted the perception of femaleness. We did this by predicting variation in the logit of the probability of observing a female response as a function of speaker vocal-tract length. The logit of this probability can be thought of as a latent variable representing something like 'femininity' in the mind of the listener. Based on the 'feeling' of voice femininity that the listener has they produce the surface variable that we do measure: A binary classification of a speaker as female/male. In this view the realization of the response variable (a female classification) is the result of a secret, *latent* variable that is not directly observed by us, but which we assume underlies the process. 
+**Latent variables** are variables that are inferred mathematically using some statistical model, but are not measured directly. For example, in our logistic regression model in chapter 10 we predicted the perception of femaleness. We did this by predicting variation in the logit of the probability of observing a female response as a function of speaker vocal-tract length. The logit of this probability can be thought of as a latent variable representing something like 'femininity/femaleness' in the mind of the listener. Based on the 'feeling' of voice femininity that the listener has they produce the surface variable that we do measure: A binary classification of a speaker as female/male. In this view the realization of the response variable (a female classification) is the result of a secret, *latent* variable that is not directly observed by us, but which we assume underlies the process. 
 
+In our four-category multinomial model we can imagine four latent variables, the score for each category. We can *think* of these as the 'feeling' the listener has regarding the 'boyness', 'girlness', 'manness', and 'womanness' of the voice. What is the 'boyness' of a voice? The unquantifiable internal knowledge a listener has that the speaker is a boy, as opposed to some other sort of speaker. These latent variables are not directly measured in our experiment but we think they underlie the categorization of speakers into categories. Thus, by observing the categorization of speakers into categories we can try to make inferences about these underlying variables.  
 
-```{r}
+### Comparison to logistic regression
+
+At this point we've laid out the basics of multinomial regression, however, our presentation has been very quick and fairly abstract. To make our example more concrete we're going to talk about a small toy example using a single predictor and three categories, and show how this is a modest extension of a univariate logistic regression model. 
+
+Let's assume that we're interested in prediction of a variable $Y$ with two outcome categories, 1 and 2. We arbitrarily set 2 to 'success' and make it equal to 1 in the vector representing the variable. Supposed we are interested in predicting the probability of observing a success, i.e. $Y=2$, using a single quantitative predictor $x$. We model the logit of the probability of observing a success with a line with a given intercept and slope for the quantitative predictor, and set the value of failures to 0 logits for all cases. This is equivalent to representing the failure category with a horizontal line whose intercept is zero. This situation is presented in the right plot of figure \@ref(fig:F12-1). The two lines predicting logits from x for each categories are presented in equation below. 
+
+$$
+\begin{equation}
+\begin{split}
+z_1= 0 + x \times 0
+\\
+z_2= -3 + x \times -3
+\end{split}
+(\#eq:12-00)
+\end{equation}
+$$
+
+```{r F12-1, fig.height = 4, fig.width=8, fig.cap = "(left) bla. (right) bla", echo = FALSE}
+
+################################################################################
+### Figure 12.2
+###############################################################################
 
 x = seq (-3,3,0.1)
 
@@ -138,41 +160,124 @@ softmax = function (scores){
 ps = softmax (scores)
 ps2 = softmax (scores[,-3])
 
-par (mfrow = c(2,2), mar=c(4,4,1,1))
-plot (x, z2, type = 'l',col=4, ylim = c(-15,15),xlim=c(-3,3))
-lines (x,z1,col=1)
+par (mfrow = c(2,2), mar=c(.2,4,.2,1), oma = c(4,1,.5,0))
+plot (x, z2, type = 'l',col=4, ylim = c(-15,8),xlim=c(-3,3),xaxt='n',
+      ylab = "Logit",lwd=3,cex.lab=1.3,xaxs='i')
+grid()
+lines (x,z1,col=1,lwd=3)
 
-plot (x, ps2[,1], type = 'l',col=4, ylim = c(0,1),xlim=c(-3,3))
-lines (x,ps2[,2],col=1)
+plot (x, ps2[,2], type = 'l',col=4, ylim = c(0,1),xlim=c(-3,3),xaxt='n',
+      ylab = "P(y=C)",lwd=3,cex.lab=1.3,xaxs='i')
+grid()
+lines (x,ps2[,1],col=1, lty=2,lwd=3)
 
-plot (x, z2, type = 'l',col=4, ylim = c(-15,15),xlim=c(-3,3))
-lines (x,z1,col=1)
-lines (x,z3,col=2)
+plot (x, z2, type = 'l',col=4, ylim = c(-15,8),xlim=c(-3,3),
+      ylab = "Score",lwd=3,cex.lab=1.3,xaxs='i')
+grid()
+lines (x,z1,col=1,lwd=3)
+lines (x,z3,col=2,lwd=3)
+mtext (side=1, "Predictor", line=2.7,lwd=3)
 
-plot (x, ps[,1], type = 'l',col=4, ylim = c(0,1),xlim=c(-3,3))
-lines (x,ps[,2],col=1)
-lines (x,ps[,3], col=2)
-
-
-
-
+plot (x, ps[,2], type = 'l',col=4, ylim = c(0,1),xlim=c(-3,3),
+      ylab = "P(y=C)",lwd=3,cex.lab=1.3,xaxs='i')
+grid()
+lines (x,ps[,1],col=1,lwd=3)
+lines (x,ps[,3], col=2,lwd=3)
+mtext (side=1, "Predictor", line =2.7)
 
 ```
 
-- do with just two lines show how its logistic.
-show optional inverse line
-add third line see how its same thing
+Rather than use the inverse logit function to convert logits to probabilities, we will use the softmax function (introduced above), since we know that these are equivalent when there are two categories. Below, we see that when we set the 'count' for failures to 1, i.e. set $z_1=0$ so that $e^{z_1}=1$, the softmax function really does 'become' the inverse logit function when calculating the probability of a success ($P(Y=2)$). Below that we also use this approach to calculate the probability of a failure ($P(Y=1)$). Of course, this is not usually done because $P(Y=2) = 1-P(Y=2)$, however, we do this explicitly here for illustrative purposes.
 
-We have four latent variables in our multinomial model predicting apparent speaker category: The score for each category. We can *think* of these as the 'feeling' the listener has regarding the 'boyness', 'girlness', 'manness', and 'womanness' of the voice. What is the 'boyness' of a voice? The unquantifiable internal knowledge a listener has that the speaker is a boy, as opposed to some other sort of speaker. These latent variables are not directly measured in our experiment but we think they underlie the categorization of speakers into categories. Clearly, based on equation 12-2? the category with the highest score will also have the highest probability $p$. 
-[@@ sb remove all discussion of listener and make it about prediction]
-When a listener hears a voice and their 'boyness' score is greater than the scores for the other categories, the listener is most likely to indicate that the voice is a boy. When the score between one category and the others is very unequal, this decision is easy and classification into one category will dominate. When the scores for two or more categories are about equal, i.e. the 'boyness' and 'womanness' of a voice are similar, the listener will feel ambiguous about the decision and classification into either category may be equally likely.
+$$
+\begin{equation}
+\begin{split}
+P(Y=2) = \frac{e^{z_2}}{e^{z_1} + e^{z_2}} = \frac{e^{z_2}}{1 + e^{z_2}} 
+\\
+P(Y=1) = \frac{e^{z_1}}{e^{z_1} + e^{z_2}} = \frac{1}{1 + e^{z_2}} 
+\end{split}
+(\#eq:12-001)
+\end{equation}
+$$
 
-The above might seem hand wavey and vague, and it basically is. We are presenting one of many ways to *think* about multinomial regression to help build some intuitions about it. This conceptual picture of multinomial models and latent variables is not well defined because such interpretations largely fall outside the scope of mathematics. In ther words, the matho of these models is in no way vague, but they way to think about what they 'mean' and how they relate to 'reality' and the nature of the processes we are observing is. 
+You can use the code below to recreate the lines in the top row of figure \@ref(fig:F12-1), and to find the probabilities in the top right plot. The probability of observing a success (category 2, blue line) looks just like the sigmoid curves we saw when doing a logistic regression in chapter 10. In figure \@ref(fig:F12-1) we also plot the curve associated with failures. Normally this is not plotted for logistic regression since it is just the curve for failures mirrored about the line at p=0.5. 
 
-At this point we've laid out the basics of multinomial regression and can present a summary of the information above. In multinomial logistic regression we model the probability of observing each of the $J$ categorical outcomes. We fix the value of the score (or multinomial logit) of the reference category to 1, and estimate the scores of the other categories using a prediction equation specific for the category. The logit predicted for each category in a specific situation can then be converted to a probability using the softmax function presented in equation above. 
+```{r, eval = FALSE}
+# predictor from -3 to 3
+x = seq (-3,3,0.1)
 
-[@@ SB simple example of lines converted to scores converted to probs??]
+# lines for failures
+z_1 = 0 + x*0
+# line for successes
+z_2 = -3 + x*-3
 
+scores = cbind (z1,z2)
+
+# softmax function, exponentiate and divide by sum
+probabilities = exp (scores) / rowSums (exp (scores))
+
+# simple version of the top right plot in Figure 12.1
+plot (probabilities[,1], type = 'l')
+lines (probabilities[,2], type = 'l')
+```
+
+To turn our logistic regression into a multinomial regression, let's imagine we want to model a third outcome category, $Y=3$. We will add a line predicting the 'logit', no a *score*, for this category below. We now have three lines predicting scores, one of which is still horizontal (bottom left, figure above). This is no longer a 'failure' but rather the *reference category*.
+
+$$
+\begin{equation}
+\begin{split}
+z_1= 0 + x \times 0
+\\
+z_2= -3 + x \times -3
+\\
+z_2= -3 + x \times 3
+\end{split}
+(\#eq:12-002)
+\end{equation}
+$$
+
+To get the predicted probability of observing each outcome enter these scores into the softmax function as in equation below. 
+
+$$
+\begin{equation}
+\begin{split}
+P(Y=3) = \frac{e^{z_3}}{1 + e^{z_2} + e^{z_3}} 
+\\
+P(Y=2) = \frac{e^{z_2}}{1 + e^{z_2} + e^{z_3}} 
+\\
+P(Y=1) = \frac{1}{1 + e^{z_2} + e^{z_3}} 
+\end{split}
+(\#eq:12-003)
+\end{equation}
+$$
+
+You can use the code below to recreate this process, and the lines in the bottom row of figure \@ref(fig:F12-1). Note that all we've done is add a third line and a third score. Apart from that the process is the same as it was for logistic regression.
+
+```{r, eval = FALSE}
+# predictor from -3 to 3
+x = seq (-3,3,0.1)
+
+# lines for reference category
+z_1 = 0 + x*0
+# line for category two
+z_2 = -3 + x*-3
+# line for category three
+z_2 = -3 + x*3
+
+scores = cbind (z1,z2,z3)
+
+# softmax function, exponentiate and divide by sum
+probabilities = exp (scores) / rowSums (exp (scores))
+
+# simple version of the top right plot in Figure 12.1
+plot (probabilities[,1], type = 'l',ylim=c(0,1))
+lines (probabilities[,2], type = 'l')
+lines (probabilities[,3], type = 'l')
+```
+
+There is one important difference between logistic and multinomial regression related to classification, or expected outcomes, based on probabilities and scores. When there are only two categories, a logit greater than 0 implies a probability greater than 0.5 of success. In previous chapters, we used this characteristics to talk about expected outcomes in specific parts of the stimulus space. Basically, in any part of the stimulus space where a positive logit is predicted, you expect to observe a 'success' (1). In any part of the stimulus space where a negative logit is predicted you expect to observe a 'failure' (0). Since the logit of failures is always fixed at exactly zero, another way to look at this is that the category with the greatest predicted logit value is expected. 
+
+When there are more than two possible outcome categories, there is no guarantee that a positive score means a certain outcome is predicted. However, it is still the case that the category with the greatest score in a given condition is the predicted outcome for that condition. Another thing to keep in mind is that, unlike in logistic regression, the most probable outcome may not be very probable in a multinomial model. For example, if there are five outcome categories the most probable predicted outcome could have a probability as low as 0.24 if the other categories had probabilities of 0.19. Thus, we see that in multinomial regression the most probable outcome doesn't have to be very probable, it just needs to be more probable than the alternatives.    
 
 ### Data and research questions
 
@@ -219,7 +324,7 @@ Keep in mind we're trying to predict *apparent* and not *veridical* speaker cate
 
 ### Description of our model
 
-Our model formula is largely similar to those we have seen before, with one minor change. Beside your dependent variable, you need to include a variable that indicates the integer number of trials for each set of observations. For us this will always be 1, but in many situations this can be a wider range of values. We want to predict our counts of categorizations with respect to value of speaker VTL and f0, and so the model formula we are going to use is seen below. 
+Our model formula is largely similar to those we have seen before, with one minor change. Beside your dependent variable, separated by a pipe (`|`), you need to include a variable that indicates the integer number of trials for each set of observations. For us this will always be 1, but in many situations this can be a wider range of values. We want to predict our counts of categorizations with respect to value of speaker VTL and f0, and so the model formula we are going to use is seen below. 
 
 `y|trials(size) ~ vtl+f0 + (vtl+f0|S) + (1|L)`
 
@@ -255,7 +360,7 @@ S_{j[\bullet]} \sim \mathrm{Normal}(0,\sigma_{S_j})
 \\ 
 \begin{bmatrix} L_{j[\bullet]} \\ VTL_j \colon L_{j[\bullet]} \\ f0_j \colon L_{j[\bullet]} \end{bmatrix}	
 \sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ \end{bmatrix}, \Sigma_j \right) \\ \\
-Intercept_j \sim t(3, 0, 3) \\
+\mathrm{Intercept}_j \sim t(3, 0, 3) \\
 VTL_j, f0_j \sim t(3, 0, 3) \\
 \sigma_{L_j}, \sigma_{VTL_j \colon L_j}, \sigma_{f0_j \colon L_j} \sim t(3, 0, 3) \\ R_j \sim \mathrm{LKJCorr} (2)
 
@@ -264,9 +369,7 @@ VTL_j, f0_j \sim t(3, 0, 3) \\
 \end{equation}
 $$
 
-We're going to take some time to unpack this definition, top to bottom, because it is at the same time very familiar and very different. First, note that our data-generating distribution is assumed to be the multinomial distribution. This function has a $p_j$ parameter indicating the probability of observing each of the $J$ categories, and an $n$ parameter specifying the total number of trials for that observation. The next line indicates that the next few lines applies individually for all four categories. For each category, the probability of observing that outcome ($p_j$) is found by combining the score for each category ($z_j$) using the softmax link function. For each category, the score is equal to a trial-dependent combination of an intercept, an effect fot VTL, and an effect for f0. The intercept varies according to an overall model intercept and speaker and listener-dependent variations from this. The VTL and f0 effect vary according to listener-dependent effects. 
-
-After that we move on to the model priors. Unlike for the above lines, we do not specify priors for any parameters related to the reference category. This is because all of these parameters are set to 0 for this category so that the score for this category is always 0 and the 'expected count' (as discussed above) is always equal to 1. Again we may note that the specification of priors is very similar to the models we have discussed to this point, save for the proliferation of $j$ subscripts. 
+We're going to take some time to unpack this definition, top to bottom, because it is at the same time very familiar and very different. First, note that our data-generating distribution is assumed to be the multinomial distribution. This function has a $p_j$ parameter indicating the probability of observing each of the $J$ categories, and an $n$ parameter specifying the total number of trials for that observation. The next line indicates that the next few lines apply individually for all four categories. For each category, the probability of observing that outcome ($p_j$) is found by combining the score for each category ($z_j$) using the softmax link function. For each category, the score is equal to a trial-dependent combination of an intercept, an effect for VTL, and an effect for f0. The intercept varies according to an overall model intercept and speaker and listener-dependent variations from this. The VTL and f0 effect vary according to listener-dependent effects. After that we move on to the model priors. Unlike for the above lines, we do not specify priors for any parameters related to the reference category. This is because all of these parameters are set to 0 for this category. Again we may note that the specification of priors is very similar to the models we have discussed to this point, save for the proliferation of $j$ subscripts. 
 
 ### Fitting and interpreting our models
 
@@ -351,13 +454,12 @@ We can use the code below to find the 'winning' category for each observation, t
 
 ```{r}
 # find highest posterior prbability from each category
-predicted = apply (multi_pred_re[,1,],1,which.max)
+predicted = apply (multi_pred[,1,],1,which.max)
 head (predicted)
 
 # use modal category to get a category label
 predicted_category = c("b","g","m","w")[predicted]
 head (predicted_category)
-
 ```
 
 Below, we cross-tabulate predicted and observed classifications. Each row shows speaker classifications into different categories, and model predictions vary across columns. This is a *confusion matrix*, introduced in chapter 5. Correct classifications fall on the main diagonal and all other values indicate mistakes. For example, we see that there were 258 correct classifications of boys as boys, and 88 incorrect classifications of boys as girls. A majority of observations fall along the main diagonal indicating that the model was relatively good at predicting listener behavior.
@@ -556,12 +658,12 @@ tab = table (exp_data$S, exp_data$C)
 mod_cat = apply (tab, 1,which.max)
 
 cats = apply(multi_pred[,1,],1,which.max)
-table (exp_data$C, cats)
+#table (exp_data$C, cats)
 tab2 = table (exp_data$S, cats)
 mod_cat2 = apply (tab2, 1,which.max)
 
 cats = apply(multi_pred_re[,1,],1,which.max)
-table (exp_data$C, cats)
+#table (exp_data$C, cats)
 tab2 = table (exp_data$S, cats)
 mod_cat3 = apply (tab2, 1,which.max)
 
@@ -631,7 +733,7 @@ We can think about what these speaker effects might reflect. The information reg
 We again consider our model prediction accuracy, but this time consider predictions without any random effects.
 
 ```{r}
-predicted_no_re = apply (multi_pred[,1,],1,which.max)
+predicted_no_re = apply (multi_pred_re[,1,],1,which.max)
 predicted_category_no_re = c("b","g","m","w")[predicted]
 ```
 
@@ -690,12 +792,12 @@ tab = table (exp_data$S, exp_data$C)
 mod_cat = apply (tab, 1,which.max)
 
 cats = apply(multi_pred_noS[,1,],1,which.max)
-table (exp_data$C, cats)
+#table (exp_data$C, cats)
 tab2 = table (exp_data$S, cats)
 mod_cat2 = apply (tab2, 1,which.max)
 
 cats = apply(multi_pred_re_noS[,1,],1,which.max)
-table (exp_data$C, cats)
+#table (exp_data$C, cats)
 tab2 = table (exp_data$S, cats)
 mod_cat3 = apply (tab2, 1,which.max)
 
@@ -731,7 +833,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 Figure \@ref(fig:F12-7) compares the territorial maps represented by our models with (left) and without (right) speaker information. In addition to being a better fit to the data, we think the new territorial maps make more 'sense'. This is because the map with speakers suggests that the difference between women and boys was almost entirely due to f0, with women being associated with the higher f0. This is despite boys being associated with shorter VTLs than adult females *and* a higher f0. The new map has basically no effect for f0 between these categories and makes it a primarily VTL difference, which is backed up by the distributions of these characteristics between these speaker types. 
 
-```{r F12-7, fig.height = 3, fig.width=8, fig.cap = "(left) Territorial maps indicating which sections of the stimulus space are associated with: Boys (turquoise), girls (yellow), men (green), and women (red). Points represent individual speakers, colors represent modal classifications using the same colors as the territories.", echo = FALSE}
+```{r F12-7, fig.height = 3.5, fig.width=8, fig.cap = "(left) Territorial maps indicating which sections of the stimulus space are associated with: Boys (turquoise), girls (yellow), men (green), and women (red). Points represent individual speakers, colors represent modal classifications using the same colors as the territories.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.7

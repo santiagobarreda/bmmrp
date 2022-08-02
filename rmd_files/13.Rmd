@@ -7,7 +7,7 @@ knitr::opts_chunk$set(
 
 # Writing up experiments: An investigation of the perception of speaker category from speech acoustics
 
-In this chapter we will present a complete analysis of our experimental data based on the models we've considered in the last few chapters. Will be written in the general structure of an academic paper, but less formally, and will include a meta-discussion of what we are doing and why we are doing it. 
+In this chapter we will present a complete analysis of our experimental data based on the models we've considered in the last few chapters. The chapter will be written in the general structure of an academic paper, but less formally, and will include a meta-discussion of what we are doing and why we are doing it. 
 
 Writing a paper is like directing a short (maybe slightly dull) movie. A movie is made up of hundreds or thousands of discrete "shots", stuck together to give the impression of a single, continuous, coherent "story". Do you ever watch a movie and wonder, why is this scene here? What is this characters motivation? Where are characters right now and how did they get here? If so, this shows that either the director or the editor has been careless with the way they have stuck their shots together, resulting in problems with your understanding of the story. 
 
@@ -23,7 +23,7 @@ If we think about our two hypothetical researchers above, one of these researche
 
 The acoustic characteristics of the human voice vary in a systematic way between speakers with different indexical characteristics such as age and gender. Listeners are familiar with this co-variation and use this information to guess speaker indexical characteristics from their speech. Although listeners are often incorrect in their assessments they tend to be fairly consistent. In this way, listener judgments of speaker indexical characteristics can be thought of as incorrect but precise: People often make errors but their errors are fairly predictable. In this experiment we will investigate how listeners asses speaker characteristics from speech acoustics, and the way that our assumptions about speakers can affect the use of these cues. 
 
-## The role for voice fundamental frequency
+### Variation in fundamental frequency between speakers
 
 The main acoustic predictors of apparent speaker age, size and gender are the fundamental frequency, and the resonance properties of speech. Voice fundamental frequency will be discussed, and resonance will be introduced in the following section. 
 
@@ -42,34 +42,47 @@ data(exp_data_all, package="bmmb")
 
 par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
 
-plot (height_data$age[height_data$gender=="f"],height_data$height[height_data$gender=="f"],
+plot (height_data$age[height_data$gender=="f"]-.1,height_data$height[height_data$gender=="f"],
       pch=16,col=2,lwd=2,cex=1.5, ylim = c(80,190),type='b', xlab="Age (years)",
       ylab = "Height (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (height_data$age[height_data$gender=="m"],height_data$height[height_data$gender=="m"],
+lines (height_data$age[height_data$gender=="m"]+.1,height_data$height[height_data$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
 
+
+phonTools::errorbar(height_data$age[height_data$gender=="f"]-.1,
+                    height_data$height[height_data$gender=="f"],
+                    height_data$sd[height_data$gender=="f"],col=2,lwd=1,length=0.051)
+phonTools::errorbar(height_data$age[height_data$gender=="m"]+.1,
+                    height_data$height[height_data$gender=="m"],
+                    height_data$sd[height_data$gender=="m"],col=4,lwd=1,length=0.051)
+
 #ats = c(8,9.5,11,12.5,14, 15.5)
 #vtls = (ats - 2.7)/0.068
 #axis (side=4, at = vtls, labels = ats)
-data(lee_etal_data, package="bmmb")
-lee_etal_data$gbar = rowMeans(log(lee_etal_data[,4:6]))
+lee_etal_data
+lee_etal_data$vtl = exp(-((lee_etal_data$gbar)-min(lee_etal_data$gbar)))
+lee_etal_data$vtl = 15 * lee_etal_data$vtl
 
-agg = aggregate (cbind(f0,gbar) ~ age + gender, data = lee_etal_data, FUN = mean)
+agg = aggregate (cbind(f0,vtl) ~ age + gender, data = lee_etal_data, FUN = mean)
+agg_sd = aggregate (cbind(f0,vtl) ~ age + gender, data = lee_etal_data, FUN = sd)
+agg$vtl = agg$vtl * (15/max(agg$vtl))
 
-agg$vtls = exp(-((agg$gbar)-min(agg$gbar)))
-agg$vtls = 15 * agg$vtls
+rect (9.5,140,12.5,160,lwd=2,border="forestgreen",lty=1)
+rect (17.5,155,20.5,185,lwd=2,border="forestgreen",lty=1)
 
-rect (9.5,140,12.5,160,lwd=3,border=3)
-rect (17.5,155,20.5,185,lwd=3,border=3)
-
-plot (agg$age[agg$gender=="f"],agg$f0[agg$gender=="f"],
+plot (agg$age[agg$gender=="f"]-.1,agg$f0[agg$gender=="f"],
       pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,300),type='b', xlab="Age (years)",
       ylab = "f0 (Hz)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (agg$age[agg$gender=="m"],agg$f0[agg$gender=="m"],
+lines (agg$age[agg$gender=="m"]+.1,agg$f0[agg$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
+phonTools::errorbar(agg$age[agg$gender=="f"]-.1,agg$f0[agg$gender=="f"],
+                    agg_sd$f0[agg$gender=="f"],col=2,lwd=1,length=0.051)
+phonTools::errorbar(agg$age[agg$gender=="m"]+.1,agg$f0[agg$gender=="m"],
+                    agg_sd$f0[agg$gender=="m"],col=4,lwd=1,length=0.051)
+
 
 #rect (9.5,220,12.5,270,lwd=3,border=3)
 #rect (17.5,110,20.5,250,lwd=3,border=3)
@@ -87,12 +100,12 @@ grid()
 #rect (9.5,220,12.5,270,lwd=3,border=3)
 #rect (17.5,110,20.5,250,lwd=3,border=3)
 
-points (height_data$height[c(29,10,38,19)],  tapply (exp_data$f0, exp_data$C, mean), pch=1,lwd=4, 
+points (height_data$height[c(29,10,38,19)],  tapply (exp_data$f0_original, exp_data$C, mean), pch=1,lwd=4, 
         cex = 3,col=bmmb::cols[2:5])
 
 ```
 
-## The role of vocal tract resonance
+### Variation in vocal tract resonance between speakers
 
 Another way that speakers vary systematically in their speech acoustics is in their voice resonance. When we speak, we push air through our vocal folds, causing them to vibrate. The opening and closing of the vocal folds cause little periodic puffs of air to pass by. This results in a buzzing sound much like is made by the reed of a saxophone. The puffs of air go from your larynx (in your neck) to your mouth. Even if your mouth is open, some of the energy in these puffs 'bounces' off of the boundary at your mouth and *reflect* back towards your vocal folds. These reflections add up and result in what is known as a **standing wave**. These standing waves cause an **acoustic resonance** are what allow us to produce speech that is so loud given how little effort we put into it.   
 
@@ -102,9 +115,7 @@ For human speech communication, the enclosed structure used to create acoustic r
 
 The speed of sound is fixed for a given environment (temperature, pressure, gas composition, etc.). This means that the bouncing back and forth between your mouth and your larynx occurs at a fixed speed. However, the number of cycles per second that it is able to complete, measured in Hz, varies as a function of the length of the vocal tract. This is obvious: A longer travel time at a fixed velocity entails fewer repetitions per unit time. As a result, the vocal-tract length of a speaker has a predictable acoustic consequence that can be measured with speakers with longer vocal tracts having lower resonances. 
  
-Let's imagine the number of times a puff of air can bounce back and forth between the ends of the vocal tract in 1 second. Since the speed of sound is fixed, the repetition rate of this cycle will be entirely determined by the length of the vocal tract. A puff of air will take twice as long to repeat a single cycle along a vocal tract that is twice as long.
-
-Exactly how VTL is measured acoustically is beyond the scope of this explanation, but we use the method described in Reby et al. (cite). This method uses estimates of the voice resonance frequencies to estimate the length of the vocal tract that produced them, in centimeters. This is possible because of the reliable connection between the length of a resonator and the frequencies it resonates, noted above. So, we will discuss speaker vocal-tract length in units of centimeters even though this measure is arrived at from acoustic measurements. This will be done because people tend to find VTL in cm more relatable than an eqivalent measurement based on the acoustic resonances expressed in frequency units.  
+Let's imagine the number of times a puff of air can bounce back and forth between the ends of the vocal tract in 1 second. Since the speed of sound is fixed, the repetition rate of this cycle will be entirely determined by the length of the vocal tract. A puff of air will take twice as long to repeat a single cycle along a vocal tract that is twice as long. Because of the reliable connection between the length of a resonator and the frequencies it resonates, we can estimate the length of the vocal tract, in centimeters, based on its resonances. However, it's important to know that this is just an *estimate* based on a *model*, it is not an actual measurement of the physical speaker's vocal tract in units of distance. We could have left this as a unit of frequency scaling, however we have found that readers find VTL in cm more relatable than an equivalent measurement based on the acoustic resonances expressed in frequency units.  
 
 In figure \@ref(fig:F13-2)
   
@@ -118,14 +129,25 @@ data(height_data, package="bmmb")
 data(exp_data_all, package="bmmb")
 
 par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
-
-plot (height_data$age[height_data$gender=="f"],height_data$height[height_data$gender=="f"],
+plot (height_data$age[height_data$gender=="f"]-.1,height_data$height[height_data$gender=="f"],
       pch=16,col=2,lwd=2,cex=1.5, ylim = c(80,190),type='b', xlab="Age (years)",
       ylab = "Height (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (height_data$age[height_data$gender=="m"],height_data$height[height_data$gender=="m"],
+lines (height_data$age[height_data$gender=="m"]+.1,height_data$height[height_data$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
+
+
+phonTools::errorbar(height_data$age[height_data$gender=="f"]-.1,
+                    height_data$height[height_data$gender=="f"],
+                    height_data$sd[height_data$gender=="f"],col=2,lwd=1,length=0.051)
+phonTools::errorbar(height_data$age[height_data$gender=="m"]+.1,
+                    height_data$height[height_data$gender=="m"],
+                    height_data$sd[height_data$gender=="m"],col=4,lwd=1,length=0.051)
+
+
+rect (9.5,140,12.5,160,lwd=2,border="forestgreen")
+rect (17.5,155,20.5,185,lwd=2,border="forestgreen")
 
 #ats = c(8,9.5,11,12.5,14, 15.5)
 #vtls = (ats - 2.7)/0.068
@@ -133,20 +155,27 @@ legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1
 data(lee_etal_data, package="bmmb")
 lee_etal_data$gbar = rowMeans(log(lee_etal_data[,4:6]))
 
-agg = aggregate (cbind(f0,gbar) ~ age + gender, data = lee_etal_data, FUN = mean)
+lee_etal_data
+lee_etal_data$vtl = exp(-((lee_etal_data$gbar)-min(lee_etal_data$gbar)))
+lee_etal_data$vtl = 15 * lee_etal_data$vtl
 
-agg$vtls = exp(-((agg$gbar)-min(agg$gbar)))
-agg$vtls = 15 * agg$vtls
+agg = aggregate (cbind(f0,vtl) ~ age + gender, data = lee_etal_data, FUN = mean)
+agg_sd = aggregate (cbind(f0,vtl) ~ age + gender, data = lee_etal_data, FUN = sd)
+agg$vtl = agg$vtl * (15/max(agg$vtl))
 
-rect (9.5,140,12.5,160,lwd=3,border=3)
-rect (17.5,155,20.5,185,lwd=3,border=3)
-
-plot (agg$age[agg$gender=="f"],agg$vtl[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,16),type='b', xlab="Age (years)",
+plot (agg$age[agg$gender=="f"]-.1,agg$vtl[agg$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(9,17),type='b', xlab="Age (years)",
       ylab = "VTL (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (agg$age[agg$gender=="m"],agg$vtl[agg$gender=="m"],
+lines (agg$age[agg$gender=="m"]+.1,agg$vtl[agg$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
+
+phonTools::errorbar(agg$age[agg$gender=="f"]-.1,agg$vtl[agg$gender=="f"],
+                    agg_sd$vtl[agg$gender=="f"],col=2,lwd=1,length=0.051)
+phonTools::errorbar(agg$age[agg$gender=="m"]+.1,agg$vtl[agg$gender=="m"],
+                    agg_sd$vtl[agg$gender=="m"],col=4,lwd=1,length=0.051)
+
+
 
 #rect (9.5,220,12.5,270,lwd=3,border=3)
 #rect (17.5,110,20.5,250,lwd=3,border=3)
@@ -155,7 +184,7 @@ points (c(11,11,19,19), tapply (exp_data$vtl, exp_data$C, mean), pch=1,lwd=4,
         cex = 3,col=bmmb::cols[2:5])
 
 plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],agg$vtl[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,16),type='b', xlab="Height (cm)",
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,17),type='b', xlab="Height (cm)",
       ylab = "VTL (cm)",xlim=c(110,180),cex.axis=1.3,cex.lab=1.3)
 lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],agg$vtl[agg$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
@@ -164,14 +193,22 @@ grid()
 #rect (9.5,220,12.5,270,lwd=3,border=3)
 #rect (17.5,110,20.5,250,lwd=3,border=3)
 
-points (height_data$height[c(29,10,38,19)],  tapply (exp_data$vtl, exp_data$C, mean), pch=1,lwd=4, 
+points (height_data$height[c(29,10,38,19)],  tapply (exp_data$vtl_original, exp_data$C, mean), pch=1,lwd=4, 
         cex = 3,col=bmmb::cols[2:5])
 
 ```
 
 
 
-## Perception of age, gender and size
+### Perception of age, gender and size
+
+Our discussion of the perception of apparent speaker characteristics will focus on three of these: Apparent height, apparent age, and apparent gender. We will begin with the perception of apparent gender in adults. [@@ SB - discuss sex v gender. ]The most important predictors of apparent gender in adults are f0 and VTL (cite). Because adult men and women are well separated along these dimensions, listeners can identify the gender of adult speakers from voice in a large majority of cases (e.g. >95% in blank). One important thing to keep in mind that the perception of gender in voice is more complicated than what can be explained by f0 and VTL alone and involves performative aspects that cannot be explained solely due to average differences in body types (cite). 
+
+For example, Hillenbrand et al. (2008?? cite) played listeners adult male and female voices and asked them to guess if they were men or women. They also manipulated stimuli to flip f0 and VTL between men and women: Adult males got female VTL and f0 and adult females got male VTL and f0. Even in this flipped condition, 20% (?) of women were still identified as women, and ?% of men were still identified as men. In addition, the tendency to identify speakers as their unflipped gender was greater for sentences than for syllables. So, although f0 and VTL are important for the perception of gender they do not entirely determine it, and more 'stylistic' information of the sort that is better conveyed by entire sentences also plays an important role for at least some speakers.  
+
+The identification of gender in childrens voices is more complicated, mostly due to the lack of many reliable anatomical differences between boys and girls, and in particular in atomy of the larynx and vocal tract, before puberty. This similarity can be seen by the almost complete overlap of speaker height, VTL and f0 seen in the figures above. Despite this however, previous studies have found that the gender of pre-pubescent children can be identified at an above than chance level (cite). For example, Barreda and Assmann (2021) presented listeners with the voices of boys and girls between the ages of four and 18 and asked them to guess the gender. They found that listeners can identify the gender of speakers as young as five and that this ability increased for sentences over syllables. 
+
+These findings support those of Hillanbrand et al (? cite) in two ways. First, they support the idea that although they are the most determiners of apparent gender and can predict a large majority of variation, there is more to apparent gender than just f0 and VTL. Second, they both show that given longer stretches of speech identification is better. This suggests that performative aspects of gender may come across better for longer stretches of speech.   
 
 - accurate for gender, consistent
 - more subtle than just f0 and VTL
@@ -181,7 +218,7 @@ points (height_data$height[c(29,10,38,19)],  tapply (exp_data$vtl, exp_data$C, m
 
 
   
-```{r F13-3, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) Average height of males and females in the United states of America, organized by age (cite). (middle) Average f0 produced by male and female speakers between from 5 years of age until adulthood. (right) Estimated vocal-tract length for male and female speakers between from 5 years of age until adulthood, based on the acoustic data provided in Lee at al. (?)."}
+```{r F13-3, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) Average f0 and vocal-tract length for each age group in the Lee at al. (?) data. (right) The same data as in the left plot, but only age groups similar to those included in our experiment are included. These are 10-12 year-old children, and adults 18-19 years of age."}
 
 ################################################################################
 ### Figure 13.3
@@ -204,17 +241,18 @@ par (mfrow = c(1,2), mar = c(4.1,4.1,1,1))
 
 
 plot (agg$vtl,agg$f0, pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,280),type='n', 
-      xlab="Age (years)", ylab = "VTL (cm)",xlim=c(10,16),cex.axis=1.1,cex.lab=1.1)
+      xlab="Vocal-tract length (cm)", ylab = "f0 (Hz)",xlim=c(10,16),cex.axis=1.1,cex.lab=1.1)
 grid()
 
 text (agg$vtl,agg$f0, 5:19, col = rep(c(2,4), each = 15))
 
 use = agg$age %in% c(10,11,12,18,19)
 plot (agg$vtl[use],agg$f0[use], pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,280),type='n', 
-      xlab="Age (years)", ylab = "VTL (cm)",xlim=c(10,16),cex.axis=1.1,cex.lab=1.1)
+      xlab="Vocal-tract length (cm)", ylab = "f0 (Hz)",xlim=c(10,16),cex.axis=1.1,cex.lab=1.1)
 grid()
 
-text (agg$vtl[use],agg$f0[use], rep(5:19,2)[use], col = rep(c(2,4), each = 15)[use])
+colss=bmmb::cols[c(3,3,3,5,5,2,2,2,4,4)]
+text (agg$vtl[use],agg$f0[use], rep(5:19,2)[use], col = colss, cex=1.5)
 
 ```
 
@@ -223,7 +261,7 @@ text (agg$vtl[use],agg$f0[use], rep(5:19,2)[use], col = rep(c(2,4), each = 15)[u
 There is extensive experimental evidence showing that voice f0 strongly affects the perception of speaker age (cite), gender (cite), and height (cite). 
 
 
-## Category-dependent behavior
+### Category-dependent behavior
 
 Previous research has found that perception of the age of children between the ages of 5 and 18 is dependent on the perceived gender of the child. Research has also shown the inverse: Perception of the gender of children is dependent on the apparent age of the child. Barreda (2017) also found that the way that VTL is used to estimate the height of adult females would not let them predict the height of younger women because the VTL to height relationship did not feature large enough changes to height as a function of VTL.  
 
@@ -546,7 +584,7 @@ We will base our answers to these questions on our reduced model above (`model_g
 knitr::kable(fixef(model_gender_vtl_f0_reduced), caption = "Fixed effect posterior means, error, and credible intervals for our reduced model.",digits = 2)
 ```
 
-It seems that differences in apparent speaker age is associated with varying use of both VTL and f0. In each case, the effects of f0 and VTL changes are *stronger* for adults compared to children. For example, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for children ($f0 + (-A1) = 2.2 - 1.6 = 0.6$) and nearly doubling it for adults ($f0 + A1 = 2.2 + 1.6 = 3.8$). We noted in chapter 10 (section X) that slopes of larger magnitudes generally indicate steeper category boundaries and less uncertainty between categories along that dimension. In this case, the larger slope magnitudes for apparent adults likely reflect the fact that men and women are more discriminable based on their fo and VTL than boys and girls. 
+It seems that differences in apparent speaker age is associated with varying use of both VTL and f0. In each case, the effects of f0 and VTL changes are *stronger* for adults compared to children. For example, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for children ($f0 + (-A1) = 2.2 - 1.6 = 0.6$) and nearly doubling it for adults ($f0 + A1 = 2.2 + 1.6 = 3.8$). We noted in chapter 10 (section \@ref(c10-classification)) that slopes of larger magnitudes generally indicate steeper category boundaries and less uncertainty between categories along that dimension. In this case, the larger slope magnitudes for apparent adults likely reflect the fact that men and women are more discriminable based on their fo and VTL than boys and girls. 
 
 We can think about between-listener variation in the use of acoustics in two ways. The first involves the inspection of the superpopulation standard deviation estimates for our listener-dependent effects, presented in table \@ref(tab:T11-2). Rather than only focusing on the estimates, we can also think about whether effects have 2.5% credible intervals (relatively) far from zero, meaning they are unlikely to be very small. Only three of the effects really meet that threshold: Listener-dependent variation in the use of VTL ($\sigma_{VTL \colon L}$), and the effect of apparent age ($\sigma_{A1 \colon L}$), and speaker-dependent variation in intercepts ($\sigma_{S}$). 
 

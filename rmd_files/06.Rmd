@@ -427,6 +427,7 @@ Here's a plain English description of the model specification in \@ref(eq:6-7):
 Below we fit a model where age coefficients vary across listeners. Notice that the only change in the formula is the inclusion of the `A` predictor on the left-hand-side of the pipe in `(A|L)`. We now include a prior for a new class of parameter `cor` which applies to the correlation matrices for our multivariate normal variables. In addition, we specify the priors *outside* the `brm` function call, and pass this to the function. We will do this when the number of priors is large enough that including them directly in the function call makes the whole thing look too *busy* (in our opinion). We are also going to regularly set the contrasts right before we fit the model because it is very easy to forget otherwise.  
 
 ```{r, eval = FALSE}
+# Fit the model yourself
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
            brms::set_prior("student_t(3,0, 12)", class = "sd"),
@@ -434,8 +435,6 @@ priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("gamma(2, 0.1)", class = "nu"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
 
-# Fit the model yourself
-set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 model_re_t =  
   brms::brm (height ~ A + (A|L) + (1|S), data = notmen, chains = 4, cores = 4,
@@ -1035,16 +1034,14 @@ Below we fit our t distributed random effects model again, however, this time we
 We haven't discussed including multiple predictors in our formulas yet, and in fact we will do so in the following chapter. For now, we are only interested in considering how this useless predictor affects our model comparisons. We fit this model below:
 
 ```{r, eval = FALSE}
+# Fit the model yourself
+options (contrasts = c('contr.sum','contr.sum'))
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
            brms::set_prior("student_t(3,0, 12)", class = "sd"),
            brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
            brms::set_prior("gamma(2, 0.1)", class = "nu"),
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
-
-# Fit the model yourself
-set.seed (1)
-options (contrasts = c('contr.sum','contr.sum'))
 model_re_t_tooBig =  
   brms::brm (height ~ A + useless + (A + useless|L) + (1|S), data = notmen, 
              chains = 4, cores = 4, warmup = 1000, iter = 5000, thin = 4, 

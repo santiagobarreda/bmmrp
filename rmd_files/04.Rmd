@@ -411,13 +411,12 @@ Below we fit a model and specify prior distributions for our intercept, for *all
 
 ```{r,eval = FALSE}
 # Fit the model yourself
-set.seed (1)
-model_multilevel =  
-  brms::brm (height ~ 1 + (1|L), data = men, chains = 4, cores = 4,
-             warmup = 1000, iter = 3500, thin = 2,
-             prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
-                       brms::set_prior("normal(0, 15)", class = "sd"),
-                       brms::set_prior("normal(0, 15)", class = "sigma")))
+model_multilevel =  brms::brm (
+  height ~ 1 + (1|L), data = men, chains = 4, cores = 4, 
+  warmup = 1000, iter = 3500, thin = 2,
+  prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
+            brms::set_prior("normal(0, 15)", class = "sd"),
+            brms::set_prior("normal(0, 15)", class = "sigma")))
 ```
 ```{r, include = TRUE, eval = FALSE}
 
@@ -774,13 +773,12 @@ Below, we fit the new model using exactly the same code as for `model_multilevel
 
 ```{r,eval = FALSE}
 # Fit the model yourself
-set.seed (1)
-model_multilevel_L_S =  
-  brms::brm (height ~ 1 + (1|L) + (1|S), data = men, chains = 4, cores = 4,
-             warmup = 1000, iter = 3500, thin = 2,
-             prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
-                       brms::set_prior("normal(0, 15)", class = "sd"),
-                       brms::set_prior("normal(0, 15)", class = "sigma")))
+model_multilevel_L_S =  brms::brm (
+  height ~ 1 + (1|L) + (1|S), data = men, chains = 4, cores = 4,
+  warmup = 1000, iter = 3500, thin = 2,
+  prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
+            brms::set_prior("normal(0, 15)", class = "sd"),
+            brms::set_prior("normal(0, 15)", class = "sigma")))
 ```
 
 ```{r, include = TRUE, eval = FALSE}
@@ -943,7 +941,6 @@ In traditionalists corner, we're going to compare the output of `brms` to some m
 Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the `lme4` R package. The `lmer` function uses partial pooling to estimate its 'random effects' and no pooling to estimate its 'fixed effects'. We're not going to talk about `lmer` in very much detail. The focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in both kinds of models. Below we use `lmer` to fit a model that is analogous to our `model_multilevel_L_S` model. Notice that the formulas are identical in both cases, except we do not specify priors for this model.
 
 ```{r, warning=FALSE, message = FALSE, collapse = TRUE, cache = TRUE}
-set.seed (1)
 lmer_model = lme4::lmer (height ~ 1 + (1|L) + (1|S), data = men)
 ```
 

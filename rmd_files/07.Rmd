@@ -9,6 +9,12 @@ knitr::opts_chunk$set(
 
 We've been making our models more and more complicated, but we've still only fit models with extremely simple fixed effects structures. In the last two chapters we talked about comparing two groups. Although the comparison of two groups is very simple, it also comes up often. In addition, more complicated problems are often broken down into several two-group questions in the course of understanding a data set. However, most real-world experiments don't usually *begin* as two-group questions. In this chapter, we're going to talk about the comparison of observations across multiple groups. In terms of model building concepts, in this chapter we're going to discuss how to build models with multiple fixed effect predictors and how to allow these factors to *interact* in our models. 
 
+
+## Chapter pre-cap
+
+--
+
+
 ## Comparing four (or any number of) groups
 
 First, we're going to discuss models that compare observations across any number of groups (i.e., levels of a single factor). A model that can be used to compare multiple groups might have just one predictor factor, but that factor can have any number of levels. Although it's not very common to have a study design or model that *only* consists of a single multi-group comparison, the inclusion of multi-group comparisons is ubiquitous in many disciplines (including linguistics). Examples of predictors with multiple levels are language (e.g., participants' first languages), word category (e.g., part of speech, or usage frequency bins), and age groups. 
@@ -75,15 +81,15 @@ Q1) Does apparent speaker height vary systematically across apparent speaker cat
 
 [@@ SB - check update. Also, I went back over the earlier chapters to remove causal stuff like this]
 
-### Description of our model
+### Description of our model {#c7-description-1}
 
 In the last two chapters we discussed the inclusion of a single factor with two levels in our models. Our model formula does not change in structure to include predictors with many levels. The formula to fit our model will be:
 
 `height ~ C + (C|L) + (1|S)`
 
-Where `C` is the apparent speaker category indicated by the listener for each trial, a factor with four levels (see above). Since we include `C` on the left-hand-side of the pipe of `L`, we know that we are estimating the category by listener interaction using adaptive partial pooling (see section X). At this point we have to make a decision regarding how we represent our models in more formal notation, and striking a balance between readability and models that are directly analogous to the output in R. 
+Where `C` is the apparent speaker category indicated by the listener for each trial, a factor with four levels (see above). Since we include `C` on the left-hand-side of the pipe of `L`, we know that we are estimating the category by listener interaction using adaptive partial pooling (see section \@ref(c4-partial-pooling)). At this point we have to make a decision regarding how we represent our models in more formal notation, and striking a balance between readability and models that are directly analogous to the output in R. 
 
-Each level of the category predictor that we are estimating needs to be represented by a model parameter. Since we are using sum coding for all our factors (see section X), our model will estimate three of the four group effects, omitting the alphabetically last level (in this case woman). As a result, the formula above is analogous to:
+Each level of the category predictor that we are estimating needs to be represented by a model parameter. Since we are using sum coding for all our factors (see section \@ref(c5-sum-coding)), our model will estimate three of the four group effects, omitting the alphabetically last level (in this case woman). As a result, the formula above is analogous to:
  
 `height ~ C1 + C2 + C3 + (C1 + C2 + C3|L) + (1|S)`
 
@@ -396,7 +402,7 @@ Below we compare our recreated group means with our average height judgment for 
 tapply (exp_data$height, exp_data$C, mean)
 ```
 
-## Using our models to predict
+## Using our models to predict {#c7-posterior-prediction}
 
 So far we've been working with very simple models and so we haven't worried very much about how well they *fit*, or represent our data. Our reconstruction of the group means above suggests our current model may have some issues, and that we should be concerned about its ability to accurately capture the patterns in the data. So far we've only been discussing modeling in one direction, going from data to abstract, reduced representations (i.e. regression models). However, it's also worth considering going in the other direction, from the abstraction representation back towards data. 
 
@@ -497,7 +503,7 @@ boxplot (y_hat[2,] ~ exp_data$C, ylim = c(100,205), col = cols[2:5],
          main = "Prediction: With RE",xlab = "", ylab="")
 ```
 
-## Interactions and interaction plots
+## Interactions and interaction plots {c7-interactions-and-plots}
 
 We can think of a single effect representing a difference between groups/conditions/levels as a slope. For example, in the left panel in figure \@ref(fig:F7-7) we plot mean apparent height for apparent females and males at arbitrary x-axis locations. The difference in the group means is 6 cm (females 157 cm, males 163 cm). We can use any arbitrary x axis distance to calculate slopes, as long as we are consistent. However, there are obvious practical advantages to choosing to calculate these slopes over the arbitrary 'distance' of 1. To do this, we can imagine that we plot the first level (female) at 0 and successive levels at sequential integer values along the x axis (i.e. 1, 2, 3, ...). When we do this, the line formed by joining the averages of these groups has a slope of 6 (i.e., it rises 6 cm from 0 to 1, from one group to another, for a slope of 5/1). 
 
@@ -733,7 +739,8 @@ We can see in the short model summary above that we've estimated four standard d
 
 We can now focus on the fixed effects (`Population-Level Effects`), of which there are four: An intercept, two main effects terms and an interaction. The interaction term is just another element of your prediction equation intended to help explain variation that can't be predicted by the independent effects of the other predictors in the model. If there is no interaction in your data, then the value of the interaction terms will be close to zero and your model will look just as if you had not even included the interaction at all. A look at the model output above indicates that our interaction is much smaller than the age effect, but not much smaller than the gender effect. This suggests it has the potential to influence our conclusions about gender more than our conclusions about age.
   
-Why is there only a single interaction? Basically for the same reason that we can only estimate a single effect for apparent age and gender (i.e., linear dependence, discussed in section X). The number of levels of a factor that you can estimate is generally one fewer than the number of levels in the factor. For interaction terms, the number of parameters you can estimate is equal to (number of levels of factor A - 1)x(number of levels of factor B - 1) for two factors. Since each of our factors have two levels, we can only estimate one parameter, $(2-1) \times (2-1)=1$. 
+Why is there only a single interaction? Basically for the same reason that we can only estimate a single effect for apparent age and gender (i.e., linear dependence, discussed in section \@ref(c5-contrasts)). The number of levels of a factor that you can estimate is generally one fewer than the number of levels in the factor. For interaction terms, the number of parameters you can estimate is equal to (number of levels of factor A - 1)x(number of levels of factor B - 1) for two factors. Since each of our factors have two levels, we can only estimate one parameter, $(2-1) \times (2-1)=1$. 
+
 The `A1:G1` term can be read aloud as "the effect of `A1` given (conditional on) the level of `G1`". For individual factors, our models cannot estimate `A2` because `-A1 = A2`. For interactions between factors with two levels, the model cannot estimate `A2:G1` because `-A1:G1 = A2:G1`. For interactions between factors with two levels, every time you want to change `A1` or `G1` to `A2` or `G2` you flip the sign of the `A1:G1` term instead. As a result, going left to right and changing one level at a time we get `A1:G1 = -A2:G1 = A2:G2  = -A1:G2`, which is precisely why we can't estimate more than one interaction for this model. Why does this happen? Looking at how interaction plots are built up out of main effects and interactions may help illustrate the reason for this. 
 
 Figure \@ref(fig:F7-9) presents an example of how our interaction plot can be built up from the components in our fixed effects above, and is very useful for understanding the geometry of main effects and interactions. In (a) we see that the intercept lifts up a line from 0 to the level of the overall mean apparent height of 158 cm. Then, the effect for `A1` (adult, +11 cm) and `-A1` (children, -11 cm) are added to this value, causing the separation between the lines indicating a 'main effect' for adultness. Notice that the lines are parallel with respect to each other, and also parallel to the x-axis. This is because we have not added an effect for gender, which will be indicated as a slope along the x axis. In (b) we see the addition of the gender effect: `G1` (female, -2.8 cm), and `-G1` (male, 2.8 cm). Notice that the effect is added to one end of each line segment and subtracted from the other end of the line segment. Panel (c) shows the addition of all of the effects shown in the top row, the result of a model that includes both main effects but the same non-zero slope for both lines (i.e. no interaction yet). In (e) we add the gender interaction `A1:G1`, which was -1.6 cm. 
@@ -998,7 +1005,7 @@ In our case, we will conclude that this difference in apparent height between bo
 
 ## 'Traditionalists' corner {#c7-frequentist}
 
-In traditionalists corner, we're going to compare the output of `brms` to some more 'traditional' approaches. We're not going to talk about the traditional models in any detail, the focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, some of the information provided here may not make much sense, although it may still be helpful. If you want to know more about the statistical methods being discussed here, please see section X for a list of suggested background reading in statistics.  
+In traditionalists corner, we're going to compare the output of `brms` to some more 'traditional' approaches. We're not going to talk about the traditional models in any detail, the focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in the different models. If you are already familiar with these approaches, these sections may be helpful. If not, some of the information provided here may not make much sense, although it may still be helpful. If you want to know more about the statistical methods being discussed here, please see section \@ref(c0-a-village) for a list of suggested background reading in statistics.  
 
 ### Bayesian multilevel models vs. lmer
 

@@ -93,7 +93,7 @@ Each level of the category predictor that we are estimating needs to be represen
  
 `height ~ C1 + C2 + C3 + (C1 + C2 + C3|L) + (1|S)`
 
-In section 4.X we noted that each parameter in our model needs to be associated with a predictor. If we call the predictors `x1`, `x2`, and `x3` our model formula could sort of be thought of like this:
+In section X (4?) we noted that each parameter in our model needs to be associated with a predictor. If we call the predictors `x1`, `x2`, and `x3` our model formula could sort of be thought of like this:
 
 `height ~ x1*C1 + x2*C2 + x3*C3 + (x1*C1 + x2*C2 + x3*C3|L) + (1|S)`
 
@@ -107,7 +107,7 @@ contr.sum(1:4)
 
 Imagine the tiny matrix above represented the numerical predictors for our `C` parameters so that the first, second, and third columns represent $x1, x2$ and $x3$ respectively. Our tiny data matrix above suggests that the first observation (row) belongs to the first group (boy). This is because our data results in the $C1$ parameter being multiplied by one and $C2$ and $C3$ being zeroed out. The same logic suggests the second row is an observation from the second group and the third from the third. Since $C4$ is equal to $-(C1+C2+C3)$ (under sum coding), adding the negative of $C1$, $C2$, and $C3$ to the prediction is equivalent to adding the value of $C4$ even though it is not directly estimated. So, the fourth row of our tiny matrix represents an observation from the fourth group and encodes the effect for $C4$ even without directly estimating this value. As a result, even though our model only directly estimates three parameters for our $C$ predictor, we could think of our model as tacitly representing four parameters for $C$: $C1$, $C2$, $C3$, and $-(C1+C2+C3)$. 
 
-Even though the inclusion of $C$ in our model requires the addition of three separate parameters, we're going to represent these with a single term like $C_{[C_{[i]}]}$ in our formal model descriptions. This term selects the value of $C$ for trial $i$ based on the value of the `C` (apparent category) predictor. This is consistent with the way we have been representing our listener and speaker-dependent intercepts (as discussed in section 4.X). However, a possible confusion arises from the fact that the subscript of the term references a predictor which has four levels (`C`), however, our $C$ parameter does not actually contain four separate parameters. In other words, in situations where `C = w` (i.e. $C_{[C_{[i]=4}]}$) this would seem to reference the fourth $C$ parameter, one that doesn't actually *exist* in our model. However, in such a situation the model can be thought of as using the negative sum of the other three parameters, effectively using the value of $C_{[C_{[i]=4}]}$ even without directly estimating the parameter. 
+Even though the inclusion of $C$ in our model requires the addition of three separate parameters, we're going to represent these with a single term like $C_{[C_{[i]}]}$ in our formal model descriptions. This term selects the value of $C$ for trial $i$ based on the value of the `C` (apparent category) predictor. This is consistent with the way we have been representing our listener and speaker-dependent intercepts (as discussed in section X 4?). However, a possible confusion arises from the fact that the subscript of the term references a predictor which has four levels (`C`), however, our $C$ parameter does not actually contain four separate parameters. In other words, in situations where `C = w` (i.e. $C_{[C_{[i]=4}]}$) this would seem to reference the fourth $C$ parameter, one that doesn't actually *exist* in our model. However, in such a situation the model can be thought of as using the negative sum of the other three parameters, effectively using the value of $C_{[C_{[i]=4}]}$ even without directly estimating the parameter. 
 
 Since we are including adult male speakers in our data we should also reconsider our priors. Based on CDC (cite) we expect that average heights of 176, 162, 150 and 150 cm respectively for men, women, girls, and boys. These four groups have an average of 159 cm and a standard deviation of 12 cm. Based on this, and especially given that we are investigating *apparent* and not *veridical* height, the priors we used in the last chapter still seem appropriate. The formal description of our model is given below:
 
@@ -858,7 +858,7 @@ grid()
 
 ```
 
-We can compare the models with and without the intercept using leave one out cross-validation, discussed in section 6.X. 
+We can compare the models with and without the intercept using leave one out cross-validation, discussed in section X 6?. 
 
 ```{r, cache = TRUE}
 model_both = brms::add_criterion (model_both, criterion="loo")
@@ -972,7 +972,7 @@ brmplot (fixef(model_interaction)[-1,])
 brmplot (pairwise_diffs_summary,labels = c("b-g","b-w","b-m","g-w","g-m","w-m"))
 ```
 
-Figure \@ref(fig:F7-11) also presents the pairwise difference between all four apparent speaker groups (boys, girls, women, and men). The difference between pairs of group means is calculated by extracting the samples from the group means we reconstructed in section 7.X (`means_pred_interaction`). The result of this is a matrix with four columns, each representing a group effect, with individual posterior samples differing along rows. To find the difference between group means between each pairs of groups, we subtract the columns representing the group effects and inspect the distribution of the differences. This process is shown below and the distribution of pairwise group differences in presented in the right plot of figure \@ref(fig:F7-11).
+Figure \@ref(fig:F7-11) also presents the pairwise difference between all four apparent speaker groups (boys, girls, women, and men). The difference between pairs of group means is calculated by extracting the samples from the group means we reconstructed in section X 7? (`means_pred_interaction`). The result of this is a matrix with four columns, each representing a group effect, with individual posterior samples differing along rows. To find the difference between group means between each pairs of groups, we subtract the columns representing the group effects and inspect the distribution of the differences. This process is shown below and the distribution of pairwise group differences in presented in the right plot of figure \@ref(fig:F7-11).
 
 ```{r}
 C = attributes(means_pred_interaction)$samples
@@ -995,7 +995,7 @@ pairwise_diffs_summary[1,]
 
 We might wonder, under what conditions can we accept that an effect or group difference *is* actually equal to zero. If the 95% (or some other high number) credible interval is relatively narrow and (more or less) centered around zero, the parameter value may very well be zero. It may also be a small number that has no practical effect on your dependent variable so that it doesn't really matter what it is even if its not exactly equal to $0.0000000...$. In either case, a coefficient with a narrow interval (roughly) centered at zero may not have an important role in the way you interpret your model in order to tell the 'story' of your data. However, it is extremely important to keep in mind that under a different parametrization of your model, or given a slightly different experimental design, it is possible that an equivalent  parameter may exhibit a clearly non-zero value. 
 
-In our case, we will conclude that this difference in apparent height between boys and girls is likely to be 'real' and may reflect stereotypes that male speakers are generally taller than female speakers, whether or not this is actually true for speakers of this age. We might also suggest that if we want to know more about the precise value of this difference, future research might investigate this question with a larger number of speakers, listeners, or repetitions. By increasing the sample size, researchers would narrow the parameter likelihoods (discussed in section 2.X) thereby narrowing their posterior credible intervals (given new data that's roughly the same as the data we have). 
+In our case, we will conclude that this difference in apparent height between boys and girls is likely to be 'real' and may reflect stereotypes that male speakers are generally taller than female speakers, whether or not this is actually true for speakers of this age. We might also suggest that if we want to know more about the precise value of this difference, future research might investigate this question with a larger number of speakers, listeners, or repetitions. By increasing the sample size, researchers would narrow the parameter likelihoods (discussed in section X 2?) thereby narrowing their posterior credible intervals (given new data that's roughly the same as the data we have). 
 
 ## 'Traditionalists' corner {#c7-frequentist}
 
@@ -1016,5 +1016,5 @@ The results provided by `lmer` are very similar to those provided by `brm`:
 brms::fixef (model_four_groups)
 ```
 
-However, it is not as straightforward to test for differences between parameter values in our `lmer` models. The same could be said for the combination of parameters as is necessary for the investigation of group means (section 7.X) and simple effects (7.X). The investigation of differences and combinations of parameters is definitely possible in `lmer` for many cases, however this will involve either the re-parametrization of the model or the use of additional packages that allow for these sorts of questions to be asked. This can be contrasted with the ease and consistency of inspecting posterior distributions in our `brms` models.
+However, it is not as straightforward to test for differences between parameter values in our `lmer` models. The same could be said for the combination of parameters as is necessary for the investigation of group means (section X 7?) and simple effects (X 7?). The investigation of differences and combinations of parameters is definitely possible in `lmer` for many cases, however this will involve either the re-parametrization of the model or the use of additional packages that allow for these sorts of questions to be asked. This can be contrasted with the ease and consistency of inspecting posterior distributions in our `brms` models.
 

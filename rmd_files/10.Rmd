@@ -507,23 +507,22 @@ The main differences compared to our previous models are the lack of terms relat
 
 > The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of 0 of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, A, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
 
-### Fitting and interpreting the model {#c10-fitting-1}
+### Fitting the model {#c10-fitting-0}
 
 We're going to fit the model outlined above. Below is the function call we need to run the model described in \@ref(eq:10-13):
 
 ```{r, eval = FALSE}
 # Fit the model yourself
-set.seed (1)
 options (contrasts = c('contr.sum','contr.sum'))
 
+priors = c(brms::set_prior("student_t(3, 0, 3)", class = "Intercept"),
+           brms::set_prior("student_t(3, 0, 3)", class = "b"),
+           brms::set_prior("student_t(3, 0, 3)", class = "sd"),
+           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"))
+
 model_gender_vtl =
-  brm (Female ~ vtl*A + (vtl*A|L) + (1|S), data=exp_data, 
-       chains=4, cores=4, family="bernoulli", 
-       warmup=1000, iter = 5000, thin = 4,  
-       prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
-                 set_prior("student_t(3, 0, 3)", class = "b"),
-                 set_prior("student_t(3, 0, 3)", class = "sd"),
-                 set_prior("lkj_corr_cholesky (2)", class = "cor")))
+  brm (Female ~ vtl*A + (vtl*A|L) + (1|S), data=exp_data, chains=4, cores=4, 
+       family="bernoulli", warmup=1000, iter = 5000, thin = 4,prior = priors)
 ```
 ```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
@@ -533,6 +532,28 @@ model_gender_vtl = bmmb::get_model ('10_model_gender_vtl.RDS')
 # saveRDS (model_gender_vtl, '../models/10_model_gender_vtl.RDS')
 model_gender_vtl = readRDS ('../models/10_model_gender_vtl.RDS')
 ```
+
+[@@ SB - Noah]
+
+However, we're going to (retroactively) pause before continuing in order to update our discussion of prior predictive checks. In section \@ref(c8-prior-prediction) we discussed these in the context of quantitative variables. In these cases, our predictions take on a range of values and can be summarized effectively using histograms and plots showing the density of the distribution. In contrast, our dichotomous variables only take on values of 1 and 0, and so histograms and densities of these no longer provide much useful information. 
+
+Instead of considering the distribution of values of the dependent variable directly, we can consider prior predictions as logits, allowing us to use densities or histograms just as we did for quantitative variables. We can look at the location of these predictions to see how expected outcomes vary across conditions or overall. A concentration around 0 means that predictions are balanced across successes and failures, whereas positive or negative predictions indicate one or the other category is more likely. We can also look at the variation of predictions about their average, and in particular, in the magnitude of the logits being predicted. Predicted logits with very large magnitudes indicate near certainty in the outcome, whereas predictions concentrated near zero indicate that either category is equally likely. We can use the code below to run our prior predictive check and then use the `p_check` function to get and plot our prior predictions (not shown here). 
+
+```{r, eval = FALSE}
+model_gender_vtl_priors =
+  brm (Female ~ vtl*A + (vtl*A|L) + (1|S), data=exp_data, chains=4, 
+       cores=4, family="bernoulli", warmup=1000, iter = 5000, thin = 4,
+       prior = priors, sample_prior = "only")
+
+p_check (model_gender_vtl_priors)
+```
+
+
+Our prior predictions indicate some logits with very high values (>40), with the bulk of variation seemingly between -20 and 20 logits. This indicates that in some cases, speakers would be identified as female with a probability of 0.000000002 (since $\mathrm{logit}^{-1}(-20)=0.000000002$), or about once every 500 million trials. This might seem crazy but it might not not be. For example, consider someone with a very deep voice and a deep resonance like James Earl Jones (a.k.a Mufasa in the *Lion King* and Darth Vader in *Star Wars*). You ask: What's the probability that this voice would be identified as an adult female by a random listener, knowing nothing about the speaker other than a single example of their voice? In some cases, you might reasonably think that this might *never* happen, other than perhaps due to accidental responses. But what if you had to put a number on never? Well in that case logits as large as 20, or a one in half billion chance, may not seem so crazy. 
+
+Although we've spent the last paragraph defending these priors, they probably are too wide, just not exceedingly so. If our model has problems converging or has any other pathologies (e.g., divergent transitions [@@ where?]), we may want to reconsider these priors. However, these priors seem fine for now.   
+
+### Interpreting the model {#c10-fitting-1}
 
 If we inspect the model summary (not printed here):
 

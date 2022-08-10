@@ -666,123 +666,16 @@ We are going to focus on three aspects of our results: 1) The age dependent clas
 
 ### Effect of apparent age on the perception of femaleness
 
-Apparent adultness increased the probability of observing a female response, while it increased the effects of VTL and f0. For example, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for children ($f0 + (-A1) = 2.2 - 1.6 = 0.6$) and nearly doubling it for adults ($f0 + A1 = 2.2 + 1.6 = 3.8$). This is seen in the top row of figure below which presents the predicted probability of apparent femaleness, in logits, plotted against f0. We can see that the line is much steeper for adults than for children, indicating that f0 is a stronger predictor of apparent femaleness for adults than for children. However, we can see that for both children and adults, the category boundary (i.e. the x intercept) between male and female responses moves leftward, towards lower values of f0, for apparent adults. 
+Apparent adultness increased the probability of observing a female response, while it increased the effects of VTL and f0, leading to steeper slopes along each dimension. For example, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for children ($f0 + (-A1) = 2.2 - 1.6 = 0.6$) and nearly doubling it for adults ($f0 + A1 = 2.2 + 1.6 = 3.8$). The joint effects of f0 and VTL and the way that these vary in relation to apparent age can be considered using territorial maps, as in figure below. These figures present category boundaries in a stimulus space and indicate which categorical outcome is most probable in each region of the space. 
 
-```{r F13-10, fig.height = 3.5, fig.width = 8, fig.cap='.', echo = FALSE, cache = TRUE}
+We discussed territorial maps and how to make these for models with two quantitative predictors in chapter 11, so we will go into much detail regarding that here. However, when using 'esoteric' approaches like this, it is useful to give the reader enough information so that they understand what they are looking at. for example...
+
+```{r F13-10, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Lines indicate male/female boundaries for adults (green), children (orange), and overall (blue) implied by the full model, ignoring the cross-product term. (middle) The same as the left figure but for the reduced model. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space, for the reduced model.", echo = FALSE, cache = TRUE}
 
 ################################################################################
-### Figure 13.10
+### Figure 13-10
 ################################################################################
 
-tab = table (exp_data$S, exp_data$C_v)
-mod_cat = apply (tab, 1,which.max)
-aggd = aggregate (cbind(Female,f0,vtl) ~ S, FUN = mean, data = exp_data)
-
-par (mfrow = c(2,3), mar = c(4,.1,1,.1), oma = c(0,4,0,1))
-
-curve (f0_coefficients[1,1]+f0_coefficients[3,1]*x+vtl_coefficients[3,1]*-1,ylab="Logits", 
-       xlim = c(-3,3),lwd=6,col=bmmb::cols[9],xaxs='i',xlab="Centered f0", ylim = c(-15,20),
-       xaxt='s',yaxt='s')
-curve (f0_coefficients[2,1]+f0_coefficients[4,1]*x+vtl_coefficients[4,1]*-1, 
-       xlim = c(-3,3), add=TRUE,lwd=6,col=bmmb::cols[3])
-abline (v = -(f0_coefficients[1,1]+vtl_coefficients[3,1]*-1)/f0_coefficients[3,1],
-        col = bmmb::cols[9],lty=2,lwd=2)
-abline (v = -(f0_coefficients[2,1]+vtl_coefficients[4,1]*-1)/f0_coefficients[4,1],
-        col = bmmb::cols[3],lty=2,lwd=2)
-abline (h = 0,lty=3, lwd=2)
-text (1, -5, "VTL = -1")
-
-curve (f0_coefficients[1,1]+f0_coefficients[3,1]*x+vtl_coefficients[3,1]*0,ylab="Logits", 
-       xlim = c(-3,3),lwd=6,col=bmmb::cols[9],xaxs='i',xlab="Centered f0", ylim = c(-15,20),
-       xaxt='s',yaxt='n')
-curve (f0_coefficients[2,1]+f0_coefficients[4,1]*x+vtl_coefficients[4,1]*0, 
-       xlim = c(-3,3), add=TRUE,lwd=6,col=bmmb::cols[3])
-abline (v = -(f0_coefficients[1,1]+vtl_coefficients[3,1]*0)/f0_coefficients[3,1],
-        col = bmmb::cols[9],lty=2,lwd=2)
-abline (v = -(f0_coefficients[2,1]+vtl_coefficients[4,1]*0)/f0_coefficients[4,1],
-        col = bmmb::cols[3],lty=2,lwd=2)
-abline (h = 0,lty=3, lwd=2)
-text (1, -5, "VTL = 0")
-
-curve (f0_coefficients[1,1]+f0_coefficients[3,1]*x+vtl_coefficients[3,1]*1,ylab="Logits", 
-       xlim = c(-3,3),lwd=6,col=bmmb::cols[9],xaxs='i',xlab="Centered f0", ylim = c(-15,20),
-       xaxt='s',yaxt='n')
-curve (f0_coefficients[2,1]+f0_coefficients[4,1]*x+vtl_coefficients[4,1]*1, 
-       xlim = c(-3,3), add=TRUE,lwd=6,col=bmmb::cols[3])
-abline (v = -(f0_coefficients[1,1]+vtl_coefficients[3,1]*1)/f0_coefficients[3,1],
-        col = bmmb::cols[9],lty=2,lwd=2)
-abline (v = -(f0_coefficients[2,1]+vtl_coefficients[4,1]*1)/f0_coefficients[4,1],
-        col = bmmb::cols[3],lty=2,lwd=2)
-abline (h = 0,lty=3, lwd=2)
-text (1, -5, "VTL = 1")
-
-curve (vtl_coefficients[1,1]+vtl_coefficients[3,1]*x+f0_coefficients[3,1]*-0.5,ylab="Logits", 
-       xlim = c(-3,3),lwd=6,col=bmmb::cols[9],xaxs='i',xlab="Centered VTL", ylim = c(-10,15),
-       xaxt='s',yaxt='s')
-curve (vtl_coefficients[2,1]+vtl_coefficients[4,1]*x+f0_coefficients[4,1]*-0.5, 
-       xlim = c(-3,3), add=TRUE,lwd=6,col=bmmb::cols[3])
-abline (v = -(vtl_coefficients[1,1]+f0_coefficients[3,1]*-0.5)/vtl_coefficients[3,1],
-        col = bmmb::cols[9],lty=2,lwd=2)
-abline (v = -(vtl_coefficients[2,1]+f0_coefficients[4,1]*-0.5)/vtl_coefficients[4,1],
-        col = bmmb::cols[3],lty=2,lwd=2)
-abline (h = 0,lty=3, lwd=2)
-text (1, -5, "f0 = -0.5")
-
-curve (vtl_coefficients[1,1]+vtl_coefficients[3,1]*x+f0_coefficients[3,1]*0,ylab="Logits", 
-       xlim = c(-3,3),lwd=6,col=bmmb::cols[9],xaxs='i',xlab="Centered VTL", ylim = c(-10,15),
-       xaxt='s',yaxt='n')
-curve (vtl_coefficients[2,1]+vtl_coefficients[4,1]*x+f0_coefficients[4,1]*0, 
-       xlim = c(-3,3), add=TRUE,lwd=6,col=bmmb::cols[3])
-abline (v = -(vtl_coefficients[1,1]+f0_coefficients[3,1]*0)/vtl_coefficients[3,1],
-        col = bmmb::cols[9],lty=2,lwd=2)
-abline (v = -(vtl_coefficients[2,1]+f0_coefficients[4,1]*0)/vtl_coefficients[4,1],
-        col = bmmb::cols[3],lty=2,lwd=2)
-abline (h = 0,lty=3, lwd=2)
-text (1, -5, "f0 = 0")
-
-curve (vtl_coefficients[1,1]+vtl_coefficients[3,1]*x+f0_coefficients[3,1]*0.5,ylab="Logits", 
-       xlim = c(-3,3),lwd=6,col=bmmb::cols[9],xaxs='i',xlab="Centered VTL", ylim = c(-10,15),
-       xaxt='s',yaxt='n')
-curve (vtl_coefficients[2,1]+vtl_coefficients[4,1]*x+f0_coefficients[4,1]*0.5, 
-       xlim = c(-3,3), add=TRUE,lwd=6,col=bmmb::cols[3])
-abline (v = -(vtl_coefficients[1,1]+f0_coefficients[3,1]*0.5)/vtl_coefficients[3,1],
-        col = bmmb::cols[9],lty=2,lwd=2)
-abline (v = -(vtl_coefficients[2,1]+f0_coefficients[4,1]*0.5)/vtl_coefficients[4,1],
-        col = bmmb::cols[3],lty=2,lwd=2)
-abline (h = 0,lty=3, lwd=2)
-text (1, -5, "f0 = 0.5")
-
-
-```
-
-In the bottom row of figure \@ref(fig:F13-10) we see a similar pattern of results, albeit with a negative relationship between VTL and apparent femaleness. Figure \@ref(fig:F13-10) also shows the effect of varying the *other* acoustic predictor on each of the relationships shown in the plot. For example, as we go from left to right in the bottom row we see the effect of f0 changing from -0.5, to 0, to 0.5 (i.e. from 50 Hz below the mean, to the mean, to 50 Hz above the mean). Overall, it is clear that that apparent age has a substantial effect on the mapping between gross acoustics and the perception of femaleness. 
-
-We're just going to talk briefly about how we made those plots before moving on. The lines in figure above relate f0 and the probability of a female response *for a fixed value of VTL*. There is no 'ignoring' VTL as is not considering some value, it must be accounted for. Below we calculate intercepts and slopes for our lines, independently for each acoustic predictor and for both apparent adults and apparent children. 
-
-```{r}
-f0_coefficients = 
-  bmmb::short_hypothesis (gender_model, 
-                          c("Intercept+A1=0","Intercept-A1=0",
-                            "f0+f0:A1=0","f0-f0:A1=0"))
-vtl_coefficients = 
-  bmmb::short_hypothesis (gender_model, 
-                          c("Intercept+A1=0","Intercept-A1=0",
-                            "vtl+vtl:A1=0","vtl-vtl:A1=0"))
-```
-
-For example, 
-```{r}
-f0_coefficients
-```
-
-
-```{r}
-curve (f0_coefficients[1,1]+f0_coefficients[3,1]*x+vtl_coefficients[3,1]*-1)
-curve (f0_coefficients[1,1]+f0_coefficients[3,1]*x+vtl_coefficients[3,1]*0)
-```
-
-
-```{r, collapse = TRUE}
 # get fixed effect parameters
 samples = brms::fixef (gender_model, summary = FALSE)
 
@@ -800,16 +693,6 @@ c_adult_reduced = mean (samples[,"f0"] + samples[,"f0:A1"])
 a_child_reduced = mean (samples[,"Intercept"] - samples[,"A1"])
 b_child_reduced = mean (samples[,"vtl"] - samples[,"vtl:A1"])
 c_child_reduced = mean (samples[,"f0"] - samples[,"f0:A1"])
-```
-
-
-
-```{r F11-13, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Lines indicate male/female boundaries for adults (green), children (orange), and overall (blue) implied by the full model, ignoring the cross-product term. (middle) The same as the left figure but for the reduced model. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space, for the reduced model.", echo = FALSE, cache = TRUE}
-
-################################################################################
-### Figure 11-13
-################################################################################
-
 
 fixef_2 = brms::fixef (gender_model)
 
@@ -843,7 +726,7 @@ mod_cat = apply (tab, 1,which.max)
 par (mfrow = c(1,3), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
-      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
+      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='s',
       ylab="Height (inches)")
 grid()
 points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
@@ -856,6 +739,7 @@ curve ((-b_all_reduced*x - a_all_reduced) / (c_all_reduced), from = -3, to = 3, 
 curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
 curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
 
+mtext ("Centered f0 (Hz/100)", side=2, line = 2.7, cex = 0.8)
 
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
@@ -876,6 +760,14 @@ points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
       col = 0)
 box()
 
+for ( i in seq(-20,20,2)){
+  curve ((-b_adult_reduced*x - a_adult_reduced+i)/ (c_adult_reduced), 
+         from = -5, to = 5, add = TRUE,lwd=1, lty=3,col=0)
+}
+curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), 
+         from = -5, to = 5, add = TRUE,lwd=2, lty=1,col=1)
+
+
 plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
       ylab="Height (inches)")
@@ -895,19 +787,23 @@ points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
       col = 0)
 box()
 
+for ( i in seq(-20,20,2)){
+  curve ((-b_child_reduced*x - a_child_reduced+i)/ (c_child_reduced), 
+         from = -5, to = 5, add = TRUE,lwd=1, lty=3,col=0)
+}
+curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), 
+         from = -5, to = 5, add = TRUE,lwd=2, lty=1,col=1)
+
+mtext ("Centered vocal-tract length (cm", side = 1, outer = TRUE, line=-1,cex=0.9)
 ```
 
-
-
-
-
-
+In figure above we can see that the category boundary becomes more parallel to the f0 axis for apparent children. This reflects the decreasing importance of this cue in the prediction of responses for apparent children. We can also see that the larger slopes for apparent adults result in more 'certain' predictions. The tightly packed lines in the middle plot indicate rapid changes in predicted logit values while the widely-spaced lines in the right plot reflect less certainty when estimating the gender of apparent children.
 
 ### Between-listener variation in gender perception
 
-We can also think about the result of this variation in terms of how this might actually affect gender classification from speech. To do this, we get listener-specific intercepts, f0 slopes, and VTL slopes. We do this separately for apparent children and apparent adults using the code below (explained in detail in section X). 
+Our random effects standard deviations (figure X, table X) indicated substantial variation in listener-dependent effects for VTL and for apparent age. To investigate this, we calculated listener-specific intercepts, f0 slopes, and VTL slopes. We did this separately for apparent children and apparent adults using the code below (explained in detail in section X). 
 
-```{r}
+```{r, echo = FALSE}
 listener_coefficients_adult = 
   bmmb::short_hypothesis (gender_model, scope="coef",group="L",
                           c("Intercept+A1=0","vtl+vtl:A1=0","f0+f0:A1=0"))
@@ -916,12 +812,12 @@ listener_coefficients_child =
                           c("Intercept-A1=0","vtl-vtl:A1=0","f0-f0:A1=0"))
 ```
 
-Using these parameters, we can find boundaries for each listener using the equation above. We plot these in figure \@ref(fig:F11-16). We see that there is a general consensus between listeners in terms of an approximate acoustic boundary between adult males and adult females. However, there is much more variation in the boundary between boys and girls. This likely reflects the fact that the acoustic characteristics of adult men and women are generally more predictable and stable relative to children 10-12 years old. In addition, the listeners in our experiment (undergraduate University students) likely have substantially more recent experience interacting with adults than with children in that age group.   
+Using these parameters, we found category boundaries for apparent adults and apparent children, independently for each listener. These are presented in figure \@ref(fig:F13-11). We see that there is a general consensus between listeners in terms of an approximate acoustic boundary between adult males and adult females. However, there is much more variation in the boundary between boys and girls. This likely reflects the fact that the acoustic characteristics of adult men and women are generally more predictable and stable relative to children 10-12 years old. In addition, the listeners in our experiment (undergraduate University students) likely have substantially more recent experience interacting with adults than with children in that age group.   
 
-```{r F11-16, fig.width = 8, fig.height = 5, fig.cap = "The first plot compares all category boundaries between men/women (orange) and boys/girls (blue). Subsequent plots present each listener's individual boundaries, and point colors indicate the listener's individual speaker classifications.", echo = FALSE, cache = FALSE}
+```{r F13-11, fig.width = 8, fig.height = 5, fig.cap = "The first plot compares all category boundaries between men/women (orange) and boys/girls (blue). Subsequent plots present each listener's individual boundaries, and point colors indicate the listener's individual speaker classifications.", echo = FALSE, cache = FALSE}
 
 ################################################################################
-### Figure 11-16
+### Figure 13-11
 ################################################################################
 
 # y = (-b*x - a - z) / (dx+c)
@@ -982,20 +878,23 @@ for (i in 1:15){
 }
 ```
 
-
 ### Beyond gross acoustic cues in gender perception
 
-Our model attempts to predict female responses given a small number of acoustic predictors
+Our model attempts to predict female responses given a small number of acoustic predictors and their interaction with apparent age. It also allows for these relationships to vary in a listener-dependent manner. When there is systematic variation in the way that individual speakers that cannot be explained by the acoustic predictors, including by listener-dependent variation in these, this is captured by the speaker-dependent intercepts (for a discussion of this see section X). As a result, the speaker-dependent intercept effects reflect systematic tendencies in identification of individual speakers as male or female above and beyond what can be explained given the other parameters in the model. 
 
-
-```{r}
+```{r F13-11, fig.width = 8, fig.height = 2, fig.cap = ".", echo = FALSE, cache = TRUE}
 tab = table (exp_data$S, exp_data$C_v)
 mod_cat = apply (tab, 1,which.max)
-brmplot (ranef(gender_model)$S[,,1], col = bmmb::cols[mod_cat+1])
+
+par (mar = c(1,4,1,1), oma = c(0,0,0,0))
+brmplot (ranef(gender_model)$S[,,1], col = bmmb::cols[mod_cat+1],labels="")
 ```
+
+For example, we see that the effects for boys are mostly negative, indicating that boys were less likely to be identified as female than expected. Conversely, adult females were more likely to be identified as adult females than expected. As we can see in figure above (in intro), boys and women overlap substantially in their gross acoustics. As a result, to the extent that their gender is identified correctly we might expect that this would be on the basis of 'something else'. What could this be? One candidate are what are know as **prosodic** information, that is information about timing, rhythm, pitch movement and so on. It's also possible that other more subtely acoustic information is involved. In any case, results highlight the fact that the communication and identification from speech is more complicated than what can be explained by speaker f0 and VTL. 
 
 ## Conclusion: Apparent gender
 
+- gender more complicated than gross acoustics.
 
 
 ## Overall conclusion

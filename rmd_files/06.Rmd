@@ -298,7 +298,7 @@ multivariate_normal
 
 The dimensions of the multivariate normal can have arbitrarily different means and standard deviations, but their marginal distributions will always be a (univariate) normal. However, the dimensions are not always totally independent as they are for our small sample above. In figure \@ref(fig:F6-4) we plot samples from three different bivariate normal distributions, one variable presented in each row. The variables in all three rows have the same means and standard deviations used to make our small sample above (i.e. the reflect the listener means and standard deviations). However, the rows differ in terms of the correlation between the two dimensions of the variable. 
 
-```{r F6-4, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and A1 coefficients from distributions with a means and standard deviations based on our listener data. The correlation of the variables is 0 (top), 0.5 (middle) and -0.85 (bottom). The left column presents intercepts, the right column presents A1 effects, and the right column presents both variables together.", cache = TRUE, echo = FALSE}
+```{r F6-4, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and A1 coefficients from distributions with a means and standard deviations based on our listener data. The correlation of the variables is 0 (top), 0.5 (middle) and -0.85 (bottom). The left column presents intercepts, the right column presents A1 effects, and the right column presents both variables together.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 6.4
@@ -498,7 +498,7 @@ Despite clear similarities between the models, there are some changes to the cre
 
 It's always risky to make up explanations for things after the fact (**post hoc**), but we can try to think about why these changes may have occurred. The change in the interval around the intercept is very small, and likely reflects our (slightly) better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are now acknowledging between-listener variation in the `A1` parameter, which `model_sum_coding_t` ignored (or treated as zero). `model_re_t` predicts a standard deviation of 4.3 cm in the `A1` effect between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can/should be. 
 
-```{r F6-5, fig.height = 3, fig.width = 8, fig.cap="A comparison of estimates of the same parameters across our models: Without listener-dependent effects for apparent age (blue), and with listener-dependent age effects (red). The listener-dependent effects fit with partial pooling are often referred to as 'random slopes'.", cache = TRUE, echo = FALSE}
+```{r F6-5, fig.height = 3, fig.width = 8, fig.cap="A comparison of estimates of the same parameters across our models: Without listener-dependent effects for apparent age (blue), and with listener-dependent age effects (red). The listener-dependent effects fit with partial pooling are often referred to as 'random slopes'.", cache = FALSE, echo = FALSE}
 ################################################################################
 ### Figure 6.5
 ################################################################################
@@ -626,7 +626,7 @@ $$
 
 In the formulas above we replace $p(\tilde{y}_i | \theta)$ with $\mathrm{N}(y_i | \mu, \sigma)$ because the simulations generate normally-distributed data. Our simulations result in three sets of $\mathrm{lpd}$ and three sets of $\mathrm{elpd}$, a pair of each for each of the models above. The average of each of these six sets of values is presented in figure \@ref(fig:F6-6). Since logarithmic values closer to zero are closer to one on the original scale, *more negative* log-likelihood values indicate a *less likely* outcome. We can see that the $\mathrm{lpd}$ improves as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the data generating process or to the dependent variable. 
 
-```{r F6-6, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now elpd is estimated by adjusting the lpd using the number of predictors in the model.", cache = TRUE, echo = FALSE}
+```{r F6-6, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now elpd is estimated by adjusting the lpd using the number of predictors in the model.", cache = FALSE, echo = FALSE}
 ################################################################################
 ### Figure 6.6
 ################################################################################
@@ -690,7 +690,7 @@ You may have noticed that our penalization does not exactly recreate the line re
 
 In fact, we know that in this case the 'best' model corresponds *exactly* to the true data generating process. However, penalization will not always result in the highest values of $\widehat{\mathrm{elpd}}$ for the simplest model. In figure \@ref(fig:F6-7) we simulate new fake data, except now we include $x_2$ in the 'real' underlying data generating process (i.e., `y = x1 + x2 + rnorm (n, 0, 1)`). As a result, for this data we actually *do* need both $x_1$ and $x_2$ in the model. As seen below, penalization does not obscure the benefit of adding $x_2$ to our model when it is warranted. This is because the relatively small penalty associated with the increased model complexity does not overwhelm the large benefit due to the inclusion of a predictor that is actually related to our dependent variable. 
 
-```{r F6-7, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above, modified to also include the second predictor in the data generating process. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = TRUE, echo = FALSE}
+```{r F6-7, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above, modified to also include the second predictor in the data generating process. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = FALSE, echo = FALSE}
 ################################################################################
 ### Figure 6.7
 ################################################################################
@@ -876,7 +876,7 @@ resids_t = scale(residuals(model_sum_coding_t)[,1])
 
 We scale our residuals so that they are represented in terms of standard deviations from the mean, and plot these against the `p_waic` values calculated for each data point by each model. Clearly, large residuals relate to large `p_waic` values. In other words, large `p_waic` values are related to data points that are a very poor fit for our model. In our model with Gaussian errors this relationship is very predictable and quickly leads to large values in `p_waic`. For our model with t distributed errors (`model_sum_coding_t`) residuals beyond two standard deviations do not strongly affect `p_waic`. These differences are due to the different behaviors of the normal and t distributions in their tails, as discussed in section \@ref(c5-robustness). 
 
-```{r F6-8, fig.height = 3, fig.width = 8, fig.cap="(left) Standardized model residuals plotted against values of the WAIC penalty term (P_WAIC) for each data point for the model with Gaussian errors, `model_sum_coding`. (right) The same as on the left but for the model with t distributed errors, `model_sum_coding_t`.", cache = TRUE, echo = FALSE}
+```{r F6-8, fig.height = 3, fig.width = 8, fig.cap="(left) Standardized model residuals plotted against values of the WAIC penalty term (P_WAIC) for each data point for the model with Gaussian errors, `model_sum_coding`. (right) The same as on the left but for the model with t distributed errors, `model_sum_coding_t`.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 6.8
@@ -1122,7 +1122,7 @@ lmer_model
 
 The model now includes estimates of the correlation between the listener random effects, and of the standard deviation of the listener-dependent age effects. Figure \@ref(fig:F6-9) is a comparison of the listener means and age effects fit by both approaches. Clearly the results are very similar save for the fact that just as with our correlations and standard deviations, `brms` gives us intervals while `lmer` only gives us point estimates. 
 
-```{r F6-9, fig.width = 8, fig.height =3.5, fig.cap="(left) Listener-dependent mean effects and credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer. (right) Same as the left panel but showing the listener-dependent age effects.", echo=FALSE,cache=TRUE}
+```{r F6-9, fig.width = 8, fig.height =3.5, fig.cap="(left) Listener-dependent mean effects and credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer. (right) Same as the left panel but showing the listener-dependent age effects.", echo=FALSE,cache=FALSE}
 
 ################################################################################
 ### Figure 6.9

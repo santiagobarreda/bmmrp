@@ -306,11 +306,10 @@ In response to this, Barreda (2017) has suggested that listener must use acousti
 The experiment presented here is meant to investigate the relationship between speaker VTL, f0, and apparent height and gender. In each case, we are also interested in the role for apparent age in the use of speech acoustics and in the determination of height and gender. Listeners will be presented with a set of voices and asked to classify the speakers as female or male and as children and adults. Two separate analyses will be carried out. The first predicts apparent height based on speech acoustics and apparent age and gender, the second predicts apparent gender based on speech acoustics and apparent age. In general, we are interested in a few basic questions:
 
   Q1) What is the relationship between speech acoustics, specifically speaker f0 and VTL, and apparent height/gender?
-  
-  Q2a) Do apparent talker age and gender affect vary systematically with apparent height independently of speech acoustics?
-  Q2a) Does apparent talker age vary systematically with apparent gender independently of speech acoustics?
 
-  Q3) Do the effects for speaker f0 and VTL vary based on the apparent age or gender of the speaker? 
+  Q2) Do the effects for speaker f0 and VTL on apparent height/gender vary based on apparent speaker characteristics?
+  
+[@@ SB - fix] We may consider two general models of apparent speaker perception: simple and complex. simple is direct, consistent, and acoustic. complex is flexible, indirect and may include all sorts of other stuff. many classical approaches assume a more or less simple connection. We think it may be the latter. 
   
 ## Methods
 
@@ -568,12 +567,15 @@ abline (age_intercepts[1,1], age_vtl_slopes[1,1], lwd=3,col=2)
 abline (age_intercepts[2,1], age_vtl_slopes[2,1], lwd=3, col=4)
 ```
 
-Results suggest that the perception of size from speech is not the simple relation of VTL and f0 with a predicted height, as is suggested by some simpler models of size perception (cite smith 2005 ?). For example, 
+Results suggest that the perception of size from speech is not the simple relation of VTL and f0 with a predicted height, as is suggested by some simpler models of size perception (cite smith 2005 ?). We can relate this back to patterns in our data to show that this is not just an 'abstract' association made by our model. For example, we found the 27 speakers who were identified as adults and children at least 5 times each out of 15 total classifications. These speakers included 5 boys, 2 girls, 1 man, and 19 women. We then found the average reported height for each speaker when identified as an adult, and the average height for the same speaker when identified as a child. The distribution of these differences is presented in the left plot of figure \@ref(fig:F13-7). We see a range of differences in apparent height, however, in each case individual speakers were identified as taller on average when they were also identified as adults. 
 
+```{r F13-7, echo = FALSE, fig.height = 2.5, fig.width = 8, echo = FALSE, fig.cap = " -- "}
 
+################################################################################
+### Figure 13.7
+################################################################################
 
-```{r}
-qq = aggregate (exp_data$height ~ exp_data$S + exp_data$A, 
+qq = aggregate (exp_data$height ~ exp_data$S + exp_data$A + exp_data$C_v, 
                 data = exp_data, FUN = mean)
 a = qq[qq[,2]=='a',]
 c = qq[qq[,2]=='c',]
@@ -588,21 +590,7 @@ tmp = abs (tmpp - 0.5)
 a = a[a[,1] %in% inter,]
 c = c[c[,1] %in% inter,]
 
-hist(a[,3] - c[,3])
-hist(a[tmp < 0.3,3] - c[tmp < 0.3,3], xlim = c(0,30))
-
-```
-
-
-### The effect for apparent gender on apparent height
-
-In figure \@ref(fig:F13-5) we saw that the marginal (fixed) effect for apparent gender was effectively zero, however, the standard deviation of the listener-dependent gender effect ($\sigma_{A:L}$) was not. In figure \@ref(fig:F13-7), we see the listener-dependent difference in apparent height across apparent genders (male-female). We can see that although many of these are not reliably different from zero, they can differ *from each other* and could reasonably affect apparent height judgments. As a result, we can say although apparent gender may not have a large average effect across listeners, it can be associated with meaningful difference in apparent height for at least some listeners.
-
-```{r F13-7, echo = FALSE, fig.height = 2.5, fig.width = 8, echo = FALSE, fig.cap = " -- "}
-
-################################################################################
-### Figure 13.7
-################################################################################
+#hist(a[,3] - c[,3])
 
 listener_gender_effects = 
   bmmb::short_hypothesis(height_model, "-(G1+A1:G1)=0",scope="coef",group="L")
@@ -612,44 +600,33 @@ age_intercepts = bmmb::short_hypothesis(
                   "2*(G1+A1:G1) = 0","2*(G1-A1:G1) = 0"))
 
 par (mar =c(4,4,1,1))
-layout (mat = t(c(1:2)), widths = c(.6,.4))
+layout (mat = t(c(1:2)), widths = c(.4,.6))
+hist(a[tmp < 0.3,4] - c[tmp < 0.3,4], xlim = c(0,30), main = '',
+     xlab = "Apparent height difference (cm)", col = bmmb::cols[1])
+
 brmplot (listener_gender_effects[,1:4]*2, col = bmmb::cols,
          labels = 1:15,xlab = "Listener")
-brmplot (age_intercepts, labels = c("w-g","m-b","w-m","g-b"))
+#brmplot (age_intercepts, labels = c("w-g","m-b","w-m","g-b"))
+
 
 ```
 
-Finally, before concluding our discussion of apparent height judgments we want to discuss the age by gender interaction. We include this even though its credible interval included values we consider practically meaningless because this interaction has a logical interpretation, and as a demonstration. The right plot of figure \@ref(fig:F13-5) presents the differences in predicted intercepts for different categories of speakers. These differences were calculated using the code below:
 
-```{r, eval = FALSE}
-age_intercepts = bmmb::short_hypothesis(
-  height_model, c("2*(A1+A1:G1) = 0","2*(A1-A1:G1) = 0",
-                  "2*(G1+A1:G1) = 0","2*(G1-A1:G1) = 0"))
-```
+### The effect for apparent gender on apparent height
 
-The result of the interaction between apparent age and apparent gender is that the  
-
-
-[1] "(mean = 11.93, s.d. = 2.38, 95% C.I = [7.22, 16.75])"
-[2] "(mean = 16.85, s.d. = 2.64, 95% C.I = [11.84, 22])"  
-[3] "(mean = -2.65, s.d. = 1.81, 95% C.I = [-6.09, 1.06])"
-[4] "(mean = 2.28, s.d. = 1.81, 95% C.I = [-1.32, 5.8])"  
-
-
-
-
-
+In figure \@ref(fig:F13-5) we saw that the marginal (fixed) effect for apparent gender was effectively zero, however, the standard deviation of the listener-dependent gender effect ($\sigma_{A:L}$) was not. In the right plot of figure \@ref(fig:F13-7), we see the listener-dependent difference in apparent height across apparent genders (male-female). We can see that although many of these are not reliably different from zero, they can differ *from each other* and could reasonably affect apparent height judgments. As a result, we can say although apparent gender may not have a large average effect across listeners, it can be associated with meaningful difference in apparent height for at least some listeners.
 
 ## Conclusion: Apparent height judgments
 
-apparent age is associated with taller heights given the same f0 and vtl. age is more subtle, as in communication of gender. evidence of category dependent effects for acoustics is strong and in line with previous reports. 
+The conclusion summarizes what you consider the main findings of your paper and points in the direction of future study. Writing conclusions is hard but important, it is the last part of your paper so its important to keep in mind that the reader may walk away with the things you mention in your conclusion in mind.  
 
+Since the conclusion needs to be focused on the 'point' of the paper and this is not a 'real' experiment, we won't spend much time on this. However, we can summarize what we consider to be the main take-aways in relation to the general research questions posed in section X above. We can say that we have strong evidence of the fact that the determination of apparent speaker height is not independent of apparent age such that even a single speech stimulus can be judged in different ways based on the apparent age of the speaker. This suggests that the determination of apparent speaker age, height, and gender may be related process and not a simple mapping directly from speech acoustics to apparent speaker characteristics. 
 
 ## Results: Apparent gender judgments
 
-Figure \@ref(fig:F13-8) presents the probability with which individual speakers where identified as female, plotted against their gross acoustic characteristics. It's clear that there is a positive association between f0 and the probability of a female response, and a negative association between speaker VTL and the same probability. In addition, our figure suggests a possibly differing relationship between speech acoustics and female identifications for adult (women vs. men) compared to for children (girls vs. boys). 
+Figure \@ref(fig:F13-8) presents the probability with which individual speakers where identified as female, plotted against their gross acoustic characteristics. It's clear that there is a positive association between f0 and the probability of a female response, and a negative association between speaker VTL and the same probability. In addition, our figure suggests a possibly differing relationship between speech acoustics and female identifications for adults (women vs. men) compared to for children (girls vs. boys). 
 
-```{r F13-8, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = " -- "}
+```{r F13-8, echo = FALSE, fig.height = 2.5, fig.width = 8, echo = FALSE, fig.cap = " -- "}
 
 ################################################################################
 ### Figure 13.8
@@ -665,9 +642,12 @@ tab = table (exp_data$S, exp_data$C_v)
 mod_cat = apply (tab, 1,which.max)
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
-plot (aggd$f0, aggd$Female, pch=16, col = bmmb::cols[1+mod_cat], cex=2,ylim=c(0,1))
-legend (-1.1,0.9,legend=c("boy","girl","man","woman"), col=bmmb::cols[2:5],pch=16,bty='n',pt.cex=1.2)
-plot (aggd$vtl, aggd$Female, pch=16, col = bmmb::cols[1+mod_cat], cex=2,ylim=c(0,1))
+plot (aggd$f0, aggd$Female, pch=16, col = bmmb::cols[1+mod_cat], 
+      cex=2,ylim=c(0,1), ylab="P(female response)", xlab="Centered f0 (Hz/100)")
+legend (-1.1,0.9,legend=c("boy","girl","man","woman"),col=bmmb::cols[2:5],
+        pch=16,bty='n',pt.cex=1.2)
+plot (aggd$vtl, aggd$Female, pch=16, col = bmmb::cols[1+mod_cat], 
+      cex=2,ylim=c(0,1), ylab="P(female response)", xlab="Centered VTL (cm)")
 ```
 
 Although this analysis is focused on the relationships between predictors and responses, we may also want to consider how accurate listeners tended to be and the mistakes they tended to make. We can see that listeners were most accurate at identifying the gender of adults, and in particular adult males. Boys were confused with girls and women in 40% of cases, and girls were identified incorrectly in 57% of cases.
@@ -714,10 +694,10 @@ Below we print a table of the standard deviations estimates presented in figure 
 ```{r T11-1}
 fixef_effects = fixef(gender_model)
 standard_deviations = bmmb::getsds (gender_model)
-knitr::kable(fixef_effects, caption = "Fixed effect estimaes, standard error, and 2.5% and 97.5% quantiles.")
+knitr::kable(fixef_effects, caption = "Model fixed effects.")
 ```
 
-The effects for the acoustic predictors are as expected: A lower f0 and longer VTL is associated with male responses. The magnitude of these effects is enough to make a meaningful difference for expected outcomes. For example, our results suggest that a 2 cm difference in VTL is associated with a logit difference of about 5.4, enough to change the probability of a female response from 6% ($\mathrm{logit}^{-1}(-2.7)=0.06$) to ($\mathrm{logit}^{-1}(2.7)=0.93$). Apparent adultness resulted in an increase in female responses, and the effects of f0 and VTL changes are *stronger* for adults compared to children. In terms of the random effects, it seems that there is substantial variation in only three parameters: Listener-dependent variation in the use of VTL ($\sigma_{VTL \colon L}$) and the effect of apparent age ($\sigma_{A1 \colon L}$), and speaker-dependent variation in intercepts ($\sigma_{S}$). 
+The effects for the acoustic predictors are as expected: A lower f0 and longer VTL is associated with male responses. The magnitude of these effects is enough to make a meaningful difference for expected outcomes. For example, our results suggest that a 2 cm difference in VTL is associated with a logit difference of about 5.4, enough to change the probability of a female response from 6% ($\mathrm{logit}^{-1}(-2.7)=0.06$) to ($\mathrm{logit}^{-1}(2.7)=0.93$). Apparent adultness resulted in an increase in female responses for an average VTL and f0, and the effects of f0 and VTL changes are *stronger* for adults compared to children. 
 
 ## Discussion: Apparent gender judgments
 
@@ -725,11 +705,11 @@ We are going to focus on three aspects of our results: 1) The age dependent clas
 
 ### Effect of apparent age on the perception of femaleness
 
-Apparent adultness increased the probability of observing a female response, while it increased the effects of VTL and f0, leading to steeper slopes along each dimension. For example, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for children ($f0 + (-A1) = 2.2 - 1.6 = 0.6$) and nearly doubling it for adults ($f0 + A1 = 2.2 + 1.6 = 3.8$). The joint effects of f0 and VTL and the way that these vary in relation to apparent age can be considered using territorial maps, as in figure below. These figures present category boundaries in a stimulus space and indicate which categorical outcome is most probable in each region of the space. 
+Apparent adultness increased the probability of observing a female response, while it increased the effects of VTL and f0, leading to steeper slopes along each dimension. For example, the interaction between f0 and apparent age (`f0:A1`) has the effect of reducing the effect of f0 to nearly zero for children ($f0 + (-A1) = 2.2 - 1.6 = 0.6$) and nearly doubling it for adults ($f0 + A1 = 2.2 + 1.6 = 3.8$) [@@ SB provide actual]. The joint effects of f0 and VTL and the way that these vary in relation to apparent age can be considered using territorial maps, as in figure \@ref(fig:F13-10). Territorial maps present category boundaries in a stimulus space and indicate which categorical outcome is most probable in each region of the space. 
 
-We discussed territorial maps and how to make these for models with two quantitative predictors in chapter 11, so we will go into much detail regarding that here. However, when using 'esoteric' approaches like this, it is useful to give the reader enough information so that they understand what they are looking at. for example...
+We discussed territorial maps and how to make these for models with two quantitative predictors in section X, so we will go into much detail regarding them here. However, when using 'esoteric' approaches like this, it is useful to give the reader enough information so that they understand what they are looking at. For example... [@@ SB - finish this, talk about intersecting planes]. 
 
-```{r F13-10, fig.width = 8, fig.height = 3, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Lines indicate male/female boundaries for adults (green), children (orange), and overall (blue) implied by the full model, ignoring the cross-product term. (middle) The same as the left figure but for the reduced model. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space, for the reduced model.", echo = FALSE, cache = FALSE}
+```{r F13-10, fig.width = 8, fig.height = 2.5, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Lines indicate male/female boundaries for adults (green), children (orange), and overall (blue) implied by the full model, ignoring the cross-product term. (middle) The same as the left figure but for the reduced model. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space, for the reduced model.", echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 13-10
@@ -853,14 +833,14 @@ for ( i in seq(-20,20,2)){
 curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), 
          from = -5, to = 5, add = TRUE,lwd=2, lty=1,col=1)
 
-mtext ("Centered vocal-tract length (cm", side = 1, outer = TRUE, line=-1,cex=0.9)
+mtext ("Centered vocal-tract length (cm)", side = 1, outer = TRUE, line=-1,cex=0.9)
 ```
 
-In figure above we can see that the category boundary becomes more parallel to the f0 axis for apparent children. This reflects the decreasing importance of this cue in the prediction of responses for apparent children. We can also see that the larger slopes for apparent adults result in more 'certain' predictions. The tightly packed lines in the middle plot indicate rapid changes in predicted logit values while the widely-spaced lines in the right plot reflect less certainty when estimating the gender of apparent children.
+In figure \@ref(fig:F13-10) we can see that the category boundary becomes more parallel to the f0 axis for apparent children. This reflects the decreasing importance of this cue in the prediction of responses for apparent children. We can also see that the larger slopes along f0 and VTL for apparent adults result in more 'certain' predictions. The tightly packed lines in the middle plot indicate rapid changes in predicted logit values while the widely-spaced lines in the right plot reflect less certainty when estimating the gender of apparent children.
 
 ### Between-listener variation in gender perception
 
-Our random effects standard deviations (figure X, table X) indicated substantial variation in listener-dependent effects for VTL and for apparent age. To investigate this, we calculated listener-specific intercepts, f0 slopes, and VTL slopes. We did this separately for apparent children and apparent adults using the code below (explained in detail in section X). 
+Our random effects standard deviations (figure \@ref(fig:F13-9)) indicated substantial variation in listener-dependent effects for VTL and for apparent age. To investigate this, we calculated listener-specific intercepts, f0 slopes, and VTL slopes. We did this separately for apparent children and apparent adults using the code below (explained in detail in section X). 
 
 ```{r, echo = FALSE}
 listener_coefficients_adult = 
@@ -939,7 +919,12 @@ for (i in 1:15){
 
 ### Beyond gross acoustic cues in gender perception
 
-Our model attempts to predict female responses given a small number of acoustic predictors and their interaction with apparent age. It also allows for these relationships to vary in a listener-dependent manner. When there is systematic variation in the way that individual speakers that cannot be explained by the acoustic predictors, including by listener-dependent variation in these, this is captured by the speaker-dependent intercepts (for a discussion of this see section X). As a result, the speaker-dependent intercept effects reflect systematic tendencies in identification of individual speakers as male or female above and beyond what can be explained given the other parameters in the model. 
+Our model attempts to predict female responses given a small number of acoustic predictors and their interaction with apparent age. It also allows for these relationships to vary in a listener-dependent manner. When there is systematic variation in the way that individual speakers are classified that *cannot* be explained by the acoustic predictors, including by listener-dependent variation in these, this is captured by the speaker-dependent intercepts (for a discussion of this see section X). As a result, the speaker-dependent intercept effects reflect systematic tendencies in identification of individual speakers as male or female above and beyond what can be explained given the other parameters in the model. 
+
+The speaker-dependent intercept effects for our model are presented in figure \@ref(fig:F13-12). We can see that the effects for boys are mostly negative, indicating that boys were less likely to be identified as female than expected. Conversely, adult females were more likely to be identified as adult females than expected. As we can see in figure \@ref(fig:F13-3), boys and women overlap substantially in their gross acoustics. As a result, to the extent that their gender is identified correctly we might expect that this would be on the basis of 'something else'. 
+
+We can contrast the effects for boys and women with those of adult males, which are nearly all centered around zero with fairly wide intervals. The intercept terms for veridical adult male speakers suggests there is no 'something else' necessary in the prediction of adult males. In other words, the classification of adult males is easy to explain in terms of f0 and VTL and there is no 'left over' systematic variation to explain for the speaker effects.
+
 
 ```{r F13-12, fig.width = 8, fig.height = 2, fig.cap = ".", echo = FALSE, cache = FALSE}
 
@@ -954,9 +939,7 @@ par (mar = c(1,4,1,1), oma = c(0,0,0,0))
 brmplot (ranef(gender_model)$S[,,1], col = bmmb::cols[mod_cat+1],labels="")
 ```
 
-For example, we see that the effects for boys are mostly negative, indicating that boys were less likely to be identified as female than expected. Conversely, adult females were more likely to be identified as adult females than expected. As we can see in figure above (in intro), boys and women overlap substantially in their gross acoustics. As a result, to the extent that their gender is identified correctly we might expect that this would be on the basis of 'something else'. We can contrast the effects with those of adult males which are nearly all centered around zero with fairly wide intervals. The intercept terms for veridical adult male speakers suggests there is no 'something else' necesarry in the prediction of adult males. In other words, the classification of adult males is easy to explain in terms of f0 and VTL and there is no 'left over' systematic variation to explain for the speaker effects.
-
-What could the 'something else' aiding in the classification of boys and adult women be? One candidate are what are know as **prosodic** information, that is information about timing, rhythm, pitch movement and so on. It's also possible that other more subtely acoustic information is involved. In any case, results highlight the fact that the communication and identification from speech is more complicated than what can be explained by speaker f0 and VTL. 
+What could the 'something else' aiding in the classification of boys and adult women be? One candidate are what are know as prosodic [@@ SB wheres the first mention of prosody?] information, that is information about timing, rhythm, pitch movement and so on. It's also possible that other more subtle acoustic information is involved, for example information about the breathiness or creakiness of the voice. In any case, results highlight the fact that the communication and identification of gender from speech is more complicated than what can be explained by speaker f0 and VTL. 
 
 ## Conclusion: Apparent gender
 
@@ -965,6 +948,7 @@ What could the 'something else' aiding in the classification of boys and adult w
 
 ## Overall conclusion
 
+- outline what this was for
 
 
 

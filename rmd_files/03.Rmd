@@ -9,6 +9,9 @@ knitr::opts_chunk$set(
 
 In this chapter we're going to start trying to answer basic research questions with Bayesian regression models using the `brms` package in R. The model we'll use initially is not 'correct' for our data, but it is simple enough to work as an introduction to Bayesian regression models. In the next chapter we'll use `brms` to build models that are closer to 'correct' given the structure of our data. Before using a Bayesian regression model to investigate our data, we will explain what we mean by *regression model* and what specifically makes the models in this book *Bayesian*. We'll leave a discussion of the 'multilevel' aspect of our models for the following chapter. 
 
+Throughout this book, we will present formal descriptions of our models. The relationship between statistical concepts and the formal notation used to represent them is very similar to the ability to play music and read musical notation. Someone who can play a song undoubtedly *knows* that song. However, in the absence of formal musical training that same person might not recognize sheet music representing the song. This person may also lack the vocabulary to discuss components of the song, and may find it difficult to learn to play new pieces without instruction. In the same way, most people have an excellent intuitive understanding of many statistical concepts (to be discussed in upcoming chapters) such as slopes, interactions, error, and so on. However, they lack the knowledge of formal statistical notation that enables a deeper understanding of and ability to generalize these concepts. As a result, learning to read/write this notation will help you describe your models efficiently, and understand the models used by other people more effectively.
+
+
 ## Chapter pre-cap
 
 This chapter introduces the concept of a regression model and explains what makes regression models 'Bayesian'. Posterior probabilities are introduced as is `brms`, an R package that can be used to fit Bayesian regression models. After this, a Bayesian regression model estimating data from a single normal distribution is fit to the experimental data. Topics related to model fitting such as thinning, chains, and iterations are presented, as is the specification of prior probabilities. The interpretation of the `brm` model print statement, and the concepts of errors and residuals are also introduced. Finally,  information related to working directly with the model posterior samples is also provided, and the log posterior density is discussed. 
@@ -33,8 +36,6 @@ y_{[i]} \sim \mathrm{N}(\mu,\sigma)
 (\#eq:3-1)
 \end{equation}
 $$
-
-We're going to learn to read and write formal descriptions of our models. The relationship between statistical concepts and the formal notation used to represent them is very similar to the ability to play music and read musical notation. Someone who can play a song undoubtedly *knows* that song. However, in the absence of formal musical training that same person might not recognize sheet music representing the song. This person may also lack the vocabulary to discuss components of the song, and may find it difficult to learn to play new pieces without instruction. In the same way, most people have an excellent intuitive understanding of many statistical concepts (to be discussed in upcoming chapters) such as slopes, interactions, error, and so on. However, they lack the knowledge of formal statistical notation that enables a deeper understanding of and ability to generalize these concepts. As a result, learning to read/write this notation will help you describe your models efficiently, and understand the models used by other people more effectively.
 
 Equation \@ref(eq:3-1) formalizes the fact that we think the *shape* of our data distribution will be like that of a normal distribution with a mean equal to $\mu$ and a standard deviation equal to $\sigma$. When you see this, $\mathrm{N}(\mu,\sigma)$, picture in your mind the shape of a normal distribution just like if you see this $y=x^2$ you may imagine a parabola. $\mathrm{N}(\mu,\sigma)$ really just represents that shape of the normal distribution and associated expectations about more and less probable outcomes. The above relationship can also be presented as in equation \@ref(eq:3-2).
 
@@ -98,9 +99,7 @@ y_{[i]} = \alpha_1 \times \mathrm{x}_{1[i]} + \alpha_2 \times \mathrm{x}_{2[i]} 
 \end{equation}
 $$
 
-Notice that according to equation \@ref(eq:3-6), regression models do not require that our *data* be normally distributed, but only that the *random variation* in our data ($\varepsilon$) be normally distributed. In \@ref(eq:3-8), we see the sort of representation of our model that we will use in this book. This representation presents the random and systematic components of our regression model separately, and it clearly and succinctly describes the structure of our model. In plain English this is:
-
->"Our observations are expected to be randomly distributed around the mean value according to a normal distribution with a standard deviation equal to sigma ($\sigma$), and a mean of mu ($\mu$). We expect the mean of our variable to vary from trial to trial based on three predictors. The combination of these predictors is based on model-specific coefficients ($\alpha_1,\alpha_2,\alpha_3$) that are static across trials.".
+Notice that according to equation \@ref(eq:3-6), regression models do not require that our *data* be normally distributed, but only that the *random variation* in our data ($\varepsilon$) be normally distributed. In \@ref(eq:3-8), we see the sort of representation of our model that we will use in this book. 
 
 $$
 \begin{equation}
@@ -111,6 +110,10 @@ y_{[i]} \sim \mathrm{N}(\mu,\sigma)\\
 \end{split}
 \end{equation}
 $$
+This representation presents the random and systematic components of our regression model separately, and it clearly and succinctly describes the structure of our model. In plain English this is:
+
+>"Our observations are expected to be randomly distributed around the mean value according to a normal distribution with a standard deviation equal to sigma ($\sigma$), and a mean of mu ($\mu$). We expect the mean of our variable to vary from trial to trial based on three predictors. The combination of these predictors is based on model-specific coefficients ($\alpha_1,\alpha_2,\alpha_3$) that are static across trials.".
+
 
 ## What's 'Bayesian' about these models? {#c3-whats-bayes}
 
@@ -158,29 +161,28 @@ Each of the components in \@ref(eq:3-12) has a name:
 
 * $P(y|\mu)$ is the likelihood. This is the product of the probability density values corresponding to the data points for a given value of $\mu$. The likelihood reflects the probability that the data, $y$, would be observed or generated for particular values of $\mu$. As a result, the likelihood tells us about the distribution of possible/credible parameter values given the data and probability model. 
 
-* $P(y)$ is the **marginal probability** of the data. This is necessary to scale the numerator so that the posterior density has a total area under the curve equal to one. However, you will note that the marginal probability does not vary as a function of $\mu$. As a result, this does affect the posterior probability of different values of $\mu$. For this reason, and for computational reasons described later, you don't typically need to worry about the marginal probability. In fact, you can sample from the posterior even if you don't calculate the denominator of \@ref(eq:3-12).
-
 * $P(\mu|y)$ is the **posterior probability** of the parameter given the data, the probability model, and the prior. This is the **a posteriori** (after observation) probability that the parameter is $\mu$ given your data $y$, and the structure of your model. You get the posterior probability by combining the prior distribution and the likelihood, and in doing so incorporating your current observations into your prior beliefs. 
+
+* $P(y)$ is the **marginal probability** of the data. This is necessary to scale the numerator so that the posterior density has a total area under the curve equal to one. However, note that the marginal probability does not vary as a function of $\mu$. As a result, this does affect the posterior probability of different values of $\mu$. For this reason, and for computational reasons described later, you don't typically need to worry about the marginal probability. In fact, you can sample from the posterior even if you don't calculate the denominator of \@ref(eq:3-12).
 
 As noted above, 'traditional' models focus primarily (or exclusively) on how likely different conclusions are given your data. In contrast, Bayesian models focus on the posterior probability of different parameter values, that is on the combination of the likelihood and prior probabilities of parameters.
 
-#### Prior probabilities {#c3-priors}
+### Prior probabilities {#c3-priors}
 
-In a Bayesian model, every parameter whose value is being estimated needs a prior probability distribution to be specified. For example, imagine you are interested in estimating the mean of a set of values, $\mu$. You decide to use a Bayesian model and decide that $\mu$ will have a normal prior with a mean and standard deviation equal to $\mu_{prior}$ and $\sigma_{prior}$. To estimate this model you would need to provide fixed values for $\mu_{prior}$ and $\sigma_{prior}$, for example we could use $\mu_{prior}=3$ and $\sigma_{prior}=5$. Note that the parameters of the prior do not get prior distributions themselves. This is because we are not estimating values of $\mu_{prior}$ and $\sigma_{prior}$, but only of $\mu$.  
+In a Bayesian model, every parameter whose value is being estimated needs a prior probability distribution to be specified. For example, imagine you are interested in estimating the mean of a set of values, $\mu$. You decide to use a Bayesian model and decide that $\mu$ will have a normal prior with a mean and standard deviation equal to $\mu_{prior}$ and $\sigma_{prior}$. In other words, the prior distribution of $P(\mu)$ in \@ref(eq:3-12) is $N(\mu_{prior},\sigma_{prior})$ such that $\mu \sim N(\mu_{prior},\sigma_{prior})$. To estimate this model you would need to provide fixed values for $\mu_{prior}$ and $\sigma_{prior}$, for example we could use $\mu_{prior}=3$ and $\sigma_{prior}=5$ so that $\mu \sim N(3, 5)$. Note that the parameters of the prior do not get prior distributions themselves. This is because we are not *estimating* values of $\mu_{prior}$ and $\sigma_{prior}$, but are instead setting them to fixed values such as 3 and 5. 
 
-The use of prior probabilities is sometimes said to make Bayesian models inherently 'subjective' but this concern is a bit overblown in most cases. First, in cases where you have plenty of data (as is often the case for repeated-measures data), prior probabilities often have little to no effect on outcomes. This is because when you have many observations, the posterior probability of parameters is dominated by the likelihood (as will be discussed in \@ref(c3-posterior)). Second, a researcher will always use 'common sense' (i.e. their prior expectations) to interpret their data. For example, if a listener reported that all adult males were 90 cm tall a researcher would have to wonder if this subject understands height in centimeters or if they were carrying out the experiment in good faith. So, even when they do not explicitly assign prior probabilities to parameter values, researchers still often use their expectations to 'screen' results in a manner broadly consistent with the use of prior probabilities in Bayesian reasoning. 
+The use of prior probabilities is sometimes said to make Bayesian models inherently 'subjective' but this concern is a bit overblown in most situations. First, when there is plenty of data (as is often the case for repeated-measures data), prior probabilities have little to no effect on outcomes. This is because when you have many observations, the posterior probability of parameters is dominated by the likelihood (as will be discussed in \@ref(c3-posterior)). Second, a researcher will always use 'common sense' (i.e. their prior expectations) to interpret their data. For example, if a listener reported that all adult males were 90 cm tall a researcher would have to wonder if this subject understands height in centimeters or if they were carrying out the experiment in good faith. So, even when they do not explicitly assign prior probabilities to parameter values, researchers still often use their expectations to 'screen' results in a manner broadly consistent with the use of prior probabilities in Bayesian reasoning. 
 
 A Bayesian model requires you to build your expectations into your model. It *formalizes* them, makes them *definable* and *replicable*. Finally, every model involves arbitrary decisions which can substantially affect our results so that the design of a model can never said to be strictly 'objective'. As a result, there is no particular reason to worry about the objectivity involved in establishing a prior in Bayesian modeling without also worrying about the objectivity involved in model building more generally. 
 
-#### Posterior distributions {#c3-posterior}
+### Posterior distributions {#c3-posterior}
 
 The calculation of posterior distributions involves the combination of the likelihood function with the prior probability distribution and the marginal probability. The marginal probability does not affect the 'shape' of the posterior distribution, and exists to scale the posterior so that the area under the curve is equal to one (to satisfy the requirements of basic probability theory). As a result, we will focus on the combination of the likelihood and prior probabilities. 
 
-The combination of the likelihood and prior probability distributions is straightforward conceptually: You multiply the values of the two functions at each x-axis location. This works because we are interested in the *joint* probability of the likelihood and the prior, reformulated as the product of a conditional probability (the likelihood) and a marginal probability (the prior). The resulting curve then represents the **joint density** of the two distributions. In figure \@ref(fig:F3-1), several likelihoods and priors are combined, showing the effects of variations in priors on posterior distributions. 
+The combination of the likelihood and prior probability density functions is straightforward conceptually: You multiply the values of the two functions (i.e. curves) at each x-axis location. This works because we are interested in the *joint* probability of the likelihood and the prior, reformulated as the product of a conditional probability (the likelihood) and a marginal probability (the prior). The resulting curve then represents the **joint density** of the two distributions. In figure \@ref(fig:F3-1), several likelihoods and priors are combined, showing the effects of variations in priors on posterior distributions. 
 
-The different standard deviations used for the prior probabilities of $\mu$ encode different levels of prior belief regarding what heights of adult male speakers from the US. Researchers often distinguish between different types of priors based on how much they are expected to affect conclusions. For example, priors are often referred to as **vague**, **weakly informative**, or **informative**. The boundaries between these categories is fuzzy, and the 'informativeness' of a prior is more continuous than discrete, however, we will provide a way to think about these categories in terms of the way they might differently affect your models. It's important to note however, that there is no generally accepted definition for these terms and what follows is just an informal guideline to thinking about these categories of priors. 
+[@@ SB integrate this with figure and equation 3.12 bettre. expand more.]
 
-Recall that the 'width' of the likelihood depends on the amount of underlying variability and the sample size. The underlying variability in a measurement or parameter determines the underlying 'width' of the likelihood. However, as the sample size increases the likelihood becomes narrower and narrower with respect to the underling variation in the measurement/parameter. As a result, a prior that is wider than the underlying variability in the measurement has no chance of meaningfully affecting outcomes given even only a small number of observations. This is shown in the top row of figure \@ref(fig:F3-1). As a result, we will be thinking of the 'informativeness' of priors with respect to the variation we expect in them a priori, with priors going from *vague* to *informative* as they become smaller than the expected random variation. 
 
 ```{r F3-1, echo = FALSE, fig.height = 5.5, fig.width = 8, fig.cap='Demonstration of the effect of different prior probabilities and number of observations on likelihoods on posterior distributions. In each plot, all curves have been scaled to have the same height in the figure. This is only to make the figures visually interpretable but does not affect any of the points made below. ', cache = FALSE}
 
@@ -297,6 +299,10 @@ lines (x, posterior / max (posterior),col=bmmb::cols[7], lty=2,lwd=4)
 mtext (side = 1, outer = TRUE, text = "Height (cm)", line = 2.5)
 
 ```
+
+The different standard deviations used for the prior probabilities of $\mu$ encode different levels of prior belief regarding what heights of adult male speakers from the US. Researchers often distinguish between different types of priors based on how much they are expected to affect conclusions. For example, priors are often referred to as **vague**, **weakly informative**, or **informative**. The boundaries between these categories is fuzzy, and the 'informativeness' of a prior is more continuous than discrete, however, we will provide a way to think about these categories in terms of the way they might differently affect your models. It's important to note however, that there is no generally accepted definition for these terms and what follows is just an informal guideline to thinking about these categories of priors. 
+
+Recall that the 'width' of the likelihood depends on the amount of underlying variability and the sample size. The underlying variability in a measurement or parameter determines the underlying 'width' of the likelihood. However, as the sample size increases the likelihood becomes narrower and narrower with respect to the underling variation in the measurement/parameter. As a result, a prior that is wider than the underlying variability in the measurement has no chance of meaningfully affecting outcomes given even only a small number of observations. This is shown in the top row of figure \@ref(fig:F3-1). As a result, we will be thinking of the 'informativeness' of priors with respect to the variation we expect in them a priori, with priors going from *vague* to *informative* as they become smaller than the expected random variation. 
 
 Each column of figure \@ref(fig:F3-1) differs in terms of the number of observations used to calculate the likelihood (n = 3, 10, 675), and rows differ in terms of the standard deviation of the prior probabilities of the mean with $\mu$ equal to 180 cm and $\sigma$ = 100, 15, 1. In each case, the calculation of the likelihood assumes that the data has the same standard deviation as our apparent height data (7.8 cm). Note that the yellow curve (the likelihood) is the same in each column. What changes is that priors become narrower across rows top to bottom, and therefore have an increasing effect on posterior densities.  
 
@@ -510,7 +516,9 @@ By default, `brms` takes 2000 samples, throwing out the first 1000 samples and r
 model = bmmb::get_model ('3_model.RDS')
 ```
 
-### Interpreting the model: the print statement {#c3-interpreting-print}
+### Interpreting the model: The print statement {#c3-interpreting-print}
+
+[@@ SB - mention that this is P(mu|y) basically]
 
 Typing the model name into the console and hitting enter prints the default `brms` model print statement:
 
@@ -558,7 +566,11 @@ This last section is just boilerplate and contains some basic reminders which wi
 
 ### Seeing the samples {#c3-seeing-samples}
 
+[@@ SB - mention that this is P(mu|y) basically, we see the samples to infer the characteristics of it]
+
 In section \@ref(c3-sampling), we discussed that Bayesian modeling software (like `stan`) takes *samples* of the posterior distributions of parameters given the data and model structure. It's helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summaries of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a data frame using the `get_samples` function from the `bmmb` package. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the second column is the error (`sigma`). The third column (`lp__`) is the log posterior density, to be discussed in section \@ref(c3-log-posterior). 
+
+[@@ SB - this is wrong, its the fourth column now, explain lprior now.]
 
 ```{r, collapse = TRUE}
 # get posterior samples from model
@@ -609,7 +621,11 @@ Let's take a second to think about why this works. Recall that the probability i
 
 ### Getting the residuals {#c3-getting-residuals}
 
-We can get the model residuals using the `residuals` function. By default it returns a data frame where one row corresponds to each observation in your data, and the different columns provide you information about the estimate. You will notice that you also get credible intervals for each of the estimated residuals. This is because there is one prediction for each set of posterior samples. Since we have 1000 posterior samples that means we have 1000 slightly different predicted values for each observation and therefore 1000 slightly different estimated errors for each observation. By default the distribution of residuals is presented, but you can get the individual estimates themselves by calling `residuals(model,summary=FALSE)`.
+We can get the model residuals using the `residuals` function. By default it returns a data frame where one row corresponds to each observation in your data, and the different columns provide you information about the estimate. You will notice that you also get credible intervals for each of the estimated residuals. This is because there is one prediction for each set of posterior samples. Since we have 1000 posterior samples that means we have 1000 slightly different predicted values for each observation and therefore 1000 slightly different estimated errors for each observation. 
+
+By default the distribution of residuals is presented, but you can get the individual estimates themselves by calling `residuals(model,summary=FALSE)`. [@@ SB- expand on this. why do you get so many residuals, what is being summarized, etc.]
+
+
 
 ```{r, collapse = TRUE}
 model_residuals = residuals (model)
@@ -632,7 +648,7 @@ abline (0,1,col=bmmb::cols[3],lwd=2)
 
 ## Checking model convergence {#c3-checking-convergence}
 
-Our parameter estimates are based of a set of samples from the posterior distribution of a parameter. As with any other inference based on samples, our parameter estimates will be unreliable if we don't have enough samples, or if our samples do not represent the population we are trying to understand. For this reason, it's important to look at the **ESS** values (the *effective sample size*), and the **Rhat** values provided for `brm` model print statements. ESS tells you approximately how many *independent* samples you have taken from the posterior. Bulk ESS tells you how many samples the sampler took in the 'thick' part of the density, and Tail ESS reflects how much time the sampler spent in the 'thin' part, in the tails of the distribution. Rhat tells you about whether your 'chains' have converged (more on this later). As noted in the 'boilerplate' at the end of the `brm` model print statement, values of Rhat near 1 are good, and values higher than around 1.1 are a bad sign. Ideally we would like several hundred samples (at least) for mean estimates, and thousands to be confident in the 95% confidence intervals. You may sometimes fit a model and get a warning message like this:
+Our parameter estimates are based of a set of samples from the posterior distribution of a parameter. As with any other inference based on samples, our parameter estimates will be unreliable if we don't have enough samples, or if our samples do not represent the population we are trying to understand. For this reason, it's important to look at the **ESS** values (the *effective sample size*), and the **Rhat** values provided for `brm` model print statements. ESS tells you approximately how many *independent* samples you have taken from the posterior. Bulk ESS tells you how many samples the sampler took in the 'thick' part of the density, and Tail ESS reflects how much time the sampler spent in the 'thin' part, in the tails of the distribution. Rhat tells you about whether your chains have converged (more on this later). As noted in the 'boilerplate' at the end of the `brm` model print statement, values of Rhat near 1 are good, and values higher than around 1.1 are a bad sign. [@@ expand on rhat]. Ideally we would like several hundred samples (at least) for mean estimates, and thousands to be confident in the 95% confidence intervals. You may sometimes fit a model and get a warning message like this:
 
 ```{r}
 ## Warning messages:
@@ -729,7 +745,7 @@ The code above tells our model to use a normal distribution with a mean of 176 a
 
 The random error, `sigma`, was given a prior with a normal distribution with a mean of 0 and a standard deviation of 15 (`normal(0, 15)`). Again, this is likely an overestimation of the magnitude of the random error in this data. However, it is likely to be in the ballpark. Our prior specifies a normal distribution centered at 0 for the standard deviation. Since standard deviations, like variances, can only be positive the sampler (`stan`) used by `brm` ignores the negative half and uses only the positive half of the prior distribution. This prior basically says that we expect the average variation around the mean to be less than 30 cm, which it is very likely to be. 
 
-The left plot in figure \@ref(fig:F3-4) compares the normal distribution we used (blue line) to a histogram of our height judgments. As we can see, the prior distribution we used for the intercept is much broader (more vague) than the data distribution so that it will probably have little to no practical effect on our posterior distribution (but will help our model fit properly). The right plot compares the prior for the standard deviation parameters to the absolute value of the centered apparent heights. This presentation shows how far each observation is from the mean apparent height (at 174 cm), and again we see that most of these deviations are in the thicker part of the prior density. As a result, neither of these priors is going to have much of an effect on our parameter estimates given the size of our sample (see figure \@ref(fig:F3-1).
+The left plot in figure \@ref(fig:F3-4) compares the normal distribution we used (blue line) to a histogram of our height judgments. As we can see, the prior distribution we used for the intercept is much broader (more vague) than the data distribution so that it will probably have little to no practical effect on our posterior distribution (but will help our model fit properly). The right plot compares the prior for the standard deviation parameters to the absolute value of the centered apparent heights. This presentation shows how far each observation is from the mean apparent height (at 174 cm), and again we see that most of these deviations are in the thicker part of the prior density. As a result, neither of these priors is going to have much of an effect on our parameter estimates given the size of our sample (see figure \@ref(fig:F3-1)).
 
 ```{r F3-4, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) A comparison of the densities of the prior for our intercept, compared to a histogram of our height judgments for male speakers. (right) The distribution of absolute deviations from the mean height judgment, compared to the prior distribution for the error parameter in our model."}
 
@@ -828,11 +844,11 @@ P(\theta|y) \propto P(y|\theta) \times P(\theta)
 \end{equation}
 $$
 
-If we log-transform both sides of \@ref(eq:3-23), we get the log-posterior density, shown in \@ref(eq:3-24).
+If we log-transform both sides of \@ref(eq:3-23), we get the log-posterior density, shown in \@ref(eq:3-24) and including some constant $C$. [@@SB explain C]
 
 $$
 \begin{equation}
-log (P(\theta|y)) = log (P(y|\theta)) + log(P(\theta))
+log (P(\theta|y)) = log (P(y|\theta)) + log(P(\theta)) + C
 (\#eq:3-24)
 \end{equation}
 $$
@@ -903,7 +919,7 @@ A one sample t-test helps investigate whether the mean of a set of observations 
 t.test (mens_height)
 ```
 
-Notice that the interval provided around the mean (`95 percent confidence interval: 173.2010 174.3744`) corresponds very well to the 95% credible interval around the intercept provided in `model` (`173.20, 174.33`). The reason they align so well is because both models have the same general structure and make similar mathematical assumptions. In addition, our Bayesian estimate is being dominated by the likelihood, and the more 'traditional' t-test *only* considers information from the likelihood. 
+Notice that the interval provided around the mean (`95 percent confidence interval: 173.2 174.4`) corresponds very well to the 95% credible interval around the intercept provided in `model` (`173.16, 174.33`). The reason they align so well is because both models have the same general structure and make similar mathematical assumptions. In addition, our Bayesian estimate is being dominated by the likelihood, and the more 'traditional' t-test *only* considers information from the likelihood. 
 
 ### Intercept-only ordinary-least-squares regression vs. intercept-only Bayesian models {#c3-vs-ols} 
 

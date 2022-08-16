@@ -28,8 +28,6 @@ In order to avoid a situation where you end up with data you can't analyze or a 
 
 ## Chapter pre-cap
 
-[@@ NHS: I misread this as "Chapter pre-*crap*"]
-
 --
 
 ## Models with multiple quantitative predictors
@@ -216,7 +214,7 @@ z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \t
 \end{equation}
 $$
 
-When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use as the cross product. For example, below we generate two samples of 100 random Gaussian variables (`x, y`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated (-0.00099) and yet their cross product (`xy`) is strongly correlated with both of them (0.683, and 0.729). 
+When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use as the cross product. For example, below we generate two samples of 100 random Gaussian variables (`x, y`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated (-0.00099) and yet their cross product (`xy`) is strongly correlated with both of them (0.683, and 0.729). This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables is greater magnitude. In other words, the value of $x \times (y+a)$ will *always* be greater than the value of $x \times y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative. 
 
 ```{r}
 set.seed(1)
@@ -226,9 +224,6 @@ xy = x*y
 
 cor (cbind(x,y,xy))
 ```
-
-This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables is greater magnitude. In other words, the value of $x \times (y+a)$ will *always* be greater than the value of $x \times y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative. 
-[@@ SB come back to this expand or delete, make sure it makes sense]
 
 The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_x`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and that lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models. 
 
@@ -246,8 +241,6 @@ The models we fit in chapter 9 and 10 were missing an obvious and important pred
 
 Below we load our packages and data, and center our quantitative predictors. We also scale f0 so that it has a reasonably similar magnitude as the VTL effect. Specifically, the average difference in VTL between adult females and males is about 2 cm, and the difference in f0 is about 100 Hz. This means that is we divide f0 by 100 the difference between men and women is about 1 unit, comparable to the 2 unit difference in VTL. 
 
-[@@ NHS: why not standardize using 1 SD for each variable?]
-  
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
 library (bmmb)
@@ -452,7 +445,7 @@ The lack of intervals on parameter estimates makes it difficult to 'rule out' va
 
 `boundary (singular) fit: see help('isSingular')`
 
-Which warns us that some of the variance components we are trying to estimate are quite small. Because `brm` simply samples from the posterior and doesn't try to find *the* best model parameters, these issues are minimized. [@@ NHS: just noting again that we should talk/think more about why exactly Bayesian models and/or brms specifically do well with, e.g., small variance estimates - I wonder if it's actually just a matter of under-the-hood transformations to avoid boundary issues? maybe you should email Paul Bürkner and ask him what is going on in a case like this]
+Which warns us that some of the variance components we are trying to estimate are quite small. Estimating small variance components is not generally problematic for models fit using `brms` (and `Stan`).
 
 We can use our credible intervals to figure out which variance components are unlikely to matter: Variance components whose credible intervals are concentrated near zero. There are several such components in figure \@ref(fig:F11-5). For example, consider the listener-dependent interaction between VTL and apparent gender `vtl:G1:L`. If this variation is non zero, in the *best case*, this component reflects a tiny amount of systematic variation in our outcomes and so is unlikely to matter much. Notice that it is difficult to predict which standard deviation parameters are distinguishable from zero based on their magnitude alone. This makes point estimates of limited utility for this purpose, in the absence of intervals around our estimates.
 
@@ -489,9 +482,7 @@ Batches of parameters that vary a lot from each other reflect large differences 
 
 For example, in figure \@ref(fig:F11-5) we see that the standard deviation of listener-dependent intercepts (`Intercept:L`, $\sigma_L$) is much larger than the listener-dependent interaction between VTL and apparent gender (`vtl:G1:L`, $\sigma_{VTL \colon G \colon L}$). We can see that this directly relates to the variation of each batch of 'random effects' around zero, as shown in figure \@ref(fig:F11-6). Whether or not $\sigma_{VTL \colon G \colon L}$ is *exactly* zero, we can look at figure \@ref(fig:F11-6) and see that this predictor does not predict much variation in our dependent variable. As a result of this, by inspecting the standard deviations in figure \@ref(fig:F11-5) we can see that although there are a large number of predictors, only a couple are having any meaningful effect on apparent height judgments. 
 
-[@@ SB - add legend]
-  
-```{r F11-6, fig.height = 3, fig.width = 8, fig.cap='Listener-dependent intercepts (circles) and `vtl:G1` interactions (triangles).', echo = FALSE, cache = FALSE}
+```{r F11-6, fig.height = 2.5, fig.width = 8, fig.cap='Listener-dependent intercepts (circles) and `vtl:G1` interactions (triangles).', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11.6
@@ -503,6 +494,9 @@ bmmb::brmplot (brms::ranef (model_height_vtl_f0)$L[,,"Intercept"], col = bmmb::c
          line=TRUE)
 bmmb::brmplot (brms::ranef (model_height_vtl_f0)$L[,,"vtl:G1"], add = TRUE, 
          nudge = 0.1, labels = "", col = bmmb::cols[10],pch=17)
+
+legend (11,10, legend =c("Intercept","VTL:G"),pch=16:17,horiz = TRUE,bty='n',
+        col=bmmb::cols[9:10],pt.cex=1.5)
 ```
   
 Gelman and Hill distinguish two types of standard deviations for a 'random' effect with $J$ levels (p. 459) (emphasis ours):

@@ -181,7 +181,7 @@ The calculation of posterior distributions involves the combination of the likel
 
 The combination of the likelihood and prior probability density functions is straightforward conceptually: You multiply the values of the two functions (i.e. curves) at each x-axis location. This works because we are interested in the *joint* probability of the likelihood and the prior, reformulated as the product of a conditional probability (the likelihood) and a marginal probability (the prior). The resulting curve then represents the **joint density** of the two distributions. In figure \@ref(fig:F3-1), several likelihoods and priors are combined, showing the effects of variations in priors on posterior distributions. 
 
-[@@ SB integrate this with figure and equation 3.12 bettre. expand more.]
+[@@ SB integrate this with figure and equation 3.12 better. expand more.]
 
 
 ```{r F3-1, echo = FALSE, fig.height = 5.5, fig.width = 8, fig.cap='Demonstration of the effect of different prior probabilities and number of observations on likelihoods on posterior distributions. In each plot, all curves have been scaled to have the same height in the figure. This is only to make the figures visually interpretable but does not affect any of the points made below. ', cache = FALSE}
@@ -210,7 +210,7 @@ lines (x, prior / max(prior),col=bmmb::cols[4],lwd=4)
 lines (x, posterior / max (posterior),col=bmmb::cols[7], lty=2,lwd=4)
 
 mtext (side=3,outer=FALSE,text="Observations = 3",line=1)
-mtext (side=2,outer=FALSE,text=expression(paste("Prior ", sigma, " = 100")),line=1)
+mtext (side=2,outer=FALSE,text=expression(paste("P(", mu,") = N(180,100)")),line=1)
 
 likelihood = dnorm (x, mean (mens_height), sd (mens_height) / sqrt ( 3 ) )
 prior = dnorm (x, 180, 15) ; posterior = likelihood * prior
@@ -221,7 +221,7 @@ grid()
 lines (x, prior / max(prior),col=bmmb::cols[4],lwd=4)
 lines (x, posterior / max (posterior),col=bmmb::cols[7], lty=2,lwd=4)
 
-mtext (side=2,outer=FALSE,text=expression(paste("Prior ", sigma, " = 15")),line=1)
+mtext (side=2,outer=FALSE,text=expression(paste("P(", mu,") = N(180,15)")),line=1)
 
 likelihood = dnorm (x, mean (mens_height), sd (mens_height) / sqrt ( 3 ) )
 prior = dnorm (x, 180, 1) ; posterior = likelihood * prior
@@ -232,7 +232,7 @@ grid()
 lines (x, prior / max(prior),col=bmmb::cols[4],lwd=4)
 lines (x, posterior / max (posterior),col=bmmb::cols[7], lty=2,lwd=4)
 
-mtext (side=2,outer=FALSE,text=expression(paste("Prior ", sigma, " = 1")),line=1)
+mtext (side=2,outer=FALSE,text=expression(paste("P(", mu,") = N(180,1)")),line=1)
 
 ####
 likelihood = dnorm (x, mean (mens_height), sd (mens_height) / sqrt ( 10 ) )
@@ -275,7 +275,11 @@ lines (x, prior / max(prior),col=bmmb::cols[4],lwd=4)
 lines (x, posterior / max (posterior),col=bmmb::cols[7], lty=2,lwd=4)
 
 mtext (side=3,outer=FALSE,text="Observations = 675",line=1)
-legend (176,.9,legend=c("Prior","Likelihood","Posterior"),lwd=4,lty=c(1,1,4),
+
+legend (174.75,.9,legend=c(expression(paste("Prior  ","P(",mu,")")),
+                        expression(paste("Likelihood  ","P(y|",mu,")")),
+                        expression(paste("Posterior  ","P(",mu,"|y)"))),
+        lwd=4,lty=c(1,1,4),
         col=c(bmmb::cols[4],bmmb::cols[3],bmmb::cols[7]),bty = "n",cex=1.2)
 
 likelihood = dnorm (x, mean (mens_height), sd (mens_height) / sqrt ( 675 ) )
@@ -306,7 +310,7 @@ Recall that the 'width' of the likelihood depends on the amount of underlying va
 
 Each column of figure \@ref(fig:F3-1) differs in terms of the number of observations used to calculate the likelihood (n = 3, 10, 675), and rows differ in terms of the standard deviation of the prior probabilities of the mean with $\mu$ equal to 180 cm and $\sigma$ = 100, 15, 1. In each case, the calculation of the likelihood assumes that the data has the same standard deviation as our apparent height data (7.8 cm). Note that the yellow curve (the likelihood) is the same in each column. What changes is that priors become narrower across rows top to bottom, and therefore have an increasing effect on posterior densities.  
 
-In the middle row of Figure \@ref(fig:F3-1) we see the influence of a *weakly informative* prior. This distribution has a standard deviation of 15 and a mean of 180. The standard deviation was set to twice the value of the standard deviation of adult male heights in the United States. As a result, it places reasonable constraints on our expectations but it will not strongly influence results within that reasonable range. We see that in this case, the likelihood still dominates the posterior even when only three observations are available. 
+In the middle row of Figure \@ref(fig:F3-1) we see the influence of a *weakly informative* prior. This prior is a normal distribution with a mean of 180 and a standard deviation of 15 (i.e. $P(\mu)=N(180,15)$). This distribution has a standard deviation of 15 and a mean of 180. The standard deviation was set to twice the value of the standard deviation of adult male heights in the United States. As a result, it places reasonable constraints on our expectations but it will not strongly influence results within that reasonable range. We see that in this case, the likelihood still dominates the posterior even when only three observations are available. 
 
 In the top row of Figure \@ref(fig:F3-1) we see the influence of a *vague* or *diffuse* prior on inference. Since this distribution has a standard deviation of 100 and a mean of 180, this means that basically all heights from zero to 400 cm are plausible a priori. A prior probability this wide is only going to place very minimal constraints on the posterior probabilities that fall inside this range. This is reflected in the top row of figure \@ref(fig:F3-1) where even in the case of only three observations the posterior probability almost exactly matches the likelihood. So, in the presence of very weak prior beliefs, the most credible values for your parameters a posteriori (after incorporating your data) will be dominated by the most likely values. This makes sense.
 
@@ -518,8 +522,6 @@ model = bmmb::get_model ('3_model.RDS')
 
 ### Interpreting the model: The print statement {#c3-interpreting-print}
 
-[@@ SB - mention that this is P(mu|y) basically]
-
 Typing the model name into the console and hitting enter prints the default `brms` model print statement:
 
 ```{r, collapse = TRUE, eval = FALSE}
@@ -566,11 +568,11 @@ This last section is just boilerplate and contains some basic reminders which wi
 
 ### Seeing the samples {#c3-seeing-samples}
 
-[@@ SB - mention that this is P(mu|y) basically, we see the samples to infer the characteristics of it]
+In section \@ref(c3-sampling), we discussed that Bayesian modeling software (like `stan`) takes *samples* of the posterior distributions of parameters given the data and model structure. It's helpful to see that our model is really just a series of **posterior samples**. 
 
-In section \@ref(c3-sampling), we discussed that Bayesian modeling software (like `stan`) takes *samples* of the posterior distributions of parameters given the data and model structure. It's helpful to see that our model is really just a series of **posterior samples**. Compact description of our models, such as the one in the print described above, are just summaries of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a data frame using the `get_samples` function from the `bmmb` package. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the second column is the error (`sigma`). The third column (`lp__`) is the log posterior density, to be discussed in section \@ref(c3-log-posterior). 
+We want to really highlight the fact that the information about is basically our best estimate of the characteristics of the posterior distribution of $\mu$, $P(\mu | y)$. We 
 
-[@@ SB - this is wrong, its the fourth column now, explain lprior now.]
+Compact description of our models, such as the one in the print described above, are just summaries of the information contained in the posterior samples. Below we get the posterior samples from the model we fit above, in the form of a data frame using the `get_samples` function from the `bmmb` package. As expected, we have 1000 samples of each parameter. The first column represents the model intercept (`b_Intercept`), the second column is the error (`sigma`). The third and fourth columns (`lprior`, `lp__`) are the log prior and log posterior densities, to be discussed in section \@ref(c3-log-posterior). 
 
 ```{r, collapse = TRUE}
 # get posterior samples from model
@@ -623,13 +625,16 @@ Let's take a second to think about why this works. Recall that the probability i
 
 We can get the model residuals using the `residuals` function. By default it returns a data frame where one row corresponds to each observation in your data, and the different columns provide you information about the estimate. You will notice that you also get credible intervals for each of the estimated residuals. This is because there is one prediction for each set of posterior samples. Since we have 1000 posterior samples that means we have 1000 slightly different predicted values for each observation and therefore 1000 slightly different estimated errors for each observation. 
 
-By default the distribution of residuals is presented, but you can get the individual estimates themselves by calling `residuals(model,summary=FALSE)`. [@@ SB- expand on this. why do you get so many residuals, what is being summarized, etc.]
+```{r, collapse = TRUE}
+model_residuals = residuals (model, )
+head (model_residuals)
+```
 
-
+By default, information regarding the posterior distribution of residuals for each data point is presented. However, you can get individual posterior estimates for each residuals by setting `summary=FALSE`. When you do this, you will get a matrix of size m by n for m posterior samples and n data points. We can see below that we get 1000 rows representing our posterior samples and 675 columns representing our data points. 
 
 ```{r, collapse = TRUE}
-model_residuals = residuals (model)
-head (model_residuals)
+model_residuals = residuals (model, summary=FALSE)
+dim (model_residuals)
 ```
 
 In the left plot of figure \@ref(fig:F3-3) we show a histogram of our residuals and compare this to a normal distribution centered at zero, with a standard deviation equal to the the error in our model (`sigma = 7.78`). It's no surprise that these match because this is precisely what the sigma parameter in our model is an estimate of, the standard deviation of the residuals. Since our model consists of only an intercept, a single expected value ($\mu$) for all instances of the variable, all variation around the mean constitutes error. We can show this by comparing our residual estimates to the centered data (right plot of figure \@ref(fig:F3-3)) and seeing that these are basically the same.
@@ -648,7 +653,9 @@ abline (0,1,col=bmmb::cols[3],lwd=2)
 
 ## Checking model convergence {#c3-checking-convergence}
 
-Our parameter estimates are based of a set of samples from the posterior distribution of a parameter. As with any other inference based on samples, our parameter estimates will be unreliable if we don't have enough samples, or if our samples do not represent the population we are trying to understand. For this reason, it's important to look at the **ESS** values (the *effective sample size*), and the **Rhat** values provided for `brm` model print statements. ESS tells you approximately how many *independent* samples you have taken from the posterior. Bulk ESS tells you how many samples the sampler took in the 'thick' part of the density, and Tail ESS reflects how much time the sampler spent in the 'thin' part, in the tails of the distribution. Rhat tells you about whether your chains have converged (more on this later). As noted in the 'boilerplate' at the end of the `brm` model print statement, values of Rhat near 1 are good, and values higher than around 1.1 are a bad sign. [@@ expand on rhat]. Ideally we would like several hundred samples (at least) for mean estimates, and thousands to be confident in the 95% confidence intervals. You may sometimes fit a model and get a warning message like this:
+Our parameter estimates are based of a set of samples from the posterior distribution of a parameter. As with any other inference based on samples, our parameter estimates will be unreliable if we don't have enough samples, or if our samples do not represent the population we are trying to understand. For this reason, it's important to look at the **ESS** values (the *effective sample size*), and the **Rhat** values provided for `brm` model print statements. Rhat tells you about whether your chains have converged, and it basically compares how much within-chain variation there is relative to how much between-chain overlap. Basically, you want your chains to overlap almost entirely in the values that they same since they are supposed to be sampling the same thing. As noted in the 'boilerplate' at the end of the `brm` model print statement, values of Rhat near 1 are good, and values higher than around 1.1 are a bad sign. 
+
+ESS tells you approximately how many *independent* samples you have taken from the posterior. Bulk ESS tells you how many samples the sampler took in the 'thick' part of the density, and Tail ESS reflects how much time the sampler spent in the 'thin' part, in the tails of the distribution. Ideally we would like several hundred samples (at least) for mean estimates, and thousands to be confident in the 95% confidence intervals. You may sometimes fit a model and get a warning message like this:
 
 ```{r}
 ## Warning messages:
@@ -718,6 +725,22 @@ We inspect the model print statement and see that despite having the same number
 # inspect model
 model_thinned
 ```
+
+[@@ Noah]
+
+Before moving on we want to talk about another problem you may run into: **Divergent transitions**. When you see an error like this: 
+
+`There were n divergent transitions after warmup. Increasing adapt_delta above 0.8 may help. See http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup`
+
+It means your model encountered n (it will be some number) divergent transitions during sampling. Your model has very specific expectations regarding your model structure and data, and samples from the posterior distribution on this basis. A *divergent transition* indicates that as it sampled, it came across things that were not as expected. The difference between what your model though would happen and what actually happened then calls the reliability of the entire simulation into question. One way to fix this problem is to increase `adapt_delta` to 0.95 or 0.99. This can be done as seen below.  
+
+
+```{r, eval = FALSE}
+  brms::brm (height ~ 1, data = men, chains = 4, cores = 4,
+       warmup = 1000, iter = 3000, thin = 2, control = list(adapt_delta = 0.9))
+```
+
+Increasing the `adapt_delta` parameter results in fewer divergences and a more robust sampler, but also a slower sampler. If you raise `adapt_delta` to 0.999 or something and are still getting divergent transitions, there may be an error in your data or in the way that your model is specified. We can't really be more specific than that at this point, however, divergent transitions are often not a `Stan` problem but rather a data or model structure problem.  
 
 ## Specifying prior probabilities {#c3-specifying-priors}
 
@@ -817,16 +840,16 @@ To that of the model where we specified our own priors (`model_priors`), we see 
 bmmb::short_summary (model_priors)
 ```
 
-## The log posterior density (`lp`) {#c3-log-posterior}
+## The log prior and log posterior densities (`lp`) {#c3-log-posterior}
 
-When we got our posterior samples with the `get_samples` function, in addition to our mean and standard deviation estimates we got an estimate of something called `lp__`. This is a measure of the (unnormalized) **log posterior density**, basically, the overall posterior probability of your model parameters given your data. 
+When we got our posterior samples with the `get_samples` function, in addition to our mean and standard deviation estimates we got estimates of something called `lprior` and `lp__`. We can see these below: 
 
 ```{r}
 samples = bmmb::get_samples (model_priors)
 head (samples)
 ```
 
-In \@ref(eq:3-12) we presented the posterior probability of a $\mu$ parameter given your data and priors. We can generalize this to encompass all of our model parameters, represented by $\theta$ in \@ref(eq:3-22). Now, \@ref(eq:3-22) represents the posterior probability of all our model parameters given our data.
+These are the *log prior* and the (unnormalized) *log posterior* densities, respectively. To explain what these are let's generalize equation \@ref(eq:3-12), which presented the posterior probability of a $\mu$ parameter given your data and priors, to encompass all of our model parameters represented by $\theta$ in \@ref(eq:3-22). Now, \@ref(eq:3-22) represents the posterior probability of *all* our model parameters given our data.
 
 $$
 \begin{equation}
@@ -835,20 +858,36 @@ P(\theta|y) = \frac{P(y|\theta) \times P(\theta)}{P(y)}
 \end{equation}
 $$
 
-The *unnormalized* posterior density ignores the marginal distribution ($P(y)$) and so returns a density that is proportional to the posterior density up to some constant, as in \@ref(eq:3-23). By saying that it is defined up to a proportional constant, this is what we mean. We cannot, or do not bother, calculating the exact posterior density. However, we can calculate some value, let's say $x$, where the true posterior density is equal to $x \times C$ where $C$ is some unknown constant. When we model the unnormalized posterior density we take this approach, we try to estimate $x$ ($P(\theta|y)$) while ignoring $C$ ($1/P(y)$).
+First, we can discuss `lprior`, the log density. This is the logarithm of the joint density of all of your parameters given their prior probabilities (i.e. the sum of their log densities), in other words $\log(P(\theta))$. We can calculate this for our first and fourth lines above, by remembering our priors:
+
+```{r}
+model_priors$prior
+```
+
+And using these to calculate the log density of the mean, and the log density of the error term (`sigma`) given our priors. We also add log(2) to this to multiply the density of the `sigma` term by two. This is in order to make the area under the curve still equal to 1 since since `Stan` ignores the negative half of the density since variances are bounded by zero. We can see that we can recreate the values of `lprior` above.
+
+```{r}
+dnorm (173.4,176,15,log=TRUE) + dnorm (8.041,0,15,log=TRUE) + log(2)
+dnorm (174.8,176,15,log=TRUE) + dnorm (7.936,0,15,log=TRUE) + log(2)
+```
+
+The **log posterior density** is basically the overall posterior probability of your model parameters given your data. The *unnormalized* posterior density ignores the marginal distribution ($P(y)$) and so returns a density that is proportional to the posterior density up to some constant, as in \@ref(eq:3-23). By saying that it is defined up to a proportional constant, this is what we mean. We cannot, or do not bother, calculating the exact posterior density. However, we can calculate some value, let's say $x$, where the true posterior density is equal to $x \times C$ where $C$ is some unknown constant. When we model the unnormalized posterior density we take this approach, we try to estimate $x$ ($P(\theta|y)$) while ignoring $C$ ($1/P(y)$).
 
 $$
 \begin{equation}
+\begin{split}
+P(\theta|y) = P(y|\theta) \times P(\theta) \times C \\
 P(\theta|y) \propto P(y|\theta) \times P(\theta)
+\end{split}
 (\#eq:3-23)
 \end{equation}
 $$
 
-If we log-transform both sides of \@ref(eq:3-23), we get the log-posterior density, shown in \@ref(eq:3-24) and including some constant $C$. [@@SB explain C]
+If we log-transform both sides of \@ref(eq:3-23), we get the log-posterior density, shown in \@ref(eq:3-24). [@@ SB - explain c better?]
 
 $$
 \begin{equation}
-log (P(\theta|y)) = log (P(y|\theta)) + log(P(\theta)) + C
+log (P(\theta|y)) = log (P(y|\theta)) + log(P(\theta)) + \log(C)
 (\#eq:3-24)
 \end{equation}
 $$
@@ -941,4 +980,21 @@ Again, we see a close similarity to our initial `model`. The `Std.error` for the
 ##       Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
 ## sigma     7.77      0.22     7.37     8.21 1.00     1139      741
 ```
+
+
+
+
+## Exercises
+
+The analyses in the main body of the text all involve only the unmodified 'actual' resonance level. Responses for the stimuli with the simulate 'big' resonance will be reserved for exercises throughout. You can get the 'big' resonance in the `exp_ex` data frame, or all data in the `exp_data_all` data frame. 
+
+Fit and interpret one of the suggested models:
+
+1) Easy: Analyze the (pre-fit) model that's exactly like the one in this chapter, except using the data in `exp_ex` (`model_ex`).
+
+2) Medium: Fit a model just like the one in this chapter, but for the data from some other group, for either the original or big resonance levels. 
+
+2) Hard: Fit two models like the one in this chapter, for two arbitrary groups. Compare results across models to think about group differences.
+
+In any case, describe the model, present and explain the results, and include some figures.
 

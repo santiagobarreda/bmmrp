@@ -488,15 +488,19 @@ brms::posterior_summary (new_parameters)
 
 ### Using the `hypothesis` function {#c5-using-hypothesis}
 
-Working directly with the posterior samples is simple, but often not strictly necessary. The `brms` package contains a very useful function called `hypothesis` that helps us add terms very easily without having to do any of the steps outlined in the previous section. You can ask the `hypothesis` function to add terms in your model (spelled just as they are in the print statement), and to compare the result to some number. If you compare the result to 0, it just tells you about the result of the terms you added. For example, the line below says "test my hypothesis that the Intercept plus the A1 parameter is equal to zero". This is a slightly convoluted way of saying "tell me what the value of the adult mean is so I can see if it is different from zero". You will notice that the mean, error and credible intervals *exactly* correspond to the values obtained by calculating our `new_parameters` above. 
+[@@ SB - talk about short_hypothesis immediately, skip hypothesis and explain why.]
+
+Working directly with the posterior samples is simple, but often not strictly necessary. The `brms` package contains a very useful function called `hypothesis` that helps us add terms very easily without having to do any of the steps outlined in the previous section. The hypothesis function provides a lot of extra information and formatting which may be useful in 'real life' but is cumbersome for this book. As a result, we will be relying on the `short_hypothesis` function provided in the book R package (`bmmb`). This function is simply a wrapper for the `hypothesis` function that provides a more compact output while still maintaining most of the information we need. So, to be clear, any functionality we credit to `short_hypothesis` is actually a property of `hypothesis` and all the credit goes to the `brms` package.
+
+You can ask `short_hypothesis` to add terms in your model (spelled just as they are in the print statement), and to compare the result to some number. If you compare the result to 0, it just tells you about the result of the terms you added. For example, the line below says "test my hypothesis that the Intercept plus the A1 parameter is equal to zero". This is a slightly convoluted way of saying "tell me what the value of the adult mean is so I can see if it is different from zero". You will notice that the mean, error and credible intervals *exactly* correspond to the values obtained by calculating our `new_parameters` above. 
 
 ```{r, collapse = TRUE}
-brms::hypothesis(model_sum_coding, "Intercept + A1 = 0")
+bmmb::short_hypothesis(model_sum_coding, "Intercept + A1 = 0")
 ```
 
-The hypothesis function provides a lot of extra information and formatting which may be useful in 'real life' but is cumbersome for this book. As a result, we will be relying on the `short_hypothesis` function provided in the book R package (`bmmb`). This function is simply a wrapper for the `hypothesis` function that provides a more compact output while still maintaining most of the information we need. 
+We want to be clear that we are using the term 'hypothesis' very informally, and using `short_hypothesis` as a useful way to calculate parameter values. We are not suggesting that the command above is meant to test a binary true/false hypothesis with respect to the 'real' value of the parameter in question.
 
-We can use the hypothesis function to confirm similar results for the model fit using treatment coding (`model`, fit above). In that model, the reference category was the adult female mean. So, if we call the `hypothesis` function on the intercept of the treatment-coding model, we can see that it will present a similar estimate to that seen above.
+We can use `short_hypothesis` to confirm similar results for the model fit using treatment coding (`model`, fit above). In that model, the reference category was the adult female mean. So, if we call the `hypothesis` function on the intercept of the treatment-coding model, we can see that it will present a similar estimate to that seen above.
 
 ```{r, collapse = TRUE}
 short_hypothesis(model, "Intercept = 0")
@@ -709,7 +713,7 @@ for (i in seq(-2,-8,-2)){
 }
 ```
 
-In the middle panel of figure \@ref(fig:F5-7) we see that, apart from when $\nu=1$, the shape of the distributions are all pretty similar within about two standard deviations of the mean. Since we expect the large majority of our observations to fall inside this area, this means that $\nu$ is not expected to have a large effect on inference in many cases where data falls within 'typical' ranges (when $\nu>1$). In contrast, in the right panel below see that the differences can be quite large in the 'tails' of the distributions, the areas outside of three standard deviations or so.
+In the middle panel of figure \@ref(fig:F5-7) we see that, apart from when $\nu=1$, the shape of the distributions are all pretty similar within about two standard deviations of the mean. Since we expect the large majority of our observations to fall inside this area, this means that $\nu$ is not expected to have a large effect on inference in many cases where data falls within 'typical' ranges (when $\nu>1$). In contrast, in the right panel we see that the differences can be quite large in the 'tails' of the distributions, the areas outside of three standard deviations or so.
 
 The most common implementation of the t distribution has only one parameter, $\nu$. This *standardized* t distribution always has a mean equal to zero and a variance equal to exactly $\nu / (\nu-2)$. In order to use the t distribution for variables with other means and variances, we need to refer to the **non-standardized t distribution**, a three-parameter distribution consisting of mean ($\mu$), scale ($s$), and degrees of freedom ($\nu$). The non-standardized t distributions consist of a t distributed variable ($t$) that has been scaled up by some value $s$ and then has had some value $\mu$ added to it, as in \@ref(eq:5-2). 
 

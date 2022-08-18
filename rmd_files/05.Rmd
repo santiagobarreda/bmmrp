@@ -200,7 +200,7 @@ Factors are variables like 'adult' vs. 'child' that are not inherently numerical
 
 Why not? Because once you know any 2 of these quantities, you also know the 3rd. In section \@ref(c2-sample-mean) we mentioned that the sum of the differences between observations and the sample mean calculated from those observations will always equal zero. When we estimate the overall mean based on the group 1 and group 2 means, the overall mean represents the sample mean and each group mean is an observation. This means that the deviation of the group means around the overall mean (i.e. the effects) are constrained to sum to zero. Since the sum of the effect of group 1 and the effect of group 2 must equal zero, that means that the group 1 effect *must* equal the opposite of the group 2 effect. For example, if the group 1 mean is 5 and the overall mean is 6, obviously the group 2 mean *must* be 7. This is because if the group 1 mean is 1 below the overall mean (an effect of -1), then the other group *must* be 1 above the mean (an effect of +1) in order to balance out. 
 
-The situation described above means that when we estimate the mean of the means (i.e. the intercept) based on two group means, one of the three values is always perfectly predictable based on the other two. When things are entirely predictable in this way we say they are **linearly dependent** [@@ noah -> footnote with technical definition of linear dependence here?], and regression models don't like this. For example, imagine you were trying to predict a person's weight from their height. You want to include height in centimeters *and* height in meters in your model, and you want to independently estimate effects for both predictors. Since height in centimeters = height in meters * 100, that is not going to be possible [@@ SB - why not]. The effect of one must be 100 times the effect of the other. Even though it may be less transparent, this is the same reason why we can't estimate all the group means *and* the overall mean. 
+The situation described above means that when we estimate the mean of the means (i.e. the intercept) based on two group means, one of the three values is always perfectly predictable based on the other two. When things are entirely predictable in this way we say they are **linearly dependent** [@@ noah -> footnote with technical definition of linear dependence here?], and regression models don't like this. For example, imagine you were trying to predict a person's weight from their height. You want to include height in centimeters *and* height in meters in your model, and you want to *independently* estimate effects for both predictors. Since height in centimeters = height in meters * 100, that is not going to be possible. The effect of one *must* be 100 times the effect of the other. Obviously, one value is not independent of another if one is exactl 100 times the other. This means that we can't independently estimate these two values. Even though it may be less transparent, this is the same reason why we can't estimate all the group means *and* the overall mean. 
 
 There are many different contrast coding schemes, and these reflect different ways of representing group differences, and decisions regarding which effects to estimate (and which to ignore). Here we will discuss two approaches: Treatment coding and sum coding. 
 
@@ -264,7 +264,7 @@ knitr::include_graphics("../images/coding.png")
 
 ## Sum coding and the decomposition of variation {#c5-refittin-sum}
 
-[@@ SB - noah check if I avoid being too causal-y.]
+[@@ Noah check if I avoid being too causal-y.]
 
 Regression models try to break up the value of the dependent variable into different components. This is why effects are expressed in terms of differences to some reference value. For example, imagine we say that a speaker's apparent height is 160 cm, and under some other condition their apparent height is also 160 cm. If this were the case, we might be inclined to say that the change in these conditions has no *effect* on their apparent height. On the other hand something that *is* associated with a difference in apparent height *can* be said to have an effect on that variable. As a result, we can express the *effect* of something in terms of the difference it is associated with. For example, we can say that under so and so conditions a person will tend to sound 17.5 cm shorter, relative to some reference value. More generally, we can think of any variable as the sum of a bunch of independent *effects*. 
 
@@ -488,8 +488,6 @@ brms::posterior_summary (new_parameters)
 
 ### Using the `hypothesis` function {#c5-using-hypothesis}
 
-[@@ SB - talk about short_hypothesis immediately, skip hypothesis and explain why.]
-
 Working directly with the posterior samples is simple, but often not strictly necessary. The `brms` package contains a very useful function called `hypothesis` that helps us add terms very easily without having to do any of the steps outlined in the previous section. The hypothesis function provides a lot of extra information and formatting which may be useful in 'real life' but is cumbersome for this book. As a result, we will be relying on the `short_hypothesis` function provided in the book R package (`bmmb`). This function is simply a wrapper for the `hypothesis` function that provides a more compact output while still maintaining most of the information we need. So, to be clear, any functionality we credit to `short_hypothesis` is actually a property of `hypothesis` and all the credit goes to the `brms` package.
 
 You can ask `short_hypothesis` to add terms in your model (spelled just as they are in the print statement), and to compare the result to some number. If you compare the result to 0, it just tells you about the result of the terms you added. For example, the line below says "test my hypothesis that the Intercept plus the A1 parameter is equal to zero". This is a slightly convoluted way of saying "tell me what the value of the adult mean is so I can see if it is different from zero". You will notice that the mean, error and credible intervals *exactly* correspond to the values obtained by calculating our `new_parameters` above. 
@@ -498,7 +496,8 @@ You can ask `short_hypothesis` to add terms in your model (spelled just as they 
 bmmb::short_hypothesis(model_sum_coding, "Intercept + A1 = 0")
 ```
 
-We want to be clear that we are using the term 'hypothesis' very informally, and using `short_hypothesis` as a useful way to calculate parameter values. We are not suggesting that the command above is meant to test a binary true/false hypothesis with respect to the 'real' value of the parameter in question.
+[@@ Noah]
+We want to be clear that we are not suggesting that the command above test a binary true/false hypothesis with respect to the 'real' value of the parameter in question. Instead, we are simply using using `short_hypothesis` as a useful way to calculate combinations of parameter values. 
 
 We can use `short_hypothesis` to confirm similar results for the model fit using treatment coding (`model`, fit above). In that model, the reference category was the adult female mean. So, if we call the `hypothesis` function on the intercept of the treatment-coding model, we can see that it will present a similar estimate to that seen above.
 

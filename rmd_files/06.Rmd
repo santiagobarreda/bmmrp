@@ -284,7 +284,7 @@ cor (x1, y1)
 
 ### Random effects and the multivariate normal distribution {#c6-random-and-mvn}
 
-[@@ SB - check out revision below, also do we need to say something like for real values of a, b, or c or something?]
+[@@ Noah - check out revision below, also do we need to say something like for real values of a, b, or c or something?]
 
 The **multivariate normal** distribution is a straightforward and very useful generalization of the normal distribution. A multivariate normal variable is a set of variables that are each normally distributed, and that result in another normally-distributed variable when linearly combined. Each individual variable that makes up the multivariate normal represents a **dimension** of the multivariate normal. So, if we have a three-dimensional normal distribution with dimensions $x_1, x_2$, and $x_3$, this implies that: 1) Each of $x_1, x_2$, and $x_3$ are normally distributed, and 2) If we define a new variable $x_4$ such that $x_4 = a \times x_1 +  b \times x_2 +  c \times x_3$, then $x_4$ will be normally distributed.
 
@@ -393,35 +393,33 @@ And `brm` (and Stan) will do the rest.
 
 ### Updating our model description
 
-Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:6-7). Only two things have changed with respect to the description in \@ref(eq:6-1). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than as independent univariate normal variables. Second, we specify a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal covariance matrix $\Sigma$. This is because, as noted above, `stan` constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A1 \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$) as in equation \@ref(eq:6-4). 
+Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:6-7). Only two things have changed with respect to the description in \@ref(eq:6-1). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than as independent univariate normal variables. Second, we specify a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal covariance matrix $\Sigma$. This is because, as noted above, `stan` constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A1 \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$) as in equation \@ref(eq:6-4). We include this in the final line of the model for completeness, but will be excluding it from future model specifications. This is because this element is not specified by the user, and becomes increasingly bulky as our models become more complicated.
 
 $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{N}(\nu,\mu_{[i]},\sigma) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1  + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A  + L_{[L_{[i]}]} + A \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim N(0,\sigma_S) \\
-\begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\
+\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\
 \\
 \mathrm{Intercept} \sim \mathrm{t}(3,156,12) \\
-A1 \sim \mathrm{t}(3,0,12) \\
-\sigma, \sigma_L, \sigma_{A1 \colon L}, \sigma_S \sim \mathrm{t}(3,0,12) \\
+A \sim \mathrm{t}(3,0,12) \\
+\sigma, \sigma_L, \sigma_{A \colon L}, \sigma_S \sim \mathrm{t}(3,0,12) \\
 \nu \sim gamma(2, 0.1) \\ 
 R \sim \mathrm{LKJCorr} (2) \\\\
-\Sigma = \begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A1 \colon L} \\ \end{bmatrix} 
+\Sigma = \begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A \colon L} \\ \end{bmatrix} 
 \times R \times
-\begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A1 \colon L} \\ \end{bmatrix} \\
+\begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A \colon L} \\ \end{bmatrix} \\
 \end{split}
 (\#eq:6-7)
 \end{equation}
 $$
 
-[@@ SB - refer to new deterministic part, say we will be omitting it in the future but mention we omit it often in text. add symbols to plain english]
-
 Here's a plain English description of the model specification in \@ref(eq:6-7):
 
-> We are modeling apparent height as coming from a t distribution with unknown nu, mean, and scale parameters. The expected value for any given trial is modeled as the sum of an intercept, an effect for apparent age, a listener effect, a listener dependent effect for apparent age, and a speaker effect. The speaker effects were drawn from a univariate normal distribution with a standard deviation estimated from the data. The two listener effects were drawn from a bivariate normal distribution with standard deviations and a correlation that was estimated from the data. The reaminder of the 'fixed' effects and the bivariate correlation were given fixed priors. 
+> We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value for any given trial ($\mu$) is modeled as the sum of an intercept, an effect for apparent age ($A$), a listener effect ($L$), a listener dependent effect for apparent age ($A \colon L$), and a speaker effect ($S$). The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_S$) estimated from the data. The two listener effects were drawn from a bivariate normal distribution with standard deviations ($\sigma_L, \sigma_{A \colon L}$) and a correlation matrix ($R$) that was estimated from the data. The reaminder of the 'fixed' effects and the bivariate correlation were given fixed priors. 
 
 ### Fitting and interpreting the model {#c6-fitting}
 

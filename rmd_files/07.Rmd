@@ -398,7 +398,7 @@ Below we compare our recreated group means with our average height judgment for 
 tapply (exp_data$height, exp_data$C, mean)
 ```
 
-## Using our models to predict {#c7-posterior-prediction}
+## Posterior prediction: Using our models to predict new data {#c7-posterior-prediction}
 
 So far we've been working with very simple models and so we haven't worried very much about how well they *fit*, or represent our data. Our reconstruction of the group means above suggests our current model may have some issues, and that we should be concerned about its ability to accurately capture the patterns in the data. So far we've only been discussing modeling in one direction, going from data to abstract, reduced representations (i.e. regression models). However, it's also worth considering going in the other direction, from the abstraction representation back towards data. 
 
@@ -410,7 +410,7 @@ $$
 \begin{equation}
 \begin{split}
 y_{[i]} \sim N (\mu_{[i]}, \sigma) \\
-\mu_{[i]} = Intercept + A_{[\mathrm{A}_{[i]}]} + B_{[\mathrm{B}_{[i]}]} + C_{[\mathrm{C}_{[i]}]}
+\mu_{[i]} = Intercept + A_{[\mathsf{A}_{[i]}]} + B_{[\mathsf{B}_{[i]}]} + C_{[\mathsf{C}_{[i]}]}
 \end{split}
 (\#eq:7-5)
 \end{equation}
@@ -429,7 +429,21 @@ $$
 \end{equation}
 $$
 
-A *posterior predictive check* samples from the posterior predictive distribution with the intention of comparing these samples of $\tilde{y}$ to your original data $y$. Posterior prediction can be used to assess how well your model fits your data. If your model really 'gets' your data, the fake data it generates ($\tilde{y}$ ) will have similar characteristics to your real data ($y$). If the fake data your model generates looks substantially different from your real data, that suggests a fundamental misalignment between your model and your data. The generic functions `fitted` and `predict` will help you get you linear and posterior predictions from your `brm` model. 
+A *posterior predictive check* samples from the posterior predictive distribution with the intention of comparing these samples of $\tilde{y}$ to your original data $y$. Posterior prediction can be used to assess how well your model fits your data. If your model really 'gets' your data, the fake data it generates ($\tilde{y}$ ) will have similar characteristics to your real data ($y$). If the fake data your model generates looks substantially different from your real data, that suggests a fundamental misalignment between your model and your data. 
+
+You can get simple representations of your posterior predictive distribution using the `pp_check` function in `brms` as seen below. This function call will compare the distribution of your new data ($\tilde{y}$) to the distribution of your actual data. It compares density plots by default, though the user can select other sorts of plots. 
+
+```{r}
+brms::pp_check(model_both)
+```
+
+You can also use the `p_check` (predictive check) function in `brms` to make the same sorts of comparisons, though this function only compares densities. This function lets you hide or show your data in the plot, lets you specify the number of posterior samples you want, and also lets you specify the random effects formula when predicting. This function also returns a matrix containing the posterior predictions (`y_pred` below) where each row represents a different observation and each column represents a different posterior sample. 
+
+```{r}
+y_pred = bmmb::p_check(model_both, show_data = TRUE)
+```
+
+The above function are good for "30,000 foot view" of our posterior predictions. In other words, they let you get a general sense of if something big has gone wrong but may not show you if something small has gone wrong. To investigate this, you may need to consider predictions compared across the values of different predictors, or combinations of these. The generic functions `fitted` and `predict` will help you get you linear and posterior predictions from your `brm` model. 
 
 ```{r, cache = TRUE, collapse = TRUE}
 # linear predictor
@@ -941,9 +955,9 @@ r2_both_no_re
 r2_interaction_no_re
 ```
 
-We would rather explain as much variation as possible using fixed as opposed to random effects. In addition, the interactions 'makes sense' given our domain knowledge. What we mean by the is that we know that the difference in veridical height between boys and girls 10-12 years old is inconsistent and may be about zero on average. So, we should not be too surprised if the effect for apparent gender on apparent height is smaller for children. However, there is a larger and more consistent difference in average veridical height between adult males and females. As a result, we do expect a meaningful effect for apparent gender on the apparent heights of adults. For these reasons, it would be surprising if there were *not* an interaction, and we prefer the model with the interaction despite the only middling support provided by our cross-validation model comparison. 
+We would rather explain as much variation as possible using fixed as opposed to random effects. In addition, the interactions 'makes sense' given our domain knowledge. What we mean by this that we know that the difference in veridical height between boys and girls 10-12 years old is inconsistent and may be about zero on average. So, we should not be too surprised if the effect for apparent gender on apparent height is smaller for children. However, there is a larger and more consistent difference in average veridical height between adult males and females. As a result, we do expect a meaningful effect for apparent gender on the apparent heights of adults. For these reasons, it would be surprising if there were *not* an interaction, and we prefer the model with the interaction despite the only middling support provided by our cross-validation model comparison. 
 
-## Answering our research questions
+## Answering our research questions {#c7-answering}
 
 We will answer our research questions based on `model_interaction`. In addition, we used the `forpaper` function, like this `forpaper(fixef(model_interaction))` to generate standard output of the form `(mean = --, s.d. = --, 95% C.I = [--, --])` from the typical `brms` coefficient table output.
 
@@ -995,6 +1009,8 @@ pairwise_diffs_summary[1,]
 
 We might wonder, under what conditions can we accept that an effect or group difference *is* actually equal to zero. If the 95% (or some other high number) credible interval is relatively narrow and (more or less) centered around zero, the parameter value may very well be zero. It may also be a small number that has no practical effect on your dependent variable so that it doesn't really matter what it is even if its not exactly equal to $0.0000000...$. In either case, a coefficient with a narrow interval (roughly) centered at zero may not have an important role in the way you interpret your model in order to tell the 'story' of your data. However, it is extremely important to keep in mind that under a different parametrization of your model, or given a slightly different experimental design, it is possible that an equivalent  parameter may exhibit a clearly non-zero value. 
 
+Another thing to think about is, how large does an effect need to be before it matters, even if it is not zero? This is a similar approach to Kruschke's Region of Practical Equivalence (ROPE, Kruschke 2018). Rather than worrying about whether things are exactly zero or not, Kruschke suggests we think about when things are so small that they may as well be zero. For human height, apparent and veridical, we define meaningful differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We establish this lower limit simply based off the fact that people may describe themselves as 175 cm (or 5'10.5") but rarely make distinctions smaller than that (e.g. people rarely distinguish 5'10.5" and 5'10.75"). In addition, governments, doctors, and even institutions like the NBA which are extremely interested in height will rarely measure to within less than 1 cm (half an inch). As a result, although a difference of 0.1 cm may very well be consistently different from zero, in the context of human height a difference of this magnitude likely has little to no practical significance.
+
 In our case, we will conclude that this difference in apparent height between boys and girls is likely to be 'real' and may reflect stereotypes that male speakers are generally taller than female speakers, whether or not this is actually true for speakers of this age. We might also suggest that if we want to know more about the precise value of this difference, future research might investigate this question with a larger number of speakers, listeners, or repetitions. By increasing the sample size, researchers would narrow the parameter likelihoods (discussed in section X 2?) thereby narrowing their posterior credible intervals (given new data that's roughly the same as the data we have). 
 
 ## 'Traditionalists' corner {#c7-frequentist}
@@ -1026,3 +1042,4 @@ Gelman, A., & Carlin, J. (2014). Beyond power calculations: Assessing type S (si
 
 Gelman, A., Goodrich, B., Gabry, J., & Vehtari, A. (2019). R-squared for Bayesian regression models. The American Statistician.
 
+Kruschke, J. K. (2018). Rejecting or accepting parameter values in Bayesian estimation. Advances in methods and practices in psychological science, 1(2), 270-280.

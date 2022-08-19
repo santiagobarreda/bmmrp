@@ -409,8 +409,7 @@ model_multinomial =
 model_multinomial = bmmb::get_model ("12_model_multinomial.RDS")
 ```
 ```{r, include = FALSE}
-#  saveRDS (multi_pred_re, "../models/12_multinomial_predictions.RDS")
-multi_pred_re = readRDS ("../models/12_multinomial_predictions.RDS")
+load ("../models/12_multinomial_predictions.Rda")
 #  saveRDS (model_multinomial, "../../models/12_model_multinomial.RDS")
 model_multinomial = readRDS ("../models/12_model_multinomial.RDS")
 ```
@@ -423,7 +422,7 @@ fixef (model_multinomial)
 
 Since the dependent variable is the score for each category, the parameters above are difficult to interpret in isolation. This is because scores need to be interpreted relative to the baseline category value of 0 (for boys), or two each other, rather than absolutely. For example, the negative coefficient for VTL for 'girl' (`mug_vtl`) indicates the a longer VTL made a girl response less likely. We can also see that increasing f0 made a 'woman' response less likely, and a 'male' response more likely.
 
-We might wonder how well our model can predict listener judgements. We can do this by finding the predicted probability for each category predicted by our model:
+We might wonder how well our model can predict listener judgements. We can do this by finding the predicted probability for each category predicted by our model, as seen below. Note that we use the `fitted` rather than `predict` functions. This is because we are interested in the expected values predicted by our model. In contrast, the `predict` would give us *posterior predictions* of the actual dependent variable which would incorporate our modeled noise.
 
 ```{r, eval = FALSE}
 multi_pred_re = fitted (model_multinomial)
@@ -474,12 +473,9 @@ diag(tab) / rowSums(tab)
 
 ### Multinomial models and territorial maps
 
-We discussed territorial maps for two categories along two dimensions in chapter 11 where we predicted the perception of femaleness based on speaker f0 and VTL. As we discussed then, when categories are represented by planes the boundary between categories is defined by the line formed by the intersection of the planes.
+We discussed territorial maps for two categories along two dimensions in chapter 11 where we predicted the perception of femaleness based on speaker f0 and VTL. As we discussed then, when categories are represented by planes the boundary between categories is defined by the line formed by the intersection of the planes. When we did (dichotomous) logistic regression in chapter 11, we found the intersection of one plane with a horizontal plane at $z=0$. In this chapter we still have a plane such that $z=0$ for all x and y (the reference category plane), but we also have three other planes with possible non-zero slopes. The boundary between each pair of categories forms the boundary between those two categories. Since we have 6 unique pairings of our four response categories, we will have six boundary lines. 
 
-
-When we did (dichotomous) logistic regression in chapter 11, we found the intersection of one plane with a horizontal plane at $z=0$. In this chapter we still have a plane such that $z=0$ for all x and y (the reference category plane), but we also have three other planes with possible non-zero slopes. The boundary between each pair of categories forms a boundary made by a line. Since we have 6 unique pairings of our four response categories, we will have six boundary lines. 
-
-We know that the boundary between two categories is where their respective planes intersect, i.e., the place where these planes have the same $z$ axis value. To find this, first we define the values of two planes, $z_1$ and $z_2$ based on their respective coefficients as in \@ref(eq:12-8).
+To find the line formed by the intersection of planes, first we define the values of two planes, $z_1$ and $z_2$ based on their respective coefficients as in \@ref(eq:12-8). We use $a$, $b$, and $c$ for the intercept, x axis, and y axis slope for the first plane and $d$, $e$, and $f$ for the corresponding coefficients for the second plane.
 
 $$
 \begin{equation}
@@ -491,7 +487,7 @@ z_2 = \mathrm{d} + \mathrm{e} \times x +  \mathrm{f} \times y
 \end{equation}
 $$
 
-We set $z_1$ equal to $z_2$, which is equivalent to setting to right hand side of each equation to equal as in \@ref(eq:12-9).
+We set $z_1$ equal to $z_2$, as in \@ref(eq:12-9).
 
 $$
 \begin{equation}
@@ -503,7 +499,7 @@ z_1 = z_2 \\
 \end{equation}
 $$
 
-In order to get all these terms into the format for the equation of a line ($y = a + b \times x$), we need to isolate y on the left hand side as seen in \@ref(eq:12-10). 
+In order to turn \@ref(eq:12-9) into an equation resembling that of a line ($y = a + b \times x$), we need to isolate y on the left hand side as seen in \@ref(eq:12-10). 
 
 $$
 \begin{equation}
@@ -512,7 +508,7 @@ y = \frac {-\mathrm{a} + \mathrm{d}}{\mathrm{c} - \mathrm{f}} + \frac{-\mathrm{b
 \end{equation}
 $$
 
-As mentioned above, we get 6 such line equations, one for the boundary between each of the four planes. Figure \@ref(fig:F12-2) presents each of these six boundaries compared to the modal classification for each speaker. 
+As mentioned above, we get 6 such line equations, one for the boundary between all possible pairs of each of the four planes. Figure \@ref(fig:F12-2) presents each of these six boundaries compared to the modal classification for each speaker. 
 
 ```{r F12-2, fig.height = 4, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
@@ -579,7 +575,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=3)
 
 ```
 
-All six boundary lines are presented in the left plot of figure \@ref(fig:F12-3). One problem with considering the figure in this way is that many of the boundaries are not very relevant. For example, the boundary between girl and man will hardly matter for classification because these categories are divided by 'woman' and 'boy' classifications. The right plot of figure \@ref(fig:F12-3) presents only those boundaries that are *relevant*. This can be stated more formally as: The figure contains only those boundaries that represents scores equal to or greater than the maximal score, for that location, from among the response categories. For example, in the left plot we see that the boy-woman boundary bisects the are where man is a modal response. This line segment does not feature in the right plot because it has a lower value than the man plane in this area. In other words, who cares if its a boy or a woman because people are more likely to say man anyways. 
+All six boundary lines are presented in the left plot of figure \@ref(fig:F12-3). One problem with considering the figure in this way is that many of the boundaries are not very relevant. For example, the boundary between girl and man will hardly matter for classification because these categories are divided by the 'woman' and 'boy' categories. The right plot of figure \@ref(fig:F12-3) presents only those boundaries that are *relevant*, resulting in a territorial map of our categories along f0 and VTL (see section X). This can be stated more formally as: The figure contains only those boundaries that represents scores equal to or greater than the maximal score, for that location, from among the response categories. For example, in the left plot we see that the boy-woman boundary bisects the area where man is a modal response. This line segment does not feature in the right plot because it has a lower value than the man plane in this area. In other words, who cares if its a boy or a woman because people are more likely to say man anyways. 
 
 ```{r F12-3, fig.height = 3, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
@@ -631,7 +627,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 ```
 
-We noticed something very strange when we made the territorial map in figure \@ref(fig:F12-3): The boy territory contains a large number of woman responses. In addition, the boy-woman boundary seems strangely high. If that is really the boundary between boys and women in the VYL by f0 space, then why is the model classifying all those women correctly? The answer to this question may lie in figure \@ref(fig:F12-4). 
+We noticed something very strange when we made the territorial map in figure \@ref(fig:F12-3): The boy territory contains a large number of woman responses. In addition, the boy-woman boundary seems strangely high along f0. If that is really the boundary between boys and women in the VTL by f0 space, then a large number of female speakers fall into territory where 'boy' responses are expected. If this is the case then how/why is the model classifying all those women correctly? The answer to this question may lie in figure \@ref(fig:F12-4). 
 
 In the left plot of figure \@ref(fig:F12-3), point colors represent modal listener judgments for each speaker. In the middle plot we see model predictions including speaker and listener random effects. When these are included the model predictions look very much like the listener judgments and the classifications don't make much sense relative to the territorial map. In the right plot of the same figure we see model predictions when random effects are *not* included. In this case we see that model predictions do *not* look like the listener judgments, but the classifications *do* make sense relative to the territorial map. So, it seems that the random effects may be causing this strange behavior in our model.
 
@@ -693,7 +689,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 Figure \@ref(fig:F12-5) presents the speaker random intercepts. Since there are three modeled categories, there are three random intercepts for each speaker. We can see that, in general, the speaker intercepts have small values that vary around zero, and have credible intervals that mostly include zero. However, many female speakers have intercepts that have large non-zero values for the female category, and whose credible intervals omit zero and very small values.
 
-```{r F12-5, fig.height = 4, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
+```{r F12-5, fig.height = 3.5, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
 ################################################################################
 ### Figure 12.5
@@ -704,10 +700,10 @@ sranef = ranef(model_multinomial)$S
 tab = table (exp_data$S, exp_data$C_v)
 real_cat = apply (tab, 1,which.max)
 
-par (mfrow = c(4,1), mar =c(.1,4,.1,.5), oma = c(.5,0,.5,0))
-brmplot((sranef[,,1]+sranef[,,2]+sranef[,,3])/3, labels = '', 
-        col = bmmb::cols[real_cat+1], ylim = c(-8,8))
-text (1,7,"Boy category speaker intercepts", pos=4,cex=1.4)
+par (mfrow = c(3,1), mar =c(.1,4,.1,.5), oma = c(.5,0,.5,0))
+#brmplot((sranef[,,1]+sranef[,,2]+sranef[,,3])/3, labels = '', 
+#        col = bmmb::cols[real_cat+1], ylim = c(-8,8))
+#text (1,7,"Boy category speaker intercepts", pos=4,cex=1.4)
 
 brmplot(sranef[,,1], labels = '', col = bmmb::cols[real_cat+1], ylim = c(-8,8))
 text (1,7,"Girl category speaker intercepts", pos=4,cex=1.4)
@@ -720,22 +716,27 @@ text (1,7,"Woman category speaker intercepts", pos=4,cex=1.4)
 
 ```
 
-Here is what we believe is happening. Think of the female response plane with a specific intercept, VTL slope and f0 slope. If female speaker categorizations were very predictable based on the value of this plane at a given location, all the female speaker effects would be zero or near zero. This is because if the score based on the plane explains classification, there is nothing left for the speaker intercept to explain. We can see this sort of behavior for adult male speakers: Adult male speakers are mostly easy to identify because of their unusually low voice f0.
+Here is what we believe is happening. Think of a female response plane with a specific intercept, VTL slope and f0 slope. If female speaker categorizations were very predictable based on the value of this plane at a given location, all the female speaker effects would be zero or near zero. This is because if the score based on the plane explains classification, there is nothing left for the speaker intercept to explain. We can see this sort of behavior for adult male speakers: Adult male speakers are mostly easy to identify because of their unusually low voice f0.
 
-In contrast, consider a situation where individual female speakers fall way off the plane, in a seemingly random but consistent manner. For example, imagine a female speaker whose score is way higher than the plane says it should be, but that every listener seems to behave this way for this speaker. This would mean that this is a consistent classification for this voice, that cannot be explained by the score according to the plane. In other words, the classification cannot be predicted based on the linear combination of voice VTL and f0. In such a situation, this consistent classification would be explained by the speaker intercept. Effectively, this tells your model "use the general female plane, but move it up/down this much specifically for this person". Why are we moving it up/down for this person? Our model can't tell us, however, it can tell us that the up/down adjustment is consistent for the speaker across listeners and improves model performance.
+In contrast, consider a situation where individual female speakers fall way off the plane, in a seemingly random but consistent manner. For example, imagine a female speaker whose score for the female category is way higher than the plane says it should be, but that every listener seems to behave this way for this speaker. This would mean that this is a consistent classification for this voice that cannot be explained by the score according to the plane. In other words, the classification cannot be predicted based on the linear combination of voice VTL and f0. In such a situation, this consistent classification would be 'explained' by the speaker intercept. Effectively, this tells your model "use the general female plane, but move it up/down this much specifically for this person". Why are we moving it up/down for this person? Our model can't tell us, however, it *can* tell us that the up/down adjustment is consistent for the speaker across listeners and improves model performance.
 
-We can think about what these speaker effects might reflect. The information regarding gender and age in voices is subtle and complicated, and likely reflects subtle stylistic and prosodic cues. Basically, sounding 'feminine' and 'masculine' is much more complicated than just f0 or VTL. This is analogous to the fact that women tend to be shorter than men, but it would be ridiculous to suggest that masculinity/femininity are entirely predictable based on the height of a person. Size is perhaps an aspect of perceived femininity/masculinity but the whole of it is substantially more complicated. 
+We can think about what these speaker effects might reflect. The information regarding gender and age in voices is subtle and complicated, and likely reflects subtle stylistic and prosodic cues. Basically, sounding 'feminine' and 'masculine' is much more complicated than just f0 or VTL (see section X ch 13). This is analogous to the fact that women tend to be shorter than men, but it would be ridiculous to suggest that masculinity/femininity are entirely predictable based on the height of a person. Size is perhaps an aspect of perceived femininity/masculinity but the whole of it is substantially more complicated. 
 
 We again consider our model prediction accuracy, but this time consider predictions without any random effects.
 
 ```{r}
-predicted_no_re = apply (multi_pred_re[,1,],1,which.max)
-predicted_category_no_re = c("b","g","m","w")[predicted]
+# predictions with no random effects
+multi_pred = fitted (model_multinomial, re_formula = NA)
 ```
 
-The picture without random effects is much more grim. Correct prediction is not *too* bad (relative to chance at 25%), however, some of the individual categories are predicted very poorly. As expected, accurate prediction of woman responses is particularly bad with only 22% of female responses being accurately predicted as such. 
+The picture without random effects is much more grim. Overall correct prediction is not too bad (relative to chance at 25%), however, some of the individual categories are predicted very poorly. As expected based on the territorial maps in \@ref(fig:12-4), the accurate prediction of woman classifications is particularly bad with only 22% of female responses being accurately predicted as such. 
 
 ```{r}
+# find winners
+predicted_no_re = apply (multi_pred[,1,],1,which.max)
+# get winner labels
+predicted_category_no_re = c("b","g","m","w")[predicted_no_re]
+
 # overall correct
 mean (predicted_category_no_re == exp_data$C)
 
@@ -746,7 +747,7 @@ diag(tab) / rowSums(tab)
 
 ### Refitting the model without speaker random effects
 
-The results of our previous model suggest that the inclusion of speaker random effects may lead to some unintended consequences. Model prediction is good as long as we include the speaker random effects. However, these do not let us understand the prediction of new speakers. Further, the territorial map we can generate using the figure is a bit unreliable because of its reliance on the speaker random effects included in the model. We will try fitting the model without speaker effects to see if we get a territorial map that is a better match for the listener judgments. We use the same priors we used before, and fit the same model save for the absence of speaker effects from our formula: 
+The results of our previous model suggest that the inclusion of speaker random effects may lead to some unintended, and undesirable, consequences. Model prediction is good as long as we include the speaker random effects. However, these do not let us understand the prediction of new speakers based solely on speaker f0 and VTL. Further, the territorial map we can generate using the figure is a bit unreliable because of its reliance on the speaker random effects included in the model. We will try fitting the model without speaker effects to see if we get a territorial map that is a better match for the listener judgments. We use the same priors we used before, and fit the same model save for the absence of speaker effects from our formula: 
 
 ```{r, eval = FALSE}
 model_multinomial_noS = 
@@ -762,12 +763,7 @@ model_multinomial_noS = bmmb::get_model ("../models/12_model_multinomial_noS.RDS
 model_multinomial_noS = readRDS ("../models/12_model_multinomial_noS.RDS")
 ```
 
-```{r, eval = FALSE}
-multi_pred_noS = predict (model_multinomial_noS, re_formula = NA)
-multi_pred_re_noS = predict (model_multinomial_noS)
-```
-
-We just straight to plotting the territorial map represented by this model, again comparing listener judgments to model predictions with and without random effects (\@ref(fig:F12-6)). We can wee that the territorial maps in the figure seem to be a better match to the data.
+We jumt straight to plotting the territorial map represented by this model, again comparing listener judgments to model predictions with and without random effects (\@ref(fig:F12-6)). We can wee that the territorial maps in the figure seem to be a better match to the data.
 
 ```{r F12-6, fig.height = 3, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
@@ -827,9 +823,9 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 ```
 
-Figure \@ref(fig:F12-7) compares the territorial maps represented by our models with (left) and without (right) speaker information. In addition to being a better fit to the data, we think the new territorial maps make more 'sense'. This is because the map with speakers suggests that the difference between women and boys was almost entirely due to f0, with women being associated with the higher f0. This is despite boys being associated with shorter VTLs than adult females *and* a higher f0. The new map has basically no effect for f0 between these categories and makes it a primarily VTL difference, which is backed up by the distributions of these characteristics between these speaker types. 
+Figure \@ref(fig:F12-7) compares the territorial maps represented by our models with (left) and without (right) speaker information. In addition to being a better fit to the data, we think the new territorial maps make more 'sense'. This is because the map with speaker effects suggests that the difference between women and boys was almost entirely due to f0, with women being associated with the higher f0. This is despite boys being associated with shorter VTLs than adult females *and* a higher f0. The new map has basically no effect for f0 between these categories and makes it a primarily VTL difference, which seems to be a better fit to the data. 
 
-```{r F12-7, fig.height = 3.5, fig.width=8, fig.cap = "(left) Territorial maps indicating which sections of the stimulus space are associated with: Boys (turquoise), girls (yellow), men (green), and women (red). Points represent individual speakers, colors represent modal classifications using the same colors as the territories.", echo = FALSE}
+```{r F12-7, fig.height = 3, fig.width=8, fig.cap = "(left) Territorial maps indicating which sections of the stimulus space are associated with: Boys (turquoise), girls (yellow), men (green), and women (red). Points represent individual speakers, colors represent modal classifications using the same colors as the territories.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.7
@@ -879,7 +875,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 ```
 
-One concern with omitting the speaker effects is that our model now thinks all observations for any one speaker are independent. Based on what we saw in figure (intercepts) we know that this is defnitely not the case. Instead, individual speakers were identified as one or another category consistently, indicating that these judgments were related across listeners. Tis can potentially have the effect of artificially decreasing our confidence intervals, as we see in chapter 6 (heck out details, it was for A1). Figure \@ref(fig:F12-8) compares the fixed effects between our two models, suggesting that the omission of the speaker effects has not had a large effect on our parameters. The two largest differences are for the woman category: The intercept went from slightly negative to slightly positive, nd the effect for f0 went from zero to positive. 
+One concern with omitting the speaker effects is that our model now thinks all observations for any one speaker are independent. This can have the effect of artificially decreasing our confidence intervals, as we saw in figure  \@ref(fig:F6-5). Figure \@ref(fig:F12-8) compares the fixed effects between our two models, suggesting that the omission of the speaker effects has not had a large effect on most parameters or their credible intervals. The two largest differences are for the woman category: The intercept went from slightly negative to slightly positive, and the effect for f0 went from zero to positive. 
 
 ```{r F12-8, fig.height = 3, fig.width=8, fig.cap = "-- ", echo = FALSE}
 ################################################################################
@@ -901,7 +897,14 @@ legend (2.5,9,legend =c("With Speaker","No Speaker"),bty='n',
         pch=16:17,pt.cex=1.3)
 ```
 
-We again find the maximum a posteriori speaker classification and get a label for each trial. 
+We will make new predictions for this model, with and without random effects:
+
+```{r, eval = FALSE}
+multi_pred_re_noS = fitted (model_multinomial_noS)
+multi_pred_noS = fitted (model_multinomial_noS, re_formula = NA)
+```
+
+We find the maximum a posteriori speaker classification and get a label for each trial for our predictions with random effects. 
 
 ```{r}
 predicted_noS = apply (multi_pred_re_noS[,1,],1,which.max)
@@ -939,15 +942,19 @@ We can use our models to answer the question we posed above:
 
 Q1) Can we use speaker f0 and VTL to predict their apparent speaker category?
 
-Yes, we can use speaker f0 and VTL to predict apparent speaker with relative accuracy. If we consider a baseline correctness by chance along of 25%, then our classification of 72% from two predictors (with no random effects) isn't bad at all. However, the importance of the speaker random effects for female speakers strongly suggests that there is 'something else' being used to identify women as women, apart from VTL and f0. So, our first model tells us that we should probably try to understand what that 'something else' is. The speaker random effects are not particularly useful for understanding the categorization of new speakers. However, understanding what causes the variation in these random effects is. Our model tells us that even though we know there is something else to it, we can still pretty much predict categorization from just these two predictors. So, the first model may be better to really try to understand what listeners are doing when they classify while the second model may be better to understand classification from just f0 and VTL. 
+Yes, we can use speaker f0 and VTL to predict apparent speaker with relative accuracy. If we consider a baseline correctness by chance of 25%, then our classification of 72% from two predictors (with no random effects) isn't bad at all. However, the importance of the speaker random effects for female speakers strongly suggests that there is 'something else' being used to identify women as women and boys as boys, apart from VTL and f0. So, the results of our first model tells us that we should probably try to understand what that 'something else' is. 
+
+The speaker random effects are not particularly useful for understanding the categorization of new speakers. However, understanding what causes the variation in these random effects is. Our model tells us that even though we know there is something else to it, we can still predict categorization fairly well using just speaker VTL and f0. So, the first model may be better to really try to understand what listeners are doing when they classify individual voices, while the second model may be better to understand classification from just f0 and VTL. 
 
 ## Ordinal (logistic) regression
 
-Ordinal logistic regression involves the prediction of ordered categories. Although in some senses ordinal regression is 'simpler' than multinomial regression, we decided to present it after multinomial regression. This is because multinomial regression is mostly just a multivariate generalization of logistic regression, which was discussed in detail in chapter 10. In contrast, ordinal regression, although related to (dichotomous) logistic regression, is in many ways conceptually its own thing. We will present one way of thinking about logistic regression however, as usual, there are other ways to think of it.  
+Ordinal logistic regression involves the prediction of ordered categories. Although in some senses ordinal regression is 'simpler' than multinomial regression, we decided to present it after multinomial regression. This is because, as discussed above,  multinomial regression is mostly just a multivariate generalization of logistic regression (discussed in detail in chapter 10). In contrast, ordinal regression, although related to logistic regression, is in many ways conceptually its own thing. We will present one way of thinking about logistic regression however, as usual, there are other ways to think of it. For more information about ordinal regression, please see (cite agresti? [@@ noah?]).   
 
-A simple example of an ordinal variable is first, second, and third place in a race. These values are categorical and not on an interval or ratio scale. For example fourth place is not 'double' anything with respect to second place, and the distance between first and second doesn't necessarily 'mean' the same thing as the difference between second and third. However, there is clearly an inherent ordering in the categories such that first < second < third < fourth < and so on. A common experimental example of ordered categorical data arises from survey data that asks listeners to respond to questions using a small number of discrete, categorical choices. For example, respondents might be asked to evaluate whether they 1) strongly agree, 2) somewhat agree, 3) are neutral, 4) somewhat disagree, or 5) strongly disagree with some proposition. This is often referred to as a **Likert scale** and the data resulting from this is often refereed to as **Likert scale data**. 
+A simple example of an ordinal variable is first, second, and third place in a race. These values are categorical and not on an interval or ratio scale. For example fourth place is not 'double' anything with respect to second place, and the distance between first and second doesn't necessarily represent the same difference as the difference between second and third. However, there is clearly an inherent ordering in the categories such that first < second < third < fourth < and so on. 
 
-Likert scale data was originally meant to have response scales ranging from agreement to disagreement. However, the concept of Likert scale data can be generalized to a very broad range of possible questions. For example, rather than height in centimeters, we might have asked listeners "use this 10 point scale to indicate how tall this person sounds". This could be made more traditional by asking it in the form "this person sounds very tall" and asking people to agree or disagree on a 10 point scale. Rather than ask for binary gender judgments, we might have asked "Use this 7 point scale to judge the perceived femininity/masculinity of the speaker" (or the more traditional "this person sounds very feminine" and asking people to agree or disagree on a 7 point scale).
+A common experimental example of ordered categorical data arises from survey data that asks listeners to respond to questions using a small number of discrete, categorical choices. For example, respondents might be asked to evaluate whether they 1) strongly agree, 2) somewhat agree, 3) are neutral, 4) somewhat disagree, or 5) strongly disagree with some proposition. This is often referred to as a **Likert scale** and the data resulting from this is often refereed to as **Likert scale data**. 
+
+Likert scale data was originally meant to have response scales ranging from agreement to disagreement (as above). However, the concept of Likert scale data can be generalized to a very broad range of possible questions. For example, rather than height in centimeters, we might have asked listeners "use this 10 point scale to indicate how tall this person sounds". This could be made into a more 'traditional' Likert scale by asking it in the form "this person sounds very tall" and asking people to agree or disagree on a 10 point scale. Rather than ask for binary gender judgments, we might have asked "Use this 7 point scale to judge the perceived femininity/masculinity of the speaker" (or the more traditional "this person sounds very feminine" and asking people to agree or disagree on a 7 point scale).
 
 Although Likert scale data is sometimes treated as quantitative, there are some characteristics of this data that make an ordinal analysis a better fit. First, it is not necessarily the case that the 'distance' between adjacent responses is equal across both categories. We can say with absolute certainty that the difference between 150 and 151 cm is equal to the difference between 151 and 152 cm. However, is the difference between strongly agree and somewhat agree the same as the distance between somewhat agree and neutral? This is difficult if not impossible to 'prove'. Further, the small number of outcome categories may result in subjects reserving extreme categories for extraordinary cases. What if a subject somewhat strongly agrees? There is no such option, and this subject may instead indicate they somewhat agree lest something they *really* strongly agree with comes along later. 
 
@@ -963,7 +970,9 @@ Here's what we said in chapter 1 about when to treat a variable as quantitative:
 
 If survey participants were given numerical categories and were told that this represented some continuous value 'agreement', then we could perhaps argue that that 5-point Likert scale data abides by the first two considerations above. However, our data runs afoul of the bottom two considerations: There are only a small number of discrete outcomes, with nothing 'in between', and many of the observed values are likely to be near the boundaries and are likely to be constrained by these. 
 
-We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. Below, we see a boxplot of apparent height judgments organized by apparent speaker category, with boys and girls collapsed into one (child) category. Note that apparent children are judged to be shortest, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. Based on this, we could think of our apparent speaker categories as reflecting classifications of speakers into small (boys, girls), medium (women), and large (men). Based on the boxplot below, we might imagine that if we *had* asked listeners to identify speakers small, medium, or large, listeners would have labelled most apparent children as small, most apparent women as medium, and most apparent men as large.
+We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. Below, we see a boxplot of apparent height judgments organized by apparent speaker category, with boys and girls collapsed into one category, 'child'. Note that apparent children are judged to be shortest, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. In addition, there is not very much overlap in apparent heights between categories. 
+
+Based on the above, we could potentially think of our apparent speaker categories as reflecting classifications of speakers into small (boys, girls), medium (women), and large (men). We might imagine that if we *had* asked listeners to identify speakers as small, medium, or large, listeners would have labelled most apparent children as small, most apparent women as medium, and most apparent men as large.
 
 ```{r F12-9, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
@@ -1036,9 +1045,9 @@ This relatively primitive 'model' is able to correctly predict size group respon
 mean (SG == SG_hat)
 ```
 
-Imagine that the line in the right plot in figure \@ref(fig:F12-9) reflects the relationship between speaker VTL and apparent height. We know from earlier chapters that a longer speaker VTL is associated with taller apparent speakers. Let's assume for the sake of simplicity that this relationship is causal and that there is a direct connection between speaker VTL and apparent height. This means that when we hear a voice, we can be thought of as sliding along the line in the plot based on the VTL of the speaker. Then, based on the apparent height value at a given x axis location, we can arrive at a size group classification based on the method above. 
+The line in the right plot in figure \@ref(fig:F12-9) reflects the relationship between speaker VTL and apparent height. We know from earlier chapters that a longer speaker VTL is associated with taller apparent speakers. Let's assume for the sake of simplicity that this relationship is causal and that there is a direct connection between speaker VTL and apparent height. This means that when we hear a voice, we can be thought of as sliding along the line in the plot based on the VTL of the speaker. Then, based on the apparent height value at a given x axis location, we can arrive at a size group classification based on the method above. Note that in this scenario we were not collecting or observing apparent speaker height but rather predicting size group using VTL. However, we assume that apparent height underlies this process and connects the two variables we do observe. By assuming that apparent height was driving this process but not trying to measure it directly we are treating it as a *latent variable*. 
 
-Note that in the scenario above we were not collecting or observing apparent speaker height but rather predicting size group using VTL. Instead, by assuming that apparent height was driving this process but not trying to measure it directly we are treating it as a *latent variable*. We acted like this variable was apparent size, however, the latent variable could have had any name and used any other units. For example, in our situation we can think of this variable as 'size' or 'bigness', buts its name is not important, and neither is us having a rock-solid conceptual grasp of what it is exactly. Instead, all we need to understand is that we think there is some latent variable, something like 'bigness', that allows listeners to classify speakers into small, medium, and large groups based on their voices. 
+The latent variable was presented as apparent height, however, the latent variable could have had any name and used any other units. For example, in our situation we can think of this variable as 'size' or 'bigness', buts its name is not important, and neither is us having a rock-solid conceptual grasp of what it is exactly. Instead, all we need to understand is that we think there is some latent variable, something like 'bigness', that allows listeners to classify speakers into small, medium, and large groups based on their voices. 
 
 The right side of figure \@ref(fig:F12-10) is labelled "bigness" to correspond to our hypothetical latent variable. This variable is just apparent height divided by 50, but the point is that the values of this axis are entirely arbitrary. Notice that the change in axis units has absolutely no effect on the way our conceptual model works. If the latent variable units are 50 times smaller than some other variable, that just means the slope of the line relating x to y is 50 times smaller and the boundaries between categories are 50 times closer. The same logic applies to the relationship between our latent dependent variable and our predictors. 
 
@@ -1096,15 +1105,17 @@ lines (x,y, lwd=4, col = bmmb::cols[2])
 mtext (side=4, "Bigness", line=2.2)
 ```
 
-Our 'model' so far would do a reasonable job of predicting classification but contains no random component. In figure \@ref(fig:F9-1) we showed that bivariate linear regression with normal errors can be thought of as a normal distribution sliding along a line based on the value of the dependent variable. The y axis value of the line at an x axis location tells you the expected value of y for that value of x. However, we will hardly (if ever) observed the expected value exactly. Instead, we assume that we have normal error centered around our expected values so that the values we actually observe vary probabilistically around the expected value. 
+Our 'model' so far would do a reasonable job of predicting classification but contains no random component. As a result, given a certain speaker VTL it would always predict the same size group response. In figure \@ref(fig:F9-1) we showed that bivariate linear regression with normally-distributed errors can be thought of as a normal distribution sliding along a line based on the value of the dependent variable. The y axis value of the line at an x axis location tells you the expected value of y for that value of x. However, we will hardly (if ever) observe the expected value exactly. Instead, we assume that we have normal error centered around our expected values. 
 
-We show a similar situation in figure \@ref(fig:F12-10), with a probability distribution sliding along a line. However, in the case of ordinal regression the values that this distribution generates are not the observed values of the ordinal dependent variable, but rather random values of the *latent* variable (e.g. 'bigness'). The observed ordinal variable is then based on the value of the latent variable with respect to the boundaries in the space. In this chapter we will use a *logistic* distribution as the error distribution (more detail on this in the next section), hence the name, ordinal *logistic* regression. We will do this because it is commonly used and has some useful characteristics, but a basically equivalent model can be constructed assuming a normal distribution for the latent variable. 
+We show a similar situation in figure \@ref(fig:F12-10), with a probability distribution sliding along a line. However, in the case of ordinal regression the values that this distribution generates are not the observed values of the ordinal dependent variable, but rather random values of the *latent* variable (e.g. 'bigness'). The observed ordinal variable is then based on the value of the latent variable with respect to the boundaries in the space (the horizontal lines in the figure). In this chapter we will use a *logistic* distribution as the error distribution (more detail on this in the next section), hence the name, ordinal *logistic* regression. We will do this because it is commonly used and has some useful characteristics, but a basically equivalent model can be constructed using a normal distribution to represent randomness in the latent variable. 
 
-Ordinal regression estimates the location of boundaries between categories along the latent variable, and tries to predict the expected value of the latent variable based on a combination of the dependent variables. For example, in figure \@ref(fig:F12-10) the boundaries are at 31 and 34 bigness, and you have an expected bigness of around 32 for a vocal-tract length of 14.1. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general (32), but these things are fuzzy and necessarily noisy. So there is actually,there is a distribution of expected perceived/apparent 'bigness' given our predictors. Sometimes, this distribution might 'generate' a bigness value of 28, resulting in a response of small. For another observation, the value of the latent variable may be 36 and the speaker will be identified as large, for the same value of VTL. 
+Ordinal regression estimates the location of boundaries between categories along the latent variable. It also tries to predict the expected value of the latent variable for each observation, based on the combination of the dependent variables. For example, in figure \@ref(fig:F12-10) the boundaries are at 31 and 34 bigness, and you have an expected bigness of around 32 for a vocal-tract length of 14.1. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general (32), but these things are fuzzy and necessarily noisy. So actually, there is a distribution of expected perceived/apparent 'bigness' given our predictors. 
+
+Given the actual value of the latent variable for a trial (including the random component), the ordinal response is based on the value of the latent variable with respect to the estimated category boundaries. So, for a fixed expected value of 32, sometimes the distribution might 'generate' a bigness value of 28, resulting in a response of small. For another observation with the same expected value, the value of the latent variable may be 36, meaning the speaker will be identified as large.
 
 ### Cumulative density functions {#c12-cumulative-density}
 
-In order to understand ordinal regression, we need to talk about cumulative distribution functions first. We haven't explicitly talked about cumulative distribution functions yet, though we did see one in chapter 10 when it was referred to as the *inverse logit* function (more on this in a moment). To this point we've been focused on what are called *probability density functions* (PDF), functions that assign a density to different values of a variable. Examples of PDFs are given in the top row of figure \@ref(fig:F12-11). **Cumulative distribution functions** (CDF) tell you the probability that a variable will be *less than or equal to* some value. Since a PDF has an area under the curve equal to 1 (representing the total probability of the variable) and, a CDF tells you how much of the area (out of 1) is to the left of the value, and has a range from 0 to 1.
+In order to understand ordinal regression, we need to talk about cumulative distribution functions first. We haven't explicitly talked about cumulative distribution functions yet, though we did see one in chapter 10 when it was referred to as the *inverse logit* function (more on this in a moment). To this point we've been focused on what are called *probability density functions* (PDF), functions that assign a density to different values of a variable. Examples of PDFs are given in the top row of figure \@ref(fig:F12-11). **Cumulative distribution functions** (CDF) tell you the probability that a variable will be *less than or equal to* some value. Since a PDF has an area under the curve equal to 1 (representing the total probability of the variable), a CDF tells you how much of that area (out of 1) is to the left of the value, and has a range from 0 to 1.
 
 For example, in the left column of figure \@ref(fig:F12-11) we see a standard normal distribution with a mean of 0 and a standard deviation of one. We know that the normal distribution is symmetrical about its mean so that half the area under the curve of this density must be below 0. If we look at the bottom row of the first column, we can see the CDF corresponding to the PDF in the top row. If we look at the value of this function at x=0, we see that it is exactly equal to 0.5. In other words, the cumulative function tells us that the standard normal has exactly half its mass at values less than x=0, i.e. the probability of observing a value of x that is less than or equal to 0, the mean, is exactly 0.5.
 
@@ -1161,9 +1172,9 @@ We can use the `pnorm` function (discussed in chapter 2) to get the value of the
 pnorm (c(-2,0,2),0,1)
 ```
 
-The CDF is the **integral** of the PDF, and the PDF is the **derivative** of the CDF. We've already explained the *integral* part of this: As you move left to right, the value of the CDF equals the cumulative (i.e. added up total) area under the curve (i.e. probability) in the PDF to that point. To say that the PDF is the derivative of the CDF means that the value of the PDF reflects the *rate of change* (i.e. the slope) in the CDF for different values of x. Imagine you were on a car driving along the standard normal CDF in figure \@ref(fig:F12-11), left to right. As you drive along around -4 the 'terrain' is flat and the value of the density is near 0. As you near -2 the slope of the CDF begins to increase, as does the value of the PDF. The value of the PDF is largest at x=0, telling us that the slope of the CDF is greatest at that point. As we drive past x=0 we see a gradual decrease in the slope until we more or less reach 'flat ground' again at just past x=2. This is reflected by the gradual decrease in the value of the PDF between x=0 and x=2. 
+The CDF is the **integral** of the PDF, and the PDF is the **derivative** of the CDF. We've already explained the *integral* part of this: As you move left to right, the value of the CDF equals the cumulative (i.e. added up total) area under the curve (i.e. probability) in the PDF to that point. To say that the PDF is the derivative of the CDF means that the value of the PDF reflects the *rate of change* (i.e. the slope) in the CDF for different values of x. Imagine you were in a tiny car driving along the standard normal CDF in figure \@ref(fig:F12-11), left to right. As you drive along around -4 the 'terrain' is flat and the value of the density is near 0. As you near -2 the slope of the CDF begins to increase, as does the value of the PDF. The value of the PDF is largest at x=0, telling us that the slope of the CDF is greatest at that point. As we drive past x=0 we see a gradual decrease in the slope until we more or less reach 'flat ground' again at just past x=2. This is reflected by the gradual decrease in the value of the PDF between x=0 and x=2. 
 
-In the middle column of figure \@ref(fig:F12-11) we see a logistic distribution. The **logistic distribution** is a two-parameter distribution similar in shape to the normal distribution but with 'fatter/heavier' tails (like the t distribution). The logistic distribution has a location parameter ($\mu$, equal to the mean) that determines its location along the number line, and a scale parameter ($s$, equal to the standard deviation times $\sqrt{3}/\pi$) that is positively related to the 'width' of the density function. In the bottom row of the middle column, we see the CDF of the logistic density. It turns out that the inverse logit function we use as the link function for logistic regression is simply the CDF of a logistic distribution with a mean of 0 and a scale 0f 1 (i.e. a *standard* logistic distribution). This is also why you might commonly see the inverse logit function referred to as the logistic function. We avoided this (possibly) name for the function to avoid confusion. 
+In the middle column of figure \@ref(fig:F12-11) we see a logistic distribution. The **logistic distribution** is a two-parameter distribution similar in shape to the normal distribution but with 'fatter/heavier' tails (like the t distribution). The logistic distribution has a location parameter ($\mu$, equal to the mean) that determines its location along the number line, and a scale parameter ($s$, equal to the standard deviation times $\sqrt{3}/\pi$) that is positively related to the 'width' of the density function. In the bottom row of the middle column, we see the CDF of the logistic density. It turns out that the inverse logit function we use as the link function for logistic regression is simply the CDF of a logistic distribution with a mean of 0 and a scale 0f 1 (i.e. a *standard* logistic distribution). This is also why you might commonly see the inverse logit function referred to as the logistic function. We avoided using this name for the function to avoid confusion. 
 
 In the middle column of figure \@ref(fig:F12-11) we see that we can use the same approach we used for our normal distribution to calculate values of the CDF of our logistic distribution. Below, we use the `plogis` function to calculate the probability of observing a value greater than or equal to 2 form that distribution. 
 
@@ -1181,7 +1192,14 @@ plogis (-1,0,1)
 plogis (2,0,1)
 ```
 
-At this point, the connection between CDFs and ordinal regressions may be clear: We can use a set of boundaries and the CDF of a probability distribution to calculate the probability of observing different values of the latent variable, within certain intervals. In figure \@ref(fig:F12-12), the boundaries and distributions from figure \@ref(fig:F12-11) have been rotated clockwise 90 degrees so that our latent variable (the arbitrarily named 'bigness') varies along the x axis. The distributions presented in the figure have means of 28, 32, 36, and scales of 1. The probabilities in each subsection of each plot represent the predicted probability of observing size group responses of 1, 2, and 3 for each distribution. These probabilities were calculated based on the area under the curve of the distributions falling between different intervals of the latent variable space. 
+At this point, the connection between CDFs and ordinal regressions may be clear: We can use a set of boundaries and the CDF of a probability distribution to calculate the probability of observing different values of the latent variable, within certain intervals. For example, in the bottom right plot of figure \@ref(fig:F12-11), if 0.27 falls to the left of the first line and 0.88 falls to the left of the second line, then 0.61 must fall between the first and second lines. Thus, we have effectively divided the distribution into three parts and can discuss the probability that the observation of the variable will fall within each part.   
+
+```{r}
+# area between first and second line
+plogis (2,0,1)-plogis (-1,0,1)
+```
+
+In figure \@ref(fig:F12-12), the boundaries and distributions from figure \@ref(fig:F12-10) have been rotated clockwise 90 degrees so that our latent variable (the arbitrarily named 'bigness') varies along the x axis. The distributions presented in the figure have means of 28, 32, 36, and scales of 1. The probabilities in each subsection of each plot represent the predicted probability of observing size group responses of 1, 2, and 3 for each distribution. These probabilities were calculated based on the area under the curve of the distributions falling between different intervals of the latent variable space. 
 
 ```{r F12-12, fig.height = 3.5, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
@@ -1248,21 +1266,19 @@ plogis (31,32,1)
 plogis (34,32,1) - plogis (31,32,1)
 
 # probability of observing category 3
-1 - plogis (34,28,1)
+1 - plogis (34,32,1)
 ```
 
-This conceptualization of our model leads to both **hard** and **soft** classifications. An ordinal regression model will predict, for every observation, an expected value of the dependent variable based on the values of the predictors. This value can then be used to classify the predictions into a predicted category, 1, 2, or 3 based on the value of the variable relative to the thresholds. That would be a *hard* classification that reports only the winning category. In contrast, the expected value can be used in the method shown just above to report response probabilities for each category. For example, it may be useful for the example shown in figure \@ref(fig:F12-12) that the most probable classification is of a 'medium' speaker. However, it may be just as useful to indicate that the probability of this response was only 0.61, making the observation of a small response (P=0.26) not unlikely.
+This conceptualization of our model leads to both **hard** and **soft** classifications. An ordinal regression model will predict, for every observation, an expected value of the dependent variable based on the values of the predictors. This value can then be used to find response probabilities for each category. A *hard* classification classifies each observation into a predicted category, 1, 2, or 3, based on the value of the highest predicted probability across the categories. A *soft* classification  provides the probability that an observations is classified into one or more categories. For example, in the middle plot of figure \@ref(fig:F12-12), it may be useful to say that that the most probable classification is of a 'medium' speaker. However, it may be just as, or more, useful to indicate that the probability of this response was only 0.61, making the observation of a small response (P=0.26) not unlikely.
 
 ### Data and research questions
 
 We load our packages and data below. We also add a new variable, `SG` (size group), which will act as our dependent variable. This variable represents children with a 1, adult women with a 2, and adult males with a 3. We don't need to do anything special to make this variable 'ordinal', but we are using three consecutive integers to represent the categories to make things simpler. After this, we process our quantitative predictors in the same way as in the previous chapters.
 
 ```{r, warning=FALSE, message=FALSE}
-
 library (brms)
 library (bmmb)
 data (exp_data)
-
 
 # new dependent variable: Size Group
 SG = 0
@@ -1282,7 +1298,7 @@ exp_data$f0 = exp_data$f0 / 100
 ```
 
 
-We're going to keep our research questions relatively simple this time, as this is mostly a demonstration of an ordinal regression analysis: 
+We're going to keep our research questions relatively simple this time, as this is mostly a demonstration of an ordinal regression analysis and not a 'real' ordinal variable: 
 
 Q1) Can we predict which size group people will tend to respond for a speaker's voice given their f0 and VTL?
 
@@ -1303,7 +1319,7 @@ $$
 \end{equation}
 $$
 
-We model this latent variable as being distributed according to a logistic distribution with a mean of $\mu$ and a scale parameter equal to 1, as in equation below. Actually, for reasons that we won't get into, for ordinal regression `brm` uses a parameter called the **discrimination** parameter, which is the inverse of the scale. However, since we are using a scale of 1 we can ignore this for now.  
+We model this latent variable as being distributed according to a logistic distribution with a mean of $\mu$ and a scale parameter equal to 1, as in equation below. Actually, for reasons that we won't get into, for ordinal regression `brm` uses a parameter called the **discrimination** parameter, which is the inverse of the scale. However, since we are using a scale of 1 we can ignore this for now (since 1/1=1).  
 
 $$
 \begin{equation}
@@ -1361,15 +1377,15 @@ VTL, F0 \sim t(3, 0, 3) \\
 \end{equation}
 $$
 
-Here's a verbal description of our model:
+And here is a plain English, verbal description of our model:
 
 > We are modelling an ordinal variable, size group ($SG$), with possible outcomes of small (1), medium (2), and large (3). The value expected for any given trial is based on the value of a latent variable ($z$) in relation to two thresholds ($\theta_{[1]},\theta_{[2]}$), which were estimated from the data. Our latent variable is modeled as coming from a logistic distribution with a scale of 1 and a mean that varies from trial to trial. The mean of these distributions varies based on the combination of 'main' (e.g., $VTL$) and listener-dependent (e.g. $VTL \colon L$) effects for vocal tract length and f0, and a listener-dependent intercept. 
 
 > The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of 0 of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
 
-Notice that the model in \@ref(eq:12-14) does not contain a term representing the overall model intercept. This is because the important thing for our model is the distance between the intercept and the thresholds, and not the value of the latent variable itself. For example, imagine an 'intercept-only' model (chapter 4) that had intercept = 3 and thresholds of 1 and 5. The behavior of this model would be exactly analogous in its behavior to a model with an intercept of 13 and thresholds of 11 and 15. In fact, there are an infinite number of models that maintain these distances, one for each possible value of the intercept. Under these conditions finding the 'best' model is an impossible task. To resolve this issue, the overall intercept in these models is usually set to zero and not modeled, and instead only the J-1 thresholds are modeled. 
+Notice that the model in \@ref(eq:12-14) does not contain a term representing the overall model intercept. This is because the important thing for our model is the distance between the expected value of the latent variable and the thresholds, and not the value of the latent variable itself. For example, imagine an 'intercept-only' model (chapter 4) that had intercept = 3 and thresholds of 1 and 5. The behavior of this model would be exactly analogous to a model with an intercept of 13 and thresholds of 11 and 15. In fact, there are an infinite number of models that maintain these distances, one for each possible value of the intercept. Under these conditions finding the 'best' model is an impossible task (i.e. the model is not *identifiable*, see section X). To resolve this issue, the overall intercept in these models is usually set to zero and not modeled, and instead only the $J-1$ thresholds are modeled (for $J$ categories). 
 
-Although ordinal models do not usually model the overall intercept, they *can* model listener-dependent (and speaker) intercepts, and our model in equation does contain these. Using cluster-dependent intercepts can be thought of as sliding the thresholds up and down the number line by different amounts for each level of a grouping factor (e.g. listener), or as moving the predicted values by the same amount. This sort of adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above. 
+Although ordinal models do not usually model the overall intercept, they *can* model listener-dependent (and speaker-dependent) intercepts, and our model in equation does contain these. Since the boundaries are shared by all groups, using group-dependent intercepts can be thought of as sliding the thresholds up and down the number line by different amounts for each level of a grouping factor (e.g. listener), or as moving the predicted values by the same amount. This sort of adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above. 
 
 ### Fitting and interpreting the model
 
@@ -1402,7 +1418,7 @@ bmmb::short_summary(model_ordinal)
 
 In the population-level effects, we see the two estimated thresholds `Intercept[1]` and `Intercept[1]` representing $\theta_{[1]}$ and $\theta_{[1]}$ above. We also see our 'main' effects for VTL and f0 in this section. Our results indicate that VTL is positively related to a larger size group response, while f0 is negatively related to this (no surprises there). In the group-level effects section, note that we get listener-dependent intercepts, VTL, and f0 effects. Importantly, the intercepts correspond to the $L$ terms in the model equation above, and do not refer to listener-dependent thresholds/cutoffs. 
 
-Below we make 'fixed effect' predictions using our model. These predictions omit the random effects structure to let us see how well our fixed effects can predict our data. Note that we use the `fitted` rather than `predict` functions. This is because we are interested in the value of our *linear predictor*, the expected value of our latent variable. In contrast, the `predict` would give us *posterior predictions* which would incorporate our modeled noise. In addition, we set `scale="linear"` so that we get predictions of the latent variable rather than probability of category membership.
+Below we make 'fixed effect' predictions using our model. These predictions omit the random effects structure to let us see how well our fixed effects can predict our data. In addition, we set `scale="linear"` so that we get predictions of the latent variable rather than the probability of category membership.
 
 ```{r, cache = TRUE}
 # make latent variable predictions
@@ -1412,7 +1428,7 @@ predictions_latent = fitted (model_ordinal,scale="linear", re_formula = NA)
 head (predictions_latent)
 ```
 
-Below we predict our latent variable using our posterior mean fixed effects. We do this just to show that it does, in fact, result in the expected predictions. Below, we get the posterior mean model fixed effects and use this to come up with an expected value for our latent variable for each observation (`mu`). 
+Below we predict our latent variable using our posterior mean fixed effects. We do this just to show that it does, in fact, result in the expected predictions. Below, we get the posterior mean model fixed effects and use these to come up with an expected value for our latent variable for each observation (`mu`). 
 
 ```{r}
 # get fixed effects
@@ -1427,21 +1443,21 @@ f0_slope = fixed_effects[4,1]
 mu = exp_data$vtl * vtl_slope + exp_data$f0  * f0_slope
 ```
 
-Below we see that the prediction above results in the same expected values for our latent variable as obtained using the `fitted` function, save for that `fitted` computes a prediction for each observation for each posterior sample (as ought to be done). 
+Below we see that the prediction above results in basically the same expected values for our latent variable as obtained using the `fitted` function. Of course, the `fitted` function finds these estimates the right way, computing a prediction for each posterior sample rather than only using the posterior mean.
 
 ```{r}
 cor (predictions_latent[,1], mu)
 sd (predictions_latent[,1] - mu)
 ```
 
-We can also ask for predictions as probabilities by not specifying the scale:
+We can also ask for predictions as probabilities, rather than latent variable values, by not specifying the scale:
 
 ```{r, cache = TRUE}
 # predict probability of category membership
 predictions_latent = fitted (model_ordinal, re_formula = NA)
 ```
 
-In this case our prediction results in a three dimensional matrix where response category varies along the third dimension. For example, below we see the probability of observing the first response category (small), for the first six observations. 
+In this case our prediction results in a three dimensional matrix where response category varies along the third dimension (very much like our multinomial predictions). For example, below we see the probability of observing the first response category (small), for the first six observations. 
 
 ```{r}
 # see first six for the first category
@@ -1476,7 +1492,6 @@ cor (predictions_latent[,1,3],predictions_manual[,3])
 
 Below we find the maximum value across each row of our predictions, representing the *hard*, categorical prediction for each observation.  
 
-
 ```{r}
 SG_hat = apply (predictions_latent[,1,],1,which.max)
 SG_hat_manual = apply (predictions_manual,1,which.max)
@@ -1485,11 +1500,15 @@ SG_hat_manual = apply (predictions_manual,1,which.max)
 We can see that these two approaches lead to the same outcomes and that in either case we can correctly predict about 83% of our observations using only our fixed effects.
 
 ```{r}
+# manual and automatically-calculated predictions
 mean (SG_hat == SG_hat_manual)
 
+# predictive accuracy for actual size group responses 
 mean (SG_hat == exp_data$SG)
 mean (SG_hat_manual == exp_data$SG)
 ```
+
+Our focus has been on manually replicating some of the helper functions included in `brms` in order to highlight the relationship between our model parameters and expected outcomes. For more complex models, the specific effects of parameters or combinations of parameters can still be investigated using the techniques discussed in earlier chapters. For example, imagine an ordinal model involving a single quantitative predictors and a single categorical predictor with four levels. The geometry of the lines formed to predict expected values in such a model would be the same as that of the models discussed in chapter 9, and many of the strategies discussed in that chapter could be directly applied to such an analysis.
 
 ### Listener-specific discrimation terms
 

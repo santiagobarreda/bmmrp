@@ -92,14 +92,6 @@ When we get 'unsummarized' predictions we get a prediction for each set of sampl
 hist (pp_uninformative[1,])
 ```
 
-[@@ SB - finish, fix, pcheck draws its own now. they can get all, n or specific ones.]
-
-
-```{r, cache = TRUE}
-pp_uninformative = predict (prior_uninformative, summary = FALSE)
-```
-
-
 However, the `bmmb` package has a simple function called `p_check` that can be used to consider the density of multiple samples at once. By default this compares 10 random predictions, however the number of predictions can be changed, and the user may also specify specific samples to consider. 
 
 ```{r, eval = FALSE}
@@ -261,7 +253,7 @@ brmplot (rbind(fixef_1[2,],fixef_2[2,],fixef_3[2,]), ylim = c(6.5,13.5),
 brmplot (rbind(fixef_1[3,],fixef_2[3,],fixef_3[3,]), ylim = c(-6,1),
          main = "G1",labels = c("UI", "MI", "C"),cex.lab=1.3,cex.axis=1.3)
 brmplot (rbind(fixef_1[4,],fixef_2[4,],fixef_3[4,]), ylim = c(-6,1),
-         main = "A1:G1")
+         main = "A1:G1",labels = c("UI", "MI", "C"),cex.lab=1.3,cex.axis=1.3)
 ```
 
 ### More specific priors 
@@ -301,7 +293,7 @@ brms::prior_summary(prior_informative)
 
 ## Heteroskedasticity and distributional (or mixture) models
 
-Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption can be said to be **homoscedastic**. Historically, the homogeneity of error variance has been assumed in models because it makes them simpler to work with and understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different subsets of data. These sorts of models are sometimes called **mixture models** because they can be thought of as a mixture of different distributions or **distributional models** because they allow us to model variation in $\sigma$ in addition to variation in $\mu$. 
+Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption can be said to be **homoscedastic**. Historically, the homogeneity of error variance has been assumed in models because it makes them simpler to work with and understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different subsets of data. These sorts of models are sometimes called **mixture models** because they can be thought of as a mixture of different distributions or **distributional models** because they allow us to model variation in all of the parameters of the data distribution (e.g. $\sigma$ in addition to in $\mu$. 
 
 Consider the residuals for the random effects model we just fit to our data, which we can get from the model using the `residuals` function:
 
@@ -415,7 +407,7 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[L_{[i]}]} \\ + A1 \colon L_{[L_{[i]}]} + G1 \colon L_{[L_{[i]}]} + A1 \colon G1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[\mathsf{L}_{[i]}]} \\ + A1 \colon L_{[\mathsf{L}_{[i]}]} + G1 \colon L_{[\mathsf{L}_{[i]}]} + A1 \colon G1 \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ 
 \\ \sigma_{[i]} = \mathrm{Intercept_{\sigma}} + A1_{\sigma} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim t(3,0,\sigma_S) \\
@@ -606,7 +598,7 @@ This told `brms` "model `sigma` as a function of an intercept and an effect for 
 
 `sigma ~ A + (A|L)`
 
-This formula tells `brms` "model `sigma` as varying around an overall intercept, an effect for apparent age, listener-specific deviations, and the interaction of apparent age and listener". Effectively, we have two separate model formulas: One for a model with two categorical predictors and an interaction (like those in chapter 7), and one for a model comparing two groups (like those in chapter 6). We can 'stick' our two model formulas together using the `bf` (Bayes formula) function as shown below:
+This formula tells `brms` "model `sigma` as varying around an overall intercept, an effect for apparent age, listener-specific deviations, and the interaction of apparent age and listener". Effectively, we have two separate model formulas: One for a model with two categorical predictors and an interaction (like those in chapter 7), and one for a model comparing two groups (like those in chapter 6). We can 'stick' our two model formulas together using the `bf` (or `brmsformula`) function as shown below:
 
 ```{r, eval = FALSE}
 model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
@@ -619,7 +611,7 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{[i]}) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + G1 \colon L_{[L_{[i]}]} + A1 \colon G1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + L_{[\mathsf{L}_{[i]}]} + A1 \colon L_{[\mathsf{L}_{[i]}]} + G1 \colon L_{[\mathsf{L}_{[i]}]} + A1 \colon G1 \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ 
 \sigma_{[i]} = \mathrm{Intercept_{\sigma}} + A1 + A1 \colon L_{\sigma[L_{[i]}]} + L_{\sigma[L_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 \begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \\ G1 \colon L_{[\bullet]} \\ A1 \colon G1 \colon L_{[\bullet]} \\  \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma_{L} \right) \\ 

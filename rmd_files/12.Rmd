@@ -1300,7 +1300,7 @@ exp_data$f0 = exp_data$f0 / 100
 
 We're going to keep our research questions relatively simple this time, as this is mostly a demonstration of an ordinal regression analysis and not a 'real' ordinal variable: 
 
-Q1) Can we predict which size group people will tend to respond for a speaker's voice given their f0 and VTL?
+Q1) Can we predict size group responses for a speaker given their f0 and VTL?
 
 ### Description of the model
 
@@ -1512,7 +1512,9 @@ Our focus has been on manually replicating some of the helper functions included
 
 ### Listener-specific discrimation terms
 
-Before wrapping up our discussion of our model, we want to talk briefly about the `disc` parameter. As mentioned above, this parameter is equal to the inverse of the scale parameter of the logistic distribution. In our previous ordinal model, the `disc` parameter was fixed at a value of 1 for all observations. However, this parameter can be modeled just as the error term (`sigma`, $\sigma$) of our normal or t distributed errors was modeled in chapter 8. Since this value cannot be negative our model will predict the logarithm of `disc` just as it did for `sigma`. Below we fit a model with listener-specific discrimination parameters. We are not going to discuss this in any detail, however, the model structure is extremely similar to that presented in chapter 8, \@ref(eq:8-5).  
+Before wrapping up our discussion of our model, we want to talk briefly about the `disc` (discrimination) parameter. As mentioned above, this parameter is equal to the inverse of the scale parameter of the logistic distribution. In our previous ordinal model, the `disc` parameter was fixed at a value of 1 for all observations, However, this parameter can be predicted just as the error term (`sigma`, $\sigma$) of our normal or t distributed errors was predicted in chapter 8. Since this value cannot be negative our model will predict the logarithm of `disc` just as it did for `sigma`. 
+
+Below we fit a model with listener-specific discrimination parameters. We're not going to discuss this in detail, however, the additional model structure is extremely similar to that presented in chapter 8 (in particular section \@ref(c8-description-2) and should be clear based on the information provided in that chapter.  
 
 ```{r, eval = FALSE}
 model_formula = bf(SG ~ vtl+f0 + (vtl+f0|L) + (1|S),
@@ -1536,12 +1538,13 @@ model_ordinal_disc = readRDS ("../models/12_model_ordinal_disc.RDS")
 ```
 
 We can see that our model summary now includes a fixed effect for the `disc_Intercept` and the standard deviation of the listener-dependent discrimination terms (`sd(disc_Intercept)`) in the listener random effects section.
+[@@ SB - bug in short summary, empty family specific printed.]
 
 ```{r}
 bmmb::short_summary (model_ordinal_disc)
 ```
 
-We can get the listener-dependent disc terms using the `short_hypothesis` function. Since these values are the logarithm of the discrimination, to get the logistic scale parameter we need to exponentiate and then invert the parameter estimate to get the scale. We do this inside the hypothesis function so that we summarize after manipulating (rather than exponentiating and inverting our summary).
+We can get the listener-dependent disc terms using the `short_hypothesis` function. Since these values are the logarithm of the discrimination, we need to exponentiate and then invert the parameter estimate to get the scale. We do this inside the hypothesis function so that we summarize after manipulating (rather than exponentiating and inverting our summary).
 
 ```{r}
 listener_disc = 
@@ -1553,7 +1556,7 @@ head(listener_disc)
 
 Below we compare the distributions implied by these `disc` parameters for a value of 0 for the latent variable. We can see that these distributions imply substantially different behaviors across listeners, given the same predicted value for the latent variable.
 
-```{r  F12-13, fig.height = 4.5, fig.width=8, fig.cap = " -- ", echo = FALSE}
+```{r  F12-13, fig.height = 4, fig.width=8, fig.cap = " -- ", echo = FALSE}
 
 ################################################################################
 ### Figure 12.13
@@ -1614,7 +1617,7 @@ for (i in 1:15){
 
 Our research question was very simple:
 
-Q1) Can we predict which size group people will tend to respond for a speaker's voice given their f0 and VTL?
+Q1) Can we predict size group responses for a speaker given their f0 and VTL?
 
 Yes we can, and with reasonable accuracy (83%) based only on two acoustic predictors. Below we find the predicted category for each trial based on our first model, including the random effects, and for the second ordinal model we fit that included listener-specific `disc` parameters. 
 
@@ -1629,16 +1632,39 @@ SG_hat_full = apply (predictions_latent_full[,1,],1,which.max)
 SG_hat_disc = apply (predictions_latent_disc[,1,],1,which.max)
 ```
 
-We can see that the random effects noticeably improve prediction whereas the inclusion of listener-specific `disc` has a much smaller effect. 
+Below, we calculate the probability of a correct size group prediction for the fixed effects predictions, the predictions made by the full model with a single `disc` parameter, and the model with a listener-dependent `disc` parameter. We can see that the random effects noticeably improve prediction whereas the inclusion of listener-specific `disc` has a much smaller effect. 
 
 ```{r}
-# percent of correct classifications for each model
+# fixed effects
+mean (SG_hat == exp_data$SG)
+# full model, single disc
 mean (SG_hat_full == exp_data$SG)
+# full model, listener-dependent disc
 mean (SG_hat_disc == exp_data$SG)
 ```
 
-In any case, it seems clear that ordinal variables related to apparent talker size/height are likely to be very predictable based on speaker VTL and f0. However, we're not going to dig into these results very much since this dependent variable was sort of 'made up', and our intention was to provide practical examples of an ordinal regression analysis that takes advantage of the information in repeated measures data. 
+In any case, it seems clear that ordinal variables related to apparent talker size/height are likely to be very predictable based on speaker VTL and f0. However, we're not going to dig into these results very much since this dependent variable was sort of 'made up', and our intention was mostly to provide practical examples of an ordinal regression analysis that takes advantage of the information in repeated measures data. 
 
 
+
+## References
+
+--
+
+## Exercises
+
+The analyses in the main body of the text all involve only the unmodified 'actual' resonance level (in `exp_data`). Responses for the stimuli with the simulate 'big' resonance are reserved for exercises throughout. You can get the 'big' resonance in the `exp_ex` data frame, or all data in the `exp_data_all` data frame. 
+
+Fit and interpret one or more of the suggested models:
+
+
+1) Easy: 
+
+2) Medium:
+
+3) Hard: Model `SG` as a multinomial model and compare results, predictions, coefficient estimates, etc. 
+
+
+In any case, describe the model, present and explain the results, and include some figures.
 
 

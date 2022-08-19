@@ -315,7 +315,9 @@ $$
 \end{equation}
 $$
 
-And the lines below that would have described $a$, $b$, $c$, and $d$ as the sum of the appropriate model parameters. 
+And the lines below that would have described $a$, $b$, $c$, and $d$ as the sum of the appropriate model parameters as we did above (for `a` and `a_L`). Despite the lack of the formal description, we can still give the plain English description corresponding to this formula: `height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)` (and the function call below). 
+
+> Apparent speaker height is expected to vary according to a normal distribution with some unknown mean and standard deviation. Apparent height is predicted based on two quantitative variables, speaker f0 and VTL, and two categorical variables, apparent gender and apparent age. Our model includes all possible interactions between these predictors, resulting in 16 'fixed' effects predictors (see above). Our model also included listener dependent effects for all fixed effects, which were drawn from a 16-dimensional normal distribution whose standard deviations and covariance matrix were estimated from the data. Finally, our model included speaker dependent intercepts drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. 
 
 ### Fitting the model
 
@@ -396,9 +398,7 @@ segments((1:15)+.2, pts-2*err_bars,(1:15)+.2, pts+2*err_bars,lwd=2,col=2)
 abline (h = c(-0.5,0.5), lty = 3, col = bmmb::cols[6],lwd=2)
 ```
 
-Since our model has a large number of parameters we're going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height. This is a similar approach to Kruschke's Region of Practical Equivalence (ROPE, Kruschke 2018). Rather than worrying about whether things are exactly zero or not, Kruschke suggests we think about when things are so small that they may as well be zero. For human height, apparent and veridical, we define meaningful differences as those that 1) are likely to be different from zero, *and* 2) have magnitudes of at least around 1 cm (about 0.5 inches). We establish this lower limit simply based off the fact that people may describe themselves as 175 cm (or 5'10.5") but rarely make distinctions smaller than that (e.g. people rarely distinguish 5'10.5" and 5'10.75"). In addition, governments, doctors, and even institutions like the NBA which are extremely interested in height will rarely measure to within less than 1 cm (half an inch). As a result, although a difference of 0.1 cm may very well be consistently different from zero, in the context of human height a difference of this magnitude likely has little to no practical significance.
-
-We will discuss the Bayesian model fixed effects, which you can see by running `fixef(model_height_vtl_f0)`. Our model suggests non-zero slopes for our plane along the VTL (mean = 3.12, s.d. = 0.64, 95% C.I = [1.85, 4.4]) and f0 dimensions (mean = -3.52, s.d. = 1.45, 95% C.I = [-6.32, -0.63]). However, there is not much evidence that the cross-product term (`vtl:f0`) has a meaningful non-zero value (mean = -1.28, s.d. = 1.05, 95% C.I = [-3.32, 0.81]). This means that our responses can be predicted by a plane along f0 and VTL without curving the plane into a saddle shape. The `vtl:A1` interaction suggests a differing use of VTL based on apparent adultness (mean = -2.02, s.d. = 0.51, 95% C.I = [-3.03, -1.02]), but there do not appear to be any other meaningful interactions between VTL, f0 and the other predictors. 
+Since our model has a large number of parameters we're going to focus on interpreting those that seem likely to result in 'meaningful' differences in apparent height, about 1 cm (as discussed in Section \@ref(c7-answering)). We will discuss the Bayesian model fixed effects, which you can see by running `fixef(model_height_vtl_f0)`. Our model suggests non-zero slopes for our plane along the VTL (mean = 3.12, s.d. = 0.64, 95% C.I = [1.85, 4.4]) and f0 dimensions (mean = -3.52, s.d. = 1.45, 95% C.I = [-6.32, -0.63]). However, there is not much evidence that the cross-product term (`vtl:f0`) has a meaningful non-zero value (mean = -1.28, s.d. = 1.05, 95% C.I = [-3.32, 0.81]). This means that our responses can be predicted by a plane along f0 and VTL without curving the plane into a saddle shape. The `vtl:A1` interaction suggests a differing use of VTL based on apparent adultness (mean = -2.02, s.d. = 0.51, 95% C.I = [-3.03, -1.02]), but there do not appear to be any other meaningful interactions between VTL, f0 and the other predictors. 
 
 In terms of intercept terms (i.e. those not interacting with quantitative predictors), there is a large effect for apparent age (mean = 7.04, s.d. = 1.18, 95% C.I = [4.69, 9.35]) but no main effect for apparent gender (mean = -0.17, s.d. = 0.75, 95% C.I = [-1.63, 1.36]). However, the interaction between apparent age and apparent gender (`A1:G1`) had a 95% credible interval that did not overlap with zero and had a posterior mean value of -1.72 cm (s.d. = 0.61, 95% C.I = [-2.9, -0.5]). This indicates that although apparent gender had an average effect of about 0 cm on apparent height it may have had meaningful, but opposite, effects based on the apparent age of the speaker. 
 
@@ -1342,8 +1342,6 @@ Gelman, A., Hill, J., & Yajima, M. (2012). Why we (usually) don’t have to worr
 Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian Data Analysis.
 
 Kruschke, J. (2014). Doing Bayesian data analysis: A tutorial with R, JAGS, and Stan.
-
-Kruschke, J. K. (2018). Rejecting or accepting parameter values in Bayesian estimation. Advances in methods and practices in psychological science, 1(2), 270-280.
 
 Myers, Jerome L., Arnold D. Well, and Robert F. Lorch. Research design and statistical analysis. Routledge, 2013.
 

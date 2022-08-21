@@ -804,101 +804,159 @@ The model print statement should look familiar except it contains one new chunk 
 
 ## Investigating 'shrinkage' {#c4-investigating-shrinkage}
 
-We've mentioned that multilevel models can result in *shrinkage*, that is, in effect estimates that are smaller in magnitude (i.e. closer to the mean) than their no pooling counterparts. In the code below we extract the posterior mean estimates of our listener and speaker random effects (i.e., $L$ and $S$). We also calculate the no pooling estimates for the listener and speaker averages, and center these so that they will resemble their corresponding effects. 
+We've mentioned that multilevel models can result in *shrinkage*, that is, estimates that are smaller in magnitude (i.e. closer to the mean) than their no pooling counterparts. In the code below we extract the posterior mean estimates of our listener and speaker random effects (i.e., $L$ and $S$). These estimates have been 'shrunk' by combining their estimates with the prior. We also calculate the no pooling estimates for the listener and speaker averages, and center these so that they will resemble their corresponding effects. 
 
 ```{r, cache = TRUE}
 # these are the Bayesian 'shrinkage' estimates of
 # the listener effects
-L_hat = brms::ranef(model_multilevel_L_S)$L[,1,'Intercept']
+L_shrunk = brms::ranef(model_multilevel_L_S)$L[,1,'Intercept']
 # and the speaker effects
-S_hat = brms::ranef(model_multilevel_L_S)$S[,1,'Intercept']
+S_shrunk = brms::ranef(model_multilevel_L_S)$S[,1,'Intercept']
 
 # these are the no pooling estimates
-L_np = tapply (men$height, men$L, mean)
-S_np = tapply (men$height, men$S, mean)
+L_nopooling = tapply (men$height, men$L, mean)
+S_nopooling = tapply (men$height, men$S, mean)
 # and now they are centered
-L_np = L_np - mean (L_np)
-S_np = S_np - mean (S_np)
+L_nopooling = L_nopooling - mean (L_nopooling)
+S_nopooling = S_nopooling - mean (S_nopooling)
 ```
 
-In the top row of figure \@ref(fig:F4-8) we see a comparison of the shrinkage estimates of the speaker and listener effects compared to the no pooling estimates. We can see that the Bayesian shrinkage listener effects are nearly identical to their no pooling counterparts. In the bottom row we see the difference between our two estimates plotted against the no pooling estimates. In this row we see that the degree to which an estimate is shrunk towards the mean depends on how much it deviates from the mean.   
+Figure \@ref(fig:F4-8) shows the effect of shrinkage for the listener and speaker effects: Individual effects are 'pulled' towards the overall mean at zero. We can see that in all cases, the effects estimated with partial pooling lie closer to the mean than those estimation with no pooling. This particularly evident for the speaker effects, and in particular those of speaker 87, highlighted in that figure. This is because, as we can see, the prior distribution of the speaker effects is such that the 'unshrunk' effect is very unlikely to arise from the distribution.
 
-```{r F4-8, fig.height = 4, fig.width = 8, fig.cap="(top row) Maximum likelihood (ml) estimates of listener and speaker effects plotted against the Bayesian estimates of the same effects (hat). (bottom row) The y-axis now represents the difference between the Bayesian and maximum likelihood estimates. Positive values indicate that the Bayesian estimate was greater than the maximum likelihood one, and vice versa.", echo=FALSE}
+```{r F4-8, fig.height = 4, fig.width = 8, fig.cap="Empty points indicate the no pooling estimates for listener and speaker effects, and the broken line represents the densities corresponding to the standard deviations of these effects. The filled points and solid lines indicate the Bayesian estimates and corresponding densities.", echo=FALSE}
 
 ################################################################################
 ### Figure 4.8
 ################################################################################
 
-par (mfrow = c(2,2), mar = c(.25,4,.25,1), oma=c(4,.1,.1,.1))
-plot (L_np, L_hat, xlim = c(-10,10), ylim = c(-10,10),
-      pch=4, lwd=3, col=bmmb::cols,cex=2.25,xaxt="n",xlab="")
-grid()
-abline (0,1,col=2,lwd=2)
-abline(h=0,v=0,lty=3,lwd=2)
-points (L_np, L_hat, pch=4,lwd=3, col=bmmb::cols,cex=2.25)
+par (mfrow = c(1,2), mar = c(2,.51,.5,.51))
 
-plot (S_np, S_hat, xlim = c(-12,12), ylim = c(-12,12),
-      pch=4, col=4,cex=2.25,xaxt="n",xlab="")
-grid()
-abline (0,1,col=2, lwd=2)
-abline(h=0,v=0,lty=3,lwd=2)
-points (S_np, S_hat, pch=4,lwd=3, col=bmmb::cols,cex=2.25)
+layout (mat = matrix(c(1,3,2,3), 2,2))
 
-plot (L_np, L_hat-L_np, xlim = c(-10,10), ylim = c(-5,5),
-      pch=3, lwd=3, col=bmmb::cols,cex=2.25)
-grid()
-abline(h=0,v=0,lty=3,lwd=2)
-points (L_np, L_hat-L_np, pch=3,lwd=3, col=bmmb::cols,cex=2.25)
+plot (L_nopooling,rep(0,15), ylim = c(0,4.3), cex=1.5,pch=1,col=rev(bmmb::cols), xlim = c(-13,13), 
+      yaxt = 'n',xlab = 'Listener Effects',lwd=3)
+points (L_shrunk,rep(1,15), cex=1.5,pch=16,col=rev(bmmb::cols),lwd=2)
+arrows (L_nopooling,0.1,L_shrunk,0.9, length=0.1)
+abline (v=0, lty=3,col='grey')
+x = seq(-12,12,0.01)
+den = dnorm (x, 0, 3.79)
+den = den / max (den)
+den2 = dnorm (x, 0, sd(S_nopooling))
+den2 = den2 / max (den2)
+text (0,2.5,label = expression(paste(sigma["L"]," = 3.79")), cex = 1.25)
+text (0,3,label = expression(paste("P(L)")), cex = 1.25)
+lines (x, (den*2)+2, lwd = 3, col = 4)
+#lines (x, (den2*2)+2, lwd = 2, col = 4,lty=3)
 
-mtext (side = 1, text = "L_np", line=2.5)
+text (-13.5,0,"No pooling", pos = 4)
+text (-13.5,1,"Shrunk", pos = 4)
 
-plot (S_np, S_hat-S_np, xlim = c(-12,12), ylim = c(-5,5),
-      pch=3, col=4,cex=2.25)
-grid()
-abline(h=0,v=0,lty=3,lwd=2)
-points (S_np, S_hat-S_np, pch=3,lwd=3, col=bmmb::cols,cex=2.25)
+text (5,4,"Listener Effects", pos = 4)
 
-mtext (side = 1, text = "S_np", line=2.5)
+
+plot (S_nopooling,rep(0,45), ylim = c(0,4.3), cex=1.5,pch=1,col=rev(bmmb::cols), xlim = c(-13,13), 
+      yaxt = 'n', ylab = '',xlab = 'Speaker Effects',lwd=3)
+points (S_shrunk,rep(1,45), cex=1.5,pch=16,col=rev(bmmb::cols),lwd=2)
+arrows (S_nopooling,0.1,S_shrunk,0.9, length=0.1)
+abline (v=0, lty=3,col='grey')
+x = seq(-12,12,0.01)
+den = dnorm (x, 0, 2.84)
+den = den / max (den)
+den2 = dnorm (x, 0, sd(L_nopooling))
+den2 = den2 / max (den2)
+text (0,2.5,label = expression(paste(sigma["S"]," = 2.84")), cex = 1.25)
+text (0,3,label = expression(paste("P(S)")), cex = 1.25)
+
+lines (x, (den*2)+2, lwd = 3, col = 4)
+#lines (x, (den2*2)+2, lwd = 2, col = 4,lty=3)
+
+text (5,4,"Speaker Effects", pos = 4)
+
+
+text (-12, 0.5, "S=87")
+plot (S_nopooling[41],0.05, ylim = c(0,1.5), cex=2.5,pch=1,
+      col=bmmb::cols[5], xlim = c(-17,9), yaxt = 'n', ylab = '',
+      xlab = 'Speaker Effects',lwd=3, yaxs = 'i')
+points (S_shrunk[41],0.05, cex=2.5,pch=16,col=bmmb::cols[5],lwd=2)
+arrows (S_nopooling[41],0.05,S_shrunk[41]-.5,0.05, length=0.1)
+x = seq(-20,15,0.01)
+den = dnorm (x, 0, 2.84)
+den = den / max (den)
+
+tmp = exp_data$height[exp_data$S==87] - 173.8
+den2 = dnorm (x, mean (tmp), 6.47/sqrt(14))
+den2 = den2 / max (den2)
+
+den3 = den2 * den
+den3 = den3 / max (den3)
+
+use2 = (x > -17) & (x < -5)
+lines (x[use2], (den2)[use2], lwd = 3, col = bmmb::cols[5], lty = 2)
+use3 = (x > -13) & (x < -2)
+lines (x[use3], (den3[use3]), lwd = 3, col = bmmb::cols[5])
+use = (x > -10) & (x < 10)
+lines (x[use], (den[use]), lwd = 3, col = 4)
+
+points (S_nopooling[41],0.05, cex=2.5,pch=1,col=bmmb::cols[5])
+points (S_shrunk[41],0.05, cex=2.5,pch=16,col=bmmb::cols[5],lwd=2)
+
+text (S_nopooling[41],1.25,label = expression(paste("P(y|",S["[87]"],")")), cex = 1.25)
+text (S_shrunk[41],1.25,label = expression(paste("P(",S["[87]"],"|y)")), cex = 1.25)
+text (0,1.25,label = expression(paste("P(",S,")")), cex = 1.25)
+
+text (S_nopooling[41],.5,label = "Likelihood", cex = 1.25)
+text (S_shrunk[41],.5,label = "Posterior", cex = 1.25)
+text (0,.5,label = "Prior", cex = 1.25)
+
+
+abline (v=0,lty=3,col="grey")
+
 ```
 
-Figure \@ref(fig:F4-9) shows the effect of shrinkage for the listener and speaker effects: Individual effects are 'pulled' towards the overall mean at zero. There are two reasons for the listener effects exhibiting less shrinkage than the speaker effects. First, we have 45 observations for each listener but only 15 for each speaker. As a result, the likelihood functions for our listener effects will be much narrower than those of our speaker effects. This has the effect of making our listener parameters more resistant to the effects of the prior, and therefore more resistant to shrinkage (see sections \@ref(c3-posterior) and \@ref(c2-chars-of-likelihoods-2) for more information). Second, a larger proportion of the speaker effects are close to the average, with only a relatively small number exhibiting large deviations from the average, whereas the listener effects are less concentrated near the average. The large "mass" of speaker effects near the average causes more shrinkage, particularly on the small number of more extreme values.
+In the bottom row of figure \@ref(fig:F4-8), we focus on the process by which the effect for speaker 87 gets shrunk from a no pooling value of -11.6 to a shrunk (adaptive pooling) value of -8.6. The figure is very similar to \@ref(fig:F3-1) which presented the blending of priors and likelihoods to find the posterior. 'Shrinkage' arises from the same behavior. Our 'no pooling' estimate is roughly equivalent to the likelihood of the parameter. This likelihood function is multiplied by the density of the prior, resulting in a posterior estimate that is 'shrunk' towards the prior. The posterior estimate is what you get in our model output and what you report in your work. In figure \@ref(fig:F4-8), the posterior was found by multiplying the curves representing the likelihood and the prior. 
 
-```{r F4-9, fig.height = 3, fig.width = 8, fig.cap="Empty points indicate the no pooling estimates for listener and speaker effects, and the broken line represents the densities corresponding to the standard deviations of these effects. The filled points and solid lines indicate the Bayesian estimates and corresponding densities.", echo=FALSE}
+In figure \@ref(fig:F4-9) we plot the no pooling estimates (x axis) against the difference between the no pooling and shrunk estimates (y axis). The difference between the no pooling and shrunk estimate is basically the magnitude of the horizontal arrow shown in the bottom row of figure \@ref(fig:F4-8). It is the amount of tilt in the arrows in the top row of the same figure; in the absence of shrinkage they would all be vertical. We can see that the 'amount' of shrinkage, the difference between the no pooling and shrunk estimates varies as a function of the magnitude of the estimate. More deviant estimates are shrunk more and less deviant estimates are shrunk less. 
+
+```{r F4-9, fig.height = 2.5, fig.width = 8, fig.cap="(top row) Maximum likelihood (ml) estimates of listener and speaker effects plotted against the Bayesian estimates of the same effects (hat). (bottom row) The y-axis now represents the difference between the Bayesian and maximum likelihood estimates. Positive values indicate that the Bayesian estimate was greater than the maximum likelihood one, and vice versa.", echo=FALSE}
 
 ################################################################################
 ### Figure 4.9
 ################################################################################
 
-par (mfrow = c(1,2), mar = c(4,.51,.5,.51))
-plot (L_np,rep(0,15), ylim = c(0,4.3), cex=1.5,pch=1,col=bmmb::cols, xlim = c(-13,13), 
-      yaxt = 'n',xlab = 'Listener Effects',lwd=3)
-points (L_hat,rep(1,15), cex=1.5,pch=16,col=bmmb::cols,lwd=2)
-arrows (L_np,0.1,L_hat,0.9, length=0.1)
-abline (v=0, lty=3,col='grey')
-x = seq(-12,12,0.01)
-den = dnorm (x, 0, 3.79)
-den = den / max (den)
-den2 = dnorm (x, 0, sd(S_np))
-den2 = den2 / max (den2)
-text (0,2.5,label = expression(paste(sigma["L"]," = 3.79")), cex = 1.25)
-lines (x, (den*2)+2, lwd = 3, col = 4)
-lines (x, (den2*2)+2, lwd = 2, col = 4,lty=3)
+par (mfrow = c(1,2), mar = c(.25,4,.25,1), oma=c(4,.1,.1,.1))
+# 
+# plot (L_nopooling, L_shrunk, xlim = c(-10,10), ylim = c(-10,10),
+#       pch=4, lwd=3, col=bmmb::cols,cex=2.25,xaxt="n",xlab="")
+# grid()
+# abline (0,1,col=2,lwd=2)
+# abline(h=0,v=0,lty=3,lwd=2)
+# points (L_nopooling, L_shrunk, pch=4,lwd=3, col=bmmb::cols,cex=2.25)
+# 
+# plot (S_nopooling, S_shrunk, xlim = c(-12,12), ylim = c(-12,12),
+#       pch=4, col=4,cex=2.25,xaxt="n",xlab="")
+# grid()
+# abline (0,1,col=2, lwd=2)
+# abline(h=0,v=0,lty=3,lwd=2)
+# points (S_nopooling, S_shrunk, pch=4,lwd=3, col=bmmb::cols,cex=2.25)
 
-plot (S_np,rep(0,45), ylim = c(0,4.3), cex=1.5,pch=1,col=bmmb::cols, xlim = c(-13,13), 
-      yaxt = 'n', ylab = '',xlab = 'Speaker Effects',lwd=3)
-points (S_hat,rep(1,45), cex=1.5,pch=16,col=bmmb::cols,lwd=2)
-arrows (S_np,0.1,S_hat,0.9, length=0.1)
-abline (v=0, lty=3,col='grey')
-x = seq(-12,12,0.01)
-den = dnorm (x, 0, 2.84)
-den = den / max (den)
-den2 = dnorm (x, 0, sd(L_np))
-den2 = den2 / max (den2)
-text (0,2.5,label = expression(paste(sigma["S"]," = 2.84")), cex = 1.25)
-lines (x, (den*2)+2, lwd = 3, col = 4)
-lines (x, (den2*2)+2, lwd = 2, col = 4,lty=3)
+plot (L_nopooling, L_nopooling-L_shrunk, xlim = c(-10,10), ylim = c(-5,5),
+      pch=3, lwd=3, col=bmmb::cols,cex=2.25)
+grid()
+abline(h=0,v=0,lty=3,lwd=2)
+points (L_nopooling, L_nopooling-L_shrunk, pch=3,lwd=3, col=bmmb::cols,cex=2.25)
+
+mtext (side = 1, text = "L_nopooling", line=2.5)
+
+plot (S_nopooling, S_nopooling-S_shrunk, xlim = c(-12,12), ylim = c(-5,5),
+      pch=3, col=4,cex=2.25)
+grid()
+abline(h=0,v=0,lty=3,lwd=2)
+points (S_nopooling, S_nopooling-S_shrunk, pch=3,lwd=3, col=bmmb::cols,cex=2.25)
+
+mtext (side = 1, text = "S_nopooling", line=2.5)
 ```
 
+You may have noted that the listener effects exhibiting less shrinkage than the speaker effects. There are two reasons for this. First, we have 45 observations for each listener but only 15 for each speaker. As a result, the likelihood functions for our listener effects will be much narrower than those of our speaker effects. This makes the likelihoods for our listener parameters more resistant to the effects of the prior, and therefore more resistant to shrinkage (see sections \@ref(c3-posterior) and \@ref(c2-chars-of-likelihoods-2) for more information). Second, a large proportion of the speaker effects are close to zero, with only a relatively small number exhibiting large deviations from this. In contrast, the listener effects are less concentrated near the average. As a result of this $\sigma_L > \sigma_S$, which causes speaker effects to be shrunk more than listener effects. 
 
 ## Answering our research questions {#c4-answering-question}
 

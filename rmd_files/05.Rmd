@@ -7,7 +7,9 @@ knitr::opts_chunk$set(
 
 # Comparing two groups of observations: Factors and contrasts {#c5}
 
-In the previous chapter we focused on investigating a single average, which is basically the simplest kind of data you can deal with. The models discussed in this chapter can be used for data that compares observations across two groups. In this chapter we will ask: Are two averages different or are they the same? This kind of question comes up often in scientific research. For example, a psycholinguist may ask: Does visual information speed up speech perception or not (are two sets of reaction times the same)? A phonetician may ask: Do men and women produce vowels that are about the same duration (are two sets of speech durations the same)? A doctor may ask: Is the blood pressure of people who take some medicine the same as that of those who don't (are two sets of blood pressure measurements the same)?
+In the previous chapter we focused on investigating a single average, which is basically the simplest kind of data you can deal with. The models discussed in this chapter can be used for data that compares observations across two groups. In this chapter we will ask: Are two averages different or are they the same? Comparing two groups basically means estimating a single *effect*, a single difference between groups. We do not discuss the comparison of multiple groups, i.e. the estimation of multiple fixed effects, until chapter 7.
+
+Research questions comparing two groups come up often in scientific research. For example, a psycholinguist may ask: Does visual information speed up speech perception or not (are two sets of reaction times the same)? A phonetician may ask: Do men and women produce vowels that are about the same duration (are two sets of speech durations the same)? A doctor may ask: Is the blood pressure of people who take some medicine the same as that of those who don't (are two sets of blood pressure measurements the same)?
 
 ## Chapter pre-cap
 
@@ -62,27 +64,49 @@ data (exp_data)
 notmen = exp_data[exp_data$C_v!='m' & exp_data$C!='m',]
 ```
 
-We create a new confusion matrix that compares `A_v` (veridical age group) and `C` (apparent speaker category) to see to what extent listeners confused the adult women in our sample with younger speakers (since all adults were women). We can see that although a majority of stimuli were classified correctly, there are plenty of misidentifications in the data. 
+We create a new confusion matrix that compares `A_v` (veridical age group, with levels `a` adults, and `c` children) and `C` (apparent speaker category) to see to what extent listeners confused the adult women in our sample with younger speakers (since all adults were women). We can see that although a majority of stimuli were classified correctly, there are plenty of misidentifications in the data. 
 
 ```{r}
-xtabs (~ notmen$C_v + notmen$C)
-
 xtabs (~ notmen$A_v + notmen$C)
 ```
 
 Our height responses could potentially be modeled on the basis of either apparent age group or veridical age group. Neither of these approaches would be *wrong* or *right* in any general, absolute sense. Rather, each can provide different information regarding our response variable, and so answer different research questions. The boxplot in figure \@ref(fig:F5-2) presents a comparison of height judgments for our confusable speakers, organized according to perceived and veridical age. Based on this plot we see that the apparent age of a speaker dominates their apparent height. 
 
-For example, the first and third boxes indicate that speakers 'sounded' taller when speakers were identified as adult women, regardless of whether they were adults or children. Conversely, the second and fourth boxes indicate that speakers 'sounded' shorter when they were identified as children, even if they were adults. For this reason, the analysis in this chapter will focus on understanding the role of *apparent age* on the perception of speaker height. 
+For example, the first two boxes from the top indicate that speakers 'sounded' shorter when they were identified as children, regardless of whether they were adults or not. Conversely, the bottom two boxes indicate that speakers 'sounded' taller when they were identified as children, even if they were adults. So, we see that what seems to determine apparent height is apparent speaker age, rather than veridical speaker age. This makes sense to some extent, since listeners don't *know* how old speakers are, they just know how old they *think* speakers are. For this reason, the analysis in this chapter will focus on understanding the role of *apparent age* on the perception of speaker height. 
 
-```{r F5-2, fig.height = 3, fig.width=5, fig.cap = "Apparent height organized by apparent age (A) and veridical age (A_v). The first letter in each label indicates the apparent age of the speaker, either an adult (a) or a child (c).", echo = FALSE}
+```{r F5-2, fig.height = 2.5, fig.width=8, fig.cap = "Distribution of apparent height judgments organized by apparent and veridical age.", echo = FALSE}
 
 ################################################################################
 ### Figure 5.2
 ################################################################################
 
 par (mfrow = c(1,1), mar = c(4,4,1,1))
-boxplot (height ~ A + A_v, data = notmen, col = bmmb::cols[6:9], 
-         xlab = " Perceived Age : Veridical Age", ylab = "Height (cm)")
+
+boxplot (height ~ A_v + A, data = notmen, col = bmmb::cols[c(9,4,9,4)], 
+        ylab = "Perceived Age", xlab = "Height (cm)", horizontal = TRUE,
+        names=c("","","",""),yaxt='n')
+axis (side=2,at =c(1.5,3.5),c("Adult","Child"))
+
+legend (108,2,legend=c("Veridical adults",
+                           "Veridical children"),
+         pch=15,col = bmmb::cols[c(9,4)], bty='n',pt.cex=1.5)
+
+# aa = notmen$height[notmen$A_v=="a" & notmen$A=="a"]
+# ac = notmen$height[notmen$A_v=="a" & notmen$A=="c"]
+# ca = notmen$height[notmen$A_v=="c" & notmen$A=="a"]
+# cc = notmen$height[notmen$A_v=="c" & notmen$A=="c"]
+ 
+# plot (density (aa), xlim = c(110,185), lwd=4, col= bmmb::cols[9],
+#       main="",xlab = "Apparent height (cm)", ylim = c(0,0.15),yaxs='i')
+# lines (density (ac), lwd=4, col= bmmb::cols[4])
+# lines (density (ca), lwd=4, col= bmmb::cols[9],lty=2)
+# lines (density (cc), lwd=4, col= bmmb::cols[4],lty=2)
+# 
+# legend (108,0.13,legend=c("Veridical adults, identified as adults",
+#                           "Veridical children, identified as adults",
+#                           "Veridical adults, identified as children",
+#                           "Veridical children, identified as children"),
+#         lwd=6,col = bmmb::cols[c(9,9,4,4)], bty='n',lty=c(1,3,1,3))
 ```
 
 By focusing on apparent age, we are effectively asking how apparent height as affected by whether the listener *thinks* the speaker is an adult or not. As a result, this experiment focuses on how our expectations and 'real world knowledge' can influence how we perceive the world. This may seem unusual but it is actually a very common thing. For example think of an image of a box of an unknown size. Your estimate of how heavy this is, or how hard it is to move, will depend on how large you think the box is and on what you think is inside of it. Historically, research on the perception of speaker size from speech has taken a very mathematical approach, assuming humans are using acoustic information in an optimal and dispassionate manner. More recent work, highlights the role of 'real world knowledge', and stereotypes about different kinds of speakers, in the determination (or reporting) of apparent speaker height (see the appendix for more information on this topic). 

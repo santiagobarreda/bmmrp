@@ -373,13 +373,6 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{[i]}) \\
 \end{equation}
 $$
 
-Before continuing, we need to talk about whether our (or your) data can realistically support the estimation of such a model. To this point we haven't discussed this much, but as our models get more and more complicated it is something we need to think about. Our model seeks to estimate five parameters for each listener ($Intercept, A1, G2, A1:G1, \sigma$) based on 139 observations for each listener. This is a reasonable ratio of observations to parameters. However, if we had only 10 observations per listener, it might not be such a good idea to fit a heteroskedastic model to our data. In general, before fitting a model that you *can* fit, it's a good idea to think whether you *should* fit it given the nature of your data and the number of observations you have overall (and in different conditions).
-
-
-[@@ NHS: we should maybe (probably) discuss model identifiability here, too. The number of observations vs the number of parameters is often relevant and the only thing you need to worry about, but it's not always so simple to just count up observations and model parameters. In some models, parameter can trade off against each other (I think we've probably already discussed some examples of this with the categorical variable stuff and the fact that you can't estimate coefficients for all of the levels of a factor). I suppose it's a bit of a cop-out for me to say we should do this but not just go ahead and do it, but, well, I'm kind of hung over today, so this is what I can currently muster, energy and focus wise.]
-
-[@@ SB - I might have to add a tiny section at the end of this chapter about this or something. correlation between predictors too]
-
 ## A 'simple' model: Error varies according to a single fixed effect
 
 We will begin with a 'simple' heteroscedastic model that allows for variation in $\sigma$ based on apparent age. After this, we will fit a model that includes listener-dependent variation in $\sigma$ as well.
@@ -816,49 +809,226 @@ abline (0,1,col=2,lwd=1,lty=2)
 We can see that the differences in the fixed effects are so small as to be largely meaningless. The three models also provide nearly identical listener 'random effects' and predicted values. Based on this, if we care primarily about the fixed effects and understanding apparent height judgments, any of the three models will work equally well. Where the models differ is in their estimates of the speaker effects. The inclusion of heteroscedasticity seems to reduce the magnitude of the speaker effects relative to the homoscedastic model (`model_interaction`). If we were specifically interested in these effects then we would need to take the time to understand the source, and meaning, of these differences. Of course, the experiment we ran was not designed to investigate speaker differences, so it does not make much sense to delve to far into it in our analysis. Our experiment was designed to investigate the perception of apparent height and the role of speaker age and gender in these judgments. From this perspective, it seems that either of the three models is suitable. 
 
 
-## Simulating our data
+## Building identifiable and supportable models
 
-- taking a break from comparison. 
-- going to simulate multivar random effects.
-- simulate different error variances.
-- we will simulate some of our differences
+Before finishing this chapter we want to talk about an extremely important issue that we have not discussed to this point: Whether you *should* fit the complex model you are thinking of for your data. To this point we haven't discussed this much, but as our models get more and more complicated it is something we need to think about. There are generally two constraints on the sorts of models you can fit to your data. 
 
-## Simulating data using our model parameters {#c8-simulating}
+The first of these is issues related to the **identifiability** of different model parameters, that is, the ability of your model to estimate unique and independent values for each of your model parameters. Models with parameters that are not **identifiable** mean that these parameters cannot be estimated no matter how much data you have available. We have actually seen several examples of this issue already. When we discussed contrasts (section X), and when we introduced modeling factors with many levels (section X), we talked about the fact that you can't estimate all levels of a factor. The cause of these problems is a lack of *identifiability* in the parameters. 
 
-Regression models break up variation in the dependent variables into component parts. One way to think about what all the numbers in our model mean is to simulate the dependent variable by building it from the individual component parts indicated by the model. Our model (`model_multilevel`) has just four components we need to include, one for every estimated parameter: The intercept, the listener-dependent intercepts ($L$), the between-listener variation ($\sigma_L$), and the within-listener variation, the error ($\sigma$).
+The second general constraint is related to whether is **supported** by your data, meaning you have enough data to realistically estimate all of your model parameters. In many cases involving repeated-measures data this will not be an issue as there may be a large number of observations for each group (e.g. subject), and a medium to large number of groups (>30) in the experiment. However, it is still necessary to be aware of these limitations and the problems they can cause for model fitting. 
 
-We do this in the code below. First we set the intercept to 174 cm. Then, we sample 15 random listener effects from a normal distribution, representing simulated listeners. The listener population has a mean of 0 and a standard deviation ($\sigma_L$) equal to 3.8 as indicated by our model. These effects are stored in a vector called `L_`, and they represent the values of $L$ for our different listeners. After this we create an index vector `L` that tells us which value of `L_` to apply for any given trial. This vector contains the values from 1 to 15, representing each listener, repeated 45 times each in order to simulate 45 observations from each listener. Finally, we draw our error (i.e. $\varepsilon \sim N(0,\sigma)$) based on the magnitude of `sigma` in our model. Note that the error is just 15x45 random draws from this population. Since the model contains the same value of $\sigma$ for all trials, there is no distinction between one listener and another when it comes to the magnitude of the error.
+Because of the incredible array of regression models that can be designed, it's very difficult to give a general set of guidelines that will ensure that any model will be identifiable and supported by your data. In addition, it's difficult to really explain model identifiability without talking about matrix algebra. However, we will provide some examples of general cases that we hope are illustrative. You can get the models presented below by running the following line: 
 
-```{r, collapse = TRUE}
-## don't run this line if you want a new simulated dataset. 
+```{r, eval = FALSE}
+bmmb::get_model ('8_badmodels.Rda')
+```
+```{r, include = FALSE}
+load ('../models/8_badmodels.Rda')
+```
+
+### Collinearity
+
+We've referenced the idea of *linear dependence* before (section X). We can provide a more formal definition of this now. Each of your predictors is a vector, a sequence of $i$ values that predict your dependent variable for observation $i$. A set of predictor vectors ($x_1, x_2, \dots, x_n$) is linearly dependent when there exists a vector of non-zero real numbers ($a_1, a_2, \dots, a_n$) that can be multiplied by our vectors such that the sum of the vectors equals zero for all elements of the vector. This is presented below: 
+
+$$
+\begin{equation}
+\begin{split}
+x_1 \times a_1 + x_2 \times a_2 + \dots + x_n \times a_n = 0
+\end{split}
+(\#eq:8-6)
+\end{equation}
+$$
+
+When we introduced linear dependence we gave the example that you can't include height in meters and height in centimeters as predictors. Now we can say that it is because these are *linearly dependent*, and they can be combined to add up to zero. For example, $height_{cm} \times 100 + height_{meters} \times -1 = 0$. We only introduce the use of quantitative predictors in regression in the next chapter, but we can still show how inclusion of both of these predictors will ruin our model. First we make the new predictor, VTL in meters: 
+
+```{r}
+exp_data$vtl_m = exp_data$vtl / 100
+```
+
+And then we try to fit a model predicting using both VTL in centimeters and VTL in meters.
+
+```{r, eval = FALSE}
+model_bad_1 =  
+  brms::brm (height ~ vtl_m + vtl, data = exp_data, chains = 4, cores = 4,
+       warmup = 1000, iter = 3500, thin = 2,
+       prior = c(brms::set_prior("normal(176, 50)", class = "Intercept"),
+                 brms::set_prior("normal(0, 15)", class = "sigma")))
+```
+
+Our model will not be able to find a satisfactory solution, and you will see a large list of warnings when trying to fit it. If you check out the model print statement you will see strange things in the population-level effects:
+
+```
+Population-Level Effects: 
+          Estimate Est.Error   l-95% CI  u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept    45.69      2.37      41.17     50.47 1.00     4031     4425
+vtl_m      1383.91 246800.93 -531293.80 343951.54 2.12        5       13
+vtl          -5.28   2468.01   -3430.88   5321.56 2.12        5       13
+```
+
+Above we see comically small effective sample sizes (ESS) indicating that we have basically no information about our parameters. We also see an astronomically high value for the `vtl_m` predictor, especially given knowledge that human speaker height tends to range from 100 cm to 200 cm at most. So, we see that if you try to include two quantitative predictors that are linearly dependent, this will render your model useless. 
+
+Linear dependence is binary, a set of vectors is linearly dependent or it is not. However, we can also talk about the degree to which vectors are linearly *related*, with linear dependence being one extreme. We measure linear relatedness using correlation coefficients (section X) where correlations of 1 or -1 indicating linear dependence. Our model above failed because our two predictors are linearly dependent, they have a correlation of 1. 
+
+```{r}
+cor (exp_data$vtl_m, exp_data$vtl)
+```
+
+In the code below we add a small amount of random error to our VTL (in meters) predictor. This is set to 1/10th the value of the variance of the predictor itself. This random noise brings down between VTL in meters and VTL in centimeters to 0.9946, almost perfectly correlated but *not* linearly dependent.
+
+```{r}
 set.seed(1)
-## this is the value of our intercept
-Intercept = 174
-## this is a vector of 15 listener effects
-L_ = rnorm (15, 0, 3.8 )
-## this is a vector indicating which listener produced which utterance
-L = rep (1:15, each = 45)
-## this vector contains the error
-error = rnorm (45 * 15, 0, 7)
+exp_data$vtl_m_noise = exp_data$vtl_m + 
+  rnorm (length(exp_data$vtl_m),0,sd(exp_data$vtl_m)/10)
+
+cor (exp_data$vtl, exp_data$vtl_m_noise)
 ```
 
-After creating our components, we add the Intercept, listener effects and random error to make our fake 'replicated' data. Since this data has the same statistical properties as our real data, it should look a lot like it.
+We can fit the model with the new predictor:
 
-```{r, collapse = TRUE}
-# the sum of an intercept, listener effects and random error makes our fake data
-height_rep = Intercept + L_[L] + error
+```{r, eval = FALSE}
+model_bad_2 =  
+  brms::brm (height ~ vtl_m_noise + vtl, data = exp_data, chains = 4, cores = 4,
+       warmup = 1000, iter = 3500, thin = 2,
+       prior = c(brms::set_prior("normal(176, 50)", class = "Intercept"),
+                 brms::set_prior("normal(0, 15)", class = "sigma")))
 ```
 
-WBelow we make two data sets that are 'incomplete' with respect to the variation in our data. The first contains the intercept and noise only, the second contains the intercept and listener effects only.
+If we inspect the population-level effects we see that this tiny tiny change had made our model substantially better. We get no warnings or error messages when we try to fit this model, and we have a very respectable ESS for our parameters. 
 
-```{r, collapse = TRUE}
-# this fake data is missing between listener variation
-height_rep_1 = Intercept + error
-# this fake data is missing within listener variation
-height_rep_2 = Intercept +  L_[L]
+```
+Population-Level Effects: 
+            Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept      45.75      2.36    41.16    50.35 1.00     4523     4087
+vtl_m_noise  -201.86    175.11  -544.11   139.03 1.00     3504     3697
+vtl            10.57      1.76     7.14    14.01 1.00     3439     3866
 ```
 
+At this point our model might not seem that bad except for the large effect (and huge interval) around `vtl_m_noise` (VTL in meters, plus noise). The estimate for `vtl` in the interval around it may seem plausible, especially in comparison to our last model. However, we might consider the 'real' estimate for our `vtl` predictor in a model without this redundant parameter:
 
+```{r, eval = FALSE}
+model_good =  
+  brms::brm (height ~ vtl, data = exp_data, chains = 4, cores = 4,
+       warmup = 1000, iter = 3500, thin = 2,
+       prior = c(brms::set_prior("normal(176, 50)", class = "Intercept"),
+                 brms::set_prior("normal(0, 15)", class = "sigma")))
+```
+
+We see that we get a much narrower credible interval around the VTL parameter. 
+
+```
+Population-Level Effects: 
+          Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept    45.72      2.38    41.04    50.40 1.00     5052     4679
+vtl           8.55      0.18     8.21     8.90 1.00     5072     4831
+```
+
+The above is not to say that correlated quantitative predictors should never be included in the same regression models. However, it's important to think about the consequences of doing this. In addition, when possible, its a good idea to not paint yourself into a corner by designing an experiment that will specifically lead to, or require, highly correlated predictors.  
+
+### Predictable values of categorical predictors
+
+Linear dependence can cause other sorts of problems that are less transparent when making predictions using only categorical variables. Your model parameters will also not be identifiable if you include categorical predictors whose values can be predicted based on the value of other categorical predictors. For example, we know that we can't estimate both group means *and* the intercept in two group models. We can now say that this is because if you know that an observation is not in the first group, you know it must be in the second. Underlyingly, this is a problem of linear dependence.
+
+For example, below we make a small matrix representing predictor variables in a simple regression comparing two groups. The first column represents the intercept for every observation (section X). The second column is a variable equal to 1 when the observation was in the first group and 0 if not. The third column is equal to 1 when the observation was in the second group and 0 if not. Obviously, the second column will equal 1 is the third column is zero and 0 if the third column is 1. 
+
+```{r}
+predictors = cbind (intercept=rep(1,4), x1=rep(c(1,0),2), x2=rep(c(0,1),2))
+predictors
+```
+
+If we look at the numbers above, we can take the first column and add it to the negative of the second and third columns and this will always equal zero. 
+
+```{r}
+predictors[,1] + predictors[,2]*(-1) + predictors[,3]*(-1)
+```
+
+That means that these three parameters are linearly dependent, and that is why we can't include separate predictors for the intercept and each group in a two group model. This also explains why we can't estimate all four levels of our `C` (apparent category) parameter, as we see in the previous chapter. Below we make a small matrix of 'predictors' for each of our four categories and the intercept. The predictors with `C` in their name equal zero when the observation belongs to the first, second, third, and fourth groups. 
+
+```{r}
+predictors = cbind (intercept=rep(1,4), C1=c(1,0,0,0), C2=c(0,1,0,0),
+                    C3=c(0,0,1,0),C4=c(0,0,0,1))
+predictors
+```
+
+We can see that the same approach can be used to make all rows add up to zero, indicating that these predictors are linearly dependent. The predictors cannot be made to sum to zero if we omit the fifth column of the matrix above, which is why our models will not estimate `C4` when `C` is included as a predictor in our models. 
+
+```{r}
+predictors[,1] + predictors[,2]*(-1) + predictors[,3]*(-1) + 
+  predictors[,4]*(-1) + predictors[,5]*(-1)
+```
+
+This sort of thing also causes problems when you include multiple different factors that mutually explain each other. For example, last chapter we initially fit a model using `C`, apparent speaker category, as a predictor. We then fit models using `A` and `G`, apparent age and gender as predictors. However, we did not fit models that included apparent age, gender, *and* speaker category. This is because if a speaker is a woman, the are an adult female. If they are a male child they are a boy, and if they are a female child they are a girl. So, given combinations of some categorical predictors, we can perfectly guess the values of *other* categorical predictors. Mathematically, this means that the 'secret' predictors representing each category (see section X) are linearly dependent. 
+
+Below we make our small predictor matrix containing 
+
+```{r}
+predictors = cbind (intercept=rep(1,4), C1=c(1,0,0,0), C2=c(0,1,0,0),
+                    C3=c(0,0,1,0),A1=c(0,0,1,1), G1=c(0,1,0,1),A1G1=c(1,0,0,1))
+predictors
+```
+
+This matrix actually features a large number of combinations of predictors that can be combined to equal zero. For example we can combine the first, second, third and fifth predictors:
+
+```{r}
+predictors[,1]*1 + predictors[,2]*(-1) + predictors[,3]*(-1) + 
+   predictors[,5]*(-1)
+```
+
+Or the first, third, fourth, and seventh:
+
+```{r}
+predictors[,1]*1 + predictors[,3]*(-1) + predictors[,4]*(-1) + 
+  predictors[,7]*(-1)
+```
+
+We can that if we try to fit a model that includes all of these predictors: 
+
+```{r, eval = FALSE}
+# Fit the model yourself, or
+model_bad_3 =  
+  brms::brm (height ~ C + A*G, data = exp_data, chains = 4, cores = 4,
+       warmup = 1000, iter = 3500, thin = 2,
+       prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
+                 brms::set_prior("normal(0, 15)", class = "sigma")))
+```
+
+We get a model with the low ESS values, the large Rhat values, and the very large coefficient values and intervals. 
+
+```
+Population-Level Effects: 
+          Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept   157.98      0.20   157.57   158.35 1.06       61       78
+C1         1066.31   2604.72 -4431.79  5158.68 2.07        5       18
+C2          496.91   1751.32 -2543.19  3708.83 1.87        6       13
+C3           74.39   2086.76 -4113.31  2801.74 1.99        5       21
+A1          793.68   1363.24 -2383.78  3019.96 1.90        6       12
+G1          567.63   2171.69 -4107.90  3364.23 2.04        5       18
+A1:G1       283.89   1112.60 -2295.30  2141.73 2.26        5       18
+```
+
+This concludes our discussion of linear dependence and the many ways it can cause problems for your models. If you try to fit a model and you get errors, divergent transitions, low ESS values and high Rhats, you *may* have a problem with linear dependencies in your predictors, and it is worth carefully considering this possibility. A better understanding of model identifiability and linear dependence can be gained by learning a little linear algebra. We recommend cite [@@ Noah].
+
+### Saturated, and 'nearly-saturated', models
+
+The models in this chapter seek to estimate five parameters for each listener ($Intercept, A1, G2, A1:G1, \sigma$) based on 139 observations for each listener. This is a reasonable ratio of observations to parameters. However, if we had only 10 observations per listener, it might not be such a good idea to estimate so many parameters for each listener. In general, before fitting a model that you *can* fit, it's a good idea to think whether you *should* fit it given the nature of your data and the number of observations you have overall (and in different conditions).
+
+Imagine we wanted to fit a model with speaker effects, listener effects, *and* the interaction between the two. This is effectively asking to what extent listeners exhibit different responses for individual listeners. This model would need to represent the 15 listener effects, and also 139 speaker effects conditional on each listener. This means that at a minimum, this model would require 15 x 139 = 2085 parameters to represent these effects. However, we also only have 2085 data points, one observation per speaker per listener. As a result, we would have a different parameter for every single observation leading to what's known as a **saturated model**. 
+
+In a model without shrinkage of parameters, saturated models leads to perfect prediction of data. This means that there is no data-level error ($\sigma$), or in fact, any random variation at all. This is problematic because the existence of a non-zero $\sigma$ is a pre-requisite for the calculation of the likelihood function of our regression parameters (see section X, chapter 2). For example, the model below doesn't report errors because it doesn't fit at all, it repeatedly crashed R and Stan when we attempted to fit it.
+
+```{r, eval = FALSE}
+exp_data$S = factor (exp_data$S)
+exp_data$L = factor (exp_data$L)
+# Fit the model yourself, or
+model_bad_4  =  
+  brms::brm (height ~ S*L, data = exp_data, chains = 4, cores = 4,
+       warmup = 1000, iter = 3500, thin = 2,
+       prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
+                 brms::set_prior("normal(0, 15)", class = "sigma")))
+
+saveRDS(model_bad_4, "model_bad_4.Rmd")
+```
+
+What if we had not one but two observations per speaker per listener? Now this would not be a saturated model, but we could think of it as *nearly-saturated* a term that may not be 'real' but gets the point across. A saturated model fails because once you estimate all your parameters, there is not enough uncertainty left over for it (the uncertainty) to be effectively estimated.  
 
 ## References 
 

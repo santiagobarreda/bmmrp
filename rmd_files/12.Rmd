@@ -135,10 +135,10 @@ z_2= -3 + x \times -3
 \end{equation}
 $$
 
-```{r F12-1, fig.height = 4, fig.width=8, fig.cap = "(left) bla. (right) bla", echo = FALSE}
+```{r F12-1, fig.height = 4, fig.width=8, fig.cap = "(top left) The blue line indicates the logit of the probability of observing a success, the black line represents the logit of the probability of observing a failure. (top right) Lines indicate the probabilities associated with observing the categories in the left plot. (bottom left) The blue line represents the score associated with the first cateogry, the blue line represents the score associated with the third category, the black line represents the score associated with the first (reference) category. (bottom right) Lines indicate the probabilities associated with observing the categories in the left plot.", echo = FALSE}
 
 ################################################################################
-### Figure 12.2
+### Figure 12.1
 ###############################################################################
 
 x = seq (-3,3,0.1)
@@ -510,7 +510,7 @@ $$
 
 As mentioned above, we get 6 such line equations, one for the boundary between all possible pairs of each of the four planes. Figure \@ref(fig:F12-2) presents each of these six boundaries compared to the modal classification for each speaker. 
 
-```{r F12-2, fig.height = 4, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
+```{r F12-2, fig.height = 4, fig.width=8, fig.cap = "Each panel compares a single estimated category boundary between two groups at a time for boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
 ################################################################################
 ### Figure 12.2
@@ -542,6 +542,9 @@ plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25),
 abline (find_intersection (params[1,], params[3,]),lwd=2, col = bmmb::cols[8]) # b vs m
 
 text (1.5,1, "boy-man", cex=1.5)
+
+legend (-2.3,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.75,bty='n', cex=1.25)
 
 plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25), 
      xlim = c(-2.5,3), pch = 16, col = bmmb::cols[2:5][mod_cat],cex=2,
@@ -577,7 +580,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=3)
 
 All six boundary lines are presented in the left plot of figure \@ref(fig:F12-3). One problem with considering the figure in this way is that many of the boundaries are not very relevant. For example, the boundary between girl and man will hardly matter for classification because these categories are divided by the 'woman' and 'boy' categories. The right plot of figure \@ref(fig:F12-3) presents only those boundaries that are *relevant*, resulting in a territorial map of our categories along f0 and VTL (see section X). This can be stated more formally as: The figure contains only those boundaries that represents scores equal to or greater than the maximal score, for that location, from among the response categories. For example, in the left plot we see that the boy-woman boundary bisects the area where man is a modal response. This line segment does not feature in the right plot because it has a lower value than the man plane in this area. In other words, who cares if its a boy or a woman because people are more likely to say man anyways. 
 
-```{r F12-3, fig.height = 3, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
+```{r F12-3, fig.height = 3, fig.width=8, fig.cap = "(left) Points comparing individual speakers to all six category boundaries presented in figure \@ref(fig:F12-2). (right) Territorial map comparing locations associated with the claasification of speakers into boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
 
 ################################################################################
@@ -625,13 +628,15 @@ points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmm
 mtext (side=1, "Centered vocal tract length (cm)", outer = TRUE, line=2.5)
 mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
+legend (-2.5,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.5,bty='n', cex=1.05)
 ```
 
 We noticed something very strange when we made the territorial map in figure \@ref(fig:F12-3): The boy territory contains a large number of woman responses. In addition, the boy-woman boundary seems strangely high along f0. If that is really the boundary between boys and women in the VTL by f0 space, then a large number of female speakers fall into territory where 'boy' responses are expected. If this is the case then how/why is the model classifying all those women correctly? The answer to this question may lie in figure \@ref(fig:F12-4). 
 
 In the left plot of figure \@ref(fig:F12-3), point colors represent modal listener judgments for each speaker. In the middle plot we see model predictions including speaker and listener random effects. When these are included the model predictions look very much like the listener judgments and the classifications don't make much sense relative to the territorial map. In the right plot of the same figure we see model predictions when random effects are *not* included. In this case we see that model predictions do *not* look like the listener judgments, but the classifications *do* make sense relative to the territorial map. So, it seems that the random effects may be causing this strange behavior in our model.
 
-```{r F12-4, fig.height = 3, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
+```{r F12-4, fig.height = 3, fig.width=8, fig.cap = "Territorial maps comparions the classificaitons of speakers into boys (b), girls (g), men (m), and women (w). The color of points in each plot compares modal listener judgments with the classifications made using our model with and wiuthout random effects (RE).", echo = FALSE}
 
 ################################################################################
 ### Figure 12.4
@@ -670,6 +675,9 @@ mtext (side=3, text = "Listener Judgments", line = 0.5)
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
 points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmmb::cols[2:5][mod_cat], cex = 2)
 
+legend (-2.5,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.5,bty='n', cex=1.05)
+
 plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25), 
      xlim = c(-2.5,3), pch = 16, col = bmmb::cols[2:5][mod_cat2],ylab="",yaxt="n")
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
@@ -689,7 +697,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 Figure \@ref(fig:F12-5) presents the speaker random intercepts. Since there are three modeled categories, there are three random intercepts for each speaker. We can see that, in general, the speaker intercepts have small values that vary around zero, and have credible intervals that mostly include zero. However, many female speakers have intercepts that have large non-zero values for the female category, and whose credible intervals omit zero and very small values.
 
-```{r F12-5, fig.height = 3.5, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
+```{r F12-5, fig.height = 3.5, fig.width=8, fig.cap = "Each row presents posterior means and 95% credible intervals for speaker-dependent intercept terms for each category. Colors represent veridical boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
 ################################################################################
 ### Figure 12.5
@@ -707,6 +715,9 @@ par (mfrow = c(3,1), mar =c(.1,4,.1,.5), oma = c(.5,0,.5,0))
 
 brmplot(sranef[,,1], labels = '', col = bmmb::cols[real_cat+1], ylim = c(-8,8))
 text (1,7,"Girl category speaker intercepts", pos=4,cex=1.4)
+
+legend (1,-4.5, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.5,bty='n', cex=1.1, horiz = TRUE)
 
 brmplot(sranef[,,2], labels = '', col = bmmb::cols[real_cat+1], ylim = c(-8,8))
 text (1,7,"Man category speaker intercepts", pos=4,cex=1.4)
@@ -765,7 +776,7 @@ model_multinomial_noS = readRDS ("../models/12_model_multinomial_noS.RDS")
 
 We jumt straight to plotting the territorial map represented by this model, again comparing listener judgments to model predictions with and without random effects (\@ref(fig:F12-6)). We can wee that the territorial maps in the figure seem to be a better match to the data.
 
-```{r F12-6, fig.height = 3, fig.width=8, fig.cap = "boys (b), girls (g), men (m), and women (w).", echo = FALSE}
+```{r F12-6, fig.height = 3, fig.width=8, fig.cap = "Territorial maps comparing the classificaitons of speakers into boys (b), girls (g), men (m), and women (w). These maps and predictions reflect our model with no speaker effects. The color of points in each plot compares modal listener judgments with the classifications made using our model with and wiuthout random effects (RE).", echo = FALSE}
 
 ################################################################################
 ### Figure 12.6
@@ -803,6 +814,9 @@ maps_noS = make_map (t(params))
 
 mtext (side=3, text = "Listener Judgments", line = 0.5)
 
+legend (-2.5,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.5,bty='n', cex=1.15)
+
 plot_map (maps_noS, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
 points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmmb::cols[2:5][mod_cat], cex = 2)
 
@@ -825,7 +839,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 Figure \@ref(fig:F12-7) compares the territorial maps represented by our models with (left) and without (right) speaker information. In addition to being a better fit to the data, we think the new territorial maps make more 'sense'. This is because the map with speaker effects suggests that the difference between women and boys was almost entirely due to f0, with women being associated with the higher f0. This is despite boys being associated with shorter VTLs than adult females *and* a higher f0. The new map has basically no effect for f0 between these categories and makes it a primarily VTL difference, which seems to be a better fit to the data. 
 
-```{r F12-7, fig.height = 3, fig.width=8, fig.cap = "(left) Territorial maps indicating which sections of the stimulus space are associated with: Boys (turquoise), girls (yellow), men (green), and women (red). Points represent individual speakers, colors represent modal classifications using the same colors as the territories.", echo = FALSE}
+```{r F12-7, fig.height = 3, fig.width=8, fig.cap = "Territorial maps indicating which sections of the stimulus space are associated with boys (b), girls (g), men (m), and women (w). Points represent individual speakers, colors represent modal classifications made by listeners. (left) The territories according to our initial model. (right) Territories according to our model omitting speaker effects.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.7
@@ -861,6 +875,10 @@ plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25),
 
 mtext (side=3, text = "model_multinomial", line = 0.5)
 
+
+legend (-2.5,-0.1, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.25,bty='n', cex=1.0)
+
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
 points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmmb::cols[2:5][mod_cat], cex = 2)
 
@@ -877,7 +895,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 One concern with omitting the speaker effects is that our model now thinks all observations for any one speaker are independent. This can have the effect of artificially decreasing our confidence intervals, as we saw in figure  \@ref(fig:F6-5). Figure \@ref(fig:F12-8) compares the fixed effects between our two models, suggesting that the omission of the speaker effects has not had a large effect on most parameters or their credible intervals. The two largest differences are for the woman category: The intercept went from slightly negative to slightly positive, and the effect for f0 went from zero to positive. 
 
-```{r F12-8, fig.height = 3, fig.width=8, fig.cap = "-- ", echo = FALSE}
+```{r F12-8, fig.height = 3, fig.width=8, fig.cap = "A comparison of the fixed effects means and 95% credible intervals provided by the two multinomial models we are considering.", echo = FALSE}
 ################################################################################
 ### Figure 12.8
 ###############################################################################
@@ -974,7 +992,7 @@ We don't actually have any ordinal variables in our experiment, but we still wan
 
 Based on the above, we could potentially think of our apparent speaker categories as reflecting classifications of speakers into small (boys, girls), medium (women), and large (men). We might imagine that if we *had* asked listeners to identify speakers as small, medium, or large, listeners would have labelled most apparent children as small, most apparent women as medium, and most apparent men as large.
 
-```{r F12-9, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
+```{r F12-9, fig.height = 3, fig.width=8, fig.cap = "(left) Distribution of apparent height judgments for apparent children, women, and men. (right) A hypothetical linear relationship between apparent height and speaker vocal-tract length. The apparent height axis is divided into three size groups: Small, medium, and large. Points indicate three possible apparent height judgments, leading to three different size group classifications.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.9
@@ -1051,7 +1069,7 @@ The latent variable was presented as apparent height, however, the latent variab
 
 The right side of figure \@ref(fig:F12-10) is labelled "bigness" to correspond to our hypothetical latent variable. This variable is just apparent height divided by 50, but the point is that the values of this axis are entirely arbitrary. Notice that the change in axis units has absolutely no effect on the way our conceptual model works. If the latent variable units are 50 times smaller than some other variable, that just means the slope of the line relating x to y is 50 times smaller and the boundaries between categories are 50 times closer. The same logic applies to the relationship between our latent dependent variable and our predictors. 
 
-```{r F12-10, fig.height = 3, fig.width=8, fig.cap = " -- ", echo = FALSE}
+```{r F12-10, fig.height = 3, fig.width=8, fig.cap = "Our three possible sige group classifications from figure \@ref(fig:F12-9) are presented again, this time with error distributions around predicted values. The right size of the plot shows an alternate y axis, the made up latent variable 'bigness'.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.10
@@ -1113,13 +1131,13 @@ Ordinal regression estimates the location of boundaries between categories along
 
 Given the actual value of the latent variable for a trial (including the random component), the ordinal response is based on the value of the latent variable with respect to the estimated category boundaries. So, for a fixed expected value of 32, sometimes the distribution might 'generate' a bigness value of 28, resulting in a response of small. For another observation with the same expected value, the value of the latent variable may be 36, meaning the speaker will be identified as large.
 
-### Cumulative density functions {#c12-cumulative-density}
+### Cumulative distribution functions {#c12-cumulative-density}
 
 In order to understand ordinal regression, we need to talk about cumulative distribution functions first. We haven't explicitly talked about cumulative distribution functions yet, though we did see one in chapter 10 when it was referred to as the *inverse logit* function (more on this in a moment). To this point we've been focused on what are called *probability density functions* (PDF), functions that assign a density to different values of a variable. Examples of PDFs are given in the top row of figure \@ref(fig:F12-11). **Cumulative distribution functions** (CDF) tell you the probability that a variable will be *less than or equal to* some value. Since a PDF has an area under the curve equal to 1 (representing the total probability of the variable), a CDF tells you how much of that area (out of 1) is to the left of the value, and has a range from 0 to 1.
 
 For example, in the left column of figure \@ref(fig:F12-11) we see a standard normal distribution with a mean of 0 and a standard deviation of one. We know that the normal distribution is symmetrical about its mean so that half the area under the curve of this density must be below 0. If we look at the bottom row of the first column, we can see the CDF corresponding to the PDF in the top row. If we look at the value of this function at x=0, we see that it is exactly equal to 0.5. In other words, the cumulative function tells us that the standard normal has exactly half its mass at values less than x=0, i.e. the probability of observing a value of x that is less than or equal to 0, the mean, is exactly 0.5.
 
-```{r F12-11, fig.height = 3.5, fig.width=8, fig.cap = " -- ", echo = FALSE}
+```{r F12-11, fig.height = 3.5, fig.width=8, fig.cap = "(top row) Probability density functions for a standard normal and standard logistic distributions. (bottom row) Cu mulative distribution functions for densities immediately above. Numbers indicate x and y values at different points along each curve.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.11
@@ -1168,7 +1186,7 @@ text (-7,.35,"y=0.27", cex = 1.5,pos=4)
 We can use the `pnorm` function (discussed in chapter 2) to get the value of the normal CDF for any value of x. Below we calculate this for x=0, x= -2, and x=2. See that in each case, the output of the function corresponds to the y axis value of the CDF at that x axis location (bottom left, figure \@ref(fig:F12-11)).
 
 ```{r}
-# cumulative density at x = -2, 0, 2
+# cumulative distribution at x = -2, 0, 2
 pnorm (c(-2,0,2),0,1)
 ```
 
@@ -1201,7 +1219,7 @@ plogis (2,0,1)-plogis (-1,0,1)
 
 In figure \@ref(fig:F12-12), the boundaries and distributions from figure \@ref(fig:F12-10) have been rotated clockwise 90 degrees so that our latent variable (the arbitrarily named 'bigness') varies along the x axis. The distributions presented in the figure have means of 28, 32, 36, and scales of 1. The probabilities in each subsection of each plot represent the predicted probability of observing size group responses of 1, 2, and 3 for each distribution. These probabilities were calculated based on the area under the curve of the distributions falling between different intervals of the latent variable space. 
 
-```{r F12-12, fig.height = 3.5, fig.width=8, fig.cap = " -- ", echo = FALSE}
+```{r F12-12, fig.height = 3.5, fig.width=8, fig.cap = "Error distributions from \@ref(fig:F12-11), presented in more detail. Vertical lines indicate the expected value for each distribution. Numbers indicate area under the curve of the density function inside of each category's section of the 'bigness' dimension. These values correspond to the expected probability of observing each of the size group responses for each expected value of the latent variable.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.12
@@ -1222,6 +1240,7 @@ rect (31,0,34,1, col = bmmb::cols[11],border=bmmb::cols[11])
 rect (34,0,50,1, col = bmmb::cols[10],border=bmmb::cols[10])
 lines (x-2,y*2.5, xaxs='i',type='l',lwd=2)
 abline (v = c(31,34),lwd=5,col=bmmb::cols[15])
+abline (v = 28, lty=3)
 
 text (25, .45, "P(SG=1)=0.95", cex=1.1)
 text (32.5, .3, "P(SG=2)=0.04", cex=1.1)
@@ -1234,11 +1253,11 @@ rect (31,0,34,1, col = bmmb::cols[11],border=bmmb::cols[11])
 rect (34,0,50,1, col = bmmb::cols[10],border=bmmb::cols[10])
 lines (x+2,y*2.5, type = 'l', lwd=2)
 abline (v = c(31,34),lwd=5,col=bmmb::cols[15])
+abline (v = 32, lty=3)
 
 text (25, .3, "P(SG=1)=0.26", cex=1.1)
 text (32.5, .2, "P(SG=2)=0.61", cex=1.1)
 text (40, .3, "P(SG=3)=0.12", cex=1.1)
-
 
 plot (x+3.2,y*2, yaxt='s',type = 'n', xlim = c(22,42),ylim = c(0.02,.8),
       xlab = "Bigness",xaxt='n',ylab="",yaxt = 'n')
@@ -1248,6 +1267,7 @@ rect (34,0,50,1, col = bmmb::cols[10],border=bmmb::cols[10])
 axis (side=1, at = seq(24,40,4),cex=1.2)
 lines (x+6,y*2.5, type = 'l', lwd=2)
 abline (v = c(31,34),lwd=5,col=bmmb::cols[15])
+abline (v = 36, lty=3)
 
 text (25, .3, "P(SG=1)=0.01", cex=1.1)
 text (32.5, .35, "P(SG=2)=0.11", cex=1.1)
@@ -1556,7 +1576,7 @@ head(listener_disc)
 
 Below we compare the distributions implied by these `disc` parameters for a value of 0 for the latent variable. We can see that these distributions imply substantially different behaviors across listeners, given the same predicted value for the latent variable.
 
-```{r  F12-13, fig.height = 4, fig.width=8, fig.cap = " -- ", echo = FALSE}
+```{r  F12-13, fig.height = 4, fig.width=8, fig.cap = "Listener-specific distributions of the latent variable given an expected value of zero. Numbers indicate expected probability of observing each size group for this expected value, for each listener.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.13

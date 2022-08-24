@@ -45,6 +45,7 @@ There are two main sources of average f0 differences between speakers. First, th
 
 data(height_data, package="bmmb")
 data(exp_data_all, package="bmmb")
+data(lee_etal_data, package="bmmb")
 
 par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
 
@@ -75,17 +76,19 @@ agg$vtl = agg$vtl * (15/max(agg$vtl))
 rect (9.5,128,12.5,168,lwd=2,border="forestgreen",lty=1)
 rect (17.5,150,20.5,190,lwd=2,border="forestgreen",lty=1)
 
-plot (agg$age[agg$gender=="f"]-.1,agg$f0[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,300),type='b', xlab="Age (years)",
+plot (aggdmu$age[aggdmu$sex=="f"]-.1,aggdmu$F0[aggdmu$sex=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(90,320),type='b', xlab="Age (years)",
       ylab = "f0 (Hz)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (agg$age[agg$gender=="m"]+.1,agg$f0[agg$gender=="m"],
+lines (aggdmu$age[aggdmu$sex=="m"]+.1,aggdmu$F0[aggdmu$sex=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
-phonTools::errorbar(agg$age[agg$gender=="f"]-.1,agg$f0[agg$gender=="f"],
-                    agg_sd$f0[agg$gender=="f"],col=2,lwd=1,length=0.051)
-phonTools::errorbar(agg$age[agg$gender=="m"]+.1,agg$f0[agg$gender=="m"],
-                    agg_sd$f0[agg$gender=="m"],col=4,lwd=1,length=0.051)
 
+aggdmu
+
+phonTools::errorbar(aggdmu$age[aggdmu$sex=="f"]-.1,aggdmu$F0[aggdmu$sex=="f"],
+                    aggdsd$F0[aggdsd$sex=="f"],col=2,lwd=1,length=0.051)
+phonTools::errorbar(aggdmu$age[aggdmu$sex=="m"]+.1,aggdmu$F0[aggdmu$sex=="m"],
+                    aggdsd$F0[aggdsd$sex=="m"],col=4,lwd=1,length=0.051)
 
 #rect (9.5,220,12.5,270,lwd=3,border=3)
 #rect (17.5,110,20.5,250,lwd=3,border=3)
@@ -93,10 +96,12 @@ phonTools::errorbar(agg$age[agg$gender=="m"]+.1,agg$f0[agg$gender=="m"],
 #points (c(11,11,19,19), tapply (exp_data$f0, exp_data$C, mean), pch=1,lwd=4, 
 #        cex = 3,col=bmmb::cols[2:5])
 
-plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],agg$f0[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,300),type='b', xlab="Hieght (cm)",
-      ylab = "f0 (Hz)",xlim=c(110,180),cex.axis=1.3,cex.lab=1.3)
-lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],agg$f0[agg$gender=="m"],
+plot (height_data$height[height_data$gender=="f"][-c(1,2,3,18,19,20)],
+      aggdmu$F0[aggdmu$sex=="f"], pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,300),
+      type='b', xlab="Hieght (cm)", ylab = "f0 (Hz)",xlim=c(110,180),cex.axis=1.3,
+      cex.lab=1.3)
+lines (height_data$height[height_data$gender=="m"][-c(1,2,3,18,19,20)],
+       aggdmu$F0[aggdmu$sex=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 
@@ -162,30 +167,18 @@ phonTools::errorbar(height_data$age[height_data$gender=="m"]+.1,
 rect (9.5,128,12.5,168,lwd=2,border="forestgreen",lty=1)
 rect (17.5,150,20.5,190,lwd=2,border="forestgreen",lty=1)
 
-#ats = c(8,9.5,11,12.5,14, 15.5)
-#vtls = (ats - 2.7)/0.068
-#axis (side=4, at = vtls, labels = ats)
-data(lee_etal_data, package="bmmb")
-lee_etal_data$gbar = rowMeans(log(lee_etal_data[,4:6]))
-
-lee_etal_data$vtl = exp(-((lee_etal_data$gbar)-min(lee_etal_data$gbar)))
-lee_etal_data$vtl = 15 * lee_etal_data$vtl
-
-agg = aggregate (cbind(f0,vtl) ~ age + gender, data = lee_etal_data, FUN = mean)
-agg_sd = aggregate (cbind(f0,vtl) ~ age + gender, data = lee_etal_data, FUN = sd)
-agg$vtl = agg$vtl * (15/max(agg$vtl))
-
-plot (agg$age[agg$gender=="f"]-.1,agg$vtl[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(9,17),type='b', xlab="Age (years)",
+plot (aggdmu$age[aggdmu$sex=="f"]-.1,aggdmu$vtl[aggdmu$sex=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,16),type='b', xlab="Age (years)",
       ylab = "VTL (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (agg$age[agg$gender=="m"]+.1,agg$vtl[agg$gender=="m"],
+lines (aggdmu$age[aggdmu$sex=="m"]+.1,aggdmu$vtl[aggdmu$sex=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 
-phonTools::errorbar(agg$age[agg$gender=="f"]-.1,agg$vtl[agg$gender=="f"],
-                    agg_sd$vtl[agg$gender=="f"],col=2,lwd=1,length=0.051)
-phonTools::errorbar(agg$age[agg$gender=="m"]+.1,agg$vtl[agg$gender=="m"],
-                    agg_sd$vtl[agg$gender=="m"],col=4,lwd=1,length=0.051)
+phonTools::errorbar(aggdmu$age[aggdmu$sex=="f"]-.1,aggdmu$vtl[aggdmu$sex=="f"],
+                    aggdsd$vtl[aggdsd$sex=="f"],col=2,lwd=1,length=0.051)
+phonTools::errorbar(aggdmu$age[aggdmu$sex=="m"]+.1,
+                    aggdmu$vtl[aggdmu$sex=="m"],
+                    aggdsd$vtl[aggdsd$sex=="m"],col=4,lwd=1,length=0.051)
 
 
 
@@ -195,10 +188,12 @@ phonTools::errorbar(agg$age[agg$gender=="m"]+.1,agg$vtl[agg$gender=="m"],
 #points (c(11,11,19,19), tapply (exp_data$vtl, exp_data$C, mean), pch=1,lwd=4, 
 #        cex = 3,col=bmmb::cols[2:5])
 
-plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],agg$vtl[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,17),type='b', xlab="Height (cm)",
+plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],
+      agg$vtl[agg$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(10,16),type='b', xlab="Height (cm)",
       ylab = "VTL (cm)",xlim=c(110,180),cex.axis=1.3,cex.lab=1.3)
-lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],agg$vtl[agg$gender=="m"],
+lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],
+       agg$vtl[agg$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 
@@ -943,13 +938,6 @@ What could the 'something else' aiding in the classification of boys and adult w
 ## Conclusion: Apparent gender
 
 In conclusion, we can say that the determination of apparent gender from speech acoustics seems to also involve the estimation of apparent speaker age in the process. In addition, there seems to be 'other' acoustic information that is very important for the perception of speaker age/gender that is not captured by the gross acoustic cues (f0 and VTL) included in our model. Further research is needed to investigate these topics. 
-
-## Overall conclusion
-
-- 
-
-
-
 
 ## References
 

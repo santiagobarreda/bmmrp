@@ -7,11 +7,11 @@ knitr::opts_chunk$set(
 
 # Probabilities, likelihood, and inference {#c2}
 
-In the previous chapter we introduced some experimental data and talked about variables and experiments. In this chapter we're going to talk about probabilities and explain how they can be used to make inferences about our data and research questions. Before beginning this chapter we should note that it's normal if a some of the topics to be discussed don't make sense the first time you read this chapter. It will make more sense once you start to actually build models and it becomes less hypothetical and more practical. 
+In the previous chapter we introduced some data and talked about variables and experiments. In this chapter we're going to talk about probabilities and explain how they can be used to make inferences about our data and research questions. Before beginning this chapter we should note that it's normal if some, or many, of the topics to be discussed don't make sense the first time you read this chapter. Things will make more sense once you start to actually build models and it becomes less hypothetical and more practical. 
 
-In addition, as noted in the preface, it is a mistake to think that you can read a chapter in a statistics textbook once and move on having fully absorbed the content. If many of the topics in this chapter are new to you, you should probably: 1) Read this chapter, 2) wait a few days and read it again, and then 3) wait a few more days (or weeks) and read it again. It may also be useful to return to this chapter even once you are working through the following chapters. In our experience, you may find that you *see* information for the first time that was there all along, but that finally makes sense given your increased experience with the subject. 
+In addition, as noted in the preface, it's a mistake to think that you can read a chapter in a statistics textbook once and move on having fully absorbed the content. If many of the topics in this chapter are new to you, you should probably: 1) Read this chapter, 2) wait a few days and read it again, and then 3) wait a few more days (or weeks) and read it again. It may also be useful to return to this chapter even once you are working through the following chapters. In our experience, you may find that you *see* information for the first time that was there all along, but that finally makes sense given your increased experience with the subject. 
 
-Finally, we want to note that what we present below is a teeny tiny slice of statistical inference based on the assumption of normally distributed data (or actually, errors). In chapter 5 we will introduce another error distribution (t) and in chapter 10 we will model binary dependent variables using logistic regression. In each case, those models require us to changes aspects of the details outlined below. However, in both cases the same general principles apply with respect to the relationships between data, likelihoods, and the estimation of credible parameter values. 
+Finally, we want to note that what we present below is a teeny tiny slice of statistical inference based on the assumption of normally distributed data (or actually, errors). In chapter 5 we will introduce another error distribution (t) and in chapter 10 we will model binary dependent variables using logistic regression. In each case, those models require us to change aspects of the details outlined below. However, in both cases the same general principles apply with respect to the relationships between data, likelihoods, and the estimation of credible parameter values. 
 
 ## Chapter pre-cap
 
@@ -19,23 +19,23 @@ This chapter introduced important statistical concepts such as probability, prob
 
 ## Data and research questions {#c2-data}
 
-We're going to think about a hypothetical value "the average apparent height of adults males in the United States (US)". To put it another way, we might wonder "how tall do men from the US 'sound'?". The apparent heights of men from the US cannot be known *a priori*. In other words, you don't know how tall a random man from the US will 'sound' until you actually observe the judgment. For this reason, "the average apparent height of men from the US" can be modeled as a random variable. We're going to think about how we can use our experimental data to try to answer the following two questions: 
+We're going to think about a hypothetical value "the average apparent height of adult males in the United States (US)". To put it another way, we might wonder "how tall do men from the US 'sound'?". The apparent heights of men from the US cannot be known *a priori*. In other words, you don't know how tall a random man from the US will 'sound' until you actually observe the judgment. For this reason, "the average apparent height of men from the US" can be modeled as a random variable. We're going to think about how we can use our experimental data to try to answer the following two questions: 
 
-  Q1) How tall does the typical man from the US 'sound'?
+  Q1) How tall does the average man from the US 'sound'?
 
   Q2) Can we set limits on credible average apparent heights based on the data we collected?
 
-These two questions can be though of as relating the the central location and the spread of the data, respectively. Answering the first question tells you what values your variable tends to take on, while answering the second question tells you how much variation you can expect around the most typical values. Scientific research is often focused on questions such as (1) regarding the central location, the average value, of some variable. For example someone might ask "how tall do adult male speakers from the US sound?" and you can say, for example, "I have some data that suggests 174 cm is a reasonable estimate". However, reliable inference requires answering question (2) as well, and determining what range of values are plausible for a certain variable. 
+These two questions can be thought of as relating the the central location and the spread of the data, respectively. Answering the first question tells you what values your variable tends to take on, while answering the second question tells you how much variation you can expect around the most typical values. Scientific research is often focused on questions such as (Q1) regarding the central location, the average value, of some variable. For example someone might ask "how tall do adult male speakers from the US sound?" and you can say, for example, "I have some data that suggests 174 cm is a reasonable estimate". However, reliable inference requires answering question (Q2) as well, and determining what range of values are plausible for a certain variable. 
 
-Think of the (actual) average height of the people in a large city. You can go out and sample 100 people and find the mean of your sample, arriving at a single estimate of the population mean. Now imagine that 50 people went out in the same city and each sampled 100 random people. There is no chance that every single of those 50 people would find identical means across all of their samples. Instead, there will be a distribution of sample means, in the same way there is a distribution of the original data used to calculate the means. Another way to look at this is that there is some degree of **uncertainty** involved when answering any research question. 
+Think of the (actual) average height of the people in a large city. You can go out and sample 100 people and find the mean of your sample, arriving at a single estimate of the population mean. Now imagine that 50 people went out in the same city and each sampled 100 random people. There is no chance that every one of those 50 people would find identical means across all of their samples. Instead, there will be a distribution of sample means, in the same way there is a distribution of the original data used to calculate the means. Another way to look at this is that there is some degree of **uncertainty** involved when answering any research question. 
 
 As a result of uncertainty, it can be difficult to rule out alternative possible answers to our research questions. For example, if 174 cm is a good estimate, what about 173.99 cm? What about 173 cm? 172 cm? Where do estimates of average height stop being 'good'? Without being able to say what is *not* a good estimate, it's not quite as useful to be able to say what *is*. 
 
-A related issue arises with respect to the interpretation of average values. Imagine that you read about a miracle diet that was guaranteed to make you lose one gram of weight a day. You know that is not very impressive. How? Because you understand that a difference of one gram is not large relative to the variation that exists in the weight of a human body on a daily basis. You could gain the weight back (and more) by drinking a teaspoon of water. Without knowing how much human weights tend to vary between and within people, it's impossible to know whether a reduction of one gram constitutes a meaningful change in the mass of a human. In contrast, a diet that causes one gram of weight loss in the average hamster may actually be of interest to hamster owners, as this is a relatively large value relative to natural variation in hamster weight. 
+A related issue arises with respect to the interpretation of average values. Imagine that you read about a miracle diet that was guaranteed to make you lose one gram of weight a day. You know that is not very impressive. How? Because you understand that a difference of one gram is not large relative to the variation that exists in the weight of a human body on a daily basis. You could gain the weight back (and more) by drinking a teaspoon of water. Without knowing how much human weight tends to vary between and within people, it's impossible to know whether a reduction of one gram constitutes a meaningful change in the mass of a human. In contrast, a diet that causes one gram of weight loss in the average hamster may actually be of interest to hamster owners, as this may be a relatively large value relative to natural variation in hamster weight. 
 
-So, we see that imposing limits on credible ranges for our average values can be as important as finding the average values themselves. Further, in order to properly contextualize values and effects, we need to have some idea about the underlying variation in the measurements. Clearly, we need some principled way to 'guess' reasonable ranges based on our sample of observations, in addition to just talking about average values. In this chapter we will discuss how statistics provides us with a framework to answer both questions above using only our sample of values and a (statistical) model. 
+So, we see that imposing limits on credible ranges for our average values can be as important as finding the average values themselves. Further, in order to properly contextualize values and effects, we need to have some idea about the underlying variation in the measurements. Clearly, we need some principled way to 'guess' reasonable ranges based on our sample of observations, in addition to just talking about average values. In this chapter we will discuss how statistics provides us with a framework to answer Q1 and Q2 above using only our sample of values and a (statistical) model. 
 
-In order to discuss the apparent heights of adult males, we need to extract the subset of speakers judged to be adult males from our data. Below we load the book package (`bmmb`) and select the relevant rows from our experimental data. Recall that our experiment contained an acoustic manipulation such that speech resonances were changed to make speakers sound bigger (see section \@ref(c1-methods)). For now, we're going to focus only for the unmodified productions, the 'natural' speech produced by the men in our sample. To do this, we are going to use the data `exp_data` which contains only the trials involving unmodified productions.
+In order to discuss the apparent heights of adult males, we need to extract the subset of speakers judged to be adult males from our data. Below we load the book package (`bmmb`) and select the relevant rows from our experimental data. Recall that our experiment contained an acoustic manipulation such that speech resonances were changed to make speakers sound bigger (see section \@ref(c1-methods)). In the main text, we're going to focus only for the unmodified productions, the 'natural' speech produced by the men in our sample. To do this, we are going to use the data `exp_data` which contains only the trials involving unmodified productions. 
 
 ```{r warning=FALSE,message=FALSE}
 # Load book package 
@@ -55,17 +55,16 @@ We can have a look at some of the quantiles (see section \@ref(c1-quantitative) 
 quantile (mens_height)
 ```
 
-Obviously, an inspection of the distribution of our observed height judgments only gives us direct information about the judgments we observed. To make inferences about the probable characteristics of the height judgments we *have not* observed, or to talk about height judgments for adult males from the US more generally, we rely on methods of statistical inference, as will be described below. 
+Obviously, inspecting the distribution of our observed height judgments only gives us direct information about the judgments we actually observed. To make inferences about the probable characteristics of the height judgments we have *not* observed, or to talk about height judgments for adult males from the US more generally, we rely on methods of statistical inference, as will be described below. 
 
 ## Empirical Probabilities {#c2-empirical-prob}
 
-The **sample space** of a variable is the set of all possible outcomes/values that a variable can take. Classic examples are a coin flip, which can take on the values 'heads' or 'tails', or the roll of a standard six-sided die, which can take on the values one through six. In other cases the sample space may have an infinite or practically infinite number of members. For example, since time is continuous there are an infinite number of durations an event may have, given adequate precision in measuring time. If we think of the human population, or the population of fish in the sea, these are theoretically finite but practically infinite. It would be extremely difficult to fully sample either of these populations, and impossible to do so before they changed substantially (i.e. before some members have died and others have been born).
+The **sample space** of a variable is the set of all possible outcomes/values that a variable can take. Classic examples are a coin flip, which can take on the values 'heads' or 'tails', or the roll of a standard six-sided die, which can take on the values one through six. In other cases the sample space may have an infinite or practically infinite number of members. For example, since time is continuous there are an infinite number of durations an event may have, given adequate precision in measuring time. If we think of the human population, or the population of fish in the sea, these are theoretically finite but practically infinite. It would be extremely difficult to fully sample either of these populations, and impossible to do so before they changed substantially (e.g, before some members have died and others have been born).
   
-The **probability** of an event/outcome is the number of times an outcome occurs relative to the number of all possible outcomes that can occur (i.e. all of the outcomes in the sample space). For example, there are six possible outcomes when you roll a die. As a result, the probability of any one outcome is 1/6 (0.17), and the probability of observing an even number if 3/6 (0.5). Actually, this is an extremely brief, and vastly oversimplified, presentation of probability, a topic that can occupy one's entire mathematical career if one isn't careful. There are actually many ways to conceive of probability mathematically and philosophically, and for more detailed, rigorous expositions, see, e.g., (cite [@@ Noah?]). However, our definition above is good enough for our purposes. 
-
+The **probability** of an event/outcome is the number of times an outcome occurs relative to the number of all possible outcomes that can occur (i.e. all of the outcomes in the sample space). For example, there are six possible outcomes when you roll a die. As a result, the probability of any one outcome is 1/6 (0.17), and the probability of observing an even number is 3/6 (0.5). Actually, this is an extremely brief, and vastly oversimplified, presentation of probability, a topic that could occupy one's entire career. There are actually many ways to conceive of probability mathematically and philosophically, and for more detailed, rigorous expositions, see, e.g., (cite [@@ Noah?]). However, our definition above is good enough for our purposes. 
 By convention, the probability of each event is assigned a value between 0 and 1 and the total probability of all of the possible outcomes in the sample space is equal to one. As a result of this convention, you know that a probability of 0.5 means something is expected to occur half the time (i.e. on 50% of trials), and a probability of 0.25 indicates that something should happen 25% of the time, about one in every four trials. 
 
-**Empirical probabilities** are the probabilities of different outcomes in a sample of data. For example, we can flip a coin 100 times and observe 65 heads. This means that the empirical probability of observing heads in our data is 0.65 (65% of trials). Empirical probabilities can also be referred to as relative frequencies or proportions. Later, we are going to talk about *theoretical* probabilities based on mathematical models.
+**Empirical probabilities** are the probabilities of different outcomes in a sample of data. For example, we can flip a coin 100 times and observe 65 heads. This means that the empirical probability of observing heads in our data is 0.65 (65% of trials). Empirical probabilities can also be referred to as relative frequencies or proportions. Later, we're going to talk about *theoretical* probabilities based on mathematical models.
 
 Suppose we want to know the probability of observing an apparent height judgment over 180 cm in our sample. To calculate the empirical probability of this occurring in our data we need to find 1) The number of times it occurred, and 2) the total number of observations for the variable. We can do this easily using the logical operators and variables discussed in chapter 1. Below, we find the total number of outcomes that satisfy our restrictions (being over 180 cm), and divide this by the total number of observations being considered. 
 
@@ -81,11 +80,11 @@ sum (mens_height > 180) / length (mens_height)
 mean (mens_height > 180)
 ```
 
-The top value is the frequency of the occurrence. This is not so useful because this number can mean very different things given different sample sizes (e.g., 136/675, 136/675000). In contrast, the middle and bottom values have been divided by the total number of observations. As a result, these now represent an estimate of the probability of occurrence in a way that is independent of the total number of observations. 
+The top value is the frequency of the occurrence. This is not so useful because this number can mean very different things given different sample sizes (e.g., 136/675, 136/675000). The middle and bottom values have been divided by the total number of observations. As a result, these now represent an estimate of the probability of occurrence in a way that is independent of the total number of observations. 
 
 ### Conditional and marginal probabilities {#c2-conditional}
 
-Figure \@ref(fig:F2-1) presents boxplots of the overall distribution of height judgments in our data (left), and of the distribution of height responses provided by each listener individually. We can see that height judgments range from about 140 to 200 cm, with most responses falling between 170 and 180 cm. Notice that our overall boxplot does not give us any information about the ranges used by different listeners, nor even the fact that the data was contributed by different listeners. This overall distribution of height responses is the **marginal distribution** of height judgments. The marginal distribution of a variable is the overall distribution, *across* all values of all other variables. The marginal boxplot on the left compresses all of the listener-specific boxplots on the right into one single box. It's common to denote marginal probabilities using notation like this $P(variable)$, meaning we might refer to the marginal probabilities of height responses like this $P(height)$. 
+Figure \@ref(fig:F2-1) presents boxplots of the overall distribution of height judgments in our data (left), and of the distribution of these provided by each listener individually. We can see that height judgments range from about 140 to 200 cm, with most responses falling between 170 and 180 cm. Notice that our overall boxplot does not give us any information about the ranges used by different listeners, nor even the fact that the data was contributed by different listeners. This overall distribution of height responses is the **marginal distribution** of height judgments. The marginal distribution of a variable is the overall distribution, *across* all values of all other variables. The marginal boxplot on the left compresses all of the listener-specific boxplots on the right into one single box. It's common to denote marginal probabilities using notation like this $P(variable)$, meaning we might refer to the marginal probabilities of height responses like this $P(height)$. 
 
 ```{r F2-1, collapse = TRUE, fig.height = 3, fig.width = 8, fig.cap='(left) Boxplot showing all height judgements for adult male speakers in our experiment. (right) Individual boxplots for each listener\'s responses', echo = FALSE}
 
@@ -117,10 +116,11 @@ L12 = mens_height[men$L==12]
 
 # find the conditional probability of height>180 for each listener
 mean (L07 > 180)
+
 mean (L12 > 180)
 ```
 
-In the boxplots in figure \@ref(fig:F2-1), we see that the distributions of heights vary substantially as a function of the value of `L`, our listener variable. Contrast this with the boxplots seen in figure \@ref(fig:F2-2), which shows the distribution of stimulus durations conditional on listener. Since every individual recording had a fixed duration and all listeners heard the same sounds, we know that the distribution of stimulus durations is identical across all levels of the listener variable. As a result, we can see that all of the conditional distributions of duration given listener look just like each other, and just like the marginal probability. This tells us that duration and listener are *statistically independent*. 
+In the boxplots in figure \@ref(fig:F2-1), we see that apparent height distributions vary substantially as a function of the value of `L`, our listener variable. Contrast this with the boxplots seen in figure \@ref(fig:F2-2), which shows the distribution of stimulus durations conditional on listener. Since every individual recording had a fixed duration and all listeners heard the same sounds, we know that the distribution of stimulus durations is identical across all levels of the listener variable. As a result, we can see that all of the conditional distributions of duration given listener look just like each other, and just like the marginal probability. This tells us that duration and listener are *statistically independent*. 
 
 ```{r F2-2, collapse = TRUE, fig.height = 3, fig.width=8, fig.cap='(left) Boxplot showing the duration of adult male speakers in our experiment. (right) Individual boxplots for the stimuli presented to each listener.', echo = FALSE}
 
@@ -140,13 +140,13 @@ boxplot (dur ~ L, data = men, ylab = "", xlab = "",yaxt='n',
          col = c(yellow, deepgreen,coral,skyblue,darkorange,lavender), add = TRUE)
 ```
 
-When two variables are **statistically independent**, the distribution of one variable is not affected by the values of the other. As a result, the conditional distribution of one variable given the other will be the same as its marginal distribution, as seen in figure \@ref(fig:F2-1). This can be stated for the general case as $P(variable | conditioning \, variable) = P(variable)$. In our example in figure \@ref(fig:F2-1), $P(height | L=7)$ is *not* equal to $P(height | L=12)$, and so we conclude that the variables apparent height and listener are not independent. Instead, they are **statistically dependent**, meaning that these variables *do* affect each other in some way, and that knowing the value of one may tell you something about probable values of the other. 
+When two variables are **statistically independent**, the distribution of one variable is not affected by the values of the other. As a result, the conditional distribution of one variable given the other will be the same as its marginal distribution, as seen in figure \@ref(fig:F2-1). This can be stated for the general case as $P(variable | conditioning \, variable) = P(variable)$. In our example in figure \@ref(fig:F2-1), $P(height | L=7)$ is *not* equal to $P(height | L=12)$, and so we conclude that the variables apparent height and listener are not independent. Instead, they are **statistically dependent**, meaning that these variables *are* related to each other in some way, and that knowing the value of one may tell you something about probable values of the other. 
 
 ### Joint probabilities {#c2-joint}
 
-**Joint probabilities** reflect the probabilities of two or more things occurring together. We can refer to the joint probability of $A$ and $B$ using the notation $P(A \cap B)$ or $P(A \& B)$. Here are some important things to know about joint probabilities:
+**Joint probabilities** reflect the probability of two or more things occurring together. We can refer to the joint probability of $A$ and $B$ using the notation $P(A \cap B)$ or $P(A \& B)$. Here are some important things to know about joint probabilities:
 
-1) The formula for calculating the joint probability of two outcomes $A$ and $B$ is given by $P(A \cap B)=P(A|B) \times P(B)$. This means that the probability of $A$ and $B$ is equal to the conditional probability of $A$ given $B$, multiplied by the marginal probability of $B$. In plain English this means that the joint probability of A and B is the probability of A assuming B is true, times the probability that B is true. 
+1) The formula for calculating the joint probability of two outcomes $A$ and $B$ is given by $P(A \cap B)=P(A|B) \times P(B)$. This means that the probability of $A$ and $B$ is equal to the conditional probability of $A$ given $B$, multiplied by the marginal probability of $B$. In plain English this means that the joint probability of A and B is the probability of $A$ assuming $B$ is true, times the probability that $B$ is true. 
 
 2) Recall from section \@ref(c2-conditional) that when $A$ and $B$ are independent $P(A|B)=P(B)$. In other words when $A$ and $B$ are independent the conditional probability of $A$ given $B$ equals the marginal (unconditional) probability of $A$. As a result of this, when $A$ and $B$ are independent $P(A|B) \times P(B)=P(A) \times P(B)$. Thus, when $A$ and $B$ are independent their joint probability can be found by simply multiplying their individual marginal probabilities. 
 
@@ -163,6 +163,7 @@ dur_250 = men$dur > 250
 
 # The probability of A and B
 mean (L12 & dur_250)
+
 mean (men$L=='12' & men$dur > 250)
 ```
 
@@ -175,7 +176,7 @@ p_L12 = mean (men$L=='12')
 # Subset containing only listener 12 
 L12 = men[men$L == '12',]
 
-# Conditional probability of dur>250 given listener 12 (i.e., P(dur>250 | L=12))
+# Probability of dur>250 given listener 12 (i.e., P(dur>250 | L=12))
 p_dur_250_given_L12 = mean (L12$dur > 250)
 
 # Joint probability = P(dur>250 | L=12) * P(L=12)
@@ -191,7 +192,7 @@ mean (p_L12) * mean (dur_250)
 This short cut will not work for variables that are not independent. For example, let's consider the probability of observing a height judgment of greater than 180 cm provided by listener 12. Below we calculate this the *wrong* way by multiplying the marginal probabilities, substantially underestimating the probability of the event. The problem is that this method of calculation does not take into account that listener 12 was among the most likely listeners to report heights greater than 180 cm.  
 
 ```{r, collapse = TRUE}
-# TRUE is the listener is 10
+# TRUE is the listener is 12
 L12 = (men$L=='12')
 # TRUE if the height is over 180
 over_180 = men$height > 180
@@ -211,14 +212,14 @@ p_L12 = mean (men$L=='12')
 
 # Subset containing only listener 12 (i.e., given listener 12)
 L12 = men[men$L == '12',]
-# Conditional probability of a height < 160 given listener 12
+# Conditional probability of a height > 180 given listener 12
 p_over_180_given_L12 = mean (L12$height > 180)
 
 # Joint probability
 p_over_180_given_L12 * p_L12
 ```
 
-This highlights a very important point: The calculation of joint probabilities is much (much) simpler when you can assume that your observations are independent. For example, consider the comparison of the joint probability of four events, one dependent and one independent:
+This highlights a very important point: The calculation of joint probabilities is much (much) simpler when you can assume that your observations are independent. For example, consider the comparison of the joint probability of four events, one for independent events, and another for dependent events:
 
 $$
 \begin{equation}
@@ -231,7 +232,7 @@ P(A \,\&\, B \,\&\, C \,\&\, D) = P(A|B,C,D) \times P(B|C,D) \times P(C|D) \time
 \end{equation}
 $$
 
-This means that we not only need to calculate many conditional probabilities, but most of these feature the conditioning of one variable on several other variables (e.g., $P(B|C,D)$). Although this may not matter when calculating the joint probability of a handful of observations, calculating the joint probability of hundreds or thousands of correlated variables can become difficult if not *impossible* in practice. 
+This means that we not only need to calculate many conditional probabilities, but most of these feature the conditioning of one variable on several other variables (e.g., $P(B|C,D)$). Although this may not matter when calculating the joint probability of a handful of observations, calculating the joint probability of hundreds or thousands of correlated variables can become difficult if not impossible in practice. 
 
 ## Probability distributions {#c2-theoretical}
 
@@ -253,13 +254,13 @@ hist (mens_height/100, freq = FALSE, main = "", col = skyblue,
       xlim = c(1.35,2.00), ylim = c(0,07.0), xlab="Height (m)",cex.lab=1.3,cex.axis=1.3)
 ```
 
-Histograms can also be used to show the **probability densities** associated with different values, i.e., the amount of probability 'mass' per unit of the variable of interest. In the middle in figure \@ref(fig:F2-3) we see a histogram that shows the **density** of the distribution of height judgments, i.e. the thickness of the distribution at different locations along the number line. The values of the density, and the heights of the bars of the density histogram, are constrained by the fact that the area under the curve must equal one, since these reflect probabilities. In the case of our histograms this means that the total area of all the bars (rectangles) is constrained to equal one. As a result of this, when variables have wide ranges densities tend to be very small (as in the middle panel in Figure \@ref(fig:F2-3)). 
+[@@ SB - compare densities across curves given same x?]
 
-In the right panel of figure \@ref(fig:F2-3) we present heights in meters rather than centimeters. This has the effect of substantially increasing the values of the density (one-hundred fold) but does not otherwise affect the shape of the distribution. The relationship between variable ranges and density values means that densities can't really be interpreted in an absolute sense - they always reflect the amount of probability per unit, so if you change the unit, you change the interpretation of the corresponding density. For example, a density value of 0.06 means very different things in the middle and right histograms in Figure \@ref(fig:F2-3). As a result, density values should be interpreted relative to other density values along the same curve. A higher density in one location tells us that values in that vicinity are more probable than values in locations with lower densities, and differences in densities reflect differences in the relative probabilities of different values.
+In the right panel of figure \@ref(fig:F2-3) we present heights in meters rather than centimeters. This has the effect of substantially increasing the values of the density (one-hundred fold) but does not otherwise affect the shape of the distribution. The relationship between variable ranges and density values means that densities can't really be interpreted in an absolute sense - they always reflect the amount of probability per unit. So, if you change the unit, you change the interpretation of the corresponding density. For example, a density value of 0.06 means very different things in the middle and right histograms in figure \@ref(fig:F2-3). As a result, density values should be interpreted relative to other density values along the same curve. A higher density in one location tells us that values in that vicinity are more probable than values in locations with lower densities, and differences in densities reflect differences in the relative probabilities of different values.
 
-Probability distributions sometimes have shapes that can be represented using mathematical functions. These functions typically have a limited number of **parameters** that determine their exact shape. Think of parameters as the properties of a system can be 'set' separately from each other. For example, a radio has three parameters: tuner frequency, band (AM/FM), and volume. A toaster may have only one, a single knob determining the degree of toasting required. The more parameters something has, the more complicated it is (e.g., an airplane has thousands). 
+Probability distributions sometimes have shapes that can be represented using mathematical functions. These functions typically have a limited number of **parameters** that determine their exact shape. Think of parameters as the properties of a system that can be 'set' separately from each other. For example, a radio has three parameters: Tuner frequency, band (AM/FM), and volume. A toaster may have only one, a single knob determining the degree of toasting required. The more parameters something has, the more complicated it is (e.g., an airplane may have thousands). 
 
-For example, consider the code below, which defines a slope and intercept and draws a line based on these parameters. You can change the values of the intercept and the slope and draw many kinds of lines. However, there no way to change the characteristics of a line other than by changing its slope and intercept: A line is entirely defined by its slope and intercept. 
+Consider the code below, which defines a slope and intercept and draws a line based on these parameters. You can change the values of the intercept and the slope and draw many kinds of lines. However, there's no way to change the characteristics of a line other than by changing its slope and intercept: A line is entirely defined by these parameters.
 
 ```{r, eval = FALSE}
 intercept = 3
@@ -270,11 +271,11 @@ y = intercept + x*slope
 plot (x,y, type='l',lwd=3,col=4)
 ```
 
-Sometimes the same sorts of probability density shapes pop up over and over, and these shapes are often well-defined mathematically. **Parametric probability distributions** are those density shapes that can be understood in terms of curves that vary in terms of a limited number of parameters. Just like with lines, the characteristics of a parametric probability distribution are entirely defined by the values of its parameters.  
+Sometimes the same sorts of probability density shapes pop up over and over, and these shapes are often well-defined mathematically. **Parametric probability distributions** are those density shapes that can be represented using curves that vary in terms of a limited number of parameters. Just like with lines, the characteristics of a parametric probability distribution are entirely defined by the values of its parameters.  
 
 ## The normal distribution {#c2-normal}
 
-The distribution of many random variables (at least approximately) follows what's known as the **normal** or **Gaussian** distribution. This means that if you take a sample of a random variables and arrange observations into bins, the resulting histogram will tend to have the familiar bell-shaped curve (seen in the histograms in figure \@ref(fig:F2-3)). The normal distribution has the following important characteristics: 
+The distribution of many random variables (at least approximately) follows what's known as the **normal** or **Gaussian** distribution. This means that if you take a sample of a random variable and arrange observations into bins, the resulting histogram will tend to have the familiar bell-shaped curve (seen in the histograms in figure \@ref(fig:F2-3)). Normal distributions have two parameters, meaning they differ from each other in only two ways: A mean ($\mu$) and a variance ($\sigma^2$). The normal distribution has the following important characteristics: 
 
 1. The distribution is symmetrical - i.e., observations above and below the mean are equally likely.  
 
@@ -282,13 +283,9 @@ The distribution of many random variables (at least approximately) follows what'
 
 3. It's easy to work with, very well understood, and (approximately) normally distributed data arises in many domains. 
 
-Normal distributions have two parameters, meaning they differ from each other in only two ways. The parameters are a mean parameter ($\mu$) that determines the location of the distribution along the number line, and a variance ($\sigma^2$) or standard deviation ($\sigma=\sqrt{\sigma^2}$) that determines its *spread* along the x axis. 
-
-A mean parameter ($\mu$) which determines the location of the distribution along the number line. When the mean changes, the whole shape of the distribution 'slides' along the number line. The mean is the 50% halfway point of the 'mass' of the distribution (i.e., it's also the median). If the distribution were a physical object, its mean would be its center of gravity and you would balance the distribution on your fingertip at this point. 
-
 [@@ Noah - check]
 
-The mean of a normal distribution represents the **expected value** of that variable. For discrete variables, the *expected value* is the sum of all possible values of $y$ multiplied by the probability of observing each value, $P(y)$), as in \@ref(eq:2-3a).
+The mean ($\mu$) of a normal distribution determines the location of the distribution along the number line. When the mean of a normal distribution changes, the whole shape of the distribution 'slides' along the number line. The mean is the 50% halfway point of the 'mass' of the distribution (i.e., it's also the median). If the distribution were a physical object, its mean would be its center of gravity and you would balance the distribution on your fingertip at this point. The mean of a normal distribution is also the **expected value** of that variable. For discrete variables, the *expected value* ($\mathbb{E}$) is the sum of all possible values of $y$ multiplied by the probability of observing each value, $P(y)$), as in \@ref(eq:2-3a).
 
 $$
 \begin{equation}
@@ -297,7 +294,7 @@ $$
 \end{equation}
 $$
 
-For example, for the roll of a single die the possible outcomes are the integers from 1 to 6 and each has a 1/6 chance of occurring. To calculate the expected value multiply each outcome by 1/6 and sum the resulting values (1/6 2/6, 3/6, 4/6, 5/6, 6/6), resulting in 3.5. So, the expected value of a roll of a single die is 3.5. This is why the game of craps involves rolling two dice and centers on whether a player rolls a 7: This is the most probable outcome when one rolls two dice since the expected value of a single die is 3.5. Continuous variables have an analogous formula defining the expected value with an integral and a probability density function ($f(y)$), as seen below. 
+For example, for the roll of a single die the possible outcomes are the integers from 1 to 6 and each has a 1/6 chance of occurring. To calculate the expected value, we multiply each outcome by 1/6 and sum the resulting values (1/6 2/6, 3/6, 4/6, 5/6, 6/6), resulting in 3.5. So, the expected value of a roll of a single die is 3.5. This is why the game of craps involves rolling two dice and centers on whether a player rolls a 7: This is the most probable outcome. Continuous variables have an analogous formula defining the expected value with an integral and a probability density function ($f(y)$), as seen below. 
 
 $$
 \begin{equation}
@@ -306,40 +303,40 @@ $$
 \end{equation}
 $$
 
-The $y_{[i]} P(y_{[i]})$ part in the discrete equation above is analogous to the $y f(y)$ in the continuous equation. In each case, the first element ($y$) represents a possible value and the second element ($P(y), f(x)$) multiplies this by a value reflecting the probability that this value is observed. In the discrete case we use probabilities ($P(y)$) and add our terms up (with $\Sigma$). For the continuous case we use the density ($f(y)$) and integrate across a given interval (with $\int dx$). 
+The $y_{[i]} P(y_{[i]})$ part in the discrete equation above is analogous to the $y f(y)$ in the continuous equation. In each case, the first element ($y$) represents a possible value and the second element ($P(y), f(x)$) multiplies this by a value reflecting the probability that this value is observed. In the discrete case we use probabilities ($P(y)$) and add our terms up (with $\Sigma$). For the continuous case we use the density ($f(y)$) and integrate (i.e. find the area under the curve) across a given interval (with $\int dx$). 
 
-The variance ($\sigma^2$), or standard deviation ($\sigma=\sqrt{\sigma^2}$), of a normal distribution determines its *spread* along the x axis. When the standard deviation changes the distribution is stretched wide or made very narrow, but stays in the same place. Since every distribution has an area under the curve equal to one (i.e., they all have the same 'volume'), distributions with small variances must necessarily be very dense.
+The variance ($\sigma^2$), or standard deviation ($\sigma=\sqrt{\sigma^2}$), of a normal distribution determines its *spread* along the x axis. When the standard deviation changes the distribution is stretched wide or made very narrow, but stays in the same place. Since every distribution has an area under the curve equal to one (i.e., they all have the same 'volume'), distributions with smaller variances must necessarily be more dense.
 
 In principle, a given probability distribution can be thought of as having a set of 'true', fixed parameters. For example, we might imagine that the average apparent height of adult male speakers from the US is exactly 175.91254... cm. This is questionable at least in part because, as noted earlier, many real-life populations are practically infinite and constantly changing. In any case, even if 'true', fixed parameters exist, in most situations we can't be certain of what the true parameters of a distribution are. Instead, we must be satisfied with estimating the values of parameters based on our samples. 
 
-Estimates of our population parameters based on our sample are called **statistics**. **Statistical inference** consists of using statistics (based on our sample) to make inferences about the characteristics of the overall population (i.e. the 'true' parameters). In the case of the normal distribution we are interested in two statistics: The sample mean and the sample standard variance. 
+Estimates of our population parameters based on our sample are called **statistics**. **Statistical inference** consists of using statistics (based on our sample) to make inferences about the characteristics of the overall population (i.e. the 'true' parameters). In the case of the normal distribution we're interested in two statistics: The sample mean and the sample standard deviation. 
 
 ### The sample mean {#c2-sample-mean}
 
-The sample mean is our 'best' guess for the population mean, i.e., the expected value of the distribution. We'll be more specific about what 'best' means later, but for now we can just say that if you don't know the population parameter for a given normal distribution, the sample mean will provide you the best available estimate.
+The sample mean is our 'best' guess for the population mean, i.e., the expected value of the distribution. We'll be more specific about what 'best' means later, but for now we can just say that if you don't know the population mean parameter for a given normal distribution, the sample mean will provide you the best available estimate.
 
 The formula for the sample mean is given in equation \@ref(eq:2-1). Initially, reading these mathematical formulas may seem daunting. However, learning to read these is just a skill that is developed with practice. In addition, you will begin to see the same 'chunks' or structures come up in formulas over and over, and reading these becomes much easier once you start to recognize the meaning of these repetitive structures intuitively. 
 
 $$
 \begin{equation}
-\hat{\mu}_{y} = \sum_{i=1}^{N} y_{[i]}/N
+\hat{\mu}_{y} = \sum_{i=1}^{n} y_{[i]}/n
 (\#eq:2-1)
 \end{equation}
 $$
 
-Note the similarity of equations \@ref(eq:2-1) and \@ref(eq:2-3a). In the case of the sample mean, the division by $N$ reflects the fact that we treat each observation as equally likely, estimating its probability as $\frac{1}{N}$. So, if we were to replace $P(y)$ with $\frac{1}{N}$ above, equation \@ref(eq:2-1) starts to look a lot more like \@ref(eq:2-3b). 
+The sample mean is an estimator of the expected value. In \@ref(eq:2-1), the division by $n$ reflects the fact that we treat each of our $n$ observations as equally likely, estimating each probability as $1/n$. If we were to replace $\frac{1}{n}$ with $P(y)$ above, equation \@ref(eq:2-1) starts to look a lot more like \@ref(eq:2-3a). 
 
-Equation \@ref(eq:2-1) says that the sample mean of $y$ ($\hat{\mu}_{y}$) is equal to the sum of all of the elements of the vector $y$, divided by $N$, where $N$ is equal to the length of the $y$ vector (i.e., the number of observations). We use the little hat symbol ($\hat{\mu}$) to indicate that this is an estimate of the mean, and to distinguish it from the population mean, which we cannot observed directly and goes hatless ($\mu$). The summation ($\sum$) symbol represents the repetitive adding of whatever is to the right of the symbol to some total. The summation begins at the number below the $\sum$ and performs one operation for every integer value of $i$ between the starting point and the end point (indicated above the $\sum$). The counter variable, in this case $i$, is also often used to index values of a vector (or other structure) that is being summed (as seen below).   
+Equation \@ref(eq:2-1) says that the sample mean of $y$ ($\hat{\mu}_{y}$) is equal to the sum of all of the elements of the vector $y$, divided by $N$, where $N$ is equal to the length of the $y$ vector (i.e., the number of observations). We use the little hat symbol ($\hat{\mu}$) to indicate that this is an estimate of the mean, and to distinguish it from the population mean, which we cannot observed directly and goes hatless ($\mu$). The summation ($\sum$) symbol represents the repetitive adding of whatever is to the right of the symbol to some total. The summation begins at the number below the $\sum$ and performs one operation for every integer value of $i$ between the starting point and the end point (indicated below and above the $\sum$). The counter variable, in this case $i$, is also often used to index values of a vector (or other structure) that is being summed.   
 
-This behavior analogous to the behavior of a `for` loop in R. Below we define the variables `N` (equal to the length of the vector) and initialize a variable to receive the summation (`mean_height`). The for loop then proceeds to increment a count variable (`i`) from one to N along the integers. For each iteration it adds the value of the vector, divided by N, to the summation variable `mean_height`. As we can see below, this results in a value identical to that returned by the `mean` function in R. 
+This behavior is similar to a `for` loop in R. Below we define the variables `N` (equal to the length of the vector) and initialize a variable to receive the summation (`mean_height`). The `for` loop then proceeds to increment a count variable (`i`) from one to N along the integers. For each iteration it adds the value of the vector, divided by N, to the summation variable `mean_height`. As we can see below, this results in a value identical to that returned by the `mean` function in R. 
 
 ```{r, collapse = TRUE}
 # initialize values
-N = length (mens_height)
+n = length (mens_height)
 mean_height = 0
 
 # summation equivalent to equation 2.1 above
-for (i in 1:N) mean_height = mean_height + mens_height[i]/N
+for (i in 1:n) mean_height = mean_height + mens_height[i]/n
 
 # replicates values of the mean function
 mean (mens_height)
@@ -348,11 +345,11 @@ mean_height
 
 Here are some useful things to know about sample means, in no particular order:
 
-1) The mean of a set of observations is affected by addition and multiplication. This means that adding $a$ to each member of a set of observations increases its mean by $a$, and multiplying observations by $b$ results in an change in the mean by the same factor. 
+1) The mean of a set of observations is affected by addition and multiplication. Adding $a$ to each member of a set of observations increases its mean by $a$, and multiplying observations by $b$ results in a change in the mean by the same factor. 
 
 2) The mean of the sum of two sets of variables (of the same length) $x$ an $y$ is equal to $\mu_{x}+\mu_{y}$. In other words, the average of the sum is just the sum of the averages. 
 
-3) The sum of sample's deviations from the sample mean equals zero (seen in \@ref(eq:2-2)). This means that the sum of the distances between positive and negative differences from the sample mean exactly balance out. To some extent this makes sense since the mean is the 'center of gravity' of a distribution. It's worth noting that this does not apply to deviations form the *population* mean since the population mean is not estimated from the characteristics of a sample. So, there is no guarantee that some set of observations will 'balance out' around the population mean.
+3) The sum of sample's deviations from the sample mean equals zero (seen in \@ref(eq:2-2)). This means that the sum of the distances between positive and negative differences from the sample mean exactly balance out. To some extent this makes sense since the mean is the 'center of gravity' of a distribution. It's worth noting that this does not apply to deviations from the *population* mean since the population mean is not estimated from the characteristics of a sample. So, there is no guarantee that some set of observations will 'balance out' around the population mean.
 
 $$
 \begin{equation}
@@ -360,8 +357,6 @@ $$
 (\#eq:2-2)
 \end{equation}
 $$
-
-Note that the sample mean is an estimator of the expected value. In the case of the sample mean, the division by $N$ reflects the fact that we treat each observation as equally likely, estimating its probability as $\frac{1}{N}$. So, if we were to replace $P(y)$ with $\frac{1}{N}$ above, equation \@ref(eq:2-3a) starts to look a lot more like \@ref(eq:2-1). Continuous variables have an analogous formula defining the expected value with an integral and a probability density function.
 
 ### The sample variance (or standard deviation) {#c2-sample-variance}
 

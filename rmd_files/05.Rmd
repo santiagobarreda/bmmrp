@@ -23,7 +23,7 @@ We introduce the comparison of two groups in terms of our hypothetical experimen
 
 Every observation in our data can be assigned to a 'group' based on the value of the coffee group predictor for that observation (i.e., whether it indicates that the observation is associated with decaf, or regular coffee). The values associated with each group can be thought of as realizations of two random variables: “the amount of time it takes people to read this passage of text after drinking decaf”, and “the amount of time it takes people to read this passage of text after drinking regular coffee”. These variables have some unknown mean parameters we can call $\mu_{decaf}$ and $\mu_{coffee}$ respectively.
 
-Usually, researchers don’t ask if the distribution of observations are identical in absolutely all respects across the two groups, and instead mostly focus on whether $\mu_{decaf}=\mu_{coffee}$ or not. So, when we design an experiment to test for differences between groups, what we are often really asking is: Is the mean of the distribution of these two variables the same? In other words, is “the mean of the distribution of amount of time it takes people to read this passage of text after drinking decaf” the same as “the mean of the distribution of the amount of time it takes people to read this passage of text after drinking coffee”?
+Usually, researchers don’t ask if the distribution of observations are identical in absolutely all respects across the two groups, and instead mostly focus on whether $\mu_{decaf}=\mu_{coffee}$ or not. So, when we design an experiment to test for differences between groups, what we are often really asking is: Is the mean of the distribution of these two variables the same? In other words, is “the mean of the distribution of the amount of time it takes people to read this passage of text after drinking decaf” the same as “the mean of the distribution of the amount of time it takes people to read this passage of text after drinking coffee”?
 
 ## Distribution of repeated measures across factors
 
@@ -471,9 +471,30 @@ $$
 \end{equation}
 $$
 
-We haven't talked about *correlation* yet, but we do in section \@ref(c6-correlations). Basically, the correlation is the strength of the relationship between variables, and it can greatly affect the outcome of the equations above. Consider a situation where $x$ is very positive when $y$ is very negative, and vice versa. This would be a *negative* correlation, a negative association between the variables. If $x$ and $y$ tend to have opposite values, then the sum of $x$ and $y$ will be near zero, meaning the variance of this sum will be near zero. This shows how even if two variables have large underlying individual variances, their *sum* can have a very small variance when they are negatively related. The same reasoning can also explain a much larger than expected variance for the sum of positively related variables. 
+We haven't talked about *correlation* yet, but we do in section \@ref(c6-correlations). Basically, the correlation is the strength of the relationship between variables, and it can greatly affect the outcome of the equations above. Consider a situation where $x$ is very positive when $y$ is very negative, and vice versa. We show this in the code below where we make $y$ equal the negative of $x$, plus some small amount of random variation. In this example $x$ and $y$ exhibit a *negative* correlation, a negative association between the variables. If you were to plot these variables (`plot(x,y`) you would see a line sloping down left to right. 
 
-Why do we care about this? Well, clearly the credible intervals describing our posterior distributions reflect the variance of these distributions; wider intervals correspond to larger variances. So, as a practical matter the only way to ensure that we get the correct variance, and credible interval, for the combination of the intercept and the apparent age predictors (i.e., $\sigma^2_{Intercept+A}$) is to take the correlation of the predictors into account. When we summarize parameters, and then combine them, we lose all information about the correlations between parameters, making an accurate estimation of $\sigma^2_{Intercept+A}$ impossible. On the other hand, if we add our parameters together, or find the differences between them *before* summarizing, we don't need to worry about the correlations between them. This is because this information is directly present in the posterior samples and is preserved when we work with these directly. This is why when combining parameters, you should *always* do so with the original samples, and *then* summarize the combined samples. 
+```{r}
+set.seed (1)
+x = 1:10
+y = -x + rnorm (10)
+```
+
+As seen in the code below, each of $x$ and $y$ has a variance of about 9. However, since $x$ and $y$ tend to have opposite values, the sum of $x$ and $y$ will be near zero, meaning the variance of this sum will be near zero. On the other hand, since they have opposite signs their *difference* will be large, meaning the variance of their difference may also be very large. This example shows that the sum/difference of two variables may vary substantially based on the relationship between the variables in a manner that is unpredictable of one does not take this relationship into account.
+
+```{r}
+# 'marginal' variance of x
+var (x)
+# 'marginal' variance of x
+var (y)
+# variance of sum of x and y
+var (x+y)
+# variance of difference of x and y
+var (x-y)
+```
+
+Why do we care about this? Well, clearly the credible intervals describing our posterior distributions reflect the variance of these distributions; wider intervals correspond to larger variances. So, as a practical matter the only way to ensure that we get the correct variance, and credible interval, for the combination of the intercept and the apparent age predictors (i.e., $\sigma^2_{Intercept+A}$) is to take the correlation of the predictors into account. When we summarize parameters, and then combine them, we lose all information about the correlations between parameters, making an accurate estimation of $\sigma^2_{Intercept+A}$ impossible. 
+
+On the other hand, if we add our parameters together, or find the differences between, them *before* summarizing, we don't need to worry about the correlations between them. This is because this information is directly present in the posterior samples and is preserved when we work with these directly. For example, in our simple example above we didn't actually calculate the correlation between $x$ and $y$ to find the correct variance of their sum, we simply found the sum and then calculated the variance. This is why when combining parameters, you should *always* do so with the original samples, and *then* summarize the combined samples. 
 
 We can see the individual samples for our population-level (i.e. fixed effects) parameters by calling the `fixef` function and setting `summary` to `FALSE`. Below, we see the first 6 posterior samples for each parameter. 
 
@@ -528,13 +549,13 @@ new_parameters = cbind(adult_mean = samples[,'Intercept'] + samples[,'A1'],
 brms::posterior_summary (new_parameters)
 ```
 
-We can compare the intervals above to those of our intercept and effect for apparent age:
+We can also compare the intervals above to those of our intercept and effect for apparent age:
 
 ```{r}
 brms::fixef (model_sum_coding)
 ```
 
-We see that the 95% credible interval for our intercept spans about 5.5 cm and our 95% credible interval for apparent age spans about 1.4 cm. However, the 95% credible intervals for the adult and child means span only about 5.7 cm each, indicating that $\sigma^2_{Intercept+A} < \; \sigma^2_{Intercept+Intercept} + \sigma^2_{Intercept+A}$. We know that this likely reflects a negative correlation between the posterior samples of the intercept and `A1` parameter, however, this is unpredictable if one only looks at the summaries immediately above.
+We see that the 95% credible interval for our intercept spans about 5.5 cm and our 95% credible interval for the apparent age effect (`A1`) spans about 1.4 cm. However, the 95% credible intervals for the adult and child means span only about 5.7 cm each, indicating that $\sigma^2_{Intercept+A} < \; \sigma^2_{Intercept+Intercept} + \sigma^2_{Intercept+A}$. In other words, the variance of the sum of the intercept and the apparent age effect is smaller than the sum of their individual variances. We know that this likely reflects a negative correlation between the posterior samples of the intercept and `A1` parameter, however, this is unpredictable to us if we only look at the summaries immediately above.
 
 ### Using the *hypothesis* function {#c5-using-hypothesis}
 
@@ -683,12 +704,11 @@ We see that the average difference is 5.6 cm and the 95% credible interval is be
 
 Imagine listeners 2 and 3 have average apparent height judgments of 162 and 164 cm, and that the intercept is 156 cm. If for some sample the intercept is 157, then the listener effects for that sample would need to be +5 (157+5=162) and +7 (157+7=164). If, for the next sample the intercept were 153, now the listener effects would need to be +9 (153+9=162) and +11 (153+11=164). In this way, model parameters (including random effects) can rise and fall together across posterior samples. This 'rising and falling together' can result in a *correlation* between parameters which, as noted above, can affect the credible intervals around combinations of parameters. 
 
-Note that in our example above, the range for the first listener spanned from +5 to +9 across samples, and the second range spanned from +7 to +11. This gives the impression that these parameters overlap, but we know that this is somewhat artificial. The listeners in our hypothetical example above had varying effect estimates across samples, however, the difference *between* the parameters was 2 across both samples. In the right plot of figure above we are showing the marginal distribution of the listener effects. This provides information about the individual credible range of these parameters but makes it difficult to consider possible intervals around combinations of these parameters. For example, in this case it obsecures the fact that the difference between the effects for listeners 2 and 3 are more similar than they appear.
+Note that in our example above, the range for the first listener spanned from +5 to +9 across samples, and the second range spanned from +7 to +11. This gives the impression that these parameters overlap, but we know that this is somewhat artificial. The listeners in our hypothetical example above had varying effect estimates across samples, however, the difference between the parameters was 2 *within* each samples. In the right plot of figure above we are showing the marginal distribution of the listener effects. This provides information about the individual credible range of these parameters but makes it difficult to consider the distribution of the *differences* between pairs of parameters. In this case it obscures the fact that the effects for listeners 2 and 3 are more dissimilar than they appear.
 
-On the other hand, we can consider the distribution of the differences directly as we did in `difference_2_3` above. This gives us information about the difference between these parameters and correctly calculates the credible interval around this difference, however, information about the ranges of the individual parameters is obviously lost. So, we effectively represent different information when we plot (or summarize) marginal parameter distributions as opposed to combinations (including differences) of these. 
+Instead, we can consider the distribution of the differences in listener effects directly as we did in `difference_2_3` above. This gives us information about the difference between these parameters and correctly calculates the credible interval around this difference, however, information about the ranges of the individual parameters is obviously lost. So, we effectively represent different information when we plot (or summarize) marginal parameter distributions as opposed to combinations (including differences) of these. If we are interested primarily in highlighting the difference between parameters, focusing on the marginal distribution of each parameters may paint a misleading picture for the reader.
 
 ## Making our models more robust: The (non-standardized) t distribution {#c5-robustness}
-
 
 By almost any objective measure, a Ferrari is a 'good' car. A Ferrari will be fast, beautiful, and precisely made. And yet a Ferrari will not do well on a bumpy dirt road or even over speed bumps. You could say that the design of the Ferrari assumes that it will be used on flat, clean(ish) roads. Someone who damaged their Ferrari driving fast on a bumpy dirt road would be foolish to blame the car, they used it 'incorrectly' by violating the assumptions implicit in the design of a Ferrari. You don't buy a Ferrari to drive it down dirt roads, because that's not what it was designed for.
 

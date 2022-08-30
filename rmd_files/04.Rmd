@@ -51,7 +51,7 @@ mens_height = men$height
 
 Figure \@ref(fig:F4-1) presents the height judgments collected for adult male speakers in our experiment, organized in two different ways. In the left plot we see the marginal distribution of the data with no differentiation made for the data collected from different listeners. This boxplot shows the individual observations of our vector $height_{[i]}$ around the overall mean $\mu$ with a standard distribution equal to $\sigma$. In other words, the left boxplot represents the model presented in \@ref(eq:4-1). From the perspective of this model, an observation of 181 cm is +7 above the mean, regardless of who provided it, because 174 cm is the assumed mean for all listeners. As a consequence, all variation about the mean is noise. There is no systematic structure 'inside' that single giant box of data. 
 
-```{r F4-1, fig.height=2.5, fig.width=8, fig.cap = "(left) Boxplot of distribution of average height judgments made by each listener in the experiment for adult male speakers. (middle) Individual boxplots of height judgments for adult male speakers, for each listener. (right) The marginal distribution of the height judgments shown in the middle plot.", echo = FALSE}
+```{r F4-1, fig.height=2.5, fig.width=8, fig.cap = "(left) Distribution of all apparent height judgments for adult male speakers. (right) Distribution of height judgments for adult male speakers, individually for each listener.", echo = FALSE}
 
 ################################################################################
 ### Figure 4.1
@@ -111,7 +111,7 @@ Figure \@ref(fig:F4-2) compares visual representations of the same data, the poi
 
 [@@ SB - fix figure]
 
-```{r F4-2, echo = FALSE, out.width = "50%", fig.cap = "A comparison of a statistical model with only a single level of variation to the structure of a multilevel model."}
+```{r F4-2, echo = FALSE, out.width = "50%", fig.cap = "Comparison of the structure of a statistical model with only a single level of variation (a \'unilevel model\', left), to a model with multiple levels of variation (a multilevel model, right)."}
 
 ################################################################################
 ### Figure 4.2
@@ -469,13 +469,13 @@ mean (listener_sigmas$height)
 
 We're going to discuss the calculations we made above in terms of what they represent in the boxplots in figure \@ref(fig:F4-3), our model coefficients in the print statement above, and in our model definition in \@ref(eq:4-9). 
 
-```{r F4-3, fig.height = 2.7, fig.width = 8, fig.cap = "Listener-specific boxplots for apparent height judgments made for adult male speakers. The horizontal line indicates the model intercept.", echo = FALSE}
+```{r F4-3, fig.height = 2.75, fig.width = 8, fig.cap = "Listener-specific boxplots for apparent height judgments made for adult male speakers. The horizontal line represents the model intercept.", echo = FALSE}
 
 ################################################################################
 ### Figure 4.3
 ################################################################################
 
-par (mfrow = c(1,1), mar = c(4,4,1,1))
+par (mfrow = c(1,1), mar = c(4,4,0.5,0.5))
 boxplot (height ~ L, data = men, main = "",xlab="Listener",
          ylab="Apparent Height (cm)",
          col=bmmb::cols, ylim = c(150,195), outline=FALSE) 
@@ -596,7 +596,7 @@ bmmb::brmplot(listener_intercepts, col = bmmb::cols)
 
 We can compare the estimates of our by-listener effects to the distribution of centered height responses arranged by subject. In figure \@ref(fig:F4-4) we plot centered listener responses using boxplots and then use `brmplot` to overlay the colored points and lines, representing the listener 'random effects', on top. We can see that the arrangement of the means and raw data shows a close correspondence. 
 
-```{r F4-4, fig.height = 3, fig.width = 8, fig.cap="Boxplots presenting apparent height judgments made by each listener, centered across all listeners. Colored points and lines indicate posterior mean estimates and 95% credible intervals for the listener-specific intercept effects.", echo=FALSE}
+```{r F4-4, fig.height = 3, fig.width = 8, fig.cap="Distribution of centered apparent height, individually for each listener. Colored points and lines indicate posterior mean estimates and 95% credible intervals for the listener-specific intercept effects (i.e. the listener \'random\' effects).", echo=FALSE}
 
 ################################################################################
 ### Figure 4.4
@@ -647,6 +647,7 @@ Figure \@ref(fig:F4-5) we compare the results of our simulation to our real data
 ################################################################################
 
 par (mfrow = c(1,2), mar = c(0.5,0.5,1,0.5), oma = c(0,3.5,0,0))
+
 boxplot (height_rep ~ L, ylim = c(140,200), xaxt='n',xlab='',
          col=bmmb::cols)
 abline (h = 173.8, lwd=3,lty=3)
@@ -726,7 +727,7 @@ quantile(sigma_L_rep)
 
 Our model is looking better, but is still not 'right'. This is because in addition to repeatedly sampling from only 15 listeners, our model also features repeated sampling from only 45 different speakers. In figure \@ref(fig:F4-7) we see that we can recreate figure \@ref(fig:F4-1), this time illustrating systematic variation between speakers in addition to between listeners. So, we are interested in the average apparent height of adult males overall but have only sampled 45 of them, and we need to build this information into our model.
 
-```{r F4-7, fig.height=3, fig.width=8, fig.cap = "(left) Boxplot of distribution of average height judgments made by each listener in the experiment for adult male speakers. (middle) Individual boxplots of height judgments for adult male speakers, for each listener. (right) The marginal distribution of the height judgments shown in the middle plot.", echo = FALSE}
+```{r F4-7, fig.height=3, fig.width=8, fig.cap = "(left) Distribution of all apparent height judgments for adult male speakers. (middle) Distribution of height judgments for adult male speakers, individually for each listener. (right) Distribution of height judgments for adult male speakers, individually for each speaker.", echo = FALSE}
 
 ################################################################################
 ### Figure 4.7
@@ -883,7 +884,7 @@ S_nopooling = S_nopooling - mean (S_nopooling)
 
 Figure \@ref(fig:F4-8) shows the result of shrinkage for the listener and speaker effects: Individual effects are 'pulled' towards the overall mean at zero. We can see that in all cases, the effects estimated with partial pooling lie closer to the mean than those estimated with no pooling. This is particularly evident for the speaker effects, and in particular those of speaker 87, highlighted in that figure. 
 
-```{r F4-8, fig.height = 4, fig.width = 8, fig.cap="Empty points indicate the no pooling estimates for listener and speaker effects, and the broken line represents the densities corresponding to the standard deviations of these effects. The filled points and solid lines indicate the Bayesian estimates and corresponding densities.", echo=FALSE}
+```{r F4-8, fig.height = 4, fig.width = 8, fig.cap="(top row) A comparison of the shrunk (i.e. partial pooling) and no pooling estimates of the listener and speaker effects. Curves indicate the density of the prior distribution of each set of effects. Arrows link shrunk and no pooling effects for each listener/speaker. (bottom row) An illustration of how the effect for speaker 87, highlighted in the top row, gets shrunk towards the prior through partial pooling.", echo=FALSE}
 
 ################################################################################
 ### Figure 4.8
@@ -985,7 +986,7 @@ Our 'no pooling' estimate is an estimate based solely on the individual likeliho
 
 In figure \@ref(fig:F4-9) we plot the no pooling estimates (x axis) against the difference between the no pooling and shrunk estimates (y axis). The difference between the no pooling and shrunk estimate is basically the magnitude of the horizontal arrow shown in the bottom row of figure \@ref(fig:F4-8), for each pair of shrunk and no pooling parameters. It is the amount of tilt in the arrows in the top row of the same figure; in the absence of shrinkage they would all be vertical. We can see that the amount of shrinkage, the difference between the no pooling and shrunk estimates, varies as a function of the magnitude of the estimate. More deviant estimates are shrunk more, and less deviant estimates are shrunk less. 
 
-```{r F4-9, fig.height = 2.5, fig.width = 8, fig.cap="(top row) Maximum likelihood (ml) estimates of listener and speaker effects plotted against the Bayesian estimates of the same effects (hat). (bottom row) The y-axis now represents the difference between the Bayesian and maximum likelihood estimates. Positive values indicate that the Bayesian estimate was greater than the maximum likelihood one, and vice versa.", echo=FALSE}
+```{r F4-9, fig.height = 2.5, fig.width = 8, fig.cap="The x axis represents the no pooling estimate for listener (L) and speaker (S) effects. The y axis represents the difference between the shrunk and no pooling estimates of each parameter, i.e. the amount of shrinkage. Positive values indicate that the shrunk estimate was greater than the no pooling one, and vice versa. Shrunk values were more positive for negative values and more negative for positive values.", echo=FALSE}
 
 ################################################################################
 ### Figure 4.9
@@ -1007,21 +1008,21 @@ par (mfrow = c(1,2), mar = c(.25,4,.25,1), oma=c(4,.1,.1,.1))
 # abline(h=0,v=0,lty=3,lwd=2)
 # points (S_nopooling, S_shrunk, pch=4,lwd=3, col=bmmb::cols,cex=2.25)
 
-plot (L_nopooling, L_nopooling-L_shrunk, xlim = c(-10,10), ylim = c(-5,5),
-      pch=3, lwd=3, col=bmmb::cols,cex=2.25)
+plot (L_nopooling, L_shrunk-L_nopooling, xlim = c(-10,10), ylim = c(-5,5),
+      pch=3, lwd=3, col=rev(bmmb::cols),cex=2.25,cex.lab=0.9,cex.axis = 0.9)
 grid()
 abline(h=0,v=0,lty=3,lwd=2)
-points (L_nopooling, L_nopooling-L_shrunk, pch=3,lwd=3, col=bmmb::cols,cex=2.25)
+points (L_nopooling, L_shrunk-L_nopooling, pch=3,lwd=3, col=bmmb::cols,cex=2.25)
 
-mtext (side = 1, text = "L_nopooling", line=2.5)
+mtext (side = 1, text = "L_nopooling", line=2.5,cex=0.9)
 
-plot (S_nopooling, S_nopooling-S_shrunk, xlim = c(-12,12), ylim = c(-5,5),
-      pch=3, col=4,cex=2.25)
+plot (S_nopooling, S_shrunk-S_nopooling, xlim = c(-12,12), ylim = c(-5,5),
+      pch=3, col=4,cex=2.25,cex.lab=0.9,cex.axis = 0.9)
 grid()
 abline(h=0,v=0,lty=3,lwd=2)
-points (S_nopooling, S_nopooling-S_shrunk, pch=3,lwd=3, col=bmmb::cols,cex=2.25)
+points (S_nopooling, S_shrunk-S_nopooling, pch=3,lwd=3, col=rev(bmmb::cols),cex=2.25)
 
-mtext (side = 1, text = "S_nopooling", line=2.5)
+mtext (side = 1, text = "S_nopooling", line=2.5,cex=0.9)
 ```
 
 You may have noted that the listener effects exhibit less shrinkage than the speaker effects. There are two reasons for this. First, we have 45 observations for each listener but only 15 for each speaker. As a result, the likelihood functions for our listener effects will be narrower than those of our speaker effects. This makes the likelihoods for our listener parameters more resistant to the effects of the prior, and therefore more resistant to shrinkage (see sections \@ref(c3-posterior) and \@ref(c2-chars-of-likelihoods-2) for more information). Second, a large proportion of the speaker effects are close to zero, with only a relatively small number exhibiting large deviations from this. In contrast, the listener effects are less concentrated near the average. As a result of this $\sigma_L > \sigma_S$, which causes speaker effects to be shrunk more than listener effects, in general. 

@@ -41,9 +41,9 @@ The relevant variables in our data frame are:
   * `S`: An integer from 1-139 indicating which *speaker* produced the trial stimulus. 
   * `A`: The *apparent age* of the speaker indicated by the listener, `a` (adult) or `c` (child). 
  
-We recreate figure \@ref(fig:F5-9) as figure \@ref(fig:F6-1) below to show the distribution of apparent height by listener, and across apparent ages. In the last chapter we focused on 'the difference' between height judgments for apparent adults and apparent children as a singular thing. This is a bit like focusing only on the difference between boxes in the left panel of figure \@ref(fig:F6-1). However, if we instead focus on the right panel in figure \@ref(fig:F6-1) we see that there is not a *single* difference in heights between apparent children and adults, but rather a *set* of listener-specific differences. The model we will introduce in this chapter will be able to represent this information.
+We recreate figure \@ref(fig:F5-9) as figure \@ref(fig:F6-1) below to show the distribution of apparent height by listener, and across apparent ages. In the last chapter we focused on 'the difference' between height judgments for apparent adults and apparent children as a singular thing. This is a bit like focusing only on the difference between the boxes in the left panel of figure \@ref(fig:F6-1). However, if we instead focus on the right panel in figure \@ref(fig:F6-1) we see that there is not a *single* difference in apparent heights between apparent children and adults, but rather a *set* of listener-specific differences. The model we will introduce in this chapter will be able to represent this information.
 
-```{r F6-1, fig.height = 2.75, fig.width=8, fig.cap = "(left) Distribution of apparent heights according to apparent age group. (rght) Same as left panel but presented individually for each listener. In each case, the first box of each color (the upper box) indicates responses for speakers judged to be adults. The horizontal lines running through the figures represent the grand mean (black), the adult mean (blue), and the child mean (green).", echo = FALSE}
+```{r F6-1, fig.height = 3, fig.width=8, fig.cap = "(left) Distribution of apparent heights according to apparent age group. (right) Same as left panel but presented individually for each listener. In each case, the first box of each color (the upper box) indicates responses for apparent adults. The horizontal lines running through the figures represent the grand mean (black), the adult mean (blue), and the child mean (green).", echo = FALSE}
 
 ################################################################################
 ### Figure 6.1
@@ -67,106 +67,102 @@ boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
 
 ## Variation in parameters across sources of data {#c6-variation-sources}
 
-The models we fit in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. Another way to think about this is that our model included only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a **main effect**. Someone might ask "what is the average apparent height difference between apparent children and adult females?" and you might say "about 17 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall* effect. 
+The models we fit in chapter 5 included a predictor representing the apparent age of the speaker. However, this was only a `population-level parameter` (i.e. a 'fixed' effect) meaning that it had the same value for all listeners. Another way to think about this is that our model included only the *marginal* effect for apparent age. This is the effect of apparent age on average across all listeners, *independent* of listener. This sort of effect is often referred to as a **main effect**. Someone might ask "what is the average apparent height difference between apparent children and adult females?" and you might say "about 20 cm". Which listener exactly does this statement apply to? To all of them, this is the average *overall* effect. 
 
 In contrast, we may want to think about the effect of apparent age *conditional* on listener. For example, imagine that this effect varies conditionally based on the listener such that it is large for some listeners and small for others. In this case if someone asks "what is the apparent height difference between apparent children and adult females?" you may have to answer "well it depends on the listener". When the effect of one predictor varies based on the value of another predictor, these predictors are said to **interact** or to have an **interaction**. The parameters in your model that help you capture these conditional effects are referred to as interactions or **interaction effects**. The 'fixed' effect for `A1` we included in our models in the last chapter really represents the marginal (overall) effect for the predictor. To investigate the values of this predictor *conditional* on listener, we need to include the listener by `A1` *interaction* in our model. 
 
-We can consider a possible interaction between apparent adultness and listener in our data. Below we find the average height reported by each listener for apparent adults and children, and half the difference between these averages (to estimate the adultness effect). 
+In the left plot of figure \@ref(fig:F6-2) we present the average height reported by each listener. The variation seen along the line is result of non-zero listener effects: In the absence of listener effects the line would be a flat horizontal line at the grand mean. So, it is the effect for different listeners that gives the line its specific shape. In the middle plot we see the average apparent height reported by each listener for each apparent age. The age-specific listener effect, `L` given `A1` (`L:A1`), is evident from the age-dependent shape of the lines. In other words, each line has an unpredictably different shape, and since the shape reflects the listener effect, this means that `L` has an unpredictable effect across the levels of `A`.
 
-```{r, include = FALSE}
-options (digits = 2)
-```
-
-```{r, collapse = TRUE}
-listener_age_differences = tapply (notmen$height, notmen[c("A","L")], mean)
-#The average height for each age group for each listener
-listener_age_differences
-
-listener_age_effects = (listener_age_differences[1,]-listener_age_differences[2,])/2
-# The difference in apparent height  between age groups for each listener
-listener_age_effects
-```
-```{r, include = FALSE}
-options (digits = 4)
-```
-
-Figure \@ref(fig:F6-2) presents several ways to consider this information. In the left plot we see that the distance between the top and bottom lines, i.e. the effect for apparent age, varies from listener to listener. This listener-specific variation in the age effect is evidence of an interaction between listener and age in our data, i.e. `A1:L`. In other words, to accurately predict the effect of age (the spacing between the lines) you need to know the listener. The first plot also highlights the fact that the presence of an `A:B`interaction always indicates the presence of a `B:A` interaction: The listener-specific age effects are also age-specific listener effects. We can see the age-specific listener effects by looking at the differing shapes of the two lines in figure above, and how these vary relative to their respective group means. The shapes are different, indicating that the mean for each listener varies conditionally based on apparent age. This conditional effect reflects an interaction between listener and apparent age in our data, i.e. `L:A1`.
-
-```{r F6-2, fig.height = 2.5, fig.width=8, fig.cap = "(left) Average height reported by each listener for apparent adults and children. Horizontal lines indicated the grand mean (solid) and the adult (upper dotted) and child means (lower dotted). (middle) Listener-dependent age effects, the difference between the adult and child means reported by each listener. The horizontal line indicates the average differences across all listeners. (right) Arrows represent the magnitude of listener-specific deviations from the overall average difference across all listeners (horizontal line).", echo = FALSE}
+```{r F6-2, fig.height = 2.5, fig.width=8, fig.cap = "(left) Average height reported by each listener overall. The horizontal line represents the grand mean. (middle) Age-dependent listener effects for apparent children (lower line) and apparent adults (upper line). The horizontal lines indicate the grand mean (solid), and the average means for apparent adults (upper dotted) and apparent children (lower dotted). (right) Listener-dependent age effects, the difference between the adult and child means reported by each listener (i.e., the difference between the lines in the middle plot). The horizontal line represents the average age effect across listeners.", echo = FALSE}
 
 ################################################################################
 ### Figure 6.2
 ################################################################################
 par (mfrow = c(1,3), mar = c(4,4,1,1))
 
+plot(colMeans(listener_age_differences), cex=2,
+     type = 'b', col = bmmb::cols[7], pch=16, ylim = c(132,172),ylab = "Height (cm)",
+     lwd=2, xlab = "Listener")
+abline (h = c(155), lty = c(1,3,3),col=bmmb::cols[7])
+
 plot(listener_age_differences[1,], cex=2,
      type = 'b', col = lavender, pch=16, ylim = c(132,172),ylab = "Height (cm)",
      lwd=2, xlab = "Listener")
 lines(listener_age_differences[2,],cex=2, 
       type = 'b', col = deepgreen, pch=16,lwd=2)
-abline (h = c(157, 165, 149), lty = c(1,3,3))
+abline (h = c(155, 165, 145), lty = c(1,3,3), col=bmmb::cols[c(7,14,4)])
 
 plot(listener_age_effects, lwd=2,lty=1,cex=2,
-     type = 'b', col = darkorange, pch=16, ylim = c(0,18),
+     type = 'b', col = darkorange, pch=16, ylim = c(-5,25),
      ylab = "Height difference (cm)", xlab = "Listener")
-abline (h = mean (listener_age_effects))
+abline (h = mean (listener_age_effects), col = darkorange)
 
-plot(listener_age_effects, lwd=1,lty=3,
-     type = 'n', col = darkorange, pch=16, ylim = c(0,18),
-     ylab = "Height difference (cm)", xlab = "Listener")
-arrows (1:15, rep(mean(listener_age_effects),15), 1:15, listener_age_effects,
-        length=.1, lwd=2, col=skyblue)
-abline (h = mean(listener_age_effects))
+# plot(listener_age_effects, lwd=1,lty=3,
+#      type = 'n', col = darkorange, pch=16, ylim = c(0,18),
+#      ylab = "Height difference (cm)", xlab = "Listener")
+# arrows (1:15, rep(mean(listener_age_effects),15), 1:15, listener_age_effects,
+#         length=.1, lwd=2, col=skyblue)
+# abline (h = mean(listener_age_effects))
 
 ```
 
-In fact, the `A1:L` (the effect of apparent age dependent on listener) encodes the same information as `L:A1` (the effect of listener dependent on apparent age). Imagine the left plot in figure \@ref(fig:F6-2) contained two flat parallel lines, separated by some amount. In order to add a listener dependent age effect (`A1:L`) to these lines, we would need to make the separation between the lines unpredictably different for each listener. However, in doing so we *necessarily* also make the shapes of the two lines unpredictably different. In fact, it is the arbitrary difference in shapes between the two lines (`L:A1`) on the left of figure \@ref(fig:F6-2) that allows there to be a listener dependent age effect (`A1:L`). As a result of this, the `A1:L` interaction is *the same thing* as the `L:A1` interaction and the notational difference between them is only superficial. 
+The average difference between the lines in the middle plot of figure \@ref(fig:F6-2) represents the average 'main' effect for apparent age. This effect has a magnitude of 10.1 cm, representing the separation on average between the lines for apparent children and adults and the line representing the grand mean. We can see that each listener has an unpredictable difference between their lines, representing listener-dependent variation in `A1` and a meaningful effect for `A1:L` in our data. Actually, the `A1:L` interaction *entails* an `L:A1` interaction: In the process of adding an `A1:L`  interaction in your data you also add an `L:A1` interaction to your data.
 
-Although we can think of interactions either way, conceptually it may be useful to think of them primarily one way or another. In our case, we will focus on the listener-dependent effect for apparent age, presented in the middle panel of figure \@ref(fig:F6-2). The value of each point along the line in the middle plot reflects the spacing of the two lines in the left plot of the same figure. In the complete and total absence of an interaction between listener and age, the orange line in the figure would be horizontal at just above 10 (the marginal difference). In the presence of an interaction, our marginal and listener-dependent effects may diverge in a seemingly random manner, as seen in the figure. 
+Imagine the middle plot in figure \@ref(fig:F6-2) contained two flat parallel lines, separated by some amount (the effect for `A1`). In order to add a listener dependent age effect (`A1:L`) to these lines, we would need to make the separation between the lines unpredictably different for each listener. However, in doing so we *necessarily* also make the shapes of the two lines unpredictably different. This is the only way to make the separation between the lines different for each listener. However, since the shape of the line is the listener effect, by giving each line a different shape we also necessarily add an age-dependent effect for listener to our data. As a result of this, the `A1:L` interaction is *the same thing* as the `L:A1` interaction and the notational difference between them is only superficial. 
 
-As noted several times to this point, regression models represent the difference between means and not the means themselves. In the case of interactions, interaction effects represent the difference between the marginal effect and the conditional effect. We can see values analogous to interaction effects in the right panel of figure \@ref(fig:F6-2). These effects are represented by the magnitude of the arrows, which reflect listener-specific deviations from the average effect for apparent age. If there were no interaction, all the arrows in the right panel of figure \@ref(fig:F6-2) would have lengths of zero, or perhaps show small amounts of random variation. So, the presence of large deviations from the marginal effect, i.e. arrows with large magnitudes, suggests that our model should include coefficients that can help represent this variation between listeners. 
+Although we can think of interactions either way, conceptually it may be useful to think of them primarily one way or another. In our case, we will focus on the listener-dependent effect for apparent age, presented in the right plot of figure \@ref(fig:F6-2). The value of each point along the line in the right plot reflects the spacing of the two lines in the middle plot of the same figure. In the complete and total absence of an interaction between listener and age, the orange line in the figure would be horizontal at 10.1 (the marginal difference). In the presence of an interaction, our marginal and listener-dependent effects may diverge in a seemingly random manner, as seen in the figure. 
 
 Before moving on, we need to discuss the concepts of **crossing** and **nesting**, and how these relate to interactions. When two factors are **crossed**, this means that all levels of one factor appear at all levels of the other factor. When levels of one factor appear exclusively at specific levels of the other factor they are said to be *nested*. To estimate the interaction between two factors, the factors *must* be crossed. Since our 'random effects' are just interactions, this means that to include a random effect for a predictor given some grouping factor (like listener), it needs to be crossed with that factor. 
 
-For example, consider a situation where (monolingual) listeners are divided into groups according to native language. The listener factor will be nested within first language because each speaker only has speaks one language. As a result, in such a situation a model can not estimate the listener-dependent effect for first language, i.e. the first language 'random effect' for listeners. The reason for this is very straightforward. If we do not observe the effect of first language for each level of listener, we are not in a position to say anything about the *listener-dependent* effect of first language. 
+For example, consider a situation where (monolingual) listeners are divided into groups according to native language. We might imagine a model like this that tries to estimate height based on the native language (`NatLang`) of the speakers to see if there are reliable cross-language differences in listener's opinions:
 
-In terms of our data, this means that to estimate listener-dependent effects for apparent age we need to make sure listener is crossed with apparent age. We can see in the `listener_age_differences` above that we have average heights for both ages for all listeners, meaning that age and listener are crossed, and it is possible to estimate the interaction between these in our model.
+`height ~ NatLang + (1|L)`
+
+In such an experiment, the listener factor will be nested within first language because each speaker only speaks one language. As a result, in such a situation a model *can* estimate the 'fixed', marginal effect for native language on apparent height. However, this model can *not* estimate the listener-dependent effect for first language, i.e. the first language 'random effect' for listeners *or* the listener by native language interaction. This means that neither of the following models are possible: 
+
+`height ~ NatLang + (NatLang|L)`
+
+`height ~ NatLang + L + NatLang:L`
+
+The reason for this is very straightforward. If we do not observe the effect of first language for each level of listener, we are not in a position to say anything about the *listener-dependent* effect of first language (i.e. the conditional effect of native language for every individual listener). For example, if the first listener is an English speaker, how can you possibly estimate the conditional effect for when that listener is a Mandarin speaker? What would that even mean?
+
+In terms of our data, this means that to estimate listener-dependent effects for apparent age we need to make sure listener is *crossed* with apparent age. We can do this by, for example, cross tabulating our observations of apparent age with listener (`table(notmen$A, notmen$L)`) and making sure that we have more than zero observations for every combination of listener and apparent age (which we do). As a result, it's possible to estimate the interaction between these in our model. In contrast, speakers are not crossed with apparent age. If we tabulate apparent age by speakers (`table(notmen$A, notmen$S)`), we see a lot of cells with zero observations. This is because some speakers were just not very confusable: Some children were never identified as adults and some adults were never identified as children. As a result, our model cannot estimate the interaction between speaker and apparent age, nor the random effect for apparent age for each speaker. 
 
 ### Description of our model
 
-Before including interactions in our model, let's take step back and consider the model formula we used last chapter. Below, we explicitly include the leading one (indicating the intercept) to make the following discussion simpler. 
+Before including interactions in our model, let's take a step back and consider the model formula we used last chapter. Below, we explicitly include the leading one (indicating the intercept) to make the following discussion simpler. 
 
 `height ~ 1 + A + (1|L) + (1|S)`
 
-This formula told our model to draw the parameter related to `A` from a fixed prior distribution and to draw the `L` and `S` terms from distributions whose standard deviations were estimated from the data (i.e. using adaptive partial pooling). We can pretend that we want to estimate our `L` terms as 'fixed' effects (i.e. without partial pooling) by pulling `L` out of the parentheses, as seen below.    
+This formula told our model to draw the parameter related to `A` from a fixed prior distribution and to draw the `L` and `S` terms from distributions whose standard deviations were estimated from the data (i.e. using adaptive partial pooling). We did this by adding `L` and `S` to the right of a pipe inside parentheses (like this `(1|L)`), and putting a `1` to the left of the pipe. Recall that the `|` symbol means 'given', so that the notation `(1|L)` says 'estimate an intercept given listener', or 'estimate a different intercept effect for each level of the factor listener'.  
 
-`height ~ 1 + A + L + (1|S)`
+We can imagine an analogous model formula that uses only 'fixed effects', meaning it uses no pooling to estimate all of the listener and speaker effects. The formula for such a model would look like this: 
 
-We're doing this to highlight the two ways that we can include interactions in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and L, and the interaction between A and L". The `:` symbol can be read as "given", which helps to highlight that these help represent conditional effects. So `A:L` can be read out loud as "A given L" or "the effect of A given the value of L". 
+`height ~ 1 + A + L + S`
 
-`y ~ 1 + A + L + A:L`
+As discussed above, we seem to have listener-dependent age effects in our model, suggesting that we want to include the interaction of apparent age and listener in our model. Interactions between combinations of fixed effects can be denoted using `:`. For example the formula below says "include the main effect for A and L, and the interaction between A and L". The `:` symbol can also be read as "given", which helps to highlight that these help represent conditional effects. So `A:L` can be read out loud as "A given L" or "the effect of A given the value of L". 
+
+`height ~ 1 + A + L + A:L + S`
 
 As a shortcut, we can use the symbol `*` which means "include the main effects for these predictors and all interactions between them."
 
-`y ~ 1 + A * L`
+`height ~ 1 + A * L + S`
 
-So, if we wanted to include the marginal effects of age and listener, and the interaction between them we could include them in either of the two ways below, provided we want to estimate these without adaptive partial pooling. 
-
-`height ~ 1 + A + L + A:L + (1|S)`
-
-`height ~ 1 + A * L + (1|S)`
-
-However, we know that is is advisable to estimate factors with large numbers of levels using partial pooling, regardless of how 'random' the effect may be (see section \@ref(c4-strategies)). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. This leads to the second way of including interactions in our model. Whenever fixed effects interact with random effects, it is most common to include these inside the parentheses belonging to the random effect they interact with, like so:
+The previous two formulas include the marginal effects of age and listener and the interaction between them. However, they estimate all these without adaptive pooling. We know that it is advisable to estimate factors with large numbers of levels using partial pooling, regardless of how 'random' the effect may be (see section \@ref(c4-strategies)). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. In order to estimate listener-dependent age effects in our model using partial pooling, we include these inside the parentheses belonging to the listener predictor, like so:
 
 `height ~ 1 + A + (1 + A|L) + (1|S)`
 
-When we do this, we tell our model to fit the age by listener interaction using partial pooling just like we did for the listener intercept effects. Actually, our 'listener intercept effects' are simply listener-specific deviations from the intercept, i.e. the listener by intercept interaction. When our formula has a non intercept predictor, we can omit the `1` and write it as seen below:
+The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Notice the parallel structure between our models with and without random effects:
+
+`height ~ 1 + A +  L +  A:L     +   S`
+
+`height ~ 1 + A + (1 +   A  |L) + (1|S)`
+
+These models have equivalent parameters, which have been horizontally aligned in the two formulas above. The `L` term in the top model is represented by the `1` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect), and the `A:L` term in the top model is represented by the `A` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect). The main difference between `L` and `A:L` on one hand and `(1 + A|L)` on the other, is that the latter notation tells your model to estimate these listener dependent predictors using adaptive partial pooling. When our formula has non intercept predictors, we can omit the `1` and write it as seen below:
 
 `height ~ A + (A|L) + (1|S)`
 
-The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. 
-
-Our model formula might specify a model as in \@ref(eq:6-1). Compared to the t distributed model we fit at the end of chapter 5, the only changes have been the addition of a new term ($A1 \colon L_{[L_{[i]}]}$) and its associated priors ($A1 \colon L_{[\bullet]} \sim \mathrm{t}(\nu, 0,\sigma_{A1 \colon L}) ,\; \sigma_{A1 \colon L} \sim \mathrm{t}(\nu,0,12)$). Note that although the $A1$ predictor does not need a subscript, the $A1 \colon L_{[L_{[i]}]}$ term (the by-listener random effect for age) does. This is because although we only have a single age predictor, the interaction term estimates a different one of these for each listener, which requires the estimation of 15 such parameters in our model.
+Our model formula might specify a model as in \@ref(eq:6-1). Compared to the t distributed model we fit at the end of chapter 5, the only changes have been the addition of a new term ($A1 \colon L_{[L_{[i]}]}$) and its associated priors ($A1 \colon L_{[\bullet]} \sim \mathrm{N}(0,\sigma_{A1 \colon L}) ,\; \sigma_{A1 \colon L} \sim \mathrm{N}(0,12)$). Note that although the $A1$ predictor does not need a subscript, the $A1 \colon L_{[L_{[i]}]}$ term (the by-listener random effect for age) does. This is because although we only have a single age predictor, the interaction term estimates a different one of these for each listener, which requires the estimation of 15 such parameters in our model.
 
 $$
 \begin{equation}
@@ -174,9 +170,9 @@ $$
 height_{[i]} \sim \mathrm{t}(\nu, \mu_{[i]},\sigma) \\ 
 \mu_{[i]} = \mathrm{Intercept} + A1 + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
-L_{[\bullet]} \sim \mathrm{t}(3, 0,\sigma_L) \\
-A1 \colon L_{[\bullet]} \sim \mathrm{t}(3, 0,\sigma_{A1 \colon L}) \\
-S_{[\bullet]} \sim \mathrm{t}(3, 0,\sigma_S) \\
+L_{[\bullet]} \sim \mathrm{N}(0,\sigma_L) \\
+A1 \colon L_{[\bullet]} \sim \mathrm{N}(0,\sigma_{A1 \colon L}) \\
+S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\
 \\
 \mathrm{Intercept} \sim \mathrm{t}(3, 156,12) \\
 A1 \sim \mathrm{t}(3, 0,12) \\
@@ -188,7 +184,32 @@ A1 \sim \mathrm{t}(3, 0,12) \\
 \end{equation}
 $$
 
-This model is perfectly fine, sort of. One potential problem is that we are now estimating two parameters for each listener, an intercept and an effect for `A`. Our model above draws each of these variables from independent distributions as if these were totally unrelated. The problem with treating multiple listener-specific effects as independent is that they are often not, and recognizing this fact can improve our models.
+For the sake of comparison, \@ref(eq:6-1a) presents the model structure associated with the following formula:
+
+`height ~ 1 + A + L + A:L + S`
+
+We can see that \@ref(eq:6-1) and \@ref(eq:6-1a) are nearly identical. The only differences between the two models is whether the standard deviations of the prior distributions of the listener related parameters (e.g. $L_{[\bullet]}$) are estimated from the data (as in  \@ref(eq:6-1)), or specified a priori ( as in \@ref(eq:6-1a)).
+
+$$
+\begin{equation}
+\begin{split}
+height_{[i]} \sim \mathrm{t}(\nu, \mu_{[i]},\sigma) \\ 
+\mu_{[i]} = \mathrm{Intercept} + A1 + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mathrm{Priors:} \\ 
+L_{[\bullet]} \sim \mathrm{N}(0,12) \\
+A1 \colon L_{[\bullet]} \sim \mathrm{N}(0,12) \\
+S_{[\bullet]} \sim \mathrm{N}(0,12) \\
+\\
+\mathrm{Intercept} \sim \mathrm{t}(3, 156,12) \\
+A1 \sim \mathrm{t}(3, 0,12) \\
+\nu \sim gamma(2, 0.1) \\ 
+\sigma \sim \mathrm{t}(3, 0,12) \\
+\end{split}
+(\#eq:6-1a)
+\end{equation}
+$$
+
+The model in \@ref(eq:6-1) is preferable over the one in \@ref(eq:6-1a) because it will use information about the distribution of $L$, $A \colon L$, and $S$ to estimate the associated effects. However, one potential problem is that the model in \@ref(eq:6-1) draws each of the listener-dependent effects ($L$, $A \colon L$) from independent distributions as if these were totally unrelated, which they are not. 
 
 ### Correlations between random parameters {#c6-correlations}
 
@@ -226,22 +247,32 @@ abline (v = mean(listener_means), h = mean(listener_age_effects), lty=3)
 
 The **linear correlation** between two variables (often referred to simply as the **correlation**) is a measure of the **linear relationship** between two variables. An informal (but accurate) way to think of a linear relationship is that when you make a scatter plot using two variables (as in the right plot of figure \@ref(fig:F6-3)), the organization of the points should resemble a line if there is a strong linear relationship between them. The more the dots form a single perfect line, the closer the magnitude of the correlation gets to 1. Whether the value of a perfect correlation is 1 or -1 depends on if the line is sloped up (1) or down (-1) left to right. A correlation of 0 means there is no linear relationship between the variables. So, if two variables have a correlation of 0 you would be hard-pressed to draw any kind of *line* that captured the relationship between the variables (though some other curve might work). Figure \@ref(fig:F6-3) suggests that listener means and age effects are *negatively correlated*. 
 
-There are many ways to measure correlation, but the most common way is by using **Pearson's correlation coefficient**, defined in equation \@ref(eq:6-2) for variables $x$ and $y$. Equation \@ref(eq:6-2) introduces a term we have not seen yet, $\sigma_{xy}$, corresponding to the *covariance* between $x$ and $y$. The variance of a variable is the expected value of squared deviations from the mean. The **covariance** of two variables is the expected value of the product of deviations of each from their respective means. The correlation is the ratio of the covariance of two variables over the product of the individual standard deviations.
+There are many ways to measure correlation, but the most common way is by using **Pearson's correlation coefficient**, defined in equation \@ref(eq:6-2) for variables $x$ and $y$. Equation \@ref(eq:6-2) introduces a term we have not seen yet, $\sigma_{xy}$, corresponding to the *covariance* between $x$ and $y$ (often denoted by $\mathrm{cov}(x,y)$). We can see below that the correlation between two variables is the covariance divided by the product of their individual standard deviations. 
 
 $$
 \begin{equation}
-r = \frac {\sigma_{xy}} 
-          {\sigma_x \sigma_y}
+\hat{r} = \frac {\hat{\sigma}_{xy}} 
+          {\hat{\sigma}_x \hat{\sigma}_y}
 (\#eq:6-2)
 \end{equation}
 $$
 
-The correlation ($r$) between $x$ and $y$ can be estimated from a sample using the formula below. 
+The variance of a variable is the expected value of squared deviations from the mean. The **covariance** of two variables is the expected value of the product of deviations of each from their respective means. The correlation can be estimating by calculating the sum of the product of deviations from the mean and dividing by the number of observations minus one, as seen in \@ref(eq:6-2).
+
+$$
+\begin{equation}
+\hat{\sigma}_{xy} = \frac {\Sigma(x_i-\bar{x})(y_i-\bar{y})} 
+          {(n-1)}
+(\#eq:6-2a)
+\end{equation}
+$$
+
+Replacing $\hat{\sigma}_{xy}$ in \@ref(eq:6-2) with \@ref(eq:6-2a) yields \@ref(eq:6-3), an estimate of te correlation ($r$) between $x$ and $y$.
 
 $$
 \begin{equation}
 \hat{r} = \frac {\Sigma(x_i-\bar{x})(y_i-\bar{y})} 
-          {(N-1) \times \hat{\sigma}_x \hat{\sigma}_y}
+          {(n-1) \times \hat{\sigma}_x \hat{\sigma}_y}
 (\#eq:6-3)
 \end{equation}
 $$
@@ -299,9 +330,9 @@ multivariate_normal = cbind(rnorm (5,154,4.8),rnorm (5,10,4.2))
 multivariate_normal
 ```
 
-The dimensions of the multivariate normal can have arbitrarily different means and standard deviations, but their marginal distributions will always be a (univariate) normal. However, the dimensions are not always totally independent as they are for our small sample above. In figure \@ref(fig:F6-4) we plot samples from three different bivariate normal distributions, one variable presented in each row. The variables in all three rows have the same means and standard deviations used to make our small sample above (i.e. the reflect the listener means and standard deviations). However, the rows differ in terms of the correlation between the two dimensions of the variable. 
+The dimensions of the multivariate normal can have arbitrarily different means and standard deviations, but their marginal distributions will always be a (univariate) normal. However, the dimensions are not always totally independent as they are for our example above. In figure \@ref(fig:F6-4) we plot samples from three different bivariate normal distributions, one variable presented in each row. The variables in all three rows have the same means and standard deviations used to make our small sample above (i.e. the reflect the listener means and standard deviations). However, the rows differ in terms of the correlation between the two dimensions of the variable. 
 
-```{r F6-4, fig.height = 6.5, fig.width = 7, fig.cap="10,000 bivatiate normal draws of simulated intercept and A1 coefficients from distributions with a means and standard deviations based on our listener data. The correlation of the variables is 0 (top), 0.5 (middle) and -0.85 (bottom). The left column presents intercepts, the right column presents A1 effects, and the right column presents both variables together.", cache = FALSE, echo = FALSE}
+```{r F6-4, fig.height = 5, fig.width = 6, fig.cap="10,000 bivatiate normal draws of simulated intercept and A1 coefficients from distributions with a means and standard deviations based on our listener data. The correlation of the variables is 0 (top), 0.5 (middle) and -0.85 (bottom). The left column presents intercepts, the right column presents A1 effects, and the right column presents both variables together.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 6.4
@@ -312,7 +343,7 @@ The dimensions of the multivariate normal can have arbitrarily different means a
 #mean (listener_age_effects)
 #sd (listener_age_effects)
 set.seed(.1)
-par (mfrow = c(3,3), mar = c(4,4,3,1))
+par (mfrow = c(3,3), mar = c(4,4,1,1))
 
 ranefs = phonTools::rmvtnorm (10000, means = c(153,10), sigma = matrix (c(4.8^2,0,0,4.3^2),2,2))
 hist (ranefs[,1],main='',col=4,xlab='Intercept',freq = FALSE,breaks=40, xlim = c(130,175))
@@ -475,13 +506,11 @@ You can get information about the variance, correlation, and covariance paramete
 varcorr_information = brms::VarCorr (model_re_t)
 str (varcorr_information)
 ```
-
 You can also use the `get_corrs` and `get_sds` functions in the `bmmb` package to get summaries of your model standard deviations (including the error term): 
 
 ```{r}
 bmmb::get_sds (model_re_t)
 ```
-
 And correlations:
 
 ```{r}
@@ -490,16 +519,17 @@ bmmb::getcorrs (model_re_t, "L")
 
 Below we load the sum-coded, t distributed model we fit in the last chapter. This model contained an identical fixed-effects structure to `model_re_t`, but does not include listener-dependent age effects (and associated parameters). Figure \@ref(fig:F6-5) presents a comparison of the two models, for selected model parameters. 
 
-
-```{r}
+```{r, include = FALSE}
 model_sum_coding_t = readRDS ('../models/5_model_sum_coding_t.RDS')
 ```
+```{r, eval = FALSE}
+model_sum_coding_t = bmmb::get_model ('5_model_sum_coding_t.RDS')
+```
 
-Despite clear similarities between the models, there are some changes to the credible intervals around the parameters that are shared across both models (presented in figure \@ref(fig:F6-5)). 
+Despite clear similarities between the models, there are some changes to the credible intervals around the parameters that are shared across both models (presented in figure \@ref(fig:F6-5)). It can be risky to make up explanations for things after the fact (**post hoc**), but we can try to think about why these changes may have occurred. The change in the interval around the intercept is very small, and likely reflects our (slightly) better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are now acknowledging between-listener variation in the `A1` parameter, which `model_sum_coding_t` ignored (or treated as zero). `model_re_t` predicts a standard deviation of 4.3 cm in the `A1` effect between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can/should be. 
 
-It's always risky to make up explanations for things after the fact (**post hoc**), but we can try to think about why these changes may have occurred. The change in the interval around the intercept is very small, and likely reflects our (slightly) better overall understanding of the data. In contrast, the interval around `A1` has grown substantially. This is likely because we are now acknowledging between-listener variation in the `A1` parameter, which `model_sum_coding_t` ignored (or treated as zero). `model_re_t` predicts a standard deviation of 4.3 cm in the `A1` effect between listeners, and our data includes judgments from only 15 unique listeners. This limits how precise our `A1` estimate can/should be. 
+```{r F6-5, fig.height = 2.5, fig.width = 8, fig.cap="A comparison of estimates of the same parameters across our models with and without random effects (RE) for apparent age.", cache = FALSE, echo = FALSE}
 
-```{r F6-5, fig.height = 3, fig.width = 8, fig.cap="A comparison of estimates of the same parameters across our models: Without listener-dependent effects for apparent age (blue), and with listener-dependent age effects (red). The listener-dependent effects fit with partial pooling are often referred to as 'random slopes'.", cache = FALSE, echo = FALSE}
 ################################################################################
 ### Figure 6.5
 ################################################################################
@@ -515,13 +545,16 @@ bmmb::brmplot (comparison[c(1,5),], ylim = c(152,159),main="Intercept",
                xlim = c(.75,2.25), col = c(4,2), labels = "")
 bmmb::brmplot(comparison[c(2,6),], ylim = c(6,11),main="A1", 
               xlim = c(.75,2.25), col = c(4,2), labels = "")
-bmmb::brmplot(comparison[c(3,7),], ylim = c(2,8),main="Lsd", 
+bmmb::brmplot(comparison[c(3,7),], ylim = c(2,8),main="sigma_L", 
               xlim = c(.75,2.25), col = c(4,2), labels = "")
 bmmb::brmplot(comparison[c(4,8),], ylim = c(4,9.5),main="sigma", 
               xlim = c(.75,2.25), col = c(4,2), labels = "")
+
+legend (1.25, 9, legend = c("Age RE", "No age RE"), col = c(2,4),
+        pch=16,bty='n', cex = 1.3)
 ```
 
-The standard deviation of our listener intercepts appears to decrease slightly at the inclusion of random effects for age. This is likely because what previously seemed like variation in listener averages may have actually been variation in listener age effects. The separation of this into two separate predictors may lead to the magnitude of variation in one being diminished. Finally, the decrease in the error standard deviation is due to the inclusion of the listener random effects for `A1`, and the fact that including listener-dependent values for `A1` helped explain our variable. The error is just what the model can't explain, so as our models explain more, the error will tend to get smaller. 
+The standard deviation of our listener intercepts ($\sigma_L$, 'sigma_L' in the figure) appears to decrease slightly at the inclusion of random effects for age. This is likely because what previously seemed like variation in listener averages may have actually been variation in listener age effects. The separation of this into two separate predictors may lead to the magnitude of variation in one being diminished. Finally, the decrease in the data-level error ($\sigma$, 'sigma' in the figure) is due to the inclusion of the listener random effects for `A1`, and the fact that including listener-dependent values for `A1` helped explain our variable. The error is just what the model can't explain, so as our models explain more, the error will tend to get smaller. 
 
 ## Model Comparison {#c6-model-comparison}
 

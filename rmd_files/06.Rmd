@@ -926,7 +926,7 @@ model_sum_coding = brms::add_criterion (model_sum_coding, criterion="waic")
 model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="waic")
 ```
 
-Adding the `waic` criterion to our model with Gaussian errors (`model_sum_coding`) returns in an error message. To understand why we get these errors we can investigate the model `waic` information, which we can see below:
+Adding the `waic` criterion to our model with Gaussian errors (`model_sum_coding`) returns an error message. To understand why we get these errors we can investigate the model `waic` information, which we can see below:
 
 ```{r}
 model_sum_coding$criteria$waic
@@ -941,14 +941,14 @@ model_waic_info = model_sum_coding$criteria$waic$pointwise
 model_t_waic_info = model_sum_coding_t$criteria$waic$pointwise
 ```
 
-There will be as many rows as data points were used to fit the model. Below we can have a look at the first six values: 
+There will be one rows for each data point used to fit the model. Below we can have a look at the first six values: 
 
 ```{r}
 # first six data points
 head (model_waic_info)
 ```
 
-The estimates above simply correspond to the sum of each column. The standard error (SE) corresponds to the variance of the column times the square root of N (since the statistics are sums and not means). We recreate the summary values seen above:
+The estimates above simply correspond to the sum of each column. The standard error (SE) corresponds to the variance of the column times the square root of the number of rows (since the statistics are sums and not means). We recreate the summary values seen above:
 
 ```{r}
 # the sum of each column
@@ -986,7 +986,7 @@ grid()
 abline (v = 0.4)
 ```
 
-The warning message suggest that we use `loo` (discussed in the next section) rather than `waic` because some `p_waic` values are too large. Why is this bad? Because the theory underlying the use of $\widehat{\mathrm{elpd}}_{WAIC}$ basically assumes that there will *not* be large values of $\widehat{\mathrm{elpd}}_{WAIC}$. So, if there are large values of $\widehat{\mathrm{elpd}}_{WAIC}$ that suggests that something is wrong and $\widehat{\mathrm{elpd}}_{WAIC}$ may no longer be reliable. When this occurs, as the error message suggests, you shouldn't use $\widehat{\mathrm{elpd}}_{WAIC}$ even if it seems reliable and looks 'fine'. Think of it this way, if a bridge say it has a weight limit of three tonnes and you're driving a truck that weighs four tonnes, should you drive across the bridge? Maybe you get across safely and save some time. Maybe you crash off the bridge into the river. When you use something like this despite being warned not to you run the same risk: Maybe what you report is a true and reliable analysis, and maybe it's not and you are reporting nonsense (the academic equivalent of crashing into the river). 
+The warning message suggest that we use `loo` (discussed in the next section) rather than `waic` because some `p_waic` values are too large. Why is this bad? Because the theory underlying the use of $\widehat{\mathrm{elpd}}_{WAIC}$ basically assumes that there will *not* be large values of `p_waic`. So, if there are large values of `p_waic` that suggests that something is wrong and $\widehat{\mathrm{elpd}}_{WAIC}$ may no longer be reliable. When this occurs, as the error message suggests, you shouldn't use $\widehat{\mathrm{elpd}}_{WAIC}$ even if it seems reliable and looks 'fine'. Think of it this way, if a bridge says it has a weight limit of three tonnes and you're driving a truck that weighs four tonnes, should you drive across the bridge? Maybe you get across safely and save some time. Maybe you crash off the bridge into the river. When you use something like this despite being warned not to you run the same risk: Maybe what you report is a true and reliable analysis, and maybe it's not and you are reporting nonsense (the academic equivalent of crashing into the river). 
 
 ### Out-of-sample prediction: Cross validation {#c6-out-sample-crossval}
 
@@ -996,9 +996,9 @@ There are many ways to carry out cross validation, and these mostly differ in te
 
 The logical endpoint of k-fold cross-validation is **leave-one-out** cross validation, sometimes referred to as $\mathrm{LOO}$. In leave-one-out cross validation you leave out a single observation at a time. So, if you have $i$ observations you train the model on all observations but $i$ (i.e. $y_{[-i]}$), and then predict the lone held out point ($y_[i]$). Although $\mathrm{LOO}$ provides excellent estimates of out-of-sample prediction, this approach can be extremely computationally intensive since it involves fitting $i$ models for $i$ data points. For example, our relatively small data set (`notmen`) has 1401 observations, potentially requiring 1401 models. 
 
-Luckily, recent advances have resulted in fast ways to approximate $\widehat{\mathrm{elpd}}_{LOO}$, i.e. estimates of $\mathrm{elpd}$ based on $\mathrm{LOO}$, without having to refit models repeatedly. The `loo` package (Vehtari et al. 2022) in R and the associated functions implemented in the `brms` make it easy to estimate $\widehat{\mathrm{elpd}}_{LOO}$ in a very fast an efficient manner. In addition, $\mathrm{LOO}$ works in many cases where $\mathrm{WAIC}$ does not, hence the suggestion in the error message above to use $\mathrm{LOO}$ for model comparison. 
+Luckily, recent advances have resulted in fast ways to approximate $\widehat{\mathrm{elpd}}_{LOO}$, i.e. estimates of $\mathrm{elpd}$ based on $\mathrm{LOO}$, without having to refit models repeatedly. The `loo` package (Vehtari et al. 2022) in R and the associated functions implemented in `brms` make it easy to estimate $\widehat{\mathrm{elpd}}_{LOO}$ in a very fast an efficient manner. In addition, $\mathrm{LOO}$ works in many cases where $\mathrm{WAIC}$ does not, hence the suggestion in the error message above to use $\mathrm{LOO}$ for model comparison. 
 
-The calculation of $\widehat{\mathrm{elpd}}_{LOO}$ is more complicated than what we can explain here, however, we can provide an approximate definition here. In \@ref(eq:6-18) we use the $\approx$ symbol because we are not providing an exact definition of how $\widehat{\mathrm{elpd}}_{LOO}$ is calculated in practice, but only in principle. Equation \@ref(eq:6-18) states that the estimate of $\mathrm{elpd}$ provided by LOO cross validation is approximately equal to the sum of the log density of each data point ($y_i$) based on parameters estimated using all the data *except* for that point ($\theta_{y_{-i}}$). 
+The calculation of $\widehat{\mathrm{elpd}}_{LOO}$ is more complicated than what we can explain here, however, we can provide an approximate definition. In \@ref(eq:6-18) we use the $\approx$ symbol because we are not providing an exact definition of how $\widehat{\mathrm{elpd}}_{LOO}$ is calculated in practice, but only in principle. Equation \@ref(eq:6-18) states that the estimate of $\mathrm{elpd}$ provided by LOO cross validation is approximately equal to the sum of the log density of each data point ($y_i$) based on parameters estimated using all the data *except* for that point ($\theta_{y_{-i}}$). 
 
 $$
 \begin{equation}
@@ -1028,9 +1028,14 @@ $$
 Estimates of $\widehat{\mathrm{elpd}}_{LOO}$ and associated statistics can be added to our models using the code below. We will now include our model with random effects for apparent age in our comparison.
 
 ```{r, cache = TRUE}
-model_sum_coding = brms::add_criterion (model_sum_coding, criterion="loo")
-model_sum_coding_t = brms::add_criterion (model_sum_coding_t, criterion="loo")
-model_re_t = brms::add_criterion (model_re_t, criterion="loo")
+model_sum_coding = 
+  brms::add_criterion (model_sum_coding, criterion="loo")
+
+model_sum_coding_t = 
+  brms::add_criterion (model_sum_coding_t, criterion="loo")
+
+model_re_t = 
+  brms::add_criterion (model_re_t, criterion="loo")
 ```
 
 We can see our new criteria using the code below. Notice that we no longer see the error message we got with $\mathrm{WAIC}$ above. 
@@ -1059,17 +1064,17 @@ We can see that the `elpd_diff` is just the sum of the `elpd` estimates across t
 sum(model_t_loo_info[,1]-model_re_t_lo_info[,1])
 ```
 
-The standard error of the difference is simply the standard deviation of the difference times the square root of N. 
+The standard error of the difference is simply the standard deviation of the difference times the square root of the number of observations. 
 
 ```{r}
-sd(model_t_loo_info[,1]-model_re_t_lo_info[,1]) * sqrt(1386)
+sd(model_t_loo_info[,1]-model_re_t_lo_info[,1]) * sqrt(1401)
 ```
 
 We can use this knowledge to calculate the difference between our two worst performing models since these are not directly compared above: 
 
 ```{r}
 sum(model_loo_info[,1]-model_t_loo_info[,1])
-sd(model_loo_info[,1]-model_t_loo_info[,1]) * sqrt(1386)
+sd(model_loo_info[,1]-model_t_loo_info[,1]) * sqrt(1401)
 ```
 
 And see that these values correspond to those obtained using the 'official' comparison function as seen below:
@@ -1078,9 +1083,9 @@ And see that these values correspond to those obtained using the 'official' comp
 brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
 ```
 
-Finally, we can check out the estimated number of parameters by summing the third column of our pointwise information for each model, which contains information about $\mathrm{p_{\mathrm{LOO}}}$ for each model. We can compare this to the number of actual parameters estimated by our models. An easy way to find the number of estimated parameters is to get the posterior draws for a model using the `get_samples` function from `bmmb`. This will return a data frame that contains one column for each estimated parameter, plus one columns for the `lp` (discussed in chapter 3), and a column called `lprior` that relates to your priors. So, if we find the number of columns minus two, we can quickly count the number of estimated parameters for most kinds of models. 
+Finally, we can check out the estimated number of parameters by summing the third column of our pointwise information, which contains information about $\mathrm{p_{\mathrm{LOO}}}$ for each model. We can compare this to the actual number of parameters estimated by our models. An easy way to find the number of estimated parameters is to get the posterior draws for a model using the `get_samples` function from `bmmb`. This will return a data frame that contains one column for each estimated parameter, plus two columns for the `lp` and `lprior` (discussed in section \@ref(c3-log-posterior)). So, if we find the number of columns minus two, we can quickly count the number of estimated parameters for most kinds of models. 
 
-Below, we compare the actual number of parameters to each model with our effective number of parameters. For example, we can see that going from Gaussian to t distributed errors results in the estimation of one additional 'real' parameter ($\nu$), but the number of 'effective' parameters goes up by about 3. Adding random effects for apparent age to our model required the addition of 17 parameters: 15 listener-specific age effects, a standard deviation for these effects, and the correlation between the listener specific age and intercept effects. However, we can see that this has led to an increase of about 24 effective parameters. We can potentially explain this by thinking about how the inclusion of random effects for apparent age may have affected the estimation of the other random effects already included in the model. However, we are not going to worry too much and 'overinterpret' the effective number of parameters. 
+Below, we compare the actual number of parameters for each model with our effective number of parameters. For example, we can see that going from Gaussian to t distributed errors results in the estimation of one additional 'real' parameter ($\nu$), but the number of 'effective' parameters goes up by about 3. Adding random effects for apparent age to our model required the addition of 17 parameters: 15 listener-specific age effects, a standard deviation for these effects, and the correlation between the listener specific age and intercept effects. However, we can see that this has led to an increase of about 24 effective parameters. We can potentially explain this by thinking about how the inclusion of random effects for apparent age may have affected the estimation of the other random effects already included in the model. However, we are not going to worry too much and 'overinterpret' the effective number of parameters. 
 
 ```{r, cache = TRUE}
 # Actual and effective number of parameters for simplest model
@@ -1098,15 +1103,15 @@ sum(model_re_t_lo_info[,'p_loo'])
 
 ### Selecting a model
 
-Which model should we use? Based on the comparison above, we see that `model_re_t` has an $\mathrm{elpd}$ that is 204 greater than the next best model. How large does an $\mathrm{elpd}$ difference need to be in order to be meaningful? There two things that need to be taken into account: The magnitude of a difference and the uncertainty in the difference. A general rule of thumb seems to be that a difference of around 4 in $\mathrm{elpd}$ suggests a meaningful difference between the models (Vehtari et al. 2017). However, this is simply a rule of thumb and does not mean that a difference of 3.99 does not matter and a difference of 2.01 does. On the other hand, even large differences between models may not be reliable in the presence of large standard error estimates. For example, below we see the difference between out two smaller models:
+Which model should we use? Based on the comparison above, we see that `model_re_t` has an $\mathrm{elpd}$ that is 204 greater than the next best model. How large does an $\mathrm{elpd}$ difference need to be in order to be meaningful? There are two things that need to be taken into account: The magnitude of a difference and the uncertainty in the difference. A general rule of thumb seems to be that a difference of around 4 in $\mathrm{elpd}$ suggests a meaningful difference between the models (Vehtari et al. 2017). However, this is simply a general guideline and does not mean that a difference of 3.99 does not matter and a difference of 4.01 does. On the other hand, even large differences between models may not be reliable in the presence of large standard errors (i.e. large amounts of variation in the difference). For example, below we see the difference between out two smaller models:
 
 ```{r, cache = TRUE}
 brms::loo_compare (model_sum_coding, model_sum_coding_t, criterion = "loo")
 ```
 
-The difference is 19.6, which is obviously large enough to be considered a meaningful improvement in the model. However, the standard error is 7.6. This means that the difference is only about 2.6 standard errors from zero. How many standard errors away from zero does a difference need to be in order to be 'real'? This is impossible to say, and in fact the 'reality' of any given model can not be definitively established by any statistical test. Ok, so how many standard errors from zero should it be before we make a fuss about it? The answer to this seems to be somewhere in the neighborhood of 2-5 at least. If we think of improvements to our model as continuous, we can think of differences that are two standard errors away as potentially 'small' and differences that are 5+ standard errors away as 'large'. 
+The difference is 19.6, which is obviously large enough to be considered a meaningful improvement in the model. However, the standard error is 7.6. This means that the difference is only about 2.6 standard errors from zero. How many standard errors away from zero does a difference need to be in order to be 'real'? This is impossible to say, and in fact the 'reality' of any given model can not be definitively established by any statistical test. Ok, so how many standard errors from zero should it be before we make a fuss about it? The answer to this seems to be somewhere in the neighborhood of 2-5 at least. If we think of improvements to our model as continuous, we can think of differences that are two standard errors away as potentially 'small' and differences that are >5 standard errors away as 'large'. 
 
-However, $\mathrm{elpd}$ is just a tool and is not really meant to be used to select the 'best' or 'real' model from a set of alternatives. The decision about which model to use is up to the researcher and can't be handed off to the models themselves. In addition to considering differences in $\mathrm{elpd}$ in isolation, the researcher should also consider how theoretically or practically warranted differences their models are. For example, we know that our data contains way too many outliers to have proper Gaussian distributed errors. Based on previous experience, we knew a priori that outliers are typical for listener judgements of things like apparent height. As a result, although the improvement provided by using t distributed errors is not large, we may choose to keep using t distributed errors in our model anyways. On the other hand, given the small difference between the estimates provided by both models and the not-huge difference in $\mathrm{elpd}$ between the models, a researcher may be warranted in simply using normally distributed errors in their model. 
+However, $\mathrm{elpd}$ is just a tool and is not really meant to be used to select the 'best' or 'real' model from a set of alternatives. The decision about which model to use is up to the researcher and can't be handed off to the models themselves. In addition to considering differences in $\mathrm{elpd}$ in isolation, the researcher should also consider how theoretically or practically warranted differences in their models are. For example, we know that our data contains way too many outliers to have proper Gaussian distributed errors. Based on previous experience, we knew a priori that outliers are typical for listener judgements of things like apparent height. As a result, although the improvement provided by using t distributed errors is not large, we may choose to keep using t distributed errors in our model anyways. On the other hand, given the small difference between the estimates provided by both models and the not-huge difference in $\mathrm{elpd}$ between the models, a researcher may be warranted in simply using normally distributed errors in their model. 
 
 In contrast to these small differences, we see a difference of 204 in $\mathrm{elpd}$ due to the addition of random effects for apparent age, 10.7 standard errors away from zero. Keep in mind this does not mean that a researcher *must* include this predictor nor that this structure will necessarily be an aspect of the *real* model. What it *does* mean is that: 1) The addition of random effects for apparent age greatly improves the fit of our model to our data, 2) This increase in fit is likely to extend to the data we did *not* observe, and 3) We have pretty good evidence that the difference between the models is reliable. We could add to this: 4) It makes *sense* that there would be listener-dependent variation in the effect for apparent age, for many reasons. As a result, in this situation it seems that random age effects should be included in our model. 
 
@@ -1159,13 +1164,13 @@ Finally, we compare this to our equivalent model, minus the useless predictor.
 brms::loo_compare (model_re_t, model_re_t_tooBig)
 ```
 
-We can see that the more-complex model in this case actually has a slightly higher $\mathrm{elpd}$. In addition, we can look at a summary of the fixed effects and see that the value of the useless predictor is near zero (0.08), and the credible interval is wide and approximately symmetrical about zero. The more-complex model has a slightly higher $\mathrm{elpd}$, but that this difference in only 1/4 the magnitude of the standard error. In addition, we can look at a summary of the fixed effects and see that the value of the useless predictor is near zero (0.3), and the 95% credible interval is wide relative to this value and include zero ([-.2, .8]). 
+The more-complex model has a slightly higher $\mathrm{elpd}$, but this difference in only 1/4 the magnitude of the standard error. In addition, we can look at a summary of the fixed effects and see that the value of the useless predictor is near zero (0.3), and the 95% credible interval is wide relative to this value and includes zero and very small values ([-.2, .8]). 
 
 ```{r, cache = TRUE}
 brms::fixef(model_re_t_tooBig)
 ```
 
-So, does this mean that this predictor should be excluded from the model? We would be justified in doing so, but may not necessarily want to. For example, if one of our important research questions centered round the value of the useless predictor, the fact that it is around zero and not some other value (e.g. -100) may be useful information. or example, we might want to keep the predictor in the model so we can say something like "So & So (2007) reported a value of -100 for the useless predictor. However, our results suggest that the effect of this predictor are likely to be near zero [mean = 0.34, sd = 0.25, 95% CI = [-0.17,0.84])". 
+So, does this mean that this predictor should be excluded from the model? We would be justified in doing so, but may not necessarily want to. For example, if one of our important research questions centered on the value of the useless predictor, the fact that it is around zero and not some other value (e.g. -100) may be useful information. or example, we might want to keep the predictor in the model so we can say something like "So & So (2007) reported a value of -100 for the useless predictor. However, our results suggest that the effect of this predictor are likely to be near zero [mean = 0.34, sd = 0.25, 95% CI = [-0.17, 0.84])". 
 
 ## Answering our research questions {#c6-answering}
 
@@ -1177,13 +1182,13 @@ We've selected the model with random effects as the 'best' model and are ready t
   
   (Q3) What is the difference in apparent height associated with the perception of adultness? 
   
-Our answers to the main research questions are largely unchanged from the previous chapter (section \@ref(c5-answering-qs)), however, there have been some changes that highlight interesting aspects of our data. We are going to focus on what our model tells us the listener dependent intercepts and effects for apparent age. 
+Our answers to the main research questions are largely unchanged from the previous chapter (section \@ref(c5-answering-qs)), however, there have been some changes that highlight interesting aspects of our data. We are going to focus on what our model tells us about the listener dependent intercepts and effects for apparent age. 
 
 We saw that there was a strong negative correlation between the listener means and age effects. The reason for this is clearly evident in figure \@ref(fig:F6-1). Listeners generally provided quite stable estimates for adult speakers. However, they exhibited substantial variation in their average judged height for child speakers. This makes sense. Most people probably have a good sense for approximately how tall adult females are on average. However, how tall are children 10-12? This is harder to answer for the average person. Not only is there more variability in height for children in these age ranges, but in addition most people are not around large numbers of children 10-12 and so may not have a good sense of how tall they are on average. 
 
-Since the adult heights are more or less fixed across listeners, listeners that indicated shorter children necessarily indicated shorter speakers overall. In addition, listeners that indicated shorter children also would tend to exhibit larger age effects. In this way, the listener means and age effect become negatively correlated. 
+Since reported adult heights are more or less fixed across listeners, listeners that indicated shorter children necessarily indicated shorter speakers overall. In addition, listeners that indicated shorter children also would tend to exhibit larger age effects. In this way, the listener means and age effect become negatively correlated. 
 
-Although we said we would stick to sum coding for this book, it is worth noting that this is actually a situation where it might sense to use treatment coding, using adult as the reference level (see section \@ref(c5-treatment-coding)). This would not affect our answers to the questions above but it would make the structure of the model more closely reflect the structure of the data, and it would decrease the correlation between the listener-dependent random effects. Why? Because when the listener intercepts correspond to their adult means (and not the grand mean), the intercept no longer helps you predict their age effect. As we can see in figure \@ref(fig:F6-1), all listeners rate adult speakers about the same height regardless of how tall/short they think the children are. 
+Although we said we would stick to sum coding for this book, it is worth noting that this is actually a situation where it might make sense to use treatment coding, using adult as the reference level (see section \@ref(c5-treatment-coding)). This would not affect our answers to the questions above but it would make the structure of the model more closely reflect the structure of the data, and it would decrease the correlation between the listener-dependent random effects. Why? Because when the listener intercepts correspond to their adult means (and not the grand mean), the intercept no longer helps you predict their age effect. As we can see in figure \@ref(fig:F6-1), all listeners rate adult speakers about the same height regardless of how tall/short they think the children are. 
 
 ## 'Traditionalists' corner {#c6-frequentist}
 
@@ -1211,7 +1216,7 @@ lmer_model
 
 The model now includes estimates of the correlation between the listener random effects, and of the standard deviation of the listener-dependent age effects. Figure \@ref(fig:F6-9) is a comparison of the listener means and age effects fit by both approaches. Clearly the results are very similar save for the fact that just as with our correlations and standard deviations, `brms` gives us intervals while `lmer` only gives us point estimates. 
 
-```{r F6-9, fig.width = 8, fig.height =3.5, fig.cap="(left) Listener-dependent mean effects and credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer. (right) Same as the left panel but showing the listener-dependent age effects.", echo=FALSE,cache=FALSE}
+```{r F6-9, fig.width = 8, fig.height =2.5, fig.cap="(left) Listener-dependent mean effects and credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer. (right) Same as the left panel but showing the listener-dependent age effects.", echo=FALSE,cache=FALSE}
 
 ################################################################################
 ### Figure 6.9
@@ -1221,11 +1226,14 @@ random_effects = brms::ranef(model_re_t)$L
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 
-brmplot (random_effects[,,1], col = cols)
-points (lme4::ranef (lmer_model)$L[,1], pch=4,lwd=2, cex=3, col = cols)
+brmplot (random_effects[,,1], col = bmmb::cols,
+         ylab = "Apparent height (cm)", xlab="Listener")
+points (lme4::ranef (lmer_model)$L[,1], pch=4,lwd=2, cex=3, 
+        col = bmmb::cols)
 abline (h=0,lty=3)
-brmplot (random_effects[,,2], col = cols)
-points (lme4::ranef (lmer_model)$L[,2], pch=4,lwd=2, cex=3, col = cols)
+brmplot (random_effects[,,2], col = bmmb::cols, xlab="Listener")
+points (lme4::ranef (lmer_model)$L[,2], pch=4,lwd=2, cex=3, 
+        col = bmmb::cols)
 abline (h=0,lty=3)
 ```
 

@@ -57,11 +57,11 @@ abline (h = c(155.3,155.3+8.8,155.3-8.8), lwd = c(3,2,2), col = c(1,4,3))
 boxplot (height ~ A, data=notmen, col = c(beige,lightpink),ylim = c(103,185), xlab="",add=TRUE)
 
 mtext (side = 2, outer = FALSE, "Height (cm)", line = 2.75)
-boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
+boxplot (height ~ A+L, data=notmen, col = rep(bmmb::cols,each=2),ylim = c(103,185),
          ylab="",yaxt="n", xaxt="n",xlab="Listener")
 axis (side=1, at = seq(1.5,30.5,2), 1:15)
 abline (h = c(155.3,155.3+8.8,155.3-8.8), lwd = c(3,2,2), col = c(1,4,3))
-boxplot (height ~ A+L, data=notmen, col = rep(cols,each=2),ylim = c(103,185),
+boxplot (height ~ A+L, data=notmen, col = rep(bmmb::cols,each=2),ylim = c(103,185),
          ylab="",yaxt="n", xaxt="n",xlab="Listener", add = TRUE)
 ```
 
@@ -445,7 +445,7 @@ This distribution has a single parameter (eta, $\eta$) that determines how peake
 ```{r F6-4b, fig.height = 3, fig.width = 8, fig.cap="(left) Density of different correlation parameters for a two-dimensional correlation matrix, according to LKJ distributions with varying eta parameters. (right) Log densities of the densities in the left plot.", cache = FALSE, echo = FALSE}
 
 ################################################################################
-### Figure 6.4b
+### Figure 6.5
 ################################################################################
 
 cols = colorRampPalette(bmmb::cols[colls = c(9,7,4,3,8,5,12)])(10)
@@ -461,7 +461,7 @@ for (j in 1:10){
 }
 
 legend (0.65,2.5, legend = c(1:10),col = cols, 
-        pch=15, bty = 'n', cex = 0.65)
+        pch=15, bty = 'n', cex = 0.75)
 
 plot (tmp[,1],log(tmp[,2]), type = 'l', col = cols[1], ylab="Log Density",xlab="Correlation",
       ylim = c(-10,2), xaxs='i', lwd=3, yaxs='i')
@@ -586,7 +586,7 @@ Despite clear similarities between the models, there are some changes to the cre
 ```{r F6-5, fig.height = 2.5, fig.width = 8, fig.cap="A comparison of estimates of the same parameters across our models with and without random effects (RE) for apparent age.", cache = FALSE, echo = FALSE}
 
 ################################################################################
-### Figure 6.5
+### Figure 6.6
 ################################################################################
 
 varcorr_information = brms::VarCorr (model_re_t)
@@ -718,43 +718,45 @@ $$
 
 In the formulas above we replace $p(\tilde{y}_i | \theta)$ with $\mathrm{N}(y_i | \mu, \sigma)$ because the simulations generate normally-distributed data. Our simulations result in three sets of $\mathrm{lpd}$ and three sets of $\mathrm{elpd}$, a pair of each for each of the models above. The average of each of these six sets of values is presented in figure \@ref(fig:F6-6). Since logarithmic values closer to zero are closer to one on the original scale, *more negative* log-likelihood values indicate a *less likely* outcome. We can see that the $\mathrm{lpd}$ improves as the model becomes more complicated, despite the fact that the $x_1$ and $x_2$ had absolutely no relationship to the data generating process or to the dependent variable. 
 
-```{r F6-6, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above. (right) The same values as on the left, however, now elpd is estimated by adjusting the lpd using the number of predictors in the model.", cache = FALSE, echo = FALSE}
+```{r F6-6, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in our simulated example. (right) The same values as on the left, however, now elpd is estimated by adjusting the lpd using the number of predictors in the model, as discussed in the text.", cache = FALSE, echo = FALSE}
 ################################################################################
-### Figure 6.6
+### Figure 6.7
 ################################################################################
 
 means = round (apply (cbind(lpd,elpd), 2, mean),1)
 
 layout (mat=t(c(1:3)), widths = c(.4,.4,.2))
-par (mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+par (mar = c(4.2,1,1,.1),oma = c(.5,3.5,.1,.1))
 
 plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "lpd",xlab="Predictors")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"),cex=1.1)
+      pch=16, xlim = c(.8,3.2), ylab = "lpd",xlab="Predictors",
+      cex.lab=1.3,cex.axis=1.3)
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"),cex.axis=1.3)
 lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
 arrows (1,means[1]-0.2, 1,means[4]+0.2,code=3, length=0.1,lwd=2)
 arrows (2,means[2]-0.2, 2,means[5]+0.2,code=3, length=0.1,lwd=2)
 arrows (3,means[3]-0.2, 3,means[6]+0.2,code=3, length=0.1,lwd=2)
-text ((1:3)+.1, -71, labels = round(c(means[1]-means[4],means[2]-means[5],
-                                means[3]-means[6]),2))
-text (0.8,c(-68.8,-73.6), labels = c("More Likely","Less likely"), pos=4)
 
-mtext (side=2,text = "log density", line = 2.75)
+text ((1:3)+.1, -71, labels = round(c(means[1]-means[4],means[2]-means[5],
+                                means[3]-means[6]),2),cex=1.2)
+text (0.8,c(-68.8,-73.6), labels = c("More Likely","Less likely"), pos=4,cex=1.2)
+
+mtext (side=2,text = "Log density", line = 3)
 #legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
 #        col=c(1,2), lwd=2,bty="n")
 
 plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n",cex.lab=1.3)
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"),cex.axis=1.3)
 lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
 lines (means[1:3] - c(2:4), col =2, lwd=2, type = "b",pch=16, lty = 2)
 arrows (1,means[1]-0.2, 1,means[1]+0.2-2,code=3, length=0.1,lwd=2)
 arrows (2,means[2]-0.2, 2,means[2]+0.2-3,code=3, length=0.1,lwd=2)
 arrows (3,means[3]-0.2, 3,means[3]+0.2-4,code=3, length=0.1,lwd=2)
 
-text (1:3, means[1:3]+.25, labels = means[1:3])
-text (1:3, means[4:6]-.25, labels = means[4:6])
-text (1:3, means[1:3]-.25-c(2:4), labels = means[1:3]-c(2:4))
+text (1:3, means[1:3]+.25, labels = means[1:3],cex=1.2)
+text (1:3, means[4:6]-.25, labels = means[4:6],cex=1.2)
+text (1:3, means[1:3]-.25-c(2:4), labels = means[1:3]-c(2:4),cex=1.2)
 
 plot (0, bty='n', xaxt='n',yaxt='n',xlab="",type="n")
 legend (.6,.2,legend = c("lpd","elpd","elpd_hat"), lwd=4, 
@@ -782,9 +784,10 @@ You may have noticed that our penalization does not exactly recreate the line re
 
 In fact, we know that in this case the 'best' model corresponds *exactly* to the true data generating process. However, penalization will not always result in the highest values of $\widehat{\mathrm{elpd}}$ for the simplest model. In figure \@ref(fig:F6-7) we simulate new fake data, except now we include $x_2$ in the 'real' underlying data generating process (i.e., `y = x1 + x2 + rnorm (n, 0, 1)`). As a result, for this data we actually *do* need both $x_1$ and $x_2$ in the model. As seen below, penalization does not obscure the benefit of adding $x_2$ to our model when it is warranted. This is because the relatively small penalty associated with the increased model complexity does not overwhelm the large benefit due to the inclusion of a predictor that is actually related to our dependent variable. 
 
-```{r F6-7, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in the simulations above, modified to also include the second predictor in the data generating process. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = FALSE, echo = FALSE}
+```{r F6-7, fig.height = 3, fig.width = 8, fig.cap="(left) Average value of lpd and elpd for each model in our simulated example, modified to also include the second predictor (`x2`) in the data generating process. (right) The same values as on the left, however, now elpd is estimated based on adjusting the lpd using the number of model parameters.", cache = FALSE, echo = FALSE}
+
 ################################################################################
-### Figure 6.7
+### Figure 6.8
 ################################################################################
 n = 50         # how many observations
 iter = 1000    # how many simulations
@@ -824,28 +827,30 @@ for (i in 1:iter){
 means = round (apply (cbind(in_sample_ll,out_of_sample_ll), 2, mean),1)
 
 layout (mat=t(c(1:3)), widths = c(.4,.4,.2))
-par (mar = c(4,1,1,.1),oma = c(.1,3,.1,.1))
+par (mar = c(4,1.5,1,.1),oma = c(.5,3,.1,.1))
 
 plot (means[1:3], type = "b", lwd = 2, ylim = range(means)+c(-.5,.5),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "Model log-likelihhod",xlab="Predictors")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+      pch=16, xlim = c(.8,3.2), ylab = "Model log-likelihhod",
+      xlab="Predictors",cex.lab=1.3,cex.axis=1.3)
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"),cex.axis=1.3)
 lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
-mtext (side=2,text = "Log-likelihood", line = 2.5)
+mtext (side=2,text = "Log-likelihood", line = 3)
 #legend (3.4,-70.5, legend= c("In sample","out-of-sample"), 
 #        col=c(1,2), lwd=2,bty="n")
 
-  plot (means[1:3], type = "b", lwd = 2, ylim =c(-73.5,-69),xaxt='n',
-      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",yaxt="n")
-axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"))
+plot (means[1:3], type = "b", lwd = 2, ylim =c(-73.5,-69),xaxt='n',
+      pch=16, xlim = c(.8,3.2), ylab = "",xlab="Predictors",
+      yaxt="n",cex.lab=1.3)
+axis (side=1,at=1:3,labels = c("x1","x1, x2","x1, x2, x3"),cex.axis=1.3)
 lines (means[4:6], col =2, lwd=2, type = "b",pch=16)
 lines (means[1:3] - c(1:3), col =2, lwd=2, type = "b",pch=16, lty = 2)
 arrows (1,means[1]-0.2, 1,means[1]+0.2-1,code=3, length=0.1,lwd=2)
 arrows (2,means[2]-0.2, 2,means[2]+0.2-2,code=3, length=0.1,lwd=2)
 arrows (3,means[3]-0.2, 3,means[3]+0.2-3,code=3, length=0.1,lwd=2)
 
-text (c(1,2.2,3), means[1:3]+.25, labels = means[1:3])
-text (c(1,2.2,3), means[4:6]-.25, labels = means[4:6])
-text (c(1,2.2,3), means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3))
+text (c(1,2.2,3), means[1:3]+.25, labels = means[1:3],cex=1.2)
+text (c(1,2.2,3), means[4:6]-.25, labels = means[4:6],cex=1.2)
+text (c(1,2.2,3), means[1:3]-.25-c(1:3), labels = means[1:3]-c(1:3),cex=1.2)
 
 plot (0, bty='n', xaxt='n',yaxt='n',xlab="",type="n")
 legend (.6,.2,legend = c("lpd","elpd","elpd_hat"), lwd=4, 
@@ -967,20 +972,20 @@ resids_t = scale(residuals(model_sum_coding_t)[,1])
 
 We scale our residuals so that they are represented in terms of standard deviations from the mean, and plot these against the `p_waic` values calculated for each data point by each model. Clearly, large residuals relate to large `p_waic` values. In other words, large `p_waic` values are related to data points that are a very poor fit for our model. In our model with Gaussian errors this relationship is very predictable and quickly leads to large values in `p_waic`. For our model with t distributed errors (`model_sum_coding_t`) residuals beyond two standard deviations do not strongly affect `p_waic`. These differences are due to the different behaviors of the normal and t distributions in their tails, as discussed in section \@ref(c5-robustness). 
 
-```{r F6-8, fig.height = 3, fig.width = 8, fig.cap="(left) Standardized model residuals plotted against values of the WAIC penalty term (P_WAIC) for each data point for the model with Gaussian errors, `model_sum_coding`. (right) The same as on the left but for the model with t distributed errors, `model_sum_coding_t`.", cache = FALSE, echo = FALSE}
+```{r F6-8, fig.height = 3, fig.width = 8, fig.cap="(left) Standardized model residuals plotted against values of the WAIC penalty term (p_waic) for each data point for the model with Gaussian errors, `model_sum_coding`. (right) The same as on the left but for the model with t distributed errors, `model_sum_coding_t`.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 6.8
 ################################################################################
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
-plot(model_sum_coding$criteria$waic$pointwise[,2], resids,xlab="P_WAIC",ylab="Residual", 
+plot(model_sum_coding$criteria$waic$pointwise[,2], resids,xlab="p_waic",ylab="Residual", 
      ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
 grid()
 abline (v = 0.4)
 #abline (h=c(-2.5,2.5))
 
-plot(model_sum_coding_t$criteria$waic$pointwise[,2], resids_t,xlab="P_WAIC",ylab="Residual", 
+plot(model_sum_coding_t$criteria$waic$pointwise[,2], resids_t,xlab="p_waic",ylab="Residual", 
      ylim = c(-4.5,4.5), xlim = c(0,1.1), col=cols[6],pch=16)
 grid()
 abline (v = 0.4)
@@ -1216,7 +1221,7 @@ lmer_model
 
 The model now includes estimates of the correlation between the listener random effects, and of the standard deviation of the listener-dependent age effects. Figure \@ref(fig:F6-9) is a comparison of the listener means and age effects fit by both approaches. Clearly the results are very similar save for the fact that just as with our correlations and standard deviations, `brms` gives us intervals while `lmer` only gives us point estimates. 
 
-```{r F6-9, fig.width = 8, fig.height =2.5, fig.cap="(left) Listener-dependent mean effects and credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer. (right) Same as the left panel but showing the listener-dependent age effects.", echo=FALSE,cache=FALSE}
+```{r F6-9, fig.width = 8, fig.height =3, fig.cap="(left) Listener-dependent intercept effects and 95% credible intervals estimated using brms models. Crosses indicate random effects estimated by lmer. (right) Same as the left panel but showing the listener-dependent age effects.", echo=FALSE,cache=FALSE}
 
 ################################################################################
 ### Figure 6.9
@@ -1227,11 +1232,12 @@ random_effects = brms::ranef(model_re_t)$L
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 
 brmplot (random_effects[,,1], col = bmmb::cols,
-         ylab = "Apparent height (cm)", xlab="Listener")
+         ylab = "Listener effects (cm)", xlab="Listener")
 points (lme4::ranef (lmer_model)$L[,1], pch=4,lwd=2, cex=3, 
         col = bmmb::cols)
 abline (h=0,lty=3)
-brmplot (random_effects[,,2], col = bmmb::cols, xlab="Listener")
+brmplot (random_effects[,,2], col = bmmb::cols, xlab="Listener",
+         ylab = "Listener age effects (cm)")
 points (lme4::ranef (lmer_model)$L[,2], pch=4,lwd=2, cex=3, 
         col = bmmb::cols)
 abline (h=0,lty=3)

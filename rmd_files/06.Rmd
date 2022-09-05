@@ -161,17 +161,17 @@ As a shortcut, we can use the symbol `*` which means "include the main effects f
 
 `height ~ 1 + A * L + S`
 
-The previous two formulas include the marginal effects of age and listener and the interaction between them. However, they estimate all these without adaptive pooling. We know that it is advisable to estimate factors with large numbers of levels using partial pooling, regardless of how 'random' the effect may be (see section \@ref(c4-strategies)). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. In order to estimate listener-dependent age effects in our model using partial pooling, we include these inside the parentheses belonging to the listener predictor, like so:
+The previous two formulas include the marginal effects of age and listener and the interaction between them. However, they estimate all these without adaptive pooling. We know that it is advisable to estimate factors with large numbers of levels using adaptive pooling, regardless of how 'random' the effect may be (see section \@ref(c4-strategies)). This applies to the marginal effects of predictors such as listener, but also to the interactions between these 'random' effects and our 'fixed' effects. In order to estimate listener-dependent age effects in our model using adaptive pooling, we include these inside the parentheses belonging to the listener predictor, like so:
 
 `height ~ 1 + A + (1 + A|L) + (1|S)`
 
-The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive partial pooling. Notice the parallel structure between our models with and without random effects:
+The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive pooling. Notice the parallel structure between our models with and without random effects:
 
 `height ~ 1 + A +  L +  A:L     +   S`
 
 `height ~ 1 + A + (1 +   A  |L) + (1|S)`
 
-These models have equivalent parameters, which have been horizontally aligned in the two formulas above. The `L` term in the top model is represented by the `1` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect), and the `A:L` term in the top model is represented by the `A` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect). The main difference between `L` and `A:L` on one hand and `(1 + A|L)` on the other, is that the latter notation tells your model to estimate these listener dependent predictors using adaptive partial pooling. When our formula has non intercept predictors, we can omit the `1` and write it as seen below:
+These models have equivalent parameters, which have been horizontally aligned in the two formulas above. The `L` term in the top model is represented by the `1` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect), and the `A:L` term in the top model is represented by the `A` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect). The main difference between `L` and `A:L` on one hand and `(1 + A|L)` on the other, is that the latter notation tells your model to estimate these listener dependent predictors using adaptive pooling. When our formula has non intercept predictors, we can omit the `1` and write it as seen below:
 
 `height ~ A + (A|L) + (1|S)`
 
@@ -350,7 +350,7 @@ cor (x1, y1)
 
 The **multivariate normal** distribution is a straightforward and very useful generalization of the normal distribution. A multivariate normal variable is a set of variables that are each normally distributed, *and* that result in another normally-distributed variable when linearly combined. Each individual variable that makes up the multivariate normal represents a **dimension** of the multivariate normal. So, if we have a three-dimensional normal distribution with dimensions $x_1, x_2$, and $x_3$, this implies that: 1) Each of $x_1, x_2$, and $x_3$ are normally distributed, and 2) If we define a new variable $x_4$ such that $x_4 = a \times x_1 +  b \times x_2 +  c \times x_3$, where $a, b,$ and $c$ can take any scalar value, then $x_4$ will be normally distributed.
 
-When our models feature multiple predictors for a factor whose levels are estimated with partial pooling (e.g., speaker, listener), we model the coefficients with a multivariate normal distribution. In doing so we estimate the standard deviation of each dimension *and* the correlation between all pairs of dimensions. The easiest way to see why the correlation between dimensions matters is by drawing bivariate (2-dimensional) normal variables with different correlations and plotting the results.
+When our models feature multiple predictors for a factor whose levels are estimated with adaptive pooling (e.g., speaker, listener), we model the coefficients with a multivariate normal distribution. In doing so we estimate the standard deviation of each dimension *and* the correlation between all pairs of dimensions. The easiest way to see why the correlation between dimensions matters is by drawing bivariate (2-dimensional) normal variables with different correlations and plotting the results.
 
 The dimensions of the multivariate normal can have arbitrarily different means and standard deviations, but their marginal distributions will always be a (univariate) normal. In figure \@ref(fig:F6-4) we plot randomly-generated samples from three different bivariate normal distributions differing in the correlation between their dimensions, one variable presented in each row. The variables all have means and standard deviations that reflect the distribution of listener means (first column), and the listener-dependent age effects (second column). So, the first dimension has a mean and standard deviation equal to 154 and 4.8 cm, and the second dimension has a mean and standard deviation equal to 10.1 and 4.2 cm respectively. 
 
@@ -855,7 +855,7 @@ legend (.6,.2,legend = c("lpd","elpd","elpd_hat"), lwd=4,
         col = c(1,2,2),cex=1.4,lty = c(1,1,3))
 ```
 
-Two aspects involved in the traditional estimation of $\mathrm{elpd}$ need to be updated to use these measures for multilevel Bayesian models. The first of these is the way that models are penalized based on their complexity. Historically, the $\mathrm{p}$ term is related to the number of *independent* parameters estimated by the model. Estimated parameters are those that are not specified a priori but instead depend on the data and structure of the model. Unfortunately, counting the number of independent parameters is not so straightforward in our multilevel models since parameters estimated with partial pooling (and shrinkage) are not fully independent. For example, a set of 10 'random effects' that have all been pulled slightly towards their shared mean can hardly be considered totally independent. On the other hand they do vary from each other in unpredictable ways. As a result, it seems like our random effect with ten levels may represent somewhere between zero and ten independent parameters, based on how much they have been *shrunk* towards their mean. Our estimate of $\mathrm{elpd}$ will need a way to estimate model complexity that takes this into account. 
+Two aspects involved in the traditional estimation of $\mathrm{elpd}$ need to be updated to use these measures for multilevel Bayesian models. The first of these is the way that models are penalized based on their complexity. Historically, the $\mathrm{p}$ term is related to the number of *independent* parameters estimated by the model. Estimated parameters are those that are not specified a priori but instead depend on the data and structure of the model. Unfortunately, counting the number of independent parameters is not so straightforward in our multilevel models since parameters estimated with adaptive pooling (and shrinkage) are not fully independent. For example, a set of 10 'random effects' that have all been pulled slightly towards their shared mean can hardly be considered totally independent. On the other hand they do vary from each other in unpredictable ways. As a result, it seems like our random effect with ten levels may represent somewhere between zero and ten independent parameters, based on how much they have been *shrunk* towards their mean. Our estimate of $\mathrm{elpd}$ will need a way to estimate model complexity that takes this into account. 
 
 Second, $\mathrm{lpd}$ and $\mathrm{p}$ have traditionally been *point estimates*, single values often based on maximum-likelihood estimation. Since our models consist of posterior distributions of parameters, we instead have *distributions* of $\mathrm{lpd}$ and $\mathrm{p}$. This means that we also have a distribution of values of $\mathrm{elpd}$, and it would be useful to take this into account.
 
@@ -877,7 +877,7 @@ $$
 \end{equation}
 $$
 
-Rather than count the number of parameters in our model, $\mathrm{WAIC}$ estimates the penalty term based on the characteristics of the predictive density. First, you find the log density for each individual data point across all posterior draws, and then find the variance of this. Equation \@ref(eq:6-15) shows an example of this for the first data point. Following Gelman (2013 [@@ SB ?]), the $Var_{s=1}^{\,S}$ term indicates that we are finding the variance of $\mathrm{log} (p(y_{[1]} | \theta^s))$ across values of $S$.
+Rather than count the number of parameters in our model, $\mathrm{WAIC}$ estimates the penalty term based on the characteristics of the predictive density. First, you find the log density for each individual data point across all posterior draws, and then find the variance of this. Equation \@ref(eq:6-15) shows an example of this for the first data point. The $Var_{s=1}^{\,S}$ term indicates that we are finding the variance of $\mathrm{log} (p(y_{[1]} | \theta^s))$ across values of $S$.
 
 $$
 \begin{equation}
@@ -1243,6 +1243,8 @@ abline (h=0,lty=3)
 
 
 ## References
+
+Gelman, A., Goodrich, B., Gabry, J., & Vehtari, A. (2019). R-squared for Bayesian regression models. The American Statistician.
 
 McElreath, R. (2020). Statistical rethinking: A Bayesian course with examples in R and Stan. Chapman and Hall/CRC.
 

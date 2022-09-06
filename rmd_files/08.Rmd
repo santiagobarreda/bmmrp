@@ -599,7 +599,7 @@ Our previous model had the following formula for the `sigma` term:
 
 `sigma ~ A`
 
-This told `brms` "model `sigma` as a function of an intercept and an effect for apparent age". We can add to our formula by specifying a 'random effects' term for listeners, and a 'random slope' for age (i.e. an interaction between apparent age and listener), both estimated using partial pooling.
+This told `brms` "model `sigma` as a function of an intercept and an effect for apparent age". We can add to our formula by specifying a 'random effects' term for listeners, and a 'random slope' for age (i.e. an interaction between apparent age and listener), both estimated using adaptive pooling.
 
 `sigma ~ A + (A|L)`
 
@@ -696,7 +696,7 @@ If we look at the model output we see see the same `sigma_Intercept` and `sigma_
 bmmb::short_summary (model_A_L_sigma)
 ```
 
-Our listener-specific adjustments to the sigma intercept were fit with partial pooling, i.e. they are 'random' effects. As such, we can get these in the same way as for other random effects terms (see section \@ref(c5-manipulating-random-effects)). Here, we will use the `hypothesis` function to get the listener random effects themselves (`sigmas_centered`, $L_{\sigma}$), and the sum of these with the sigma intercept (`sigmas`), resulting in the logarithm of the listener-specific $\sigma$ parameter ($\mathrm{Intercept}_{\sigma} + L_{\sigma[i]}$). We compare these in figure \@ref(fig:F8-5), exponentiating the recreated `sigma` values to get the listener-specific $\sigma$ terms. 
+Our listener-specific adjustments to the sigma intercept were fit with adaptive pooling, i.e. they are 'random' effects. As such, we can get these in the same way as for other random effects terms (see section \@ref(c5-manipulating-random-effects)). Here, we will use the `hypothesis` function to get the listener random effects themselves (`sigmas_centered`, $L_{\sigma}$), and the sum of these with the sigma intercept (`sigmas`), resulting in the logarithm of the listener-specific $\sigma$ parameter ($\mathrm{Intercept}_{\sigma} + L_{\sigma[i]}$). We compare these in figure \@ref(fig:F8-5), exponentiating the recreated `sigma` values to get the listener-specific $\sigma$ terms. 
 
 ```{r}
 sigmas_centered = short_hypothesis(model_A_L_sigma, "sigma_Intercept = 0", 
@@ -851,8 +851,6 @@ We can see that the differences in the fixed effects are so small as to be large
 
 ## Building identifiable and supportable models {#c8-identifiability}
 
-[@@ Noah read whole section please, brand new] [@@ NHS: made some edits, left some comments - overall looks good]
-
 Before finishing this chapter we want to talk about an extremely important issue that we have not discussed yet: Whether you *should* fit the complex model you are thinking of for your data. To this point, we haven't discussed this, but as our models get more and more complicated it is something we need to think about. There are generally two constraints on the sorts of models you can fit to your data. 
 
 The first of these is issues related to the **identifiability** of different model parameters, that is, the ability of your model to estimate unique and independent values for each of your model parameters. When model parameters are not **identifiable**, that means that these parameters cannot be estimated no matter how much data you have available. We have actually seen several examples of this issue already. When we discussed contrasts (section \@ref(c5-contrasts)), and when we introduced modeling factors with many levels (section \@ref(c7-description-1)), we talked about the fact that you can't estimate all levels of a factor. The cause of these problems is a lack of *identifiability* of the parameters. 
@@ -870,9 +868,7 @@ load ('../models/8_badmodels.Rda')
 
 ### Collinearity
 
-We've referenced the idea of *linear dependence* before, and we can provide a more formal definition of this now. Each of your predictors is a vector, a sequence of $N$ values that predict your dependent variable for observation $i$. A set of predictor vectors ($x_1, x_2, \dots, x_p$) [@@ NHS: N for sample size and p for number of predictors is fairly standard] is linearly dependent when there exists a vector of non-zero real numbers ($a_1, a_2, \dots, a_p$) that can be multiplied by our vectors such that the sum of the vectors equals zero for all elements of the vector. This is presented below: 
-
-[@@ NHS: linear independence is defined as all the coefficients have to be zero for the linear combination to equal the zero vector, but the converse of this doesn't imply that they all have to be non-zero, right? That is, you could have linear dependence with $a_1, ..., a_{p-2}$ all equal to zero and $a_{p-1}$ and $a_p$ non-zero and the corresponding sum equal to zero, right? The point being that it's probably better to state the definition of linear *independence* rather than linear *dependence*.]
+We've referenced the idea of *linear dependence* before, and we can provide a more formal definition of this now. Each of your predictors is a vector, a sequence of $n$ values that predict your dependent variable for observation $i$. A set of predictor vectors ($x_1, x_2, \dots, x_p$) is linearly independent when there is no vector of non-zero real numbers ($a_1, a_2, \dots, a_p$) that can be multiplied by our vectors such that the sum of the vectors equals zero for all elements of the vector. This is presented below: 
 
 $$
 \begin{equation}
@@ -883,7 +879,7 @@ $$
 \end{equation}
 $$
 
-When we introduced linear dependence we gave the example that you can't include height in meters and height in centimeters as predictors. Now we can say that it is because these are *linearly dependent*, and they can be combined to add up to zero. For example, we can add a new predictor to our data, apparent height specified in meters rather than centimeters. 
+Basically, if the vectors ($x_1, x_2, \dots, x_p$) are independent, the values of the $a$ variables above need to all be zero for the equation to be true. When we introduced linear dependence we gave the example that you can't include height in meters and height in centimeters as predictors. Now we can say that it is because these are *linearly dependent*, and they can be combined to add up to zero. For example, we can add a new predictor to our data, apparent height specified in meters rather than centimeters. 
 
 ```{r}
 exp_data$vtl_m = exp_data$vtl / 100

@@ -70,53 +70,103 @@ Smaller things tend to vibrate at higher rates than larger things. This holds fo
 
 In addition to general age-related changes, the vocal folds tend to increase in size during puberty for most males so that post-pubescent males tend to produce speech with a lower pitch than the rest of the human population. As a result of these relations, a voice with a lower voice pitch is more likely to be produced by someone who is *older*, *taller*, and more likely to be *male* than a voice with a higher pitch. The relationships between age, height, gender and f0 are presented in Figure \@ref(fig:F1-1). The height information used throughout this book is available in the `height_data` data included in the `bmmb` package and is from Fryar et al. (2012)
 
-[@@ SB - figure and caption need attention]
-
-```{r F1-1, echo = FALSE, fig.height = 2.5, fig.width = 8, echo = FALSE, fig.cap = "(left) Average height of males and females in the United states of America. (middle) Average f0 produced by male and female speakers from 5 years of age to adulthood. (right) Estimated vocal-tract length for male and female speakers from 5 years of age to adulthood, based on the acoustic data provided in Lee et al. (1999)."}
+```{r F1-1, echo = FALSE, fig.height = 2.5, fig.width = 8, echo = FALSE, fig.cap = "(left) Average height of males and females in the United States of America, organized by age (Fryar et al. (2012)). (middle) Average f0 produced by male and female speakers from 5 years of age until adulthood (Lee et al. 1999). (right) Average acoustic vocal-tract length (VTL) of male and female speakers from 5 years of age until adulthood (Lee et al. 1999). The average adult male VTL was set to 15 cm. Error bars indicate two standard deviations.", eval = TRUE}
 
 ################################################################################
 ### Figure 1.1
 ################################################################################
 
-data(height_data, package="bmmb")
-data(exp_data_all, package="bmmb")
+data (lee_etal_data)
 
 par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
-
-plot (height_data$age[height_data$gender=="f"],height_data$height[height_data$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(80,190),type='b', xlab="Age (years)",
+plot (height_data$age[height_data$gender=="f"]-.1,
+      height_data$height[height_data$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(70,205),type='b', xlab="Age (years)",
       ylab = "Height (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (height_data$age[height_data$gender=="m"],height_data$height[height_data$gender=="m"],
+lines (height_data$age[height_data$gender=="m"]+.1,
+       height_data$height[height_data$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
 
-#ats = c(8,9.5,11,12.5,14, 15.5)
-#vtls = (ats - 2.7)/0.068
-#axis (side=4, at = vtls, labels = ats)
-data(lee_etal_data, package="bmmb")
-lee_etal_data$gbar = rowMeans(log(lee_etal_data[,4:6]))
+phonTools::errorbar(height_data$age[height_data$gender=="f"]-.1,
+                    height_data$height[height_data$gender=="f"],
+                    height_data$sd[height_data$gender=="f"]*2,col=2,lwd=1,length=0.051)
+phonTools::errorbar(height_data$age[height_data$gender=="m"]+.1,
+                    height_data$height[height_data$gender=="m"],
+                    height_data$sd[height_data$gender=="m"]*2,col=4,lwd=1,length=0.051)
 
-agg = aggregate (cbind(f0,gbar) ~ age + gender, data = lee_etal_data, FUN = mean)
+rect (9.5,120,12.5,177,lwd=2,border="forestgreen",lty=1)
+rect (17.5,143,20.5,205,lwd=2,border="forestgreen",lty=1)
 
-agg$vtls = exp(-((agg$gbar)-min(agg$gbar)))
-agg$vtls = 15 * agg$vtls
 
-plot (agg$age[agg$gender=="f"],agg$f0[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(100,300),type='b', xlab="Age (years)",
+lee_etal_data$f0_original=lee_etal_data$f0
+
+lee_etal_data$f0 = log(lee_etal_data$f0_original)
+aggdmu = aggregate (f0 ~ age+gender, FUN = mean, data = lee_etal_data)
+aggdmu[,3] = exp(aggdmu[,3])
+
+lee_etal_data$f0 = log(lee_etal_data$f0sd/lee_etal_data$f0_original)
+aggdsd = aggregate (f0 ~ age+gender, FUN = sd, data = lee_etal_data)
+aggdsd[,3] = (exp(aggdsd[,3])-1)*aggdmu[,3] 
+
+aggdmuf0 = aggdmu
+aggdsdf0 = aggdsd
+
+plot (aggdmu$age[aggdmu$gender=="f"]-.1,aggdmu$f0[aggdmu$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(50,370),type='b', xlab="Age (years)",
       ylab = "f0 (Hz)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (agg$age[agg$gender=="m"],agg$f0[agg$gender=="m"],
+lines (aggdmu$age[aggdmu$gender=="m"]+.1,aggdmu$f0[aggdmu$gender=="m"],
+      pch=16,col=4,lwd=2,cex=1.5,type='b')
+grid()
+
+phonTools::errorbars(aggdmu$age[aggdmu$gender=="f"]-.1,aggdmu$f0[aggdmu$gender=="f"],
+                   aggdsd$f0[aggdsd$gender=="f"]*2,col=2,lwd=1,length=0.051)
+phonTools::errorbars(aggdmu$age[aggdmu$gender=="m"]+.1,aggdmu$f0[aggdmu$gender=="m"],
+                   aggdsd$f0[aggdsd$gender=="m"]*2,col=4,lwd=1,length=0.051)
+
+
+gbars = (log(lee_etal_data$f1)+log(lee_etal_data$f2)+log(lee_etal_data$f3))/3
+
+aggdmu = aggregate (gbars ~ age+gender, FUN = mean, data = lee_etal_data)
+aggdmu[,3] = (aggdmu[,3])
+
+aggdmu$vtl = exp(-((aggdmu$gbar)-min(aggdmu$gbars)))
+aggdmu$vtl = 15 * aggdmu$vtl
+
+vtl = (log(lee_etal_data$f1sd/lee_etal_data$f1)+
+         log(lee_etal_data$f2sd/lee_etal_data$f2)+
+         log(lee_etal_data$f3sd/lee_etal_data$f3))/3
+
+aggdsd = aggregate (vtl ~ age+gender, FUN = mean, data = lee_etal_data)
+aggdsd[,3] = exp(aggdsd[,3])*aggdmu$vtl
+
+aggdmuvtl = aggdmu
+aggdsdvtl = aggdsd
+
+plot (aggdmu$age[aggdmu$gender=="f"]-.1,aggdmu$vtl[aggdmu$gender=="f"],
+      pch=16,col=2,lwd=2,cex=1.5, ylim = c(8.5,17),type='b', xlab="Age (years)",
+      ylab = "VTL (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
+lines (aggdmu$age[aggdmu$gender=="m"]+.1,aggdmu$vtl[aggdmu$gender=="m"],
       pch=16,col=4,lwd=2,cex=1.5,type='b')
 grid()
 
 
-plot (agg$age[agg$gender=="f"],agg$vtls[agg$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(8.14, 15.62),type='b', xlab="Age (years)",
-      ylab = "Vocal-tract length (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (agg$age[agg$gender=="m"],agg$vtls[agg$gender=="m"],
-      pch=16,col=4,lwd=2,cex=1.5,type='b')
-grid()
+phonTools::errorbars(aggdmu$age[aggdmu$gender=="f"]-.1,
+                   aggdmu$vtl[aggdmu$gender=="f"],
+                   aggdsd$vtl[aggdsd$gender=="f"]*2,col=2,lwd=1,length=0.051)
+phonTools::errorbars(aggdmu$age[aggdmu$gender=="m"]+.1,
+                   aggdmu$vtl[aggdmu$gender=="m"],
+                   aggdsd$vtl[aggdsd$gender=="m"]*2,col=4,lwd=1,length=0.051)
+
 ```
+
+
+
+
+
+
+
 
 **Resonance** can be thought of as the 'size' of a sound. For example, a violin and a cello can be playing the same note (with the same pitch), but a cello 'sounds' bigger. This is because lower frequencies resonate in its larger structure. In the same way, speakers with longer **vocal tracts** (the space from the vocal folds to the lips) tend to 'sound' bigger by producing speech with lower frequencies overall. We don't really have good words to describe what resonance 'sounds' like, but a small resonance (short vocal tract) sounds 'heliumy'. When a person breathes helium and speaks, their pitch does not go up, but their *resonance* frequencies increase (for more information on this, see chapter 13). 
 
@@ -132,9 +182,7 @@ In summary, voice pitch and voice resonance are independent ways that someone ca
 
 Our listeners were 15 speakers of American English. Listeners were presented with the word "heed" produced by 139 different speakers of Michigan English. These speech samples were recorded by Hillenbrand et al. (1995) and are available on the GitHub page associated with this book. So, this experiment featured 139 unique **stimulus** sounds that the listeners in the experiment were asked to respond to. The stimuli used were productions by 48 adult females, 45 adult males, 19 girls (10-12 years of age), and 27 boys (10-12 years of age). These speakers showed substantial variation in their voice pitch and resonance as measured by their f0 and estimated vocal-tract length (as will be discussed in section \@ref(c1-inspecting)). 
 
-[@@ SB - check scaling reported in 13]
-
-In addition to the natural acoustic variation that exists between speakers, voice resonance was also manipulated experimentally. All stimuli were manipulated by shifting the spectral envelope down by 10%, simulating an increase in speaker size of approximately 10%. The downward shift of the spectral envelope results in a perceptually lower resonance which should 'sound bigger' to listeners. This acoustic manipulation is similar to the one carried out to make voices such as those of 'Alvin and the Chipmunks' sound small, but in reverse (and pitch was not affected). 
+In addition to the natural acoustic variation that exists between speakers, voice resonance was also manipulated experimentally. All stimuli were manipulated by shifting the spectral envelope down by 8%, simulating an increase in speaker size of approximately 8% (all other things being equal). The downward shift of the spectral envelope results in a perceptually lower resonance which should 'sound bigger' to listeners. This acoustic manipulation is similar to the one carried out to make voices such as those of 'Alvin and the Chipmunks' sound small, but in reverse (and pitch was not affected). 
 
 Each listener responded to all 278 stimuli (139 speakers x 2 resonance levels), for a total of 4170 observations across all listeners (15 listeners x 278 stimuli). Stimuli were presented one at a time, randomized along all stimulus dimensions. This means that tokens were thrown in one big pile and selected at random in a way that a stimulus was never predictable based on the previous one. For each trial, listeners were presented with a single word at random and were asked to: 
 

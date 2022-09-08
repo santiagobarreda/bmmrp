@@ -30,15 +30,13 @@ In order to avoid a situation where you end up with data you can't analyze or a 
 
 ## Chapter pre-cap
 
---
+In this chapter we discuss how Bayesian multilevel models are well suited for the analysis of complex models with large numbers of parameters, and some strategies for interpreting these models. We present a model with two quantitative predictors and an interaction between them, and fit and interpret a complex model including those predictors. We introduce Bayesian ANOVA and Bayesian ANOVA plots, and apply these to our initial model. Following that, we fit a complex multilevel logistic regression model, and also interpret it using a Bayesian ANOVA. We then discuss how this model can be used to interpret classification and listener behavior. Finally, we discuss model selection and misspecification, and discuss some diagnostics that can help find and diagnose problems with your models. 
 
 ## Models with multiple quantitative predictors
 
-Our regression models so far have only involved at most a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed surfaces with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL) and f0 (voice pitch) with apparent speaker height. In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, the error in the prediction of each observation, is the vertical distance between the line the observation.   
+Our regression models so far have only involved at most a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed surfaces with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL) and fundamental frequency (f0) with apparent speaker height (see chapter 1, or 13 for more information on these predictors). In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, the error in the prediction of each observation, is the vertical distance between the line and the observation.   
 
-We can also think about how apparent height, VTL, and f0 vary together. Every point in figure \@ref(fig:F11-1) has a specific value of f0, VTL, and apparent height. These three quantitative variables can be thought of as defining a single location in a 3-dimensional space. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:F11-1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots in figure \@ref(fig:F11-1). The first plot show the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
-  
-```{r F11-1, fig.height = 2.5, fig.width = 8, fig.cap='(left) Average apparent height reported for each speaker plotted against speaker VTL. Point size reflects average apparent height. (middle) Same as the left plot but comparing apparent height to f0. (right) A comparison of VTL and f0 for each speaker.', echo = FALSE, cache = FALSE}
+```{r F11-1, fig.height = 2.5, fig.width = 8, fig.cap='(left) Average apparent height reported for each speaker plotted against speaker vocal-tract length (VTL). Point size reflects average apparent height. (middle) Same as the left plot but comparing apparent height to f0. (right) A comparison of VTL and f0 for each speaker.', echo = FALSE, cache = FALSE}
 
 ###############################################################################
 ### Figure 11-1
@@ -66,9 +64,11 @@ grid()
 
 ```
 
+We can also think about how apparent height, VTL, and f0 vary together. Every point in figure \@ref(fig:F11-1) has a specific value of f0, VTL, and apparent height. These three quantitative variables can be thought of as defining a single location in a 3-dimensional space. Imagine you had a clear plastic cube containing points arranged as in \@ref(fig:F11-1) inside it, where each dimension along the cube represented one of the dimensions in the figure. Looking 'through' the cube at different orientations would result in arrangements just like the plots in figure \@ref(fig:F11-1). The first plot shows the view through the VTL side, and the second plot shows the view down the f0 side, a 1/4 rotation of the cube. The final plot shows the view down through the top of the cube.  
+
 It may be easier to see what we mean in figure \@ref(fig:F11-2), which attempts to present our points in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds (more or less) to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds (more or less) to the middle plot in figure \@ref(fig:F11-1). When we have two quantitative predictors, our models predict values along **planes** rather than lines. If we want to predict apparent height based on speaker f0 and VTL, we are basically asking: Can we predict the height of a point in our 3-dimensional space (i.e., location on the vertical z axis) based on its x and y-axis location? 
 
-```{r F11-2, fig.height = 4.5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but the cube has been rotated 90 debrees counter-clockwise.', echo = FALSE, cache = FALSE}
+```{r F11-2, fig.height = 4.5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but the cube has been rotated 90 degrees counter-clockwise.', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11.2
@@ -94,70 +94,70 @@ s3d$plane3d(my.lm, col = 1,lty=3, draw_polygon=TRUE,
             polygon_args = list(col = rgb(0, 0, 0, 0.2)))
 ```
 
-For example, any given point in the room you are sitting in right now can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the residuals) still applies to our models. In the right plot of figure \@ref(fig:F11-2), we see the plane that results in the smallest residuals between our points and the plane along the apparent height axis.   
+For example, any given point in the room you are sitting in right now can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the residuals) still applies to our models. In the right plot of figure \@ref(fig:F11-2), we see the plane that results in the smallest residuals for our points, i.e. the smallest distances between the surface of the plane and the points along the apparent height axis.   
 
-In \@ref(eq:11-1) we see that that the height of the plane along the z axis is determined by an intercept ($a$) plus the product of the x axis coordinate and its slope ($b$), and the product of the y axis coordinate and its slope ($c$). When we fit a model that includes two quantitative predictors, the model represents the planes it estimates using their $a$, $b$, and $c$ parameters. 
+In equation \@ref(eq:11-1) we see that the height of the plane along the z axis is determined by an intercept ($a$) plus the product of the x axis coordinate and its slope ($b$), and the product of the y axis coordinate and its slope ($c$). When we fit a model that includes two quantitative predictors, the model represents the planes it estimates using their $a$, $b$, and $c$ parameters. 
   
 $$
 \begin{equation}
-z =  \mathrm{a} + \mathrm{b} \times x + \mathrm{c} \times y 
+z =  \mathrm{a} + \mathrm{b} \cdot x + \mathrm{c} \cdot y 
 (\#eq:11-1)
 \end{equation}
 $$
 
-Since the plane has two dimensions it has two slopes: A field can be uphill/downhill away from you, but also be up/downhill left to right. The slope coefficients for each quantitative predictor change the slope of the plane independently for each dimension. In fact, the slope of each predictor reflects the expected change in the dependent variable when all other predictors are *held constant*. The intercept of the model slides the planes up/down the z axis without changing their slopes along either the x or y dimensions. 
+Since the plane has two dimensions it has two slopes: A field can be uphill/downhill away from you, but also be up/downhill left to right. The slope coefficient for each quantitative predictor change the slope of the plane independently for each dimension. In fact, the slope of each predictor reflects the expected change in the dependent variable when all other predictors are *held constant*. The intercept of the model slides the planes up/down the z axis without changing their slopes along either the x or y dimensions. 
 
-Our discussion above has been entirely about planes, and we will stick to two quantitative predictors for our models. However, your model can include any number of quantitative predictors, it just gets a harder to have good intuitions about the geometry involved. If your model has $n$ quantitative predictors, your data specifies points in an $n+1$ dimensional space, where dimension $n+1$ represents the dependent variable. Residuals in such models represent the difference between the surface of the $n$ dimensional shape specified by the predictors, and the position of each point along the $n+1$ dimension. 
+Our discussion above has been entirely about planes, and we will stick to two quantitative predictors for our models. However, your model can include any number of quantitative predictors, it just gets harder to have good intuitions about the geometry involved. If your model has $n$ quantitative predictors, your data specifies points in an $n+1$ dimensional space, where dimension $n+1$ represents the dependent variable. Residuals in such models represent the difference between the surface of the $n$ dimensional shape specified by the predictors, and the position of each point along the $n+1$ dimension. 
   
 ## Interactions between quantitative predictors
 
-Models with two quantitative predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by adding a new predictor, the **cross-product** (i.e. $x_1 \times x_2$) of the two variables. We can add a term representing the interaction between our two quantitative predictors to equation \@ref(eq:11-2). It's common to refer to this term as the 'interaction' between our quantitative predictors, and we will adopt this convention. Just keep in mind that we are actually referring to the product of the two variables.  
+Models with two quantitative predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by adding a new predictor, the **cross-product** (i.e. $x_1 \cdot x_2$) of the two variables. We can add a term representing the interaction between our two quantitative predictors to equation \@ref(eq:11-2). It's common to refer to this term as the 'interaction' between our quantitative predictors, and we will adopt this convention. Just keep in mind that we are actually referring to the product of the two variables.  
 
 $$
 \begin{equation}
-z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times x \times y)
+z =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) + (\mathrm{d} \cdot x \cdot y)
 (\#eq:11-2)
 \end{equation}
 $$
 
-In general, interaction terms are parameters that allow for the effect of a predictor to vary according to the value of some other predictor. When it comes to quantitative predictors, an interaction means that the slope of each predictor continuously increases/decreases as a function of the value of the *other* predictor. Consider the equation below which omits the term $(c \times y)$ for the sake of simplicity. If we factor out the x from the second and third terms on the right, we can see that the slope for the x dimension, $b$, will vary as a function of the value of y and the interaction coefficient $d$.
+In general, interaction terms are parameters that allow for the effect of a predictor to vary according to the value of some other predictor. When it comes to quantitative predictors, an interaction means that the slope of each predictor continuously increases/decreases as a function of the value of the *other* predictor. Consider the equation below which omits the term $(c \cdot y)$ for the sake of simplicity. If we factor out the x from the second and third terms on the right, we can see that the slope for the x dimension, $b$, will vary as a function of the value of y and the interaction coefficient $d$.
 
 $$
 \begin{equation}
 \begin{split}
-z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{d} \times x \times y) \\
-z =  \mathrm{a} + (\mathrm{b}) \times x + (\mathrm{d} \times y) \times x \\
-z =  \mathrm{a} + (\mathrm{b} + \mathrm{d} \times y) \times x \\
+z =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{d} \cdot x \cdot y) \\
+z =  \mathrm{a} + (\mathrm{b}) \cdot x + (\mathrm{d} \cdot y) \cdot x \\
+z =  \mathrm{a} + (\mathrm{b} + \mathrm{d} \cdot y) \cdot x \\
 \end{split}
 (\#eq:11-3)
 \end{equation}
 $$
 
-Imagine a case where the slope ($b$) along the $x$ dimension is fixed at 2 and the interaction term ($d$) is equal to zero. In this case the is no interaction between $x$ and $y$. When this happens the slope of $x$ is constant and does not change based on the value of $y$, as in \@ref(eq:11-4). 
+Imagine a case where the slope ($b$) along the $x$ dimension is fixed at 2 and the interaction term ($d$) is equal to zero. In this case there is no interaction between $x$ and $y$. When this happens the slope of $x$ is constant and does not change based on the value of $y$, as in \@ref(eq:11-4). 
 
 $$
 \begin{equation}
 \begin{split}
 b = 2, \; d = 0 \\
-z =  \mathrm{a} + (\mathrm{b} + \mathrm{d} \times y) \times x \\
-z =  \mathrm{a} + (2 + 0 \times y) \times x \\
-z =  \mathrm{a} + 2  \times x \\
+z =  \mathrm{a} + (\mathrm{b} + \mathrm{d} \cdot y) \cdot x \\
+z =  \mathrm{a} + (2 + 0 \cdot y) \cdot x \\
+z =  \mathrm{a} + 2  \cdot x \\
 \end{split}
 (\#eq:11-4)
 \end{equation}
 $$
 
-Now consider a situation where the interaction term has some non-zero value (e.g. 1). In this case we *will* see the slope along x change as a function of the value of y. In  \@ref(eq:11-5) we see that as y increases from 1 to 5, the effective slope along the x axis increases from 3 to 7. This reasoning also holds for the y dimension and also means that negative interactions result in a *decrease* in slopes as the value of variables increase.   
+Now consider a situation where the interaction term has some non-zero value (e.g. 1). In this case we *will* see the slope along x change as a function of the value of y. In \@ref(eq:11-5) we see that as y increases from 1 to 5, the effective slope along the x axis increases from 3 to 7. This reasoning also holds for the y dimension and also means that negative interactions result in a *decrease* in slopes as the value of variables increase.   
 
 $$
 \begin{equation}
 \begin{split}
 b = 2 , \; d = 1 , \; y = 1   \\
-z =  \mathrm{a} + (2 + 1 \times 1) \times x \\
-z =  \mathrm{a} + 3 \times x \\ \\ 
+z =  \mathrm{a} + (2 + 1 \cdot 1) \cdot x \\
+z =  \mathrm{a} + 3 \cdot x \\ \\ 
 b = 2 , \; d = 1 , \; y = 5   \\
-z =  \mathrm{a} + (2 + 1 \times 5) \times x \\
-z =  \mathrm{a} + 7 \times x \\
+z =  \mathrm{a} + (2 + 1 \cdot 5) \cdot x \\
+z =  \mathrm{a} + 7 \cdot x \\
 \end{split}
 (\#eq:11-5)
 \end{equation}
@@ -169,12 +169,12 @@ The function for a hyperbolic parabaloid can be seen below, where the height of 
 
 $$
 \begin{equation}
-z = d \times x \times y 
+z = d \cdot x \cdot y 
 (\#eq:11-6)
 \end{equation}
 $$
 
-Clearly, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:11-6). When our models include effects for x, y, *and* their interactions (cross product), we are effectively modeling a surface that combines a plane and a saddle shape, as in \@ref(eq:11-2). In figure \@ref(fig:F11-3) we can see a comparison of a plane in the top row and a saddle shape in the middle row. In the middle row on the left we can imagine that if we were walking 'into' the plot the ground would first be sloping down left to right. However, as we proceeded into the plot the ground would gradually change so that it it sloping up from left to right further into the figure. In other words, the left-to-tight slope would gradually increase as we walk further into the plot.  
+Clearly, the interaction of quantitative predictors results in a saddle shape as defined in \@ref(eq:11-6). When our models include effects for x, y, *and* their interactions (cross product), we are effectively modeling a surface that combines a plane and a saddle shape, as in equation \@ref(eq:11-2). In figure \@ref(fig:F11-3) we can see a comparison of a plane in the top row and a saddle shape in the middle row. In the middle row on the left we can imagine that if we were walking 'into' the plot, the ground would first be sloping down left to right. However, as we proceeded into the plot the ground would gradually change so that it is sloping up from left to right further into the figure. In other words, the left-to-right slope would gradually increase as we walk further into the plot.  
 
 ```{r F11-3, fig.height = 6, fig.width = 8, fig.cap='(top row) Three perspectives of the same plane. (middle row) Three perspectives of the same saddle shape. (bottom row) Three perspectives of the sum of the plane and the saddle shape in the top two rows.', echo = FALSE, cache = FALSE}
 
@@ -207,16 +207,16 @@ persp(x, y, z, col = bmmb::cols[4],theta = 45,zlim = c(-3,5))
 
 ```
 
-We can combine a plane and a saddle, as in the bottom row of figure \@ref(fig:F11-3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. Notice that all we really did was add the term for the saddle shape to the plane in \@ref(eq:11-2). 
+We can combine a plane and a saddle, as in the bottom row of figure \@ref(fig:F11-3). The general formula for such a shape is presented below, and we've placed the terms in parentheses just to make it easier to interpret the equation. Notice that all we really did was add the term for the saddle shape in \@ref(eq:11-6) to the plane in \@ref(eq:11-1). 
 
 $$
 \begin{equation}
-z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (\mathrm{d} \times x \times y)
+z =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) + (\mathrm{d} \cdot x \cdot y)
 (\#eq:11-7)
 \end{equation}
 $$
 
-When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use as the cross product. For example, below we generate two samples of 100 random Gaussian variables (`x, y`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated (-0.00099) and yet their cross product (`xy`) is strongly correlated with both of them (0.683, and 0.729). This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables is greater magnitude. In other words, the value of $x \times (y+a)$ will *always* be greater than the value of $x \times y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative. 
+When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use as the cross product. For example, below we generate two samples of 100 random Gaussian variables (`x, y`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated (-0.00099) and yet their cross product (`xy`) is strongly correlated with both variables (0.683, and 0.729). This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables increases in magnitude. In other words, the value of $x \cdot (y+a)$ will *always* be greater than the value of $x \cdot y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative. 
 
 ```{r}
 set.seed(1)
@@ -227,21 +227,21 @@ xy = x*y
 cor (cbind(x,y,xy))
 ```
 
-The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_x`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and that lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models. 
+The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_c`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and that lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models. 
 
 ```{r}
 x_c = x - mean (x)
 y_c = y - mean (y)
-xy_c = x_c*y_c
+xy_c = x_c * y_c
 
 cor (cbind(x_c,y_c,xy_c))
 ```
 
 ### Data and research questions
 
-The models we fit in chapter 9 and 10 were missing an obvious and important predictor: The fundamental frequency of the speaker's voice (f0). The fundamental frequency of a sound is the main acoustic correlate of perceived pitch. We know from previous studies that, in general, speakers with lower speaking f0s tend to be identified as taller (see chapter 13 for a discussion of this). In this section, we're going to fit a model that tries to predict apparent height from VTL, f0, and the interaction of the two. 
+The models we fit in chapter 9 and 10 were missing an obvious and important predictor: The fundamental frequency (f0) of the speaker's voice. The fundamental frequency of a sound is the main acoustic correlate of perceived pitch. We know from previous studies that, in general, speakers with lower speaking f0s tend to be identified as taller (see chapter 13 for a discussion of this). In this section, we're going to fit a model that tries to predict apparent height from VTL, f0, and the interaction of the two. 
 
-Below we load our packages and data, and center our quantitative predictors. We also scale f0 so that it has a reasonably similar magnitude as the VTL effect. Specifically, the average difference in VTL between adult females and males is about 2 cm, and the difference in f0 is about 100 Hz. This means that is we divide f0 by 100 the difference between men and women is about 1 unit, comparable to the 2 unit difference in VTL. 
+Below we load our packages and data, and center our quantitative predictors. We also scale f0 so that it has a reasonably similar between-group difference as the VTL predictor. Specifically, the average difference in VTL between adult females and males is about 2 cm, and the difference in f0 between the groups is about 100 Hz. This means that is we divide f0 by 100 the difference between men and women is about 1 unit, comparable to the 2 unit difference between these groups in VTL. 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -250,25 +250,27 @@ options (contrasts = c('contr.sum','contr.sum'))
 
 data (exp_data)
 
+# center VTL
 exp_data$vtl_original = exp_data$vtl
 exp_data$vtl = exp_data$vtl - mean (exp_data$vtl)
 
+# center and scale f0
 exp_data$f0_original = exp_data$f0 
 exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
 
-We're not going to have well-defined research questions this time. Instead, we have a meta research question that we will try to deal with:
+We're not going to have well-defined research questions this time. Instead, we have a more 'meta' question that we will try to deal with:
 
-Q1) What do we do with all these parameters? How do we know what to focus on and where to begin?
+(Q1) What do we do with all these parameters? How do we know what to focus on and where to begin?
 
 ### Description of the model {#c11-description-1}
 
-We're going to begin with a model that includes all possible interactions between our predictors, and also includes listener-dependent versions of all of our 'fixed' effects predictors. Models of this sort are sometimes referred to as **maximal** models because they include all predictors, interactions, and 'random effects' supported by the data. When we say 'supported by the data', what we mean is that certain parameters cannot be estimated given the data you have, though maybe they could have been estimated in principle with other data. For example, notice that we don't include any speaker-dependent predictors in our model (other than intercepts). This is because each speaker had a single f0 and VTL, and many were only identified as either male or female, or only as either adults or children. As a result, estimating interactions between these predictors and speaker is not *supported* by our data. Our model formula is:
+We're going to begin with a model that includes all possible interactions between our predictors, and also includes listener-dependent versions of all of our 'fixed' effects predictors. Models of this sort are sometimes referred to as **maximal** models because they include all predictors, interactions, and 'random effects' supported by the data. When we say 'supported by the data', what we mean is that certain parameters cannot be estimated given the data you have, though maybe they could have been estimated in principle with other data (see section \@ref(c8-identifiability)). For example, notice that we don't include any speaker-dependent predictors in our model (other than intercepts). This is because each speaker had a single f0 and VTL, and many were only identified as either male or female, or only as either adults or children. As a result, estimating interactions between these predictors and speaker is not *supported* by our data. Our model formula is:
 
 `height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`
 
-We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is too long at this point, and all of the required elements have already been presented and discussed at this point. However, we can talk about all our model coefficients and what they mean for our model. Below is an 'expanded' version of our model formula that spells out all of the included parameters.
+We're going to use the same priors we used for our regression models in chapter 9. We won't present the full model description as this is too long at this point, and all of the required elements have already been presented and discussed at this point. However, we can talk about all our model coefficients and what they mean for our model. Below is an 'expanded' version of our model formula that spells out all of the fixed effect parameters implied by the formula above.
 
 ```
 height ~ Intercept + vtl + f0 + A + G + 
@@ -310,7 +312,7 @@ $$
 \begin{equation}
 \begin{split}
 \mathrm{height}_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
-\mu_{[i]} = a_{[i]} +  (b_{[i]} \times \mathrm{vtl}_{[i]}) + (c_{[i]} \times \mathrm{f0}_{[i]}) + (d_{[i]} \times \mathrm{f0}_{[i]} \times \mathrm{vtl}_{[i]}) \\
+\mu_{[i]} = a_{[i]} +  (b_{[i]} \cdot \mathrm{vtl}_{[i]}) + (c_{[i]} \cdot \mathrm{f0}_{[i]}) + (d_{[i]} \cdot \mathrm{f0}_{[i]} \cdot \mathrm{vtl}_{[i]}) \\
 \ldots
 \end{split}
 (\#eq:11-8)
@@ -880,8 +882,8 @@ We will begin by discussing the case where the response surface is a plane, i.e.
 $$
 \begin{equation}
 \begin{split}
-z =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) \\
-0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y)
+z =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) \\
+0 =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y)
 \end{split}
 (\#eq:11-11)
 \end{equation}
@@ -892,8 +894,8 @@ We will arbitrarily decide to draw a line that treats y as the 'dependent' varia
 $$
 \begin{equation}
 \begin{split}
-0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) \\
-y =  -(\mathrm{b} \times x - \mathrm{a}) / \mathrm{c}
+0 =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) \\
+y =  -(\mathrm{b} \cdot x - \mathrm{a}) / \mathrm{c}
 \end{split}
 (\#eq:11-12)
 \end{equation}
@@ -904,8 +906,8 @@ We can use the above method to calculate the category boundaries implied by a mo
 $$
 \begin{equation}
 \begin{split}
-0 =  \mathrm{a} + (\mathrm{b} \times x) + (\mathrm{c} \times y) + (d \times xy) \\
-y =  (-\mathrm{b} \times x - \mathrm{a}) / (d \times x + c)
+0 =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) + (d \cdot xy) \\
+y =  (-\mathrm{b} \cdot x - \mathrm{a}) / (d \cdot x + c)
 \end{split}
 (\#eq:11-13)
 \end{equation}

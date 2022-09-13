@@ -665,21 +665,25 @@ In figure \@ref(fig:F4-6) we compare these 'incomplete' data sets to the full si
 
 par (mfrow = c(3,1), mar = c(.1,3,.1,1), oma = c(1,2,1,0))
 boxplot (height_rep_1 ~ L, ylim = c(140,198),xaxt='n',
-         col=bmmb::cols)
+         col=bmmb::cols,ylab="",yaxt = 'n')
 text (1, 145, label = "Intercept + error", cex = 1.5, pos=4)
 abline (h=174.8,lty=2)
+axis (side=2,at=seq(150,190,10))
 
 boxplot (height_rep_2 ~ L, ylim = c(140,198),xaxt='n',
-         col=bmmb::cols)
+         col=bmmb::cols,ylab="",yaxt = 'n')
 abline (h=174.8,lty=2)
 text (1, 145, label = "Intercept + L", cex = 1.5, pos=4)
+axis (side=2,at=seq(150,190,10))
 
 boxplot (height_rep ~ L, ylim = c(140,198),xaxt='n',
-         col=bmmb::cols)
+         col=bmmb::cols,ylab="",yaxt = 'n')
 abline (h=174.8,lty=2)
 text (1, 145, label = "Intercept + L + error", cex = 1.5, pos=4)
 
 mtext (side=2,text="Apparent height (cm)", outer = TRUE, line=0)
+axis (side=2,at=seq(150,190,10))
+
 ```
 
 In the middle plot, the figure shows only between-listener variation ($\sigma_{L}$) but no within-listener variation (i.e., no $\sigma$). Now listeners vary from the intercept, and between each other, but they do not vary within themselves. We can see the effect of this, the boxes have no 'width', they are lines. That is because in this situation listeners would *always* respond at their mean, showing no internal variation in their responses. The final plot is the combination of the variation in the top two plots and shows the final simulated data: The sum of the intercept, the within-listener variation, and the between-listener variation.
@@ -732,7 +736,7 @@ mens_height = men$height
 #par (mar = c(.1,.1,.5,.1), mfrow = c(1,1), oma = c(4.2,.20,0,.2))
 #layout (m=matrix(c(1,2,3,4),2,2), heights = c(.25,.75))
 
-par (mar = c(4,.5,.5,.5), mfrow = c(1,3))
+par (mar = c(4.5,.5,.5,.5), mfrow = c(1,3))
 
 #plot (0,type='n',xlab='',ylab='',xaxt='n',yaxt='n',bty='n')
 
@@ -754,8 +758,6 @@ grid()
 abline (h = mean(mens_height), lwd=2, lty=3)
 boxplot (height ~ L, data = men, col = cols[-c(1,8)],add=TRUE,yaxt='n',xaxt='n')
 
-mtext (side=1,outer=TRUE, "Apparent speaker height (cm)",line=-0.9)
-
 
 boxplot (height ~ S, data = men, xlab = "", ylab="",xaxt='s',
          col = cols[-1], ylim = c(140,195), cex.lab=1.1,cex.axis=1.1,
@@ -764,7 +766,7 @@ grid()
 abline (h = mean(mens_height), lwd=2, lty=3)
 boxplot (height ~ S, data = men, col = cols[-c(1,8)],add=TRUE,yaxt='n',xaxt='n')
 
-mtext (side=1,outer=TRUE, "Apparent speaker height (cm)",line=-0.9)
+mtext (side=1,outer=TRUE, "Apparent speaker height (cm)",line=-1.3)
 ```
 
 In order to investigate this, our model will now include the following additional variable from our `exp_data` data frame:
@@ -773,7 +775,7 @@ In order to investigate this, our model will now include the following additiona
 
 ### Updating the model description {#c4-updating-model}
 
-In order to model the effects of the different speakers in our data, our model formula must be updated to include our `S` (speaker) predictor in parentheses, like this:
+In order to model the effects of the different speakers in our data, our formula must be updated to include our `S` (speaker) predictor in parentheses, like this:
 
 `height ~ 1 + ( 1 | L) + ( 1 | S)`
 
@@ -782,7 +784,7 @@ The new term in parentheses indicates a second predictor whose levels we want to
 $$
 \begin{equation}
 \begin{split}
-height_{[i]} \sim \mathcal{N}(\mu_{[i]},\sigma) \\ 
+height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\ 
 \mu_{[i]} = \mathrm{Intercept} + L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 L_{[\bullet]} \sim N(0,\sigma_L) \\
@@ -810,7 +812,7 @@ $$
 \end{equation}
 $$
 
-If the error was the within-listener variation before, what does it represent now? Our error is now the difference between the value we expect, given the speaker *and* listener, and the value we observe. So, it is the variation *adjusting for* the listener and listener. In other words, if you know who the speaker is and who the listener is, and you adjust for this, how much random variability do you still have left over in your model? The answer is $\sigma$.   
+If the error was the within-listener variation before, what does it represent now? Our error is now the difference between the value we expect, given the speaker *and* listener, and the value we observe. So, it is the variation *adjusting for* the speaker and listener. In other words, if you know who the speaker is and who the listener is, and you adjust for this, how much random variability do you still have left over in your model? The answer is $\sigma$.   
 
 ### Fitting and interpreting the model
 
@@ -827,7 +829,6 @@ model_multilevel_L_S =  brms::brm (
 ```
 
 ```{r, include = TRUE, eval = FALSE}
-
 # Or download it from the GitHub page:
 model_multilevel_L_S = bmmb::get_model ('4_model_multilevel_L_S.RDS')
 ```
@@ -1047,7 +1048,7 @@ Another difference is that the final model has a smaller `sigma` parameter (7.8 
 
 Usually, parameters should be reported with *at least* the mean/median and standard deviations of the posterior distribution, in addition to some useful credible interval (i.e., 50%, 95%) around that parameter. Based on the result of our final model, a thorough answer to our research questions might go something like: 
 
-> "Based on our model the average apparent height of adult males is likely to be 173.8 cm (s.d. = 1.1, 95% CI = 171.6, 176.1). The estimated magnitude of the random error was 6.5 cm (s.d. = 0.2, 95% CI = 6.1, 6.9). Systematic between-listener variation averages about 3.8 cm (s.d. = 0.9, 95% CI = 2.5, 5.8), while systematic between-speaker variation averages about 2.8 cm (s.d. = 0.4, 95% CI = 2.1, 3.8).
+> "Based on our model the average apparent height of adult males is likely to be 173.8 cm (s.d. = 1.1, 95% CI = [171.6, 176.1]). The estimated magnitude of the random error was 6.5 cm (s.d. = 0.2, 95% CI = [6.1, 6.9]). Systematic between-listener variation averages about 3.8 cm (s.d. = 0.9, 95% CI = [2.5, 5.8]), while systematic between-speaker variation averages about 2.8 cm (s.d. = 0.4, 95% CI = [2.1, 3.8]).
 
 ## 'Traditionalists' corner {#c4-frequentist}
 
@@ -1055,7 +1056,7 @@ In traditionalists corner, we're going to compare the output of `brms` to some m
 
 ### Bayesian multilevel models vs. lmer {#c4-vs-lmer}
 
-Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the `lme4` R package. We're not going to talk about `lmer` in very much detail. The focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in both kinds of models. Below we use `lmer` to fit a model that is analogous to our `model_multilevel_L_S` model. The `lmer` function also uses adaptive pooling to estimate its 'random effects' and no pooling to estimate its 'fixed effects'. Notice that the formulas are identical in both cases, except we do not specify priors for this model.
+Here we compare the output of `brms` to the output of the `lmer` ("linear mixed-effects regression") function, a very popular function for fitting multilevel models in the `lme4` R package. We're not going to talk about `lmer` in very much detail. The focus of this section is simply to highlight the similarities between different approaches, and to point out where to find equivalent information in both kinds of models. Below we use `lmer` to fit a model that is analogous to our `model_multilevel_L_S` model. The `lmer` function uses adaptive pooling to estimate its 'random effects' and no pooling to estimate its 'fixed effects'. Notice that the formulas are identical in both cases, except we do not specify priors for this model.
 
 ```{r, warning=FALSE, message = FALSE, collapse = TRUE, cache = TRUE}
 lmer_model = lme4::lmer (height ~ 1 + (1|L) + (1|S), data = men)
@@ -1127,7 +1128,7 @@ lmer_ranefs = lme4::ranef (lmer_model)[["L"]]
 head (lmer_ranefs)
 ```
 
-Importantly, the values we get from both approaches are nearly identical, as seen below, the *largest* difference between the two sets of coefficients is 0.05 cm for the listener effects and 0.06 cm for the speaker effects, with the average absolute difference for both being around 0.03 cm. So, as a practical matter analyzing this data using a Bayesian multilevel model provides some advantages (e.g. intervals around random effects), while still providing effectively the same 'answers' as a 'traditional' approach to the data. 
+Importantly, the values we get from both approaches are nearly identical, as seen in figure \@ref(fig:F4-10).
 
 ```{r F4-10, fig.width=8, fig.height=2.5, fig.cap="(left) In green, the random speaker intercept estimates provided by brm. The red arrows indicate the estimates of the same provided by lmer. .", echo = FALSE}
 
@@ -1159,6 +1160,7 @@ points (lmer_ranefs_S[,1],pch=4,cex=1.5,lwd=2,col=coral, xaxt='n',xlab='',
 #abline (h = 0, v = 0, lty=3)
 ```
 
+The *largest* difference between the two sets of coefficients is 0.05 cm for the listener effects and 0.06 cm for the speaker effects, with the average absolute difference for both being around 0.03 cm. So, as a practical matter analyzing this data using a Bayesian multilevel model provides some advantages (e.g. intervals around random effects), while still providing effectively the same 'answers' as a 'traditional' approach to the data. 
 
 ## References
 

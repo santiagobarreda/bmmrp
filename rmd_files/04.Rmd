@@ -250,17 +250,17 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mu_{[i]} = \mathrm{Intercept} + L_{[\mathsf{L}_{[i]}]} \\ 
 \\ 
 \mathrm{Priors:} \\ 
-L_{[\bullet]} \sim N(0,\sigma_L) \\ 
+L_{[\bullet]} \sim \mathrm{N}(0,\sigma_L) \\ 
 \\
-\mathrm{Intercept} \sim N(176,15) \\
-\sigma \sim N(0,15) \\
-\sigma_L \sim N(0,15)
+\mathrm{Intercept} \sim \mathrm{N}(176,15) \\
+\sigma \sim \mathrm{N}(0,15) \\
+\sigma_L \sim \mathrm{N}(0,15)
 \end{split}
 (\#eq:4-5)
 \end{equation}
 $$
 
-This approach is called adaptive partial pooling because the estimate of each level of $L$ is *partially* influenced by every other level of $L$  by virtue of being drawn from the same distribution $N(0,\sigma_L)$. For example, we saw that half of listener mean height judgments were between 170 and 176 cm, and our model will now take that into account when estimating the individual coefficients that make up $L$. So, unlike the complete pooling case we do not ignore variation between listeners, and unlike in the no pooling case we do not ignore the similarities between them. In addition, the amount of blending that occurs across levels is determined by the data, and so the method is 'adaptive' to the specific situation. 
+This approach is called adaptive partial pooling because the estimate of each level of $L$ is *partially* influenced by every other level of $L$  by virtue of being drawn from the same distribution $\mathrm{N}(0,\sigma_L)$. For example, we saw that half of listener mean height judgments were between 170 and 176 cm, and our model will now take that into account when estimating the individual coefficients that make up $L$. So, unlike the complete pooling case we do not ignore variation between listeners, and unlike in the no pooling case we do not ignore the similarities between them. In addition, the amount of blending that occurs across levels is determined by the data, and so the method is 'adaptive' to the specific situation. 
 
 ### Hyperpriors
 
@@ -359,17 +359,17 @@ height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\
 \mu_{[i]} = \mathrm{Intercept} + L_{[\mathsf{L}_{[i]}]} \\ 
 \\ 
 \mathrm{Priors:} \\ 
-L_{[\bullet]} \sim N(0,\sigma_L) \\ 
+L_{[\bullet]} \sim \mathrm{N}(0,\sigma_L) \\ 
 \\
-\mathrm{Intercept} \sim N(176,15) \\
-\sigma \sim N(0,15) \\
-\sigma_L \sim N(0,15)
+\mathrm{Intercept} \sim \mathrm{N}(176,15) \\
+\sigma \sim \mathrm{N}(0,15) \\
+\sigma_L \sim \mathrm{N}(0,15)
 \end{split}
 (\#eq:4-9)
 \end{equation}
 $$
 
-As a reminder, we use the notation $L_{[\bullet]}$ to indicate that this prior distribution applies individually to every member of the set. In our case, each of our 15 listener effects is drawn from the same normal distribution, one at a time (i.e. $L_{[1]} \sim N(0,\sigma_L), \dots , L_{[15]} \sim N(0,\sigma_L)$). In plain English, the model above says:
+As a reminder, we use the notation $L_{[\bullet]}$ to indicate that this prior distribution applies individually to every member of the set. In our case, each of our 15 listener effects is drawn from the same normal distribution, one at a time (i.e. $L_{[1]} \sim \mathrm{N}(0,\sigma_L), \dots , L_{[15]} \sim \mathrm{N}(0,\sigma_L)$). In plain English, the model above says:
 
 > We expect height judgments to be normally distributed around the expected value for any given trial, $\mu_{[i]}$, with some unknown standard deviation $\sigma$. The expected value for a trial is equal to a fixed overall average (Intercept) and some value associated with the individual listener who made a perceptual judgment on the trial ($L_{[\mathsf{L}_{[i]}]}$). The listener coefficients ($L_{[\bullet]}$) were modeled as coming from a normal distribution with a mean of zero and a standard deviation ($\sigma_L$) that was estimated from the data. 
 
@@ -605,7 +605,7 @@ bmmb::brmplot(listener_intercepts, col = bmmb::cols, ylim = c(-30,20),
 
 Regression models break up variation in the dependent variables into component parts. One way to think about what all the numbers in our model mean is to simulate the dependent variable by building it from the individual component parts indicated by the model. Our model (`model_multilevel`) has just four components we need to include, one for every estimated parameter: The intercept, the listener-dependent intercepts ($L$), the between-listener variation ($\sigma_L$), and the within-listener variation, the error ($\sigma$).
 
-We do this in the code below. First we set the intercept to 174 cm. Then, we sample 15 random listener effects from a normal distribution, representing simulated listeners. The listener population has a mean of 0 and a standard deviation ($\sigma_L$) equal to 3.8 as indicated by our model. These effects are stored in a vector called `L_`, and they represent the values of $L$ for our different listeners. After this we create an index vector `L` that tells us which value of `L_` to apply for any given trial. This vector contains the values from 1 to 15, representing each listener, repeated 45 times each in order to simulate 45 observations from each listener. Finally, we draw our error (i.e. $\varepsilon \sim N(0,\sigma)$) based on the magnitude of `sigma` in our model. Note that the error is just $45 \cdot 15$ random draws from this population. Since the model contains the same value of $\sigma$ for all trials, there is no distinction between one listener and another when it comes to the magnitude of the error.
+We do this in the code below. First we set the intercept to 174 cm. Then, we sample 15 random listener effects from a normal distribution, representing simulated listeners. The listener population has a mean of 0 and a standard deviation ($\sigma_L$) equal to 3.8 as indicated by our model. These effects are stored in a vector called `L_`, and they represent the values of $L$ for our different listeners. After this we create an index vector `L` that tells us which value of `L_` to apply for any given trial. This vector contains the values from 1 to 15, representing each listener, repeated 45 times each in order to simulate 45 observations from each listener. Finally, we draw our error (i.e. $\varepsilon \sim \mathrm{N}(0,\sigma)$) based on the magnitude of `sigma` in our model. Note that the error is just $45 \cdot 15$ random draws from this population. Since the model contains the same value of $\sigma$ for all trials, there is no distinction between one listener and another when it comes to the magnitude of the error.
 
 ```{r, collapse = TRUE}
 # skip this line if you want a new simulated data set. 
@@ -787,13 +787,13 @@ $$
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\ 
 \mu_{[i]} = \mathrm{Intercept} + L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
-L_{[\bullet]} \sim N(0,\sigma_L) \\
-S_{[\bullet]} \sim N(0,\sigma_S) \\
+L_{[\bullet]} \sim \mathrm{N}(0,\sigma_L) \\
+S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\
 \\
-\mathrm{Intercept} \sim N(176,15) \\
-\sigma \sim N(0,15) \\
-\sigma_L \sim N(0,15) \\
-\sigma_S \sim N(0,15)
+\mathrm{Intercept} \sim \mathrm{N}(176,15) \\
+\sigma \sim \mathrm{N}(0,15) \\
+\sigma_L \sim \mathrm{N}(0,15) \\
+\sigma_S \sim \mathrm{N}(0,15)
 \end{split}
 (\#eq:4-12)
 \end{equation}

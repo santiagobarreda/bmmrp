@@ -13,7 +13,7 @@ In chapter 4 we introduced 'random effects'. These were intercept terms that wer
 
 ## Chapter pre-cap
 
-Interactions are introduced as conditional effects, and marginal (average) effects are introduced as 'main' effects. The concepts of crossing and nesting are introduced and the importance for crossing is discussed for the estimation of interactions. Models with 'cluster' (e.g. listener/subject/speaker) specific variation in multiple parameters are introduced, and these 'random' effects are presented as interactions. The multivariate normal distribution is introduced, as are the concepts of multidimensionality and correlation. The fact that random effects are drawn from multivariate normal distributions is discussed, as are related topics for multilevel models (e.g. the specification of priors for correlation matrices). After that, the discussion focuses on model comparison. In sample and out-of-sample prediction are contrasted, and the bias-variance tradeoff is introduced. The widely applicable information criterion (WAIC) and leave-one-out cross validation are presented, and related concepts are introduced. Finally, model selection is discussed.
+Interactions are introduced as conditional effects, and marginal (average) effects are introduced as 'main' effects. The concepts of crossing and nesting are presented and the importance of crossing for the estimation of interactions is discussed. Models with 'cluster' (e.g. listener/subject/speaker) specific variation in multiple parameters are introduced, and these 'random' effects are presented as interactions. The multivariate normal distribution is discussed, as are the concepts of multidimensionality and correlation. The fact that random effects are drawn from multivariate normal distributions is discussed, as are related topics for multilevel models (e.g. the specification of priors for correlation matrices). After that, the discussion focuses on model comparison. In sample and out-of-sample prediction are contrasted, and the bias-variance tradeoff is introduced. The widely applicable information criterion (WAIC) and leave-one-out cross validation are presented, and related concepts are introduced. Finally, model selection is discussed.
 
 ## Data and research questions {#c6-data-and-qs}
 
@@ -27,11 +27,14 @@ We're going to use the same data from the last chapter, again excluding adult ma
  
 Below we load the data and exclude all apparent and veridical adult males.
 
-```{r}
-library (brms)
+```{r, warning=FALSE,message=FALSE}
+# load packages and data
 library (bmmb)
+library (brms)
+data (exp_data)
 
-notmen = bmmb::exp_data[exp_data$C_v!='m' & exp_data$C!='m',]
+# exclude actual men and apparent men
+notmen = exp_data[exp_data$C_v!='m' & exp_data$C!='m',]
 ```
 
 The relevant variables in our data frame are:
@@ -77,9 +80,11 @@ We can find the average apparent height reported by each listener for each appar
 round ( tapply (notmen$height, notmen[,c("A","L")], mean) )
 ```
 
-The average of each column is the average apparent height reported by each listener across both apparent ages. The average across each row is the average apparent height reported for each apparent across all listeners. Each individual cell represents the average apparent height reported by each listener for each apparent age, and the mean of all cells represents the overall grand mean.
+The average of each column is the average apparent height reported by each listener across both apparent ages. The average across each row is the average apparent height reported for each apparent age, across all listeners. Each individual cell represents the average apparent height reported by each listener for each apparent age, and the mean of all cells represents the overall grand mean.
 
-In the left plot of figure \@ref(fig:F6-2) we present the average height reported by each listener. The variation seen along the line is result of non-zero listener effects: In the absence of listener effects the line would be a flat horizontal line at the grand mean. So, it is the effect for different listeners that gives the line its specific shape. In the middle plot we see the average apparent height reported by each listener for each apparent age. The age-specific listener effect, `L` given `A1` (`L:A1`), is evident from the age-dependent shape of the lines. In other words, each line has an unpredictably different shape, and since the shape reflects the listener effect, this means that `L` has an unpredictable effect across the levels of `A`.
+[@@ SB - dont like these paragraphs]
+
+In the left plot of figure \@ref(fig:F6-2) we present the average height reported by each listener. The variation seen along the line is a result of non-zero listener effects: In the absence of listener effects the line would be a flat horizontal line at the grand mean. So, it is the effect for different listeners that gives the line its specific shape. In the middle plot we see the average apparent height reported by each listener for each apparent age. The age-specific listener effect, `L` given `A1` (`L:A1`), is evident from the age-dependent shape of the lines. In other words, each line has an unpredictably different shape, and since the shape reflects the listener effect, this means that listener (`L`) has an unpredictable effect across the levels of apparent age (`A`).
 
 ```{r F6-2, fig.height = 2.5, fig.width=8, fig.cap = "(left) Average height reported by each listener overall. The horizontal line represents the grand mean. (middle) Age-dependent listener effects for apparent children (lower line) and apparent adults (upper line). The horizontal lines indicate the grand mean (solid), and the average means for apparent adults (upper dotted) and apparent children (lower dotted). (right) Listener-dependent age effects, the difference between the adult and child means reported by each listener (i.e., the difference between the lines in the middle plot). The horizontal line represents the average age effect across listeners.", echo = FALSE}
 
@@ -119,9 +124,9 @@ abline (h = mean (listener_age_effects), col = darkorange)
 
 ```
 
-Half the average difference between the lines in the middle plot of figure \@ref(fig:F6-2) represents the average 'main' effect for apparent age. This effect has a magnitude of 10.1 cm, representing the separation on average between the lines for apparent children and adults, and the line representing the grand mean. We can see that each listener has an unpredictable difference between their lines, representing listener-dependent variation in `A1` and a meaningful effect for `A1:L` in our data. Actually, the `A1:L` interaction *entails* an `L:A1` interaction: In the process of adding an `A1:L`  interaction in your data you also add an `L:A1` interaction to your data.
+In the middle plot of figure \@ref(fig:F6-2), the average (main) effect for apparent age is equal to the average difference between the line for apparent children and the line representing the grand mean, and the line for apparent adults and the grand mean. Another way to look at it is that the main effect for apparent age will be equal to half of the average separation between the lines for apparent adults and apparent children across all listeners. This effect has an average magnitude of 10.1 cm, which we can see in the right plot of the figure. However, we can also see that each listener has an unpredictable difference between their lines, and an unpredictable effect for apparent age in the right plot in figure \@ref(fig:F6-2). This represents listener-dependent variation in `A1` and a meaningful interaction between apparent age and listener (`A1:L`) in our data. 
 
-Imagine the middle plot in figure \@ref(fig:F6-2) contained two flat parallel lines, separated by some amount (the effect for `A1`). In order to add a listener dependent age effect (`A1:L`) to these lines, we would need to make the separation between the lines unpredictably different for each listener. However, in doing so we *necessarily* also make the shapes of the two lines unpredictably different. This is the only way to make the separation between the lines different for each listener. However, since the shape of the line is the listener effect, by giving each line a different shape we also necessarily add an age-dependent effect for listener to our data. As a result of this, the `A1:L` interaction is *the same thing* as the `L:A1` interaction and the notational difference between them is only superficial. 
+Actually, the `A1:L` interaction *entails* an `L:A1` interaction: In the process of adding an `A1:L`  interaction in your data you also add an `L:A1` interaction to your data. Imagine the middle plot in figure \@ref(fig:F6-2) contained two flat parallel lines, separated by some amount (the effect for `A1`). In order to add a listener dependent age effect (`A1:L`) to these lines, we would need to make the separation between the lines unpredictably different for each listener. However, in doing so we *necessarily* also make the shapes of the two lines unpredictably different. This is the only way to make the separation between the lines different for each listener. However, since the shape of the line is the listener effect, by giving each line a different shape we also necessarily add an age-dependent effect for listener to our data. As a result of this, the `A1:L` interaction is *the same thing* as the `L:A1` interaction and the notational difference between them is only superficial. 
 
 Although we can think of interactions either way, conceptually it may be useful to think of them primarily one way or another. In our case, we will focus on the listener-dependent effect for apparent age, presented in the right plot of figure \@ref(fig:F6-2). The value of each point along the line in the right plot reflects the spacing of the two lines in the middle plot of the same figure. In the complete and total absence of an interaction between listener and age, the orange line in the figure would be horizontal at 10.1 (the marginal difference). In the presence of an interaction, our marginal and listener-dependent effects may diverge in a seemingly random manner, as seen in the figure. 
 
@@ -165,23 +170,23 @@ The previous two formulas include the marginal effects of age and listener and t
 
 `height ~ 1 + A + (1 + A|L) + (1|S)`
 
-The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the speaker intercepts and age effects, and the speaker intercepts as random effects, i.e. using adaptive pooling. Notice the parallel structure between our models with and without random effects:
+The formula above tells `brms`: "Height varies as a function of an intercept and an age effect, a listener-specific intercept and age effect, and a speaker specific intercept". It also tells `brms` to estimate the listener intercepts, the listener age effects, and the speaker intercepts as random effects, i.e. using adaptive pooling. Notice the parallel structure between our models with and without random effects:
 
-`height ~ 1 + A +  L +  A:L     +   S`
+`height ~ 1 + A +  L +  A:L     +  S`
 
-`height ~ 1 + A + (1 +   A  |L) + (1|S)`
+`height ~ 1 + A + (1 +   A  |L) + (1 |S)`
 
-These models have equivalent parameters, which have been horizontally aligned in the two formulas above. The `L` term in the top model is represented by the `1` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect), and the `A:L` term in the top model is represented by the `A` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect). The main difference between `L` and `A:L` on one hand and `(1 + A|L)` on the other, is that the latter notation tells your model to estimate these listener dependent predictors using adaptive pooling. When our formula has non intercept predictors, we can omit the `1` and write it as seen below:
+These models have equivalent parameters, which have been horizontally aligned in the two formulas above. The `L` term in the top model is represented by the `1` in `(1 + A|L)` in the bottom model (the listener dependent intercept effect), and the `A:L` term in the top model is represented by the `A` in `(1 + A|L)` in the bottom model (the listener dependent age effect). The main difference between `L` and `A:L` on one hand and `(1 + A|L)` on the other, is that the latter notation tells your model to estimate these listener dependent predictors using adaptive pooling. When our formula has non intercept predictors, we can omit the `1` and write it as seen below:
 
 `height ~ A + (A|L) + (1|S)`
 
-Our model formula might specify a model as in \@ref(eq:6-1). Compared to the t distributed model we fit at the end of chapter 5, the only changes have been the addition of a new term ($A \colon L_{[L_{[i]}]}$) and its associated priors ($A \colon L_{[\bullet]} \sim \mathrm{N}(0,\sigma_{A1 \colon L}) ,\; \sigma_{A \colon L} \sim \mathrm{N}(0,12)$). Note that although the $A1$ predictor does not need a subscript, the $A1 \colon L_{[L_{[i]}]}$ term (the by-listener random effect for age) does. This is because although we only have a single age predictor, the interaction term estimates a different one of these for each listener, which requires the estimation of 15 such parameters in our model.
+Our model formula might specify a model as in \@ref(eq:6-1). Compared to the t distributed model we fit at the end of chapter 5, the only changes have been the addition of a new term ($A \colon L_{[\mathsf{L}_{[i]}]}$) and its associated priors $A \colon L_{[\bullet]} \sim \mathrm{N}(0,\sigma_{A \colon L})$, and $\sigma_{A \colon L} \sim \mathrm{N}(0,12)$. Note that although the $A$ predictor does not need a subscript, the $A \colon L_{[\mathsf{L}_{[i]}]}$ term (the by-listener random effect for age) does. This is because although we only have a single age predictor, the interaction term estimates a different one of these for each listener, which requires the estimation of 15 such parameters in our model.
 
 $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{t}(\nu, \mu_{[i]},\sigma) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A + L_{[L_{[i]}]} + A \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A + L_{[\mathsf{L}_{[i]}]} + A \colon L_{[\mathsf{L}_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 L_{[\bullet]} \sim \mathrm{N}(0,\sigma_L) \\
 A \colon L_{[\bullet]} \sim \mathrm{N}(0,\sigma_{A \colon L}) \\
@@ -207,14 +212,14 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{t}(\nu, \mu_{[i]},\sigma) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1 + L_{[L_{[i]}]} + A1 \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A + L_{[\mathsf{L}_{[i]}]} + A \colon L_{[\mathsf{L}_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 L_{[\bullet]} \sim \mathrm{N}(0,12) \\
-A1 \colon L_{[\bullet]} \sim \mathrm{N}(0,12) \\
+A \colon L_{[\bullet]} \sim \mathrm{N}(0,12) \\
 S_{[\bullet]} \sim \mathrm{N}(0,12) \\
 \\
 \mathrm{Intercept} \sim \mathrm{t}(3, 156,12) \\
-A1 \sim \mathrm{t}(3, 0,12) \\
+A \sim \mathrm{t}(3, 0,12) \\
 \nu \sim gamma(2, 0.1) \\ 
 \sigma \sim \mathrm{t}(3, 0,12) \\
 \end{split}
@@ -226,7 +231,7 @@ The model in \@ref(eq:6-1) is preferable over the one in \@ref(eq:6-1a) because 
 
 ### Correlations between random parameters {#c6-correlations}
 
-In figure \@ref(fig:F6-3) we plot the listener effects, and the listener-dependent age effects originally presented in figure \@ref(fig:F6-2). However, this time they have both been sorted based on the value of the listener effects. We can see clearly that as the listener effects increase, the age effects decrease. In the rightmost plot we present a scatter plot of these two variables, which reinforces the fact that these variables have a negative relationship: Smaller values of average heights tend to be associated with larger apparent age effects. This is important because, if this is true, it suggests that we are unlikely to observe listeners who reported tall speakers on average *and* had large age effects on height (or vice versa). This is because as seen in figure \@ref(fig:F6-3), speakers who reported tall speakers on average tended to exhibit small age effects.
+In figure \@ref(fig:F6-3) we plot the listener effects, and the listener-dependent age effects originally presented in figure \@ref(fig:F6-2). However, this time they have both been sorted based on the value of the listener effects. We can see clearly that as the listener effects increase, the age effects decrease. In the rightmost plot we present a scatter plot of these two variables, which reinforces the fact that these variables have a negative relationship: Smaller values of apparent height tend to be associated with larger apparent age effects. This is important because, if this is true, it suggests that we are unlikely to observe listeners who reported tall speakers on average *and* had large age effects on height (or vice versa). This is because as seen in figure \@ref(fig:F6-3), speakers who reported tall speakers on average tended to exhibit small age effects.
 
 ```{r F6-3, fig.height = 2.5, fig.width=8, fig.cap = "(left) Average reported height by each listener, sorted by magnitude. (middle) The magnitude of the age effect for each listener, sorted by that listener\'s effect in the left plot. (right) Listener average reported height plotted against listener age effects.", echo = FALSE}
 
@@ -237,6 +242,8 @@ par (mfrow = c(1,3), mar = c(4,4,1,1))
 
 listener_age_differences = tapply (notmen$height, notmen[,c("A","L")], mean)
 ord = order (colMeans(listener_age_differences))
+
+listener_means = colMeans(listener_age_differences)
 
 listener_age_effects = (listener_age_differences[1,]-listener_age_differences[2,])/2
 
@@ -266,7 +273,7 @@ abline (v = mean(listener_means), h = mean(listener_age_effects), lty=3)
 
 ```
 
-The **linear correlation** between two variables (often referred to simply as the **correlation**) is a measure of the **linear relationship** between two variables. An informal (but accurate) way to think of a linear relationship is that when you make a scatter plot using two variables (as in the right plot of figure \@ref(fig:F6-3)), the organization of the points should resemble a line if there is a strong linear relationship between them. The more the dots form a single perfect line, the closer the magnitude of the correlation gets to 1. Whether the value of a perfect correlation is 1 or -1 depends on if the line is sloped up (1) or down (-1) left to right. A correlation of 0 means there is no linear relationship between the variables. So, if two variables have a correlation of 0 you would be hard-pressed to draw any kind of *line* that captured the relationship between the variables (though some other curve might work). Figure \@ref(fig:F6-3) suggests that listener means and age effects are *negatively correlated*. 
+The **linear correlation** between two variables (often referred to simply as the **correlation**) is a measure of the **linear relationship** between the variables. An informal (but accurate) way to think of a linear relationship is that when you make a scatter plot using two variables (as in the right plot of figure \@ref(fig:F6-3)), the organization of the points should resemble a line if there is a strong linear relationship between them. The more the dots form a single perfect line, the closer the magnitude of the correlation gets to 1. Whether the value of a perfect correlation is 1 or -1 depends on if the line is sloped up (1) or down (-1) left to right. A correlation of 0 means there is no linear relationship between the variables. So, if two variables have a correlation of 0 you would be hard-pressed to draw any kind of *line* that captured the relationship between the variables (though some other curve might work). Figure \@ref(fig:F6-3) suggests that listener means and age effects are *negatively correlated*. 
 
 There are many ways to measure correlation, but the most common way is by using **Pearson's correlation coefficient**, defined in equation \@ref(eq:6-2) for variables $x$ and $y$. We use the little hat, like this $\hat{r}$, because this is an estimate of the correlation between our variables. Equation \@ref(eq:6-2) introduces a term we have not seen yet, $\sigma_{xy}$, corresponding to the *covariance* between $x$ and $y$ (often denoted by $\mathrm{cov}(x,y)$). We can see below that the correlation between two variables is the covariance divided by the product of their individual standard deviations ($\hat{\sigma}_x$ and $\hat{\sigma}_y$). 
 
@@ -278,7 +285,7 @@ $$
 \end{equation}
 $$
 
-The variance of a variable is the expected value of squared deviations from the mean. The **covariance** of two variables is the expected value of the product of their deviations of each from their respective means. The covariance of two variables can be estimating by calculating the sum of the product of deviations from the mean and dividing by the number of observations minus one, as seen in \@ref(eq:6-2a).
+The variance of a variable is the expected value of squared deviations from the mean. The **covariance** of two variables is the expected value of the product of their deviations of each from their respective means. The covariance of two variables can be estimated by calculating the sum of the product of deviations from the mean and dividing by the number of observations minus one, as seen in \@ref(eq:6-2a).
 
 $$
 \begin{equation}
@@ -298,7 +305,7 @@ $$
 \end{equation}
 $$
 
-Using equation \@ref(eq:6-3), we can calculate Pearson's correlation coefficient for two variables. We can do this for any two vectors in R using the `cor` function. Below we find the average apparent height reported by each listener, and then half the difference in apparent height reported by each listener for each apparent age. As seen below, this tells us that the correlation between the listener means and apparent age effects is -0.85, representing a strong negative correlation between these two variables. 
+Using equation \@ref(eq:6-3), we can calculate Pearson's correlation coefficient for two variables. We can do this for any two vectors in R using the `cor` function. Below we find the average apparent height reported by each listener, and then half the difference in apparent height reported by each listener for each apparent age (i.e. the effect for apparent age). As seen below, this tells us that the correlation between the listener means and apparent age effects is -0.85, representing a strong negative correlation between these two variables. 
 
 ```{r}
 # find means for each listener for each apparent age
@@ -308,7 +315,7 @@ listener_age_means = tapply (notmen$height, notmen[,c("A","L")], mean)
 listener_effects = colMeans (listener_age_means)
 
 # half the difference across rows = listener age effects
-listener_age_effects = listener_age_means[1,] - listener_age_means[2,]
+listener_age_effects = (listener_age_means[1,] - listener_age_means[2,]) / 2
 
 # correlation between listener means and age effects
 cor (listener_effects, listener_age_effects)
@@ -403,20 +410,20 @@ However, when the dimensions *are* correlated we can use this to make better pre
 
 The shape of the multivariate normal distribution (i.e. how much it looks like a circle vs a tilted ellipse in the bivariate case) is determined by a covariance matrix, often represented by a capital sigma ($\Sigma$). This matrix is a square $n \cdot n$ matrix for a variable with $n$ dimensions. When we dealt with unidimensional normal distributions for our previous random effects, we specified priors for the (unidimensional) standard deviations using t (or normal) distributions. The specification of priors for our covariance matrix is only slightly more complicated. Rather than specify priors for $\Sigma$ directly, `brms` (and *Stan*) builds up $\Sigma$ from some simpler components that we specify. In this section we will provide more information than you really need to fit these models, but it helps to understand why the priors are specified the way they are for our random effects. 
 
-Consider two random effects, a random by subject intercept $L$, and a random by-listener apparent age effect called $A1 \colon L$. The covariance matrix for our random effects is created by multiplying the standard deviations of our individual dimensions by a correlation matrix ($R$) specifying the correlations between each dimension. The operation is presented in \@ref(eq:6-4).
+Consider two random effects, a random by subject intercept $L$, and a random by-listener apparent age effect called $A \colon L$. The covariance matrix for our random effects is created by multiplying the standard deviations of our individual dimensions by a correlation matrix ($R$) specifying the correlations between each dimension. The operation is presented in \@ref(eq:6-4).
 
 $$
 \begin{equation}
 \begin{split}
-\Sigma = \begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A1 \colon L} \\ \end{bmatrix} 
+\Sigma = \begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A \colon L} \\ \end{bmatrix} 
 \cdot R \cdot
-\begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A1 \colon L} \\ \end{bmatrix} \\
+\begin{bmatrix} \sigma_{L} & 0 \\ 0 & \sigma_{A \colon L} \\ \end{bmatrix} \\
 \end{split}
 (\#eq:6-4)
 \end{equation}
 $$
 
-The non-zero values in the outside matrices are the (marginal, univariate) standard deviations of the random intercepts ($\sigma_{L}$) and age effects. The correlation matrix $R$ contains information about the correlation between the dimensions of the variable (e.g., $r_{[L , A1 \colon L]}$). The correlation matrix $R$ will look like \@ref(eq:6-5) for a two-dimensional variable. In a correlation matrix each row gives you information about the correlation of one dimension with the others. For example, the first row represents the correlation of the first dimension to itself (first column) and the second dimension (second column). Correlation matrices contain only values of 1 on the main diagonal since the correlation of something with itself is one. Since the correlation of $x$ and $y$ equals the correlation of $y$ and $x$, correlation matrices are symmetric. This means that in the two dimensional case $r_{[1,2]}=r_{[2,1]}$, or, more generally, $r_{[i, j]} = r_{[j, i]}$. 
+The non-zero values in the outside matrices are the (marginal, univariate) standard deviations of the random intercepts ($\sigma_{L}$) and age effects. The correlation matrix $R$ contains information about the correlation between the dimensions of the variable (e.g., $r_{[L , A \colon L]}$). The correlation matrix $R$ will look like \@ref(eq:6-5) for a two-dimensional variable. In a correlation matrix each row gives you information about the correlation of one dimension with the others. For example, the first row represents the correlation of the first dimension to itself (first column) and the second dimension (second column). Correlation matrices contain only values of 1 on the main diagonal since the correlation of something with itself is one. Since the correlation of $x$ and $y$ equals the correlation of $y$ and $x$, correlation matrices are symmetric. This means that in the two dimensional case $r_{[1,2]}=r_{[2,1]}$, or, more generally, $r_{[i, j]} = r_{[j, i]}$. 
 
 $$
 \begin{equation}
@@ -479,13 +486,13 @@ And `brm` (and Stan) will do the rest.
 
 ### Updating our model description
 
-Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:6-7). Only two things have changed with respect to the description in \@ref(eq:6-1). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than as independent univariate normal variables. Second, we specify a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal covariance matrix $\Sigma$. This is because, as noted above, *Stan* constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A1 \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$) as in equation \@ref(eq:6-4). We include this in the final line of the model for completeness, but will be excluding it from future model specifications. This is because this element is not specified by the user, and becomes increasingly bulky as our models become more complicated.
+Now that we've discussed using multivariate normal distributions for our random effects, we can update our model formula as in \@ref(eq:6-7). Only two things have changed with respect to the description in \@ref(eq:6-1). First, the listener random effects are drawn from a multivariate normal distribution ($\mathrm{MVNormal}()$) rather than as independent univariate normal variables. Second, we specify a prior for our correlation matrix ($\mathrm{LKJCorr}$). Notice that we do not directly specify a prior for the multivariate normal covariance matrix $\Sigma$. This is because, as noted above, *Stan* constructs $\Sigma$ by multiplying the standard deviation for each dimension ($\sigma_{A \colon L}$ and $\sigma_{L}$) by the correlation matrix ($R$) as in equation \@ref(eq:6-4). We include this in the final line of the model for completeness, but will be excluding it from future model specifications. This is because this element is not specified by the user, and becomes increasingly bulky as our models become more complicated.
 
 $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{N}(\nu,\mu_{[i]},\sigma) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A  + L_{[L_{[i]}]} + A \colon L_{[L_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A  + L_{[\mathsf{L}_{[i]}]} + A \colon L_{[\mathsf{L}_{[i]}]} + S_{[S_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\
 \begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} ( \begin{bmatrix} 0 \\ 0 \\ \end{bmatrix}, \Sigma) \\
@@ -553,7 +560,7 @@ And see that although many parameter values may have changed with respect to `mo
 ## cor(Intercept,A1)    -0.80      0.12    -0.95    -0.51
 ```
 
-This section of the model summary now includes an estimate of the standard deviation of the by-listener effect for age (i.e. the standard deviation of the listener by age interaction, $\sigma_{A1 \colon L}$ in \@ref(eq:6-7)), and the correlation between our listener-dependent intercept and age-effect terms. We can see that the estimate of this correlation (-0.80) is very similar to the correlation estimated for these terms in our example above (-0.85). 
+This section of the model summary now includes an estimate of the standard deviation of the by-listener effect for age (i.e. the standard deviation of the listener by age interaction, $\sigma_{A \colon L}$ in \@ref(eq:6-7)), and the correlation between our listener-dependent intercept and age-effect terms. We can see that the estimate of this correlation (-0.80) is very similar to the correlation estimated for these terms in our example above (-0.85). 
 
 You can get information about the variance, correlation, and covariance parameters using the `VarCorr` function in the `brms` package. As with the `fixef` and `ranef` function, this function returns summaries of these samples by default but you can set `summary=FALSE` to get the individual samples for these parameters. We're not going to talk about the structure of this output, but we encourage you to investigate it using the `str` function. 
 

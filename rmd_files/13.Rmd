@@ -3,6 +3,7 @@
 knitr::opts_chunk$set(
   dpi = 300, dev = "jpeg", collapse=TRUE
 )
+rm (list=ls())
 ```
 
 # Writing up experiments: An investigation of the perception of speaker category from speech acoustics
@@ -43,82 +44,87 @@ There are two main sources of average f0 differences between speakers. First, th
 ### Figure 13.1
 ################################################################################
 
-library (bmmb)
-data(height_data)
-data(lee_etal_data)
+knitr::include_graphics("../wrong_plots/F13-1-1.jpeg")
 
-lee_etal_data$f0_original=lee_etal_data$f0
-lee_etal_data$f0 = log(lee_etal_data$f0_original)
-aggdmu = aggregate (f0 ~ age+gender, FUN = mean, data = lee_etal_data)
-aggdmu[,3] = exp(aggdmu[,3])
-
-lee_etal_data$f0 = log(lee_etal_data$f0sd/lee_etal_data$f0_original)
-aggdsd = aggregate (f0 ~ age+gender, FUN = sd, data = lee_etal_data)
-aggdsd[,3] = (exp(aggdsd[,3])-1)*aggdmu[,3] 
-
-aggdmuf0 = aggdmu
-aggdsdf0 = aggdsd
-
-par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
-
-plot (height_data$age[height_data$gender=="f"]-.1,
-      height_data$height[height_data$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(70,205),type='b', xlab="Age (years)",
-      ylab = "Height (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (height_data$age[height_data$gender=="m"]+.1,
-       height_data$height[height_data$gender=="m"], 
-       pch=16,col=4,lwd=2,cex=1.5,type='b')
-grid()
-legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
-
-
-phonTools::errorbar(height_data$age[height_data$gender=="f"]-.1,
-                    height_data$height[height_data$gender=="f"],
-                    height_data$sd[height_data$gender=="f"]*2,col=2,lwd=1,length=0.051)
-phonTools::errorbar(height_data$age[height_data$gender=="m"]+.1,
-                    height_data$height[height_data$gender=="m"],
-                    height_data$sd[height_data$gender=="m"]*2,col=4,lwd=1,length=0.051)
-
-rect (9.5,128,12.5,168,lwd=2,border="forestgreen",lty=1)
-rect (17.5,150,20.5,190,lwd=2,border="forestgreen",lty=1)
-
-plot (aggdmu$age[aggdmu$gender=="f"]-.1,aggdmu$f0[aggdmu$gender=="f"],
-      pch=16,col=2,lwd=2,cex=1.5, ylim = c(50,370),type='b', xlab="Age (years)",
-      ylab = "f0 (Hz)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
-lines (aggdmu$age[aggdmu$gender=="m"]+.1,aggdmu$f0[aggdmu$gender=="m"],
-      pch=16,col=4,lwd=2,cex=1.5,type='b')
-grid()
-
-phonTools::errorbars(aggdmu$age[aggdmu$gender=="f"]-.1,aggdmu$f0[aggdmu$gender=="f"],
-                   aggdsd$f0[aggdsd$gender=="f"]*2,col=2,lwd=1,length=0.051)
-phonTools::errorbars(aggdmu$age[aggdmu$gender=="m"]+.1,aggdmu$f0[aggdmu$gender=="m"],
-                   aggdsd$f0[aggdsd$gender=="m"]*2,col=4,lwd=1,length=0.051)
-
-plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],
-      aggdmu$f0[aggdmu$gender=="f"], pch=16,col=2,lwd=6,cex=2.75, ylim = c(50,350),
-      type='b', xlab="Hieght (cm)", ylab = "f0 (Hz)",xlim=c(95,205),cex.axis=1.3,
-      cex.lab=1.3)
-lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],
-       aggdmu$f0[aggdmu$gender=="m"],
-      pch=16,col=4,lwd=6,cex=2.75,type='b')
-grid()
-
-count = 1
-for (i in (1:19)[-c(1,2,3,19)]){
-  phonTools::sdellipse (
-    matrix(c((height_data$sd[height_data$gender=="f"][count]),0,
-             0,(aggdsd$f0[aggdsd$gender=="f"][count]))^2,2,2), 
-    means = c(height_data$height[height_data$gender=="f"][i],
-              aggdmu$f0[aggdmu$gender=="f"][count]), col = 2,lty=3)
-  
-  phonTools::sdellipse (
-    matrix(c((height_data$sd[height_data$gender=="m"][count]),0,
-             0,(aggdsd$f0[aggdsd$gender=="m"][count]))^2,2,2), 
-    means = c(height_data$height[height_data$gender=="m"][i],
-              aggdmu$f0[aggdmu$gender=="m"][count]), col = 4, lty=3)
-  
-  count = count + 1
-}
+# jpeg ("F13-1-1.jpeg",2400,900,res=300)
+# library (bmmb)
+# data(height_data)
+# data (lee_etal_data)
+# 
+# lee_etal_data$f0_original=lee_etal_data$f0
+# lee_etal_data$f0 = log(lee_etal_data$f0_original)
+# 
+# aggdmu = aggregate (f0 ~ age+gender, FUN = mean, data = lee_etal_data)
+# aggdmu[,3] = exp(aggdmu[,3])
+# 
+# lee_etal_data$f0 = log(lee_etal_data$f0sd/lee_etal_data$f0_original)
+# aggdsd = aggregate (f0 ~ age+gender, FUN = sd, data = lee_etal_data)
+# aggdsd[,3] = (exp(aggdsd[,3])-1)*aggdmu[,3]
+# 
+# aggdmuf0 = aggdmu
+# aggdsdf0 = aggdsd
+# 
+# par (mfrow = c(1,3), mar = c(4.1,4.1,1,1))
+# 
+# plot (height_data$age[height_data$gender=="f"]-.1,
+#       height_data$height[height_data$gender=="f"],
+#       pch=16,col=2,lwd=2,cex=1.5, ylim = c(70,205),type='b', xlab="Age (years)",
+#       ylab = "Height (cm)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
+# lines (height_data$age[height_data$gender=="m"]+.1,
+#        height_data$height[height_data$gender=="m"],
+#        pch=16,col=4,lwd=2,cex=1.5,type='b')
+# grid()
+# legend (11,120,legend = c("Female","Male"), col = c(2,4),pch=16,cex=1.2,pt.cex=1.5)
+# 
+# 
+# phonTools::errorbar(height_data$age[height_data$gender=="f"]-.1,
+#                     height_data$height[height_data$gender=="f"],
+#                     height_data$sd[height_data$gender=="f"]*2,col=2,lwd=1,length=0.051)
+# phonTools::errorbar(height_data$age[height_data$gender=="m"]+.1,
+#                     height_data$height[height_data$gender=="m"],
+#                     height_data$sd[height_data$gender=="m"]*2,col=4,lwd=1,length=0.051)
+# 
+# rect (9.5,128,12.5,168,lwd=2,border="forestgreen",lty=1)
+# rect (17.5,150,20.5,190,lwd=2,border="forestgreen",lty=1)
+# 
+# plot (aggdmu$age[aggdmu$gender=="f"]-.1,aggdmu$f0[aggdmu$gender=="f"],
+#       pch=16,col=2,lwd=2,cex=1.5, ylim = c(50,370),type='b', xlab="Age (years)",
+#       ylab = "f0 (Hz)",xlim=c(2,21),cex.axis=1.3,cex.lab=1.3)
+# lines (aggdmu$age[aggdmu$gender=="m"]+.1,aggdmu$f0[aggdmu$gender=="m"],
+#       pch=16,col=4,lwd=2,cex=1.5,type='b')
+# grid()
+# 
+# phonTools::errorbars(aggdmu$age[aggdmu$gender=="f"]-.1,aggdmu$f0[aggdmu$gender=="f"],
+#                    aggdsd$f0[aggdsd$gender=="f"]*2,col=2,lwd=1,length=0.051)
+# phonTools::errorbars(aggdmu$age[aggdmu$gender=="m"]+.1,aggdmu$f0[aggdmu$gender=="m"],
+#                    aggdsd$f0[aggdsd$gender=="m"]*2,col=4,lwd=1,length=0.051)
+# 
+# plot (height_data$height[height_data$gender=="f"][-c(1,2,3,19)],
+#       aggdmu$f0[aggdmu$gender=="f"], pch=16,col=2,lwd=6,cex=2.75, ylim = c(50,350),
+#       type='b', xlab="Hieght (cm)", ylab = "f0 (Hz)",xlim=c(95,205),cex.axis=1.3,
+#       cex.lab=1.3)
+# lines (height_data$height[height_data$gender=="m"][-c(1,2,3,19)],
+#        aggdmu$f0[aggdmu$gender=="m"],
+#       pch=16,col=4,lwd=6,cex=2.75,type='b')
+# grid()
+# 
+# count = 1
+# for (i in (1:19)[-c(1,2,3,19)]){
+#   phonTools::sdellipse (
+#     matrix(c((height_data$sd[height_data$gender=="f"][count]),0,
+#              0,(aggdsd$f0[aggdsd$gender=="f"][count]))^2,2,2),
+#     means = c(height_data$height[height_data$gender=="f"][i],
+#               aggdmu$f0[aggdmu$gender=="f"][count]), col = 2,lty=3)
+# 
+#   phonTools::sdellipse (
+#     matrix(c((height_data$sd[height_data$gender=="m"][count]),0,
+#              0,(aggdsd$f0[aggdsd$gender=="m"][count]))^2,2,2),
+#     means = c(height_data$height[height_data$gender=="m"][i],
+#               aggdmu$f0[aggdmu$gender=="m"][count]), col = 4, lty=3)
+# 
+#   count = count + 1
+# }
+# dev.off()
 
 ```
 
@@ -569,7 +575,7 @@ abline (v = c(0.5), lty = 3, col = bmmb::cols[6],lwd=2)
 
 ```
 
-Table \@ref(tab:T12-1) presents information regarding our model fixed effects. We can see in the table (and figure) that f0 and VTL variation between speakers is associated with meaningful differences in apparent height. For example, a difference of 100 Hz between speakers is associated with a change of 3 cm in apparent height, and a 1 cm difference in VTL is associated with a change of 3 cm in apparent height. However, the largest effect is that of apparent age, indicating a difference of 14 cm in apparent height between speakers based on their apparent age.
+Table \@ref(tab:T13-1) presents information regarding our model fixed effects. We can see in the table (and figure) that f0 and VTL variation between speakers is associated with meaningful differences in apparent height. For example, a difference of 100 Hz between speakers is associated with a change of 3 cm in apparent height, and a 1 cm difference in VTL is associated with a change of 3 cm in apparent height. However, the largest effect is that of apparent age, indicating a difference of 14 cm in apparent height between speakers based on their apparent age.
 
 ```{r T13-1, echo = FALSE}
 knitr::kable(fixef(height_model), digits=2, caption = "Posterior means, standard deviations, and 2.5% and 97.5% quantiles for our regression model \'fixed\' effects parameter estimates.")

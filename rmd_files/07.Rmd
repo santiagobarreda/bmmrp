@@ -103,11 +103,25 @@ When there are more than two levels, each level that is being estimated is assoc
 contr.sum(1:4)
 ```
 
-Our tiny data matrix above suggests that the first observation (row) belongs to the first group (boy). This is because our data results in the $C1$ parameter being multiplied by one and $C2$ and $C3$ being zeroed out (see section \@ref(c4-many-levels)). The same logic suggests the second row is an observation from the second group and the third from the third. Since $C4$ is equal to $-(C1+C2+C3)$ (under sum coding), adding the negative of $C1$, $C2$, and $C3$ to the prediction is equivalent to adding the value of $C4$ even though it is not directly estimated, and it does not even have a predictor in our tiny matrix above. So, the fourth row of our tiny matrix represents an observation from the fourth group and encodes the effect for $C4$ even without directly estimating this value. As a result, even though our model only directly estimates three parameters for our $C$ predictor, we could think of our model as tacitly representing four parameters for $C$: $C1$, $C2$, $C3$, and $-(C1+C2+C3)$. 
+Our tiny data matrix above suggests that the first observation (row) belongs to the first group (boy). This is because our data results in the $C1$ parameter being multiplied by one and $C2$ and $C3$ being zeroed out (see section \@ref(c4-many-levels)). The same logic suggests the second row is an observation from the second group and the third from the third. For example, in \@ref(eq:7-0) we imagine that the first four values of our `C` predictor are 1, 2, 3, and 4, meaning that the apparent speaker category indicated for the first four trials were boy, girl, man, and woman. We also imagine that our predicted value ($\mu$) is a combination of our estimated parameters $C1, C2$ and $C3$ with the 'secret' predictors in our matrix above. We can see that multiplying our coefficients with our predictors has the effect of 'erasing' the unwanted coefficients for a given row leaving only the one associated with the observation. 
 
-Even though the inclusion of $C$ in our model requires the addition of three separate parameters, we're going to represent these with a single term like $C_{[\mathsf{C}_{[i]}]}$ in our formal model descriptions. This term selects the value of $C$ for trial $i$ based on the value of the `C` (apparent category) predictor, which is consistent with the way we've been representing our listener and speaker-dependent intercepts. However, there appears to be a problem. The subscript of the term is a predictor which has four levels (`C`, or $\mathsf{C}$). However, our $C$ coefficient does not actually represent four separate parameters because the fourth level of the `C` predictor is not estimated. 
+$$
+\begin{equation}
+\begin{split}
+\mathsf{C}_{[1]} = 1, \mathsf{C}_{[2]}=2,\mathsf{C}_{[3]}=3,\mathsf{C}_{[4]}=4  \dots \\
+\mu_{[i]} = x_1 \cdot C1 +  x_2 \cdot C2 + x_3 \cdot C3 \\ \\
+\mu_{[1]} = 1 \cdot C1 +  0 \cdot C2 + 0 \cdot C3 = C1\\
+\mu_{[2]} = 0 \cdot C1 +  1 \cdot C2 + 0 \cdot C3 = C2\\
+\mu_{[3]} = 0 \cdot C1 +  0 \cdot C2 + 1 \cdot C3 = C3\\
+\mu_{[4]} = -1 \cdot C1 - 1 \cdot C2 - 1 \cdot C3 = -(C1 + C2 + C3)\\
+\end{split}
+(\#eq:7-0)
+\end{equation}
+$$
 
-The above situation means that when the `C` predictor is equal to it's fourth level (`C = w`), the model seems to want to select the fourth $C$ predictor, i.e. $C_{[4]}$. However this predictor does not actually exist in our model (it only goes up to $C_{[3]}$ as seen above). When this occurs, we can simply assume that our model uses the negative sum of the other three parameters to predict values, effectively using the value of $C_{[\mathsf{C}_{[i]=4}]}$ even without directly estimating the parameter. 
+Since $C4$ is equal to $-(C1+C2+C3)$ (under sum coding), adding the negative of $C1$, $C2$, and $C3$ to the prediction is equivalent to adding the value of $C4$. As a result, the fourth row of our tiny matrix represents an observation from the fourth group, and encodes the effect for $C4$, even without directly estimating this value. As a result, even though our model only directly estimates three parameters for our $C$ predictor, we could think of our model as tacitly representing four parameters for $C$: $C1$, $C2$, $C3$, and $-(C1+C2+C3)$. 
+
+Even though the inclusion of $C$ in our model requires the addition of three separate parameters, we're going to represent these with a single term like $C_{[\mathsf{C}_{[i]}]}$ in our formal model descriptions. This term selects the value of $C$ for trial $i$ based on the value of the `C` (apparent category) predictor, which is consistent with the way we've been representing our listener and speaker-dependent intercepts. However, there appears to be a problem. The subscript of the term is a predictor which has four levels (`C`, or $\mathsf{C}$). When the `C` predictor is equal to it's fourth level (`C = w`), the model seems to want to select the fourth $C$ predictor, i.e. $C_{[4]}$. However, our $C$ coefficient does not actually represent four separate parameters because the fourth level of the `C` predictor is not estimated (i.e. there is no $x_4$ predictor in \@ref(eq:7-0)). So, when this occurs we can just imagine that our model reconstructs the missing model parameter to 'fill in' the missing parameter. 
 
 Since we are including adult male speakers in our data we should also reconsider our priors. Based on the information in `height_data` we expect average apparent heights of around 176, 162, 150 and 150 cm respectively for men, women, girls, and boys. These four groups have an average of 159 cm and a standard deviation of 12 cm. Based on this, and especially given that we are investigating *apparent* and not *veridical* height, the priors we used in the last chapter still seem appropriate. The formal description of our model is given below. We omit the deterministic equation 'building' up $\mathrm{\Sigma}$ from the correlation matrix ($R$) and the individual standard deviations (shown in \@ref(eq:6-7)) since this does not involve the user, and it makes the model description needlessly bigger.
 
@@ -196,7 +210,7 @@ all_groups =
 all_groups
 ```
 
-We can also use `short_hypothesis` to compare different combinations of our fixed effects. Using the code below we test for a difference in group means between the first and second groups (boys and girls), and between the third and four groups (men and women).  
+Above we see that we have differences in apparent height across groups. If someone asked you "please describe the difference to me", you might begin by saying something like "there doesn't seem to be too much difference in apparent height between apparent boys and girls", or "apparent men are identified as taller than apparent women". In each case, these statements reduce a multi-group model to focus on a single difference between groups at a time. We can also use `short_hypothesis` to help us compare different combinations of our fixed effects. Using the code below we test for a difference in group means between the first and second groups (boys and girls), and between the third and four groups (men and women).  
 
 ```{r, collapse = TRUE}
 # parameters = centered means
@@ -1065,16 +1079,6 @@ brms::fixef (model_four_groups)
 
 However, it is not as straightforward to test for differences between parameter values in our `lmer` models. The same could be said for the combination of parameters as is necessary for the investigation of group means and simple effects. The investigation of differences and combinations of parameters is definitely possible in `lmer` for many cases, however this will involve either the re-parametrization of the model or the use of additional packages that allow for these sorts of questions to be asked. This can be contrasted with the ease and consistency of inspecting posterior distributions in our `brms` models.
 
-## References 
-
-Gelman, A., Hill, J., & Yajima, M. (2012). Why we (usually) don’t have to worry about multiple comparisons. Journal of Research on Educational Effectiveness, 5(2), 189–211.
-
-Gelman, A., & Carlin, J. (2014). Beyond power calculations: Assessing type S (sign) and type M (magnitude) errors. Perspectives on Psychological Science, 9(6), 641-651.
-
-Gelman, A., Goodrich, B., Gabry, J., & Vehtari, A. (2019). R-squared for Bayesian regression models. The American Statistician.
-
-Kruschke, J. K. (2018). Rejecting or accepting parameter values in Bayesian estimation. Advances in methods and practices in psychological science, 1(2), 270-280.
-
 
 ## Exercises
 
@@ -1091,4 +1095,16 @@ Fit and interpret one or more of the suggested models:
 
 
 In any case, describe the model, present and explain the results, and include some figures.
+
+
+## References 
+
+Gelman, A., Hill, J., & Yajima, M. (2012). Why we (usually) don’t have to worry about multiple comparisons. Journal of Research on Educational Effectiveness, 5(2), 189–211.
+
+Gelman, A., & Carlin, J. (2014). Beyond power calculations: Assessing type S (sign) and type M (magnitude) errors. Perspectives on Psychological Science, 9(6), 641-651.
+
+Gelman, A., Goodrich, B., Gabry, J., & Vehtari, A. (2019). R-squared for Bayesian regression models. The American Statistician.
+
+Kruschke, J. K. (2018). Rejecting or accepting parameter values in Bayesian estimation. Advances in methods and practices in psychological science, 1(2), 270-280.
+
 

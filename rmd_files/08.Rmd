@@ -13,7 +13,7 @@ So far our models have been a bit 'old-fashioned' in one important way: They hav
 
 ## Chapter pre-cap
 
-The chapter begins by introducing prior predictive checks, and the importance of these for model building. We provide some examples of the results of different prior setting for our models. After that we discuss how to specify more specific prior probabilities for individual model parameters. After that, we introduce heteroscedastic models, that is, models with error terms that vary from observation to observation. First, we present a ‘simple’ model that includes only variation in the error term across two conditions. Following that, we present a ‘complex’ model that features listener-dependent error terms fit using shrinkage, in addition to the equivalent of listener ‘random effects’ for the error term. After this, we discuss building identifiable models and models supported by the data we have, and collinearity, linear dependance, and saturated models are discussed.  
+The chapter begins by introducing prior predictive checks, and the importance of these for model building. We provide some examples of the results of different prior settings for our models. After that we discuss how to specify more specific prior probabilities for individual model parameters. After that, we introduce heteroscedastic models, that is, models with error terms that vary from observation to observation. First, we present a ‘simple’ model that includes only variation in the error term across two conditions. Following that, we present a ‘complex’ model that features listener-dependent error terms fit using shrinkage, in addition to the equivalent of listener ‘random effects’ for the error term. After this, we discuss building identifiable models and models supported by the data we have, and collinearity, linear dependance, and saturated models are discussed.  
 
 ## Data and Research questions
 
@@ -44,9 +44,13 @@ We're going to use models whose structure is similar to the final model we fit i
 
 To this point our focus has been on understanding the components that make up our models, and how these are represented using our model parameters. Now that we've covered most of the essentials of using categorical predictors, we can focus a bit more on the prior distributions of the parameters in our models. The reason we've been able to get away with not talking about priors very much is that we have substantial **domain knowledge** regarding the distribution of human height as a function of age and gender. In addition, our models thus far have been fairly simple, making the consideration of prior distributions relatively straightforward. 
 
-For example, we will lay out some expected coefficient values based on the assumption that apparent height basically corresponds to veridical height, on average. Based on the information in `height_data`, we know that 11 year-old boys and girls are about 150 cm tall, and women and men are 163 and 176 cm tall respectively, on average. This means that there is an difference of 19.5 cm ((13+26)/2) on average between adults and children between 11 and 12 years of age. A difference of 19.5 cm between age groups suggests about a 10 cm distance (half the group difference) between each age group and the overall intercept. In other words, if apparent height is similar to veridical height, we expect an apparent age ($A$) predictor of about 10 cm in magnitude given sum coding. In contrast, we have an expected height difference of 0 cm across genders for children, and 12 cm across genders for adults. This is an average difference of 6 cm between males and females across both ages. This means that we expect an effect of about 3 cm for gender averaged across ages. Based on this, our prior standard deviation of 12 cm for our `b` (fixed-effects) parameters seems very reasonable, although perhaps a bit large. 
+For example, we will lay out some expected coefficient values based on the assumption that apparent height basically corresponds to veridical height, on average. Based on the information in `height_data`, we know that 11 year-old boys and girls are about 150 cm tall, and women and men are 163 and 176 cm tall respectively, on average. This means that there is a difference of 19.5 cm ((13+26)/2) on average between adults and children between 11 and 12 years of age. A difference of 19.5 cm between age groups suggests about a 10 cm distance (half the group difference) between each age group and the overall intercept. In other words, if apparent height is similar to veridical height, we expect an apparent age ($A$) predictor of about 10 cm in magnitude given sum coding. In contrast, we have an expected height difference of 0 cm across genders for children, and 12 cm across genders for adults. This is an average difference of 6 cm between males and females across both ages. As a result, we expect an effect of about 3 cm for gender averaged across ages. Based on this, our prior standard deviation of 12 cm for our `b` (fixed-effects) parameters seems very reasonable, although perhaps a bit large for some effects. 
 
-However, imagine a situation where there was less certainty about reasonable values for our priors. This can happen for many reasons. For example, imagine you carry out a lexical decision task where participants listen to a combination of 'real' (e.g., 'map') and 'fake' words (e.g., 'marp') and have to decide if the word they heard is 'real' or not. You divide your real words into 5 groups based on a numerical measure of their frequency (how often they tend to appear in speech). To complicate matters further, you see that your reaction times are *heavily* skewed and so decide to model the logarithm of the reaction times. What should your priors be for your frequency groups? The prior distribution of a parameter represents the expected distribution of your parameters *a priori*. So what do we think are reasonable group differences in this situation? Even in this relatively simple case, setting prior distributions using only your intuitions would require understanding plausible variation in the *logarithm* of reaction times across word groups. This may not be realistic in this situation nor in many others.
+[@@ Noah check this paragraph, its new]
+
+Are they *too* large? An effect of 12 cm is reasonable for something related to human height. If we were astronomers, our priors might be on the order of 12 light-years rather than cm, where a light year is equal to $9.461 \cdot 10^{17}$ cm. If we were studying variation in the size of E. coli bacteria, our priors might be on the order of 0.2 micrometers, or about $2 \cdot 10^{-5}$ cm. When viewed from this perspective, worrying about a prior of 12 cm vs. 6 cm is less important than providing your model with information about the general magnitude of variation it can expect in your data and in parameter estimates. Furthermore, in many situations involving repeated measures data, you will have so many observations that slight differences in the settings of the prior will not have any noticeable effect on the posterior distributions of the model parameters (see figure \@ref(fig:F3-1)). This fact makes arguments regarding which prior is 'better' in many situations more *philosophical* than *practical*. That being said, it is still useful and important to provide priors that conform to plausible ranges of expected parameter values. 
+
+As we noted above, this is generally straightforward for our experiment involving the perception of apparent height. However, imagine a situation where there was less certainty about reasonable values for our priors. This can happen for many reasons. For example, imagine you carry out a lexical decision task where participants listen to a combination of 'real' (e.g., 'map') and 'fake' words (e.g., 'marp') and have to decide if the word they heard is 'real' or not. You divide your real words into 5 groups based on a numerical measure of their frequency (how often they tend to appear in speech). To complicate matters further, you see that your reaction times are heavily skewed and so decide to model the logarithm of the reaction times. What should your priors be for your frequency groups? The prior distribution of a parameter represents the expected distribution of your parameters *a priori*. So what do we think are reasonable group differences in this situation? Even in this relatively simple case, setting prior distributions using only your intuitions would require understanding plausible variation in the *logarithm* of reaction times across word groups. This may not be realistic in this situation nor in many others.
 
 ### Prior predictive checks {#c8-prior-prediction}
 
@@ -55,18 +59,17 @@ A **prior predictive check** can help understand the consequences of the prior d
 Below we fit `model_interaction` from chapter 7 again, except this time we sample only from the prior. Imagine that we did not have much knowledge about speaker heights other than that humans tend to be between 1 and 2 meters tall. Based on this we decided to be cautious and use relatively *uninformative* priors and set all prior standard deviations to 1000 cm (10 meters). 
 
 ```{r, eval = FALSE, warnings=FALSE,error=FALSE}
+# Fit the model yourself
 priors = c(brms::set_prior("student_t(3,156, 1000)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 1000)", class = "b"),
            brms::set_prior("student_t(3,0, 1000)", class = "sd"),
            brms::set_prior("lkj_corr_cholesky (1000)", class = "cor"), 
            brms::set_prior("student_t(3,0, 1000)", class = "sigma"))
 
-# Fit the model yourself
-options (contrasts = c('contr.sum','contr.sum'))
 prior_uninformative =  
-  brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), sample_prior="only",
-             data = exp_data, chains = 4, cores = 4, warmup = 1000, 
-             iter = 5000, thin = 4, prior = priors)
+  brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
+             sample_prior="only", data = exp_data, chains = 4, cores = 4, 
+             warmup = 1000, iter = 5000, thin = 4, prior = priors)
 ```
 
 ```{r, include = TRUE, eval = FALSE}
@@ -98,7 +101,7 @@ bmmb::p_check (pp_uninformative)
 
 In the left plot of figure \@ref(fig:F8-1) we see the result of using `p_check` in ten random samples from our 'uninformative' prior prediction. As can be seen, our 'cautious' approach results in a range of simulated heights that make no sense even given our relatively limited prior knowledge, in this case that most humans are between 100 and 200 cm tall. In fact, our simulated data contains not only large negative values, which make no sense in the context of height, but also substantial values above 5000 cm, which is about the size of a 10-story office building.  
 
-```{r F8-1, fig.height = 2.5, fig.width=8, fig.cap = "(left) Densities of 10 prior predictions of apparent height for the uninformative prior. (middel) Densities of 10 prior predictions of apparent height for the mildly informative prior. (right). Densities of 10 prior predictions of apparent height for the conservative prior.", echo = FALSE, cache = FALSE}
+```{r F8-1, fig.height = 2.5, fig.width=8, fig.cap = "Densities of 10 prior predictions of apparent height for the uninformative, mildly informative, and conservative priors.", echo = FALSE, cache = FALSE}
 
 ###############################################################################
 ### Figure 8.1
@@ -107,24 +110,32 @@ In the left plot of figure \@ref(fig:F8-1) we see the result of using `p_check` 
 prior_mildly_informative  = readRDS ("../models/8_prior_mildly_informative.RDS")
 prior_conservative = readRDS ("../models/8_prior_conservative.RDS")
 
-par (mfrow = c(1,3), mar = c(4,4,1,1))
-p_check (prior_uninformative, samples = seq(1,4000,length.out=10))
-p_check (prior_mildly_informative, samples = seq(1,4000,length.out=10), xlim = c(-100,400))
-p_check (prior_conservative, samples = seq(1,4000,length.out=10), xlim = c(-100,400))
+par (mfrow = c(1,3), mar = c(4.5,.5,2,1), oma = c(0,2,.1,1))
+p_check (prior_uninformative, xlab="", cex.lab=1.2,yaxt="n", ylab = "Density",
+         samples = seq(1,4000,length.out=10))
+title ("Uinformative")
+p_check (prior_mildly_informative, xlim = c(-100,400), xlab="", ylab="",yaxt="n",
+         samples = seq(1,4000,length.out=10))
+title ("Mildly Informative")
+p_check (prior_conservative, xlim = c(-100,400), xlab="", ylab="",yaxt="n",
+         samples = seq(1,4000,length.out=10))
+title ("Conservative")
+mtext ("Predicted Apparent Height", outer = TRUE, side=1,line=-1.5, cex = 0.8)
+mtext ("Density", outer = TRUE, side=2,line=.7, cex = 0.9, adj = 0.6)
 ```
 
-It is difficult to *prove* that such a wide prior is 'bad', and in fact some authors recommend the use of very uninformative priors (Krushcke 2014). However, it's difficult to deny that a prior that results in prior predictions that are more in line with our domain knowledge is generally better for at least two reasons. First, more informative priors can help the model converge on credible parameter values, especially for complicated models with many parameters. Second, more informative priors can help improve out-of-sample prediction by providing actual information about plausible parameter values for our model. Basically, no fancy statistical model is going to convince anyone that 50 meters tall is a plausible apparent height for human speakers because human speakers are simply not nearly that tall. As a result, a model that acts as if 50 meters is a plausible apparent height for human speakers is likely to offer worse out-of-sample prediction than a model that correctly assigns little to no prior belief to this range of apparent heights. For a more in-depth discussion on the role and function of prior probabilities in multilevel Bayesian models see  Gelman et al. (2017). 
+It is difficult to *prove* that such a wide prior is 'bad', and in fact some authors have recommended the use of very uninformative priors (Krushcke 2014). However, it's difficult to deny that a prior that results in prior predictions that are more in line with our domain knowledge is generally better for at least two reasons. First, more informative priors can help the model converge on credible parameter values, especially for complicated models with many parameters. Second, more informative priors can help improve out-of-sample prediction by providing actual information about plausible parameter values for our model. Basically, no fancy statistical model is going to convince anyone that 50 meters tall is a plausible apparent height for human speakers because human speakers are simply not nearly that tall. As a result, a model that acts as if 50 meters is a plausible apparent height for human speakers is likely to offer worse out-of-sample prediction than a model that correctly assigns little to no prior belief to this range of apparent heights. For a more in-depth discussion on the role and function of prior probabilities in multilevel Bayesian models see  Gelman et al. (2017). 
 
 Below we again sample from the prior using the setting we've been using so far, and that we used in the previous chapter. 
 
 ```{r, eval = FALSE, warnings=FALSE,error=FALSE}
+# Fit the model yourself
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
            brms::set_prior("student_t(3,0, 12)", class = "sd"),
            brms::set_prior("lkj_corr_cholesky (12)", class = "cor"), 
            brms::set_prior("student_t(3,0, 12)", class = "sigma"))
 
-options (contrasts = c('contr.sum','contr.sum'))
 prior_mildly_informative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
              sample_prior="only", data = exp_data, chains = 4, cores = 4, 
@@ -143,13 +154,13 @@ prior_mildly_informative = readRDS ('../models/8_prior_mildly_informative.RDS')
 We can use the `p_check` function again to make plots of our prior predictions, as shown in middle plot of figure \@ref(fig:F8-1). As we can see, the priors we've been using allow for some implausibly large or small apparent height judgments. However, they are constraining the bulk of these to values between 100-200 cm, which is our approximate target. In our opinion, these priors are 'good enough'. However, we may be unhappy that even some implausible values are being generated and want to test out even tighter priors. Below, we sample from priors that are half as wide as those of our mildly informative model above. 
 
 ```{r, eval = FALSE, warnings=FALSE,error=FALSE}
+# Fit the model yourself
 priors = c(brms::set_prior("student_t(3,156, 6)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 6)", class = "b"),
            brms::set_prior("student_t(3,0, 6)", class = "sd"),
            brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
            brms::set_prior("student_t(3,0, 6)", class = "sigma"))
 
-options (contrasts = c('contr.sum','contr.sum'))
 prior_conservative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
              sample_prior="only", data = exp_data, chains = 1, cores = 1, 
@@ -184,7 +195,7 @@ model_conservative =
   bmmb::get_model ("8_model_conservative.RDS")
 ```
 
-We use `brmplot` to compare the fixed effects estimates for the three models. As can be seen, there is little to no difference in parameter estimates or the credible intervals around them as a function of our prior probabilities. This is in part due to the large amount of data we have, and to the fact that our model is fairly simple relative to the information contained in our data. However, there does appear to be a small reduction in the `A1` parameter as we decrease the value of the prior standard deviation of our fixed effects parameters from 1000, to 12, to 6.  
+We use `brmplot` to compare the fixed effects estimates for the three models. As can be seen, there is little to no difference in parameter estimates or the credible intervals around them as a function of our prior probabilities. For example, although it may seem that there is a reduction in the `A1` effect based on the prior, the posterior means of these effects differ by less than 0.2 cm across the three models. This is in part due to the large amount of data we have, and to the fact that our model is fairly simple relative to the information contained in our data. 
 
 ```{r, eval = FALSE, include = FALSE}
 priors = c(brms::set_prior("student_t(3,156, 1000)", class = "Intercept"),
@@ -257,14 +268,14 @@ brmplot (rbind(fixef_1[4,],fixef_2[4,],fixef_3[4,]), ylim = c(-6,1),
 
 ### More specific priors 
 
-The final model above was named `conservative` because its priors may have been *too* small. As noted above we actually expect an effect for age of about 10 cm based on variation in veridical height between children and adults, and about 3 cm for the gender effect. When we set our priors using the `class` parameter in the `prior` function, we can reduce the time our models turn to fit, but we lose the ability to fine-tune priors for specific parameters. For example, we might want a model with a prior with a standard deviation of 10 cm for the age effect, and a prior standard deviation of 3 cm for the gender effect. We can use the `prior_summary` function in `brms` to see what priors we can set for our model. The output of this function is analogous to that for the `get_priors` function, discussed in sections \@ref(c3-specifying-priors) and \@ref(c4-fitting-1)). 
+The final model above was named `conservative` because its priors may have been *too* small. As noted above we actually expect an effect for age of about 10 cm based on variation in veridical height between children and adults, and about 3 cm for the gender effect. When we set our priors using the `class` parameter in the `prior` function, we can reduce the time our models take to fit, but we lose the ability to fine-tune priors for specific parameters. For example, we might want a model with a prior with a standard deviation of 10 cm for the age effect, and a prior standard deviation of 3 cm for the gender effect. We can use the `prior_summary` function in `brms` to see what priors we can set for our model. The output of this function is analogous to that for the `get_priors` function, discussed in sections \@ref(c3-specifying-priors) and \@ref(c4-fitting-1). 
 
 ```{r, eval = TRUE}
 # we omit empty columns to let the output fit on the page 
 brms::prior_summary(model_mildly_informative)[,-c(5:9)]
 ```
 
-We can copy the values of the `class`, `coeff`, and `group` values in the output above to set specific prior probabilities for our `A1` and `G1` parameters, and for the standard deviations of the `A1` and `G1` random effects. In the specification below, the parameters with a standard deviation represent the 'default' case, parameters with a standard deviation of 6 represent age-related effects, and parameters with a standard deviation of 3 represent gender-related effects.
+We can copy the values of the `class`, `coeff`, and `group` columns in the output above to set more specific prior probabilities for the different parameters in our model. Below, We set some arbitrarily selected priors just to show an example of how these can be set for more specific groups of parameters.
 
 ```{r, eval = FALSE}
 # we omit the 'brms::' part so that the lines below will fit on the page
@@ -274,8 +285,8 @@ priors =
     set_prior("student_t(3,0, 10)", class = "b", coef = "A1"),
     set_prior("student_t(3,0, 3)", class = "b", coef = "G1"),
     set_prior("student_t(3,0, 10)", class = "sd"),
-    set_prior("student_t(3,0, 3)", class = "sd", coef = "A1", group = "L"),
-    set_prior("student_t(3,0, 6)", class = "sd", coef = "G1", group = "L"),
+    set_prior("student_t(3,0, 5)", class = "sd", coef = "A1", group = "L"),
+    set_prior("student_t(3,0, 1.5)", class = "sd", coef = "G1", group = "L"),
     set_prior("lkj_corr_cholesky (2)", class = "cor"), 
     set_prior("student_t(3,0, 6)", class = "sigma"))
 
@@ -289,12 +300,12 @@ prior_informative =
 If we inspect the priors for this model and compare this to the previous one, we can see that now there is between-parameter variation in our priors.
 
 ```{r, eval = FALSE}
-brms::prior_summary(prior_informative)
+brms::prior_summary(prior_informative)[,-c(5:9)]
 ```
 
 ## Heteroskedasticity and distributional (or mixture) models
 
-Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption can be said to be **homoscedastic**. Historically, the homogeneity of error variance has been assumed in models because it makes them simpler to work with and understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different subsets of data. These sorts of models are sometimes called **mixture models** because they can be thought of as a mixture of different distributions or **distributional models** because they allow us to model variation in all of the parameters of the data distribution (e.g. $\sigma$ in addition to $\mu$). 
+Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption can are **homoscedastic**. Historically, the homogeneity of error variance has been assumed in models because it makes them simpler to work with and understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different subsets of data. These sorts of models are sometimes called **mixture models** because they can be thought of as a mixture of different distributions or **distributional models** because they allow us to model variation in all of the parameters of the data distribution (e.g. $\sigma$ in addition to $\mu$). 
 
 Consider the residuals for the random effects model we just fit to our data, which we can get from the model using the `residuals` function:
 
@@ -376,19 +387,18 @@ $$
 
 ## A 'simple' model: Error varies according to a single fixed effect
 
-We'll begin with a 'simple' heteroscedastic model that allows for variation in $\sigma$ based on apparent age. After this, we will fit a model that includes listener-dependent variation in $\sigma$ as well.
+We'll begin with a 'simple' heteroscedastic model that allows for variation in $\sigma$ based on apparent age. After this, we'll fit a model that includes listener-dependent variation in $\sigma$ as well.
 
 ### Description of our model
 
 The `brms` package makes it exceptionally easy to fit heteroscedastic models by letting you write formulas for the error just as you do for the mean. For example, the model formula for the last model we fit in chapter 7 (`model_interaction`) was:
 
-`height ~ A*G + (A*G|L) + (1|S)`
 
 This told `brms` "model apparent height as a function of an intercept, an effect for apparent age, an effect for apparent gender, the interaction of the two, listener-specific adjustments to all predictors, and speaker-specific intercepts". Implicitly, we know that all of this models variation in the $\mu$ parameter of a normal distribution with a fixed $\sigma$. We want our model to consider the possibility that the value of $\sigma$ may vary based on whether the speaker is judged to be an adult or a child. We can do this by including a separate formula for our error (called `sigma` by `brms`) using the following formula:
 
 `sigma ~ A`
 
-This formula tells `brms` "model the standard deviation of the error as varying around an overall intercept and deviations of this based on the `A`, a predictor in indicating apparent age". We can 'stick' our two model formulas together using the `bf` (Bayes formula) function as shown below:
+This formula tells `brms` "model the standard deviation of the error as varying around an overall intercept and deviations of this based on `A`, a predictor in indicating apparent age". We can 'stick' our two model formulas together using the `bf` (Bayes formula) function as shown below:
 
 ```{r, eval = FALSE}
 model_formula = brms::bf(height ~ A + (A|L) + (1|S),
@@ -403,20 +413,19 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma_{[i]}, \nu) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + \\ L_{[\mathsf{L}_{[i]}]} + A1 \colon L_{[\mathsf{L}_{[i]}]} + G1 \colon L_{[\mathsf{L}_{[i]}]} + A1 \colon G1 \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ 
+\mu_{[i]} = \mathrm{Intercept} + A + G + A \colon G + \\ L_{[\mathsf{L}_{[i]}]} + A \colon L_{[\mathsf{L}_{[i]}]} + G \colon L_{[\mathsf{L}_{[i]}]} + A \colon G \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ 
 \\ 
-\log (\sigma_{[i]}) = \mathrm{Intercept_{\sigma}} + A1_{\sigma} \\ \\ 
+\log (\sigma_{[i]}) = \mathrm{Intercept_{\sigma}} + A_{\sigma} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim t(3,0,\sigma_S) \\
-\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\ 
+\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma} \right) \\ \\ 
 \mathrm{Intercept} \sim t(3,156,12) \\
 A, G, A \colon G \sim t(3,0,12) \\
 \sigma_L, \sigma_{A \colon L}, \sigma_{G \colon L}, \sigma_{A \colon G \colon L}, \sigma_S \sim t(3,0,12) \\
-\sigma \sim t(3,0,12) \\
 \nu \sim \mathrm{gamma}(2, 0.1) \\ 
 R \sim \mathrm{LKJCorr} (2) \\ 
 \mathrm{Intercept_{\sigma}} \sim \mathrm{N}(0,1.5) \\
-A1_\sigma \sim \mathrm{N}(0,1.5) \\
+A_\sigma \sim \mathrm{N}(0,1.5) \\
 \end{split}
 (\#eq:8-3)
 \end{equation}
@@ -424,9 +433,9 @@ $$
 
 A plain English description of this model is:
 
-> We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value for any given trial ($\mu$) is modeled as the sum of an intercept, an effect for apparent speaker age ($A$), gender ($G$), and their interaction ($A \colon G$), a listener effect ($L$), a listener dependent effect for apparent age ($A \colon L$), apparent gender ($G \colon L$), their interaction ($A \colon G \colon L$), and a speaker effect ($S$). The expected value of the logarithm of the error standard deviation ($\sigma$) is modeled as the sum of an intercept ($\mathrm{Intercept_{\sigma}}$) and an effect for apparent age ($A1_\sigma$) that are specific to the error. The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_S$) estimated from the data. The four listener effects were drawn from a multivariate normal distribution with individual standard deviations ($\sigma_L,\sigma_{A \colon L},\sigma_{G \colon L},\sigma_{A \colon G \colon L}$) and a correlation matrix ($R$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values, including the terms related to the error ($\mathrm{Intercept_{\sigma}}$, and $A1_\sigma$). 
+> We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value for any given trial ($\mu$) is modeled as the sum of an intercept, an effect for apparent speaker age ($A$), gender ($G$), and their interaction ($A \colon G$), a listener effect ($L$), a listener dependent effect for apparent age ($A \colon L$), apparent gender ($G \colon L$), their interaction ($A \colon G \colon L$), and a speaker effect ($S$). The expected value of the logarithm of the error standard deviation ($\sigma$) is modeled as the sum of an intercept ($\mathrm{Intercept_{\sigma}}$) and an effect for apparent age ($A_\sigma$) that are specific to the error. The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_S$) estimated from the data. The four listener effects were drawn from a multivariate normal distribution with individual standard deviations ($\sigma_L,\sigma_{A \colon L},\sigma_{G \colon L},\sigma_{A \colon G \colon L}$) and a correlation matrix ($R$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values, including the terms related to the error ($Intercept_{\sigma}$, and $A_\sigma$). 
 
-This model is quite large, but it only contains four new (or modified) lines compared to model presented in \@ref(eq:7-8). These lines are presented in \@ref(eq:8-4), and represented a simple two-group model for our $\sigma$ parameter. First, our model now uses a trial-specific error term for trial $i$ ($\sigma_{[i]}$), whereas it previously always used a constant standard deviation. Second, we are now modeling this trial-specific $\sigma$ parameter using an intercept specific to our sigma term ($\mathrm{Intercept_{\sigma}}$), and a deviation from this base on apparent age ($A1_{\sigma}$). 
+This model is quite large, but it only contains four new (or modified) lines compared to the model presented in \@ref(eq:7-8). These lines are presented in \@ref(eq:8-4), and represent a simple two-group model for our $\sigma$ parameter. First, our model now uses a trial-specific error term for trial $i$ ($\sigma_{[i]}$), whereas it previously always used a constant standard deviation. Second, we are now modeling this trial-specific $\sigma$ parameter using an intercept specific to our sigma term ($\mathrm{Intercept_{\sigma}}$), and a deviation from this base on apparent age ($A1_{\sigma}$). 
 
 $$
 \begin{equation}
@@ -477,7 +486,6 @@ Notice that we set these priors using the classes we have already discussed, `In
 
 ```{r, eval = FALSE}
 # Fit the model yourself
-options (contrasts = c('contr.sum','contr.sum'))
 model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
                          sigma ~ A)
 priors = 
@@ -500,7 +508,7 @@ prior_A_sigma =
 prior_A_sigma = bmmb::get_model ('8_prior_A_sigma.RDS')
 ```
 ```{r, include = FALSE}
-#  saveRDS (prior_uninformative,"8_prior_A_sigma.RDS")
+#  saveRDS (prior_A_sigma,"8_prior_A_sigma.RDS")
 prior_A_sigma = readRDS ('../models/8_prior_A_sigma.RDS')
 ```
 
@@ -516,9 +524,6 @@ For the first time below, we specify both the model formula (using the `bf` func
 
 ```{r, eval = FALSE}
 # Fit the model yourself
-# set the contrasts
-options (contrasts = c('contr.sum','contr.sum'))
-
 model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
                          sigma ~ A)
 priors = 
@@ -535,7 +540,7 @@ model_A_sigma =
              warmup = 1000, iter = 3500, thin = 2, family="student",
              prior = priors)
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
 model_A_sigma = bmmb::get_model ('8_model_A_sigma.RDS')
 ```
@@ -550,17 +555,18 @@ If we look at the model 'fixed' (`population-Level1) effects:
 fixef (model_A_sigma)
 ```
 
-We see a two new lines reflecting our new model parameters, both in the `Population-level effects`: `sigma_Intercept` and `sigma_A1`. These terms represent the intercept of our `sigma` ($\sigma$) term and the effect for apparent adultness on `sigma`. These effects can be interpreted in a very similar way as we interpret the corresponding effect for $\mu$: `Intercept` and `A1`. The value of `sigma_Intercept` represents the grand mean for our `sigma` ($\sigma$) term. The value of `sigma_A1` reflects the difference in `sigma` between the intercept and the value when speakers were perceived as adults. Since we are using sum coding `A2`, the effect for apparent children, is not estimated. However, we can recover `A2` since `A1 = -A2`. One easy way to do this is using the `hypothesis` function (or its clone in `bmmb`) as follows:
+We see two new lines reflecting our new model parameters, both in the `Population-level effects`: `sigma_Intercept` and `sigma_A1`. These terms represent the intercept of our `sigma`, term and the effect for apparent adultness on `sigma`. These effects can be interpreted in a very similar way as we interpret the corresponding effects for $\mu$: `Intercept` and `A1`. The value of `sigma_Intercept` represents the grand mean for our `sigma` term. The value of `sigma_A1` reflects the difference in `sigma` between the intercept and the value when speakers were perceived as adults. Since we are using sum coding `A2`, the effect for apparent children, is not estimated. However, we can recover `A2` since `A1 = -A2`. One easy way to do this is using the `hypothesis` function (or its clone in `bmmb`) as follows:
 
 ```{r}
-sigmas = short_hypothesis(model_A_sigma, 
-                          c("exp(sigma_Intercept)=0",
-                            "exp(sigma_Intercept+sigma_A1)=0",
-                            "exp(sigma_Intercept-sigma_A1)=0"))
-sigmas
+sigmas = short_hypothesis(
+  model_A_sigma, 
+  c("exp(sigma_Intercept) = 0",                # overall sigma
+    "exp(sigma_Intercept + sigma_A1) = 0",     # adult sigma
+    "exp(sigma_Intercept - sigma_A1) = 0"))    # child sigma
+sigmas[,-5]
 ```
 
-Since our model estimates `log(sigma)` and not `sigma` directly, to get our values of sigma we need to exponentiate our parameter estimates. We can do this directly in the `hypothesis` function as seen above. The three estimated error terms are presented in figure \@ref(fig:F8-4). Clearly, there are substantial differences in the value of $\sigma$ based on the perceived adultness of the speaker: The value of $\sigma$ was 61% greater (7.1/4.4) when listeners identified the speaker as a child. 
+Since our model estimates `log(sigma)` and not `sigma` directly, to get our values of sigma we need to exponentiate our parameter estimates. We can do this directly in `short_hypothesis` as seen above. The three estimated error terms are presented in figure \@ref(fig:F8-4). Clearly, there are substantial differences in the value of $\sigma$ based on the perceived adultness of the speaker: The value of $\sigma$ was 61% greater (7.1/4.4) when listeners identified the speaker as a child. 
 
 ```{r F8-4, fig.height = 2.5, fig.width = 8, fig.cap="(left) Estimates of overall data-level error ($\\sigma$), to estimates of this for apparent adults and for apparent children. (right) Comparison of some fixed-effects parameters shared by our heteroscedastic and homoscedastic models.", cache = FALSE, echo = FALSE}
 
@@ -579,7 +585,7 @@ brmplot (fixef(model_interaction)[2:4,], col = cols, add = TRUE,
 legend (1.7,10, legend = c("Heteroscedastic","Homoscedastic"), pch = c(16,17), bty='n')
 ```
 
-We might wonder two things about this new model. First, has it had any effect on our fixed-effect parameters? Second, is the additional model complexity justified? We can compare this heteroskedastic model to the equivalent homoskedastic model we fit in chapter 7 (`model_interaction`, loaded above). We can assess the first question visually using the `brmplot` function as seen in the right plot of figure \@ref(fig:F8-4). It doesn't seem like the change has had much impact on our parameter estimates of the intervals around them. We can make a more formal comparison using cross validation (discussed in section \@ref(c6-out-sample-crossval)). We add the `loo` (leave one out) criterion to each model and make a comparison.     
+We might wonder two things about this new model. First, has it had any effect on our fixed-effect parameters? Second, is the additional model complexity justified? We can compare this heteroskedastic model to the equivalent homoskedastic model we fit in chapter 7 (`model_interaction`, loaded above). We can assess the first question visually using the `brmplot` function as seen in the right plot of figure \@ref(fig:F8-4). It doesn't seem like the change has had much impact on our parameter estimates, or the intervals around them. We can make a more formal comparison using cross validation (discussed in section \@ref(c6-out-sample-crossval)). We add the `loo` (leave one out) criterion to each model and make a comparison.     
 
 ```{r, collapse = TRUE, cache = TRUE}
 model_interaction = add_criterion(model_interaction,"loo")
@@ -588,11 +594,11 @@ model_A_sigma = add_criterion(model_A_sigma,"loo")
 loo_compare (model_interaction, model_A_sigma)
 ```
 
-We can see that there is a substantial difference in $\mathrm{elpd}$ between models, and that this difference just over four times the size of the standard deviation. Based on this, it would seem that using the more complex model is justifiable. We will leave a discussion of whether the difference 'matters' for the section on answering our research questions. 
+We can see that there is a substantial difference in $\mathrm{elpd}$ between models, and that this difference is just over four times the size of the standard deviation. Based on this, it would seem that using the more complex model is justifiable. We will leave a discussion of whether the difference 'matters' for the section on answering our research questions. 
 
 ## A 'complex' model: Error varies according to fixed and random effects
 
-In the previous section we fit a relatively 'simple' heteroscedastic model. This model allowed for error variances to vary based on the perceived adultness, and so was very similar to the models we fit in chapter 5. Here, we're going to fit a substantially more complex model that predicts variation in $\sigma$ using listener-dependent 'random effects' in the same way we would for our prediction of $\mu$. 
+In the previous section we fit a relatively 'simple' heteroscedastic model. This model allowed for error variances to differ based on the perceived adultness, and so was very similar to the models we fit in chapter 5. Here, we're going to fit a substantially more complex model that predicts variation in $\sigma$ using listener-dependent 'random effects' in the same way we would for our prediction of $\mu$. 
 
 ### Description of our model {#c8-description-2}
 
@@ -613,14 +619,14 @@ model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
 
 If we were to fit the model using the formula above, our model would include independent multivariate normal distributions for the listener effects related to the mean, and those related to the error term. So, we would have a four-dimensional normal distribution relating to the expected mean ($\mu$), representing the listener intercept, the listener-dependent effects for apparent age and gender, and the listener-dependent interaction between the two. We would then have a separate two-dimensional normal distribution representing the listener-dependent intercepts and effects for apparent age relating the the error term ($\sigma$).
 
-Right now our model formula consists of two separate sub-formulas, each of which contains a term representing listeners (`L`). If we want our model to *know* that the `L` term predicting the mean is related to the `L` term predicting our error, then we can do this by adding the same label in each corresponding random effects term in parentheses, in between two pipes. Below, we use the label `|x|` to tell `brms` to estimate all six listener-dependent parameters jointly. The label can be anything, it just needs to be the same thing for every batch of random effects terms that you want to estimate together.  
+Right now our model formula consists of two separate sub-formulas, each of which contains a term representing listeners (`L`). If we want our model to know that the `L` term predicting the mean is related to the `L` term predicting our error, then we can do this by adding the same label in each corresponding random effects term in parentheses, in between two pipes. Below, we use the label `|x|` to tell `brms` to estimate all six listener-dependent parameters jointly. The label can be anything, it just needs to be the same thing for every batch of random effects terms that you want to estimate together.  
 
 ```{r, eval = FALSE}
 model_formula = brms::bf(height ~ A*G + (A*G|x|L) + (1|S),
                          sigma ~ A + (A|x|L))
 ```
 
-Just keep in mind, you should *not* use the same label for things you do not want grouped. So, if we wanted to estimate speaker effects for our error and wanted to associated these with the speaker effects for our means, we should use different labels as seen below. We're not actually going to fit a model like that, as we don't really have enough observations per speaker (15) to justify the estimation of speaker-dependent errors. However, we wanted to provide an example of how this would be done. 
+Just keep in mind, you should *not* use the same label for things you do not want grouped. So, if we wanted to estimate speaker effects for our error and wanted to associate these with the speaker effects for our means, we should use different labels as seen below. We're not actually going to fit a model like that, as we don't really have enough observations per speaker (15) to justify the estimation of speaker-dependent errors. However, we wanted to provide an example of how this would be done. 
 
 ```{r, eval = FALSE}
 model_formula = brms::bf(height ~ A*G + (A*G|x|L) + (1|y|S),
@@ -633,19 +639,20 @@ $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{[i]}) \\ 
-\mu_{[i]} = \mathrm{Intercept} + A1 + G1 + A1 \colon G1 + \\ L_{[\mathsf{L}_{[i]}]} + A1 \colon L_{[\mathsf{L}_{[i]}]} + G1 \colon L_{[\mathsf{L}_{[i]}]} + A1 \colon G1 \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ \\
-\log (\sigma_{[i]}) = \mathrm{Intercept_{\sigma}} + A1 + A1 \colon L_{\sigma[L_{[i]}]} + L_{\sigma[L_{[i]}]} \\ \\ 
+\mu_{[i]} = \mathrm{Intercept} + A + G + A \colon G + \\ L_{[\mathsf{L}_{[i]}]} + A \colon L_{[\mathsf{L}_{[i]}]} + G \colon L_{[\mathsf{L}_{[i]}]} + A \colon G \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ \\
+\log (\sigma_{[i]}) = \mathrm{Intercept_{\sigma}} + A_\sigma + A_\sigma \colon L_{\sigma[L_{[i]}]} + L_{\sigma[L_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
-\begin{bmatrix} L_{[\bullet]} \\ A1 \colon L_{[\bullet]} \\ G1 \colon L_{[\bullet]} \\ A1 \colon G1 \colon L_{[\bullet]} \\ L_{\sigma[\bullet]} \\ A1 \colon L_{\sigma[\bullet]} \end{bmatrix} 
-\sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ 
+\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \\ L_{\sigma[\bullet]} \\ A_\sigma \colon L_{\sigma[\bullet]} \end{bmatrix} 
+\sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma} \right) \\ 
 \\
 S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\ \\
 \mathrm{Intercept} \sim \mathrm{t}(3,156,12) \\
-A1 \sim \mathrm{t}(3,0,12) \\
-\sigma, \sigma_L, \sigma_{A1 \colon L}, \sigma_S \sim \mathrm{t}(3,0,12) \\
+A \sim \mathrm{t}(3,0,12) \\
+\sigma, \sigma_L, \sigma_{A \colon L}, \sigma_S \sim \mathrm{t}(3,0,12) \\
 \\
 \mathrm{Intercept_{\sigma}} \sim \mathrm{N}(0,1.5) \\
-\sigma_{L_\sigma}, \sigma_{A1 \colon L_\sigma} \sim \mathrm{N}(0,1.5) \\\\
+\mathrm{A_{\sigma}} \sim \mathrm{N}(0,1.5) \\
+\sigma_{L_\sigma}, \sigma_{A_\sigma \colon L_\sigma} \sim \mathrm{N}(0,1.5) \\\\
 R \sim \mathrm{LKJCorr} (2) \\
 \end{split}
 (\#eq:8-5)
@@ -654,17 +661,14 @@ $$
 
 Our plain English description would be nearly identical to the one provided for our previous model, and is quite long at this point. As a result, the description below focuses on the components related to our error term $\sigma$: 
 
-> We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value of the logarithm of the error standard deviation ($\sigma$) is modeled as the sum of an intercept ($\mathrm{Intercept_{\sigma}}$), an effect for apparent age ($A1_\sigma$), an effect for listener ($L_{\sigma[L_{[i]}]}$), and the i that are specific to the error. The two listener effects related to the error term were drawn from a multivariate normal distribution with individual standard deviations ($\sigma_{L_\sigma}$,$\sigma_{A \colon L_\sigma}$) and a correlation matrix ($R$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values.
+> We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value of the logarithm of the error standard deviation ($\sigma$) is modeled as the sum of an intercept ($\mathrm{Intercept_{\sigma}}$), an effect for apparent age ($A_\sigma$), and an effect for listener ($L_\sigma$). The two listener effects related to the error term were drawn from a multivariate normal distribution with individual standard deviations ($\sigma_{L_\sigma}$,$\sigma_{A_\sigma \colon L_\sigma}$) and a correlation matrix ($R$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values.
 
 ### Fitting and interpreting the model
 
-We need to specify a prior distribution for the standard deviation of our listener-dependent `sigma` parameters, $\sigma_{L_\sigma}$ and $\sigma_{A1 \colon L_\sigma}$. We can do this by specifying a prior for `class = "sd"` and `dpar = "sigma"`. Note that this is very similar to the way we fit priors for the intercept and fixed effects for `sigma`.
+We need to specify a prior distribution for the standard deviation of our listener-dependent `sigma` parameters, $\sigma_{L_\sigma}$ and $\sigma_{A_\sigma \colon L_\sigma}$. We can do this by specifying a prior for `class = "sd"` and `dpar = "sigma"`. Note that this is very similar to the way we fit priors for the intercept and fixed effects for `sigma`.
 
 ```{r, eval = FALSE}
 # Fit the model yourself
-# set the contrasts
-options (contrasts = c('contr.sum','contr.sum'))
-
 model_formula = brms::bf(height ~ A*G + (A*G|x|L) + (1|S),
                          sigma ~ A + (A|x|L))
 priors = 
@@ -691,13 +695,13 @@ model_A_L_sigma = bmmb::get_model ('8_model_A_L_sigma.RDS')
 model_A_L_sigma = readRDS ('../models/8_model_A_L_sigma.RDS')
 ```
 
-If we look at the model output we see see the same `sigma_Intercept` and `sigma_A1` we saw before. There are also a few new lines in the listener `Group-Level Effects`. First, we see `sd(sigma_Intercept)` and `sd(sigma_A1)`, which represent the standard deviations of the listener-specific intercepts (for `sigma`) and of the age effects (for `sigma`). Second, we see the correlations between our new random effects (i.e. `cor(sigma_Intercept,sigma_A1)`). 
+If we look at the model output we see the same `sigma_Intercept` and `sigma_A1` we saw before. There are also a few new lines in the listener `Group-Level Effects`. First, we see `sd(sigma_Intercept)` and `sd(sigma_A1)`, which represent the standard deviations of the listener-specific intercepts (for `sigma`) and of the age effects (for `sigma`). Second, we see the correlations between our new random effects (i.e. `cor(sigma_Intercept,sigma_A1)`). 
 
 ```{r, eval = FALSE}
 bmmb::short_summary (model_A_L_sigma)
 ```
 
-Our listener-specific adjustments to the sigma intercept were fit with adaptive pooling, i.e. they are 'random' effects. As such, we can get these in the same way as for other random effects terms (see section \@ref(c5-manipulating-random-effects)). Here, we will use the `hypothesis` function to get the listener random effects themselves (`sigmas_centered`, $L_{\sigma}$), and the sum of these with the sigma intercept (`sigmas`), resulting in the logarithm of the listener-specific $\sigma$ parameter ($\mathrm{Intercept}_{\sigma} + L_{\sigma[i]}$). We compare these in figure \@ref(fig:F8-5), exponentiating the recreated `sigma` values to get the listener-specific $\sigma$ terms. 
+Our listener-specific adjustments to the sigma intercept were fit with adaptive pooling, i.e. they are 'random' effects. As such, we can get these in the same way as other random effects terms (see section \@ref(c5-manipulating-random-effects)). Here, we will use `short_hypothesis` to get the listener random effects themselves (`sigmas_centered`, $L_{\sigma}$), and the sum of these with the sigma intercept (`sigmas`), resulting in the logarithm of the listener-specific $\sigma$ parameter ($\mathrm{Intercept}_{\sigma} + L_{\sigma[i]}$). We compare these in figure \@ref(fig:F8-5), exponentiating the recreated `sigma` values to get the listener-specific $\sigma$ terms. 
 
 ```{r}
 sigmas_centered = short_hypothesis(model_A_L_sigma, "sigma_Intercept = 0", 
@@ -706,7 +710,7 @@ sigmas = short_hypothesis(model_A_L_sigma, "sigma_Intercept = 0",
                           scope = "coef",group="L")
 ```
 
-```{r F8-5, fig.height = 2.5, fig.width = 8, fig.cap="(left) Values of $L_{\\sigma}$, listener-dependent variations from the `sigma` intercept (expressed as a logarithm). (right) Listener-specific sigma parameters. The result of $\\exp(\\mathrm{Intercept}_{\\sigma} + L_{\\sigma[i]})$ for listener $i$. We exponentiate the value in the plot so it reflects `sigma` rather than `log(sigma)`.", cache = FALSE, echo = FALSE}
+```{r F8-5, fig.height = 2.75, fig.width = 8, fig.cap="(left) Values of $L_{\\sigma}$, listener-dependent variations from the `sigma` intercept (expressed as a logarithm). (right) Listener-specific sigma parameters. The result of $\\exp(\\mathrm{Intercept}_{\\sigma} + L_{\\sigma[i]})$ for listener $i$. We exponentiate the value in the plot so it reflects `sigma` rather than `log(sigma)`.", cache = FALSE, echo = FALSE}
 
 ################################################################################
 ### Figure 8.5
@@ -721,7 +725,7 @@ brmplot (exp(sigmas[,1:4]), col = cols, add=TRUE, labels="")
 axis (side=1, at = 1:15)
 ```
 
-It certainly seems as though there is legitimate between-listener variation in the size of $sigma$. We might wonder, is this added complexity a good thing? We can add the `loo` criterion to our model:
+It certainly seems as though there is legitimate between-listener variation in the size of $\sigma$. We might wonder, is this added complexity a good thing? We can add the `loo` criterion to our model:
 
 ```{r}
 model_A_L_sigma = add_criterion(model_A_L_sigma, "loo")
@@ -733,7 +737,7 @@ And compare this model, the previous 'simple' heteroscedastic model (`model_A_si
 loo_compare (model_interaction, model_A_sigma, model_A_L_sigma)
 ```
 
-This time we find a very large difference in $\mathrm{elpd}$, 7.8 times greater than the standard error of the difference. Again, it seems like the more complex is justified and arguably 'better'. 
+This time we find a very large difference in $\mathrm{elpd}$ that is 7.8 times greater than the standard error of the difference. Again, it seems like the more complex is justified and arguably 'better'. 
 
 
 ## Answering our research questions
@@ -748,7 +752,7 @@ Based on the information we've already provided, we can answer these questions: 
 
 We're going to add another, more meta, question: Which model should we report? We can approach this from the perspective that the best model according to $\mathrm{elpd}$ is the 'real' model. Based on the comparison of $\mathrm{elpd}$  above, it seems that the last model we fit (`model_A_L_sigma`) is the 'best' model. Does this mean it is the 'real' model? And does it mean that this is the one we must report? The short answers to these questions are no and no. The fit between a model and data can't 'prove' that the model represents the 'real' relationship underlying the data. The reason for this is that there are potentially a large number of other, slightly different, models that provide just about as good a fit to the data, or perhaps even a better one. This problem is called the **undedetermination** of theory with respect to data, basically that there are often (or always) multiple compatible  interpretations of a set of observations, and that our observations alone are not enough to distinguish these. 
 
-Specifically with respect to our data, if the best model is the real one, how can we ever know we have the best model? How many did we try before settling on the 'best' one? Further, even if we did somehow find the best model for the data we *do* have, how could we guarantee that it will also be the best model for the data we *don't* have? It's impossible to know if some new data might come along that will not fit your model as well as one of the other model, making the 'best' model contingent on the data we have seen so far.  
+Specifically with respect to our data, if the best model is the real one, how can we ever know we have the best model? How many did we try before settling on the 'best' one? Further, even if we did somehow find the best model for the data we *do* have, how could we guarantee that it will also be the best model for the data we *don't* have? It's impossible to know if some new data might come along that will not fit your model as well as one of the other models, making the 'best' model contingent on the data we have seen so far.  
 
 Ok, so we can't prove that our best model is the real one, fine. But it's still the best one we have. Do we necessarily need to report the 'best' model? This sort of reasoning can lead to serious problems because there is almost always a better model out there, and we often don't try to find it. For example, many people would never think to fit a heteroscedastic model and so would not even worry about reporting it. Does the existence of a hypothetical better model mean that the model they report is invalid? We don't think so. If it doesn't invalidate *their* simpler model, then why should this be the case for the researcher that *did* think to try the heteroscedastic model? This would seem to penalize people for bothering to look for such variation in their data.
 
@@ -760,7 +764,7 @@ Rather than think of our models as representations of *reality*, we can think of
   
   2) The model you chose. Given another model you may have come to different conclusions.
   
-So which model should we report? One way to think about our models is that they provide different *information* about our data. If we are primarily interested in the fixed effects then maybe we are not interested in this additional information. However, if we want to know about differences in error variation then we need one of the more complicated models. It's also worth considering how the differing model structures might affect the information they share in common, in this case the model 'fixed effects'. Figure \@ref(fig:F8-6) compares the fixed effects, random effects, and predicted values made by three models: `model_interaction` from chapter 7, and `model_A_sigma` and `model_A_L_sigma` from this chapter. 
+So which model should we report? One way to think about our models is that they provide different *information* about our data. If we are primarily interested in the fixed effects then maybe we are not interested in this additional information. However, if we want to know about differences in error variation then we need one of the more complicated models. It's also worth considering how the differing model structures might affect the information they share in common. Figure \@ref(fig:F8-6) compares the fixed effects, random effects, and predicted values made by three models: `model_interaction` from chapter 7, and `model_A_sigma` and `model_A_L_sigma` from this chapter. 
 
 ```{r, include = FALSE, cache = TRUE}
 ranefs1 = ranef (model_interaction)
@@ -847,7 +851,7 @@ sigma ~ A             # model_A_sigma
 sigma ~ A + (A|L)     # model_A_L_sigma
 ```
 
-We can see that the differences in the fixed effects are so small as to be largely meaningless. The three models also provide nearly identical listener 'random effects' and predicted values. Based on this, if we care primarily about the fixed effects and understanding apparent height judgments, any of the three models will work equally well. Where the models differ is in their estimates of the speaker effects. The inclusion of heteroscedasticity seems to reduce the magnitude of the speaker effects relative to the homoscedastic model (`model_interaction`). If we were specifically interested in these effects then we would need to take the time to understand the source, and meaning, of these differences. Of course, the experiment we ran was not designed to investigate speaker differences, so it does not make much sense to delve to far into it in our analysis. Our experiment was designed to investigate the perception of apparent height and the role of speaker age and gender in these judgments. From this perspective, it seems that either of the three models is suitable. 
+We can see that the differences in the fixed effects are so small as to be largely meaningless. The three models also provide nearly identical listener 'random effects' and predicted values. Based on this, if we care primarily about the fixed effects and understanding apparent height judgments, any of the three models will work equally well. Where the models differ is in their estimates of the speaker effects. The inclusion of heteroscedasticity seems to reduce the magnitude of the speaker effects relative to the homoscedastic model (`model_interaction`). If we were specifically interested in these effects then we would need to take the time to understand the source, and meaning, of these differences. Of course, the experiment we ran was not designed to investigate speaker differences, so it does not make much sense to delve too far into these in our analysis. Our experiment was designed to investigate the perception of apparent height and the role of speaker age and gender in these judgments. From this perspective, it seems that either of the three models is suitable. 
 
 
 ## Building identifiable and supportable models {#c8-identifiability}
@@ -892,7 +896,7 @@ Since this new variable equals 100 times our original VTL predictor, its clear t
 exp_data$vtl + exp_data$vtl_m * -100
 ```
 
-In other words, $height_{cm} - height_{meters} \cdot -100  = 0$ meaning that these two variables are *linearly dependent*. We only introduce the use of quantitative predictors (such as VTL) in the next chapter, but we can still show how inclusion of both of these predictors will cause problems for your model.
+In other words, $height_{cm} - (height_{meters} \times -100)  = 0$ meaning that these two variables are *linearly dependent*. We only introduce the use of quantitative predictors (such as VTL) in the next chapter, but we can still show how inclusion of both of these predictors will cause problems for your model.
 
 ```{r, eval = FALSE}
 model_bad_1 =  
@@ -905,14 +909,14 @@ model_bad_1 =
 Our model will not be able to find a satisfactory solution, and you will see a large list of warnings when trying to fit it. If you check out the model print statement you will see strange things in the population-level effects:
 
 ```
-Population-Level Effects: 
-          Estimate Est.Error   l-95% CI  u-95% CI Rhat Bulk_ESS Tail_ESS
-Intercept    45.69      2.37      41.17     50.47 1.00     4031     4425
-vtl_m      1383.91 246800.93 -531293.80 343951.54 2.12        5       13
-vtl          -5.28   2468.01   -3430.88   5321.56 2.12        5       13
+## Population-Level Effects: 
+##           Estimate Est.Error   l-95% CI  u-95% CI Rhat Bulk_ESS Tail_ESS
+## Intercept    45.69      2.37      41.17     50.47 1.00     4031     4425
+## vtl_m      1383.91 246800.93 -531293.80 343951.54 2.12        5       13
+## vtl          -5.28   2468.01   -3430.88   5321.56 2.12        5       13
 ```
 
-Above we see comically small effective sample sizes (ESS) indicating that we have basically no information about our parameters, and large Rhat values indicating that our chains have not converged. We also see an astronomically large standard errors for `vtl_m` predictor, especially given knowledge that human speaker height tends to range from 100 cm to 200 cm at most. Also, what does it means that VTL in meters and VTL in centimeters have different effect magnitudes and differ in sign? They are the same thing, how can one be positively related and the other be negatively related to apparent height. Obviously, there are serious problems with these parameter estimates. The problem is that for any value of the `vtl` coefficient, there is a corresponding value for the `vtl_m` coefficient that will produce exactly the same expected/fitted values for our data.
+Above we see comically small effective sample sizes (ESS) indicating that we have basically no information about our parameters, and large Rhat values indicating that our chains have not converged. We also see an astronomically large standard error for our `vtl_m` predictor, especially given knowledge that human speaker height tends to range from 100 cm to 200 cm at most. Also, what does it mean that VTL in meters and VTL in centimeters have different effect magnitudes and differ in sign? They are the same thing, how can one be positively related and the other be negatively related to apparent height. Obviously, there are serious problems with these parameter estimates. The problem is that for any value of the `vtl` coefficient, there is a corresponding value for the `vtl_m` coefficient that will produce exactly the same expected/fitted values for our data.
 
 Linear dependence is binary, a set of vectors is linearly dependent or it is not. However, we can also talk about the degree to which vectors are linearly *related*, with linear dependence being one extreme. We measure linear relatedness using correlation coefficients (section \@ref(c6-correlations)) where correlations of 1 or -1 indicate linear dependence. Our model above failed because our two predictors are linearly dependent, they have a correlation of 1. 
 
@@ -933,9 +937,6 @@ cor (exp_data$vtl, exp_data$vtl_m_noise)
 We can fit the model with the new predictor:
 
 ```{r, eval = FALSE}
-prior = c(brms::set_prior("normal(176, 50)", class = "Intercept"),
-          brms::set_prior("normal(0, 15)", class = "sigma"))
-
 model_bad_2 =  
   brms::brm (height ~ vtl_m_noise + vtl, data = exp_data, chains = 4, 
              cores = 4,warmup = 1000, iter = 3500, thin = 2, prior = priors)
@@ -944,14 +945,14 @@ model_bad_2 =
 If we inspect the population-level effects we see that this tiny change had made our model substantially better. We get no warnings or error messages when we try to fit this model, and we have a very respectable ESS for our parameters. 
 
 ```
-Population-Level Effects: 
-            Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-Intercept      45.75      2.36    41.16    50.35 1.00     4523     4087
-vtl_m_noise  -201.86    175.11  -544.11   139.03 1.00     3504     3697
-vtl            10.57      1.76     7.14    14.01 1.00     3439     3866
+## Population-Level Effects: 
+##             Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+## Intercept      45.75      2.36    41.16    50.35 1.00     4523     4087
+## vtl_m_noise  -201.86    175.11  -544.11   139.03 1.00     3504     3697
+## vtl            10.57      1.76     7.14    14.01 1.00     3439     3866
 ```
 
-At this point our model might not seem that bad except for the large effect (and huge interval) around `vtl_m_noise` (VTL in meters, plus noise). The estimate for `vtl` in the interval around it may seem plausible, especially in comparison to our last model. However, we might consider the 'real' estimate for our `vtl` predictor in a model without this redundant parameter:
+At this point our model might not seem that bad except for the large effect (and huge interval) around `vtl_m_noise` (VTL in meters, plus noise). The estimate for `vtl` in the interval around it may seem plausible, especially in comparison to our last model. However, we might also consider the estimate for our `vtl` predictor in a model without this redundant parameter:
 
 ```{r, eval = FALSE}
 model_good =  
@@ -964,13 +965,13 @@ model_good =
 We see that we get a much narrower credible interval around the VTL parameter. 
 
 ```
-Population-Level Effects: 
-          Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-Intercept    45.72      2.38    41.04    50.40 1.00     5052     4679
-vtl           8.55      0.18     8.21     8.90 1.00     5072     4831
+## Population-Level Effects: 
+##           Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+## Intercept    45.72      2.38    41.04    50.40 1.00     5052     4679
+## vtl           8.55      0.18     8.21     8.90 1.00     5072     4831
 ```
 
-The above is not to say that correlated quantitative predictors should never be included in the same regression models. However, it's important to think about the consequences of doing this. In addition, when possible, its a good idea to not paint yourself into a corner by designing an experiment that will specifically lead to, or require, highly correlated predictors.  
+The above is not to say that correlated quantitative predictors should never be included in the same regression model. However, it's important to think about the consequences of doing this. In addition, when possible, its a good idea to not paint yourself into a corner by designing an experiment that will specifically lead to, or require, highly correlated predictors.  
 
 ### Predictable values of categorical predictors
 
@@ -989,7 +990,7 @@ If we look at the numbers above, we can take the first column and add it to the 
 x[,1] + x[,2]*(-1) + x[,3]*(-1)
 ```
 
-That means that these three parameters are linearly dependent, and that's why we can't include separate predictors for the intercept and each group in a two-group model. This also explains why we can't estimate all four levels of our `C` (apparent category) parameter, as we discussed in the previous chapter. Below we make a small matrix of 'predictors' for each of our four categories and the intercept. The predictors with `C` in their name equal zero when the observation belongs to the first, second, third, and fourth groups respectively. 
+That means that these three predictors are linearly dependent, and that's why we can't include separate predictors for the intercept and each group in a two-group model. This also explains why we can't estimate all four levels of our `C` (apparent category) parameter, as we discussed in the previous chapter. Below we make a small matrix of 'predictors' for each of our four categories and the intercept. The predictors with `C` in their name equal zero when the observation belongs to the first, second, third, and fourth groups respectively. 
 
 ```{r}
 x = cbind (intercept=rep(1,4), C1=c(1,0,0,0), C2=c(0,1,0,0),
@@ -1003,9 +1004,7 @@ We can see that the same approach can be used to make all rows add up to zero, i
 x[,1] + x[,2]*(-1) + x[,3]*(-1) + x[,4]*(-1) + x[,5]*(-1)
 ```
 
-This sort of thing also causes problems when you include multiple different factors that mutually explain each other. For example, last chapter we initially fit a model using `C`, apparent speaker category, as a predictor. We then fit models using `A` and `G`, apparent age and gender as predictors. However, we did not fit models that included apparent age, gender, *and* speaker category. This is because if a speaker is a woman, the are an adult female. If they are a male child they are a boy, and if they are a female child they are a girl. So, given combinations of some categorical predictors, we have perfect knowledge of the values of *other* categorical predictors. Mathematically, this means that the 'secret' predictors representing each category (see section \@ref(c7-description-1)) are linearly dependent. 
-
-Below we make our small predictor matrix containing 
+This sort of thing also causes problems when you include multiple different factors that mutually explain each other. For example, last chapter we initially fit a model using `C`, apparent speaker category, as a predictor. We then fit models using `A` and `G`, apparent age and gender as predictors. However, we did not fit models that included apparent age, gender, *and* speaker category. This is because if a speaker is a woman, they are an adult female. If they are a male child they are a boy, and if they are a female child they are a girl. So, given combinations of some categorical predictors, we have perfect knowledge of the values of *other* categorical predictors. Mathematically, this means that the 'secret' predictors representing each category (see section \@ref(c7-description-1)) are linearly dependent. Below we make our small predictor matrix containing predictors for apparent category *and* apparent age and gender. 
 
 ```{r}
 x = cbind (intercept=rep(1,4), C1=c(1,0,0,0), C2=c(0,1,0,0),
@@ -1049,11 +1048,11 @@ G1          567.63   2171.69 -4107.90  3364.23 2.04        5       18
 A1:G1       283.89   1112.60 -2295.30  2141.73 2.26        5       18
 ```
 
-This concludes our discussion of linear dependence and some of the many ways it can cause problems for your models. If you try to fit a model and you get errors, divergent transitions, low ESS values and high Rhats, you *may* have a problem with linear dependencies in your predictors, and it is worth carefully considering this possibility. A better understanding of model identifiability and linear dependence can be gained by learning a little linear algebra. 
+This concludes our discussion of linear dependence and some of the many ways it can cause problems for your models. If you try to fit a model and you get errors, divergent transitions, low ESS values and high Rhats, you *may* have a problem with linear dependencies in your predictors, and it is worth carefully considering this possibility. In addition, a better understanding of model identifiability and linear dependence can be gained by learning a little linear algebra. 
 
 ### Saturated, and 'nearly-saturated', models
 
-The models in this chapter sought to estimate five parameters for each listener ($Intercept, A1, G2, A1:G1, \sigma$) based on 139 observations for each listener. This seems like a reasonable ratio of observations to parameters. If we had only 10 observations per listener, this model would be identifiable. However, it might still not be such a good idea to fit a model with so many listener-dependent parameters given so little data. In general, before fitting a model that you *can* fit, it's a good idea to think whether you *should* fit it given the nature of your data and the number of observations you have overall (and in different relevant subsets).
+The models in this chapter sought to estimate five parameters for each listener ($Intercept, A, G, A:G, \sigma$) based on 139 observations for each listener. This seems like a reasonable ratio of observations to parameters. If we had only 10 observations per listener, this model would be identifiable. However, it might still not be such a good idea to fit a model with so many listener-dependent parameters given so little data. In general, before fitting a model that you *can* fit, it's a good idea to think whether you *should* fit it given the nature of your data and the number of observations you have overall (and in different relevant subsets).
 
 We can think of the logical extreme of a model with too many parameters and too little data. Imagine we wanted to fit a model with speaker effects, listener effects, *and* the interaction between the two. This model will be able to represent the 15 listener effects, 139 speaker effects, and all of the listener-dependent speaker effects. This means that at a minimum, this model would require 15 $\cdot$ 139 = 2085 parameters to represent these effects. However, we only have 2085 data points, one observation per speaker per listener. As a result, we would have a different parameter for every single observation leading to what's known as a **saturated model**. 
 
@@ -1062,18 +1061,15 @@ In a model without shrinkage, saturated models lead to the perfect prediction of
 ```{r, eval = FALSE}
 exp_data$S = factor (exp_data$S)
 exp_data$L = factor (exp_data$L)
-# Fit the model yourself, or
+
 model_bad_4  =  
   brms::brm (height ~ S*L, data = exp_data, chains = 4, cores = 4,
        warmup = 1000, iter = 3500, thin = 2,
        prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
                  brms::set_prior("normal(0, 15)", class = "sigma")))
-
-saveRDS(model_bad_4, "model_bad_4.Rmd")
 ```
 
-This may be easier to conceive of if we use a much smaller example. Imagine two people run the coffee and reading times experiment we discussed in earlier chapters. Two speakers read a passage after drinking decaf, and another after drinking coffee. This results in four observations. We can estimate the speaker effect, this will be the average of the reading times for each speaker across both drink conditions. The error for this estimate will be the distribution of the coffee and decaf reading times around the speaker average. We can also estimate the effect for drink condition, the average of both speaker reading times within each condition. The error for this will be the distribution of speaker reading times around the mean for each drink condition. 
-However, we cannot estimate the speaker by drink condition interaction. This is because once we know the mean reading time for each speaker for each drink condition, *there is no error*. This is because we only have one observation within this condition so that observation *is* the mean. There is no error distribution because we have no other observations. 
+This may be easier to conceive of if we use a much smaller example. Imagine two people run the coffee and reading times experiment we discussed in earlier chapters. Two speakers read a passage after drinking decaf, and another after drinking coffee. This results in four observations. We can estimate the speaker effect, this will be the average of the reading times for each speaker across both drink conditions. The error for this estimate will be the distribution of the coffee and decaf reading times around the speaker average. We can also estimate the effect for drink condition, the average of both speaker reading times within each condition. The error for this will be the distribution of speaker reading times around the mean for each drink condition. However, we cannot estimate the speaker by drink condition interaction. This is because once we know the mean reading time for each speaker for each drink condition, *there is no error*. We only have one observation within this condition so that observation *is* the mean. There is no error distribution because we have no other observations. 
 
 Ok, so what if we had not one but two observations per speaker per drink condition? This would not be a saturated model, but we could think of it as a *nearly-saturated* model, a term that may not have a formal definition but gets the point across. A model with only two observations per person per drink condition may technically allow us to model the listener by drink condition interaction, however each of the interaction parameters would be based on only two observations. 
 
@@ -1088,15 +1084,13 @@ The analyses in the main body of the text all involve only the unmodified 'actua
 Fit and interpret one or more of the suggested models:
 
 
-1) Easy: 
+1) Easy: Analyze the (pre-fit) model that's exactly like the one in this chapter, except using the data in `exp_ex` (`model_A_L_sigma_ex`).
 
-2) Medium:
+2) Medium: Fit a model like `model_interaction_ex`, but replace any of the predictors in the model with the resonance factor.
 
-2) Hard: 
-
+2) Hard: Fit a model including apparent age, apparent gender, and resonance. Include all interactions between these factors for both fixed and random effects. Add another predictor to the prediction equation for `sigma`, possibly with an interaction with apparent age. 
 
 In any case, describe the model, present and explain the results, and include some figures.
-
 
 
 ## References 

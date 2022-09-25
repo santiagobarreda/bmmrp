@@ -20,21 +20,21 @@ In this chapter we're going to cover a Bayesian approach to working with large m
 
 Before continuing, we should note that designs with many quantitative predictors, factors, and interactions between these can result in very complicated models which then have to be interpreted. However, the researcher is ultimately the one who determines the complexity of the analysis they are then faced with. Once when Santiago was buying a backpack for traveling, he was looking for the biggest backpack possible. One of the reviews said "1/5 stars, it was way too heavy when I filled it all the way up with my stuff". However, if we buy a large backpack and fill it with many heavy things, it doesn't seem fair to blame the backpack when it becomes difficult to carry. In the same way, if you are faced with a complex model that you then need to interpret, you shouldn't blame the model, `brms`, or us, for your predicament. 
 
-In order to avoid a situation where you end up with data you can't analyze or a model you can't interpret, it's worth considering the following questions before advancing to the data collection stage of your experiment: 
+In order to avoid a situation where you end up with data you can't analyze or a model you can't interpret, it's worth considering the following questions *before* advancing to the data collection stage of your experiment: 
 
   * How will I analyze the data? Will I be able to carry out my planned analysis? 
   * What will the model structure be? 
-  * What kind of results am I expecting? How will this be reflected by the model parameters?
-  * How would different results manifest in the model parameters?
+  * What kind of results am I expecting? 
+  * How will expected results be reflected by the model parameters? How would different results manifest in the model parameters?
 
 
 ## Chapter pre-cap
 
-In this chapter we discuss how Bayesian multilevel models are well suited for the analysis of complex models with large numbers of parameters, and some strategies for interpreting these models. We present a model with two quantitative predictors and an interaction between them, and fit and interpret a complex model including those predictors. We introduce Bayesian ANOVA and Bayesian ANOVA plots, and apply these to our initial model. Following that, we fit a complex multilevel logistic regression model, and also interpret it using a Bayesian ANOVA. We then discuss how this model can be used to interpret classification and listener behavior. Finally, we discuss model selection and misspecification, and discuss some diagnostics that can help find and diagnose problems with your models. 
+In this chapter, a discussion of how Bayesian multilevel models are well suited for the analysis of complex models with large numbers of parameters is presented, and some strategies for interpreting these models are given. A model with two quantitative predictors and an interaction between them is outlined, and the model is fit and interpreted. Bayesian analysis of variance (ANOVA) and Bayesian ANOVA plots are introduced, and these are applied to the initial model presented in the chapter. Following that, a complex multilevel logistic regression model is fit, and then interpreted using a Bayesian ANOVA. After this, a discussion of how this model can be used to interpret classification and listener behavior is explained. Finally, there is a discussion of model selection and misspecification, and some diagnostics that can help find and diagnose problems in large models are presented. 
 
 ## Models with multiple quantitative predictors
 
-Our regression models so far have only involved at most a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed surfaces with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL) and fundamental frequency (f0) with apparent speaker height (see chapter 1, or 13 for more information on these predictors). In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, the error in the prediction of each observation, is the vertical distance between the line and the observation.   
+Our regression models so far have only involved at most a single quantitative predictor. This means that the relationship between the dependent variable and our predictor formed surfaces with a single dimension: Lines. In the left and middle plots in figure \@ref(fig:F11-1) we see the linear relationships between speaker vocal-tract length (VTL) and fundamental frequency (f0) with apparent speaker height (see chapter 1, or 13, for more information on these variables). In each case, the expected value for the y-axis variable is the value of the line at each x-axis location. The residual, the error in the prediction of each observation, is the vertical distance between the line and the observation.   
 
 ```{r F11-1, fig.height = 2.5, fig.width = 8, fig.cap='(left) Average apparent height reported for each speaker plotted against speaker vocal-tract length (VTL). Point size reflects average apparent height. (middle) Same as the left plot but comparing apparent height to f0. (right) A comparison of VTL and f0 for each speaker.', echo = FALSE, cache = FALSE}
 
@@ -68,33 +68,36 @@ We can also think about how apparent height, VTL, and f0 vary together. Every po
 
 It may be easier to see what we mean in figure \@ref(fig:F11-2), which attempts to present our points in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds (more or less) to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds (more or less) to the middle plot in figure \@ref(fig:F11-1). When we have two quantitative predictors, our models predict values along **planes** rather than lines. If we want to predict apparent height based on speaker f0 and VTL, we are basically asking: Can we predict the height of a point in our 3-dimensional space (i.e., location on the vertical z axis) based on its x and y-axis location? 
 
-```{r F11-2, fig.height = 4.5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but the cube has been rotated 90 degrees counter-clockwise.', echo = FALSE, cache = FALSE}
+```{r F11-2, fig.height = 4, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but the cube has been rotated 90 degrees counter-clockwise.', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11.2
 ################################################################################
-agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data, FUN=mean)
-colnames(agg_data) = c("f0","VTL","C_v","Height")
 
+knitr::include_graphics("../wrong_plots/F11-2-1.jpeg")
 
-par (mfrow = c(1,2), mar = c(0,1,0,2), oma = c(0,0,0,0))
-
-tmp = agg_data[,c(2,1,4)]
-s3d = scatterplot3d::scatterplot3d (tmp, color = bmmb::cols[2:5][factor(agg_data[,3])],
-                     pch=16, angle = 55,type = "p",ylim=c(90,310), cex.symbols=rev(ptcex)*.9)
-my.lm <- lm(Height ~ f0+VTL, data = agg_data)
-#s3d$plane3d(my.lm, col = 1)
-
-s3d = scatterplot3d::scatterplot3d (agg_data[,-3],pch=16, angle = 155,
-                                    color = bmmb::cols[2:5][factor(agg_data[,3])],    
-                                    type = "p",xlim=c(90,310),
-                                    cex.symbols=rev(ptcex)*.9)
-my.lm <- lm(Height ~ f0+VTL, data = agg_data)
-s3d$plane3d(my.lm, col = 1,lty=3, draw_polygon=TRUE,
-            polygon_args = list(col = rgb(0, 0, 0, 0.2)))
+# agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data, FUN=mean)
+# colnames(agg_data) = c("f0","VTL","C_v","Height")
+# 
+# 
+# par (mfrow = c(1,2), mar = c(0,1,0,2), oma = c(0,0,0,0))
+# 
+# tmp = agg_data[,c(2,1,4)]
+# s3d = scatterplot3d::scatterplot3d (tmp, color = bmmb::cols[2:5][factor(agg_data[,3])],
+#                      pch=16, angle = 55,type = "p",ylim=c(90,310), cex.symbols=rev(ptcex)*.9)
+# my.lm <- lm(Height ~ f0+VTL, data = agg_data)
+# #s3d$plane3d(my.lm, col = 1)
+# 
+# s3d = scatterplot3d::scatterplot3d (agg_data[,-3],pch=16, angle = 155,
+#                                     color = bmmb::cols[2:5][factor(agg_data[,3])],    
+#                                     type = "p",xlim=c(90,310),
+#                                     cex.symbols=rev(ptcex)*.9)
+# my.lm <- lm(Height ~ f0+VTL, data = agg_data)
+# s3d$plane3d(my.lm, col = 1,lty=3, draw_polygon=TRUE,
+#             polygon_args = list(col = rgb(0, 0, 0, 0.2)))
 ```
 
-For example, any given point in the room you are sitting in right now can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the residuals) still applies to our models. In the right plot of figure \@ref(fig:F11-2), we see the plane that results in the smallest residuals for our points, i.e. the smallest distances between the surface of the plane and the points along the apparent height axis.   
+For example, any given point in the room you are sitting in right now can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the residuals) still applies. In the right plot of figure \@ref(fig:F11-2), we see the plane that results in the smallest residuals for our points, i.e. the smallest distances between the surface of the plane and the points along the apparent height axis.   
 
 In equation \@ref(eq:11-1) we see that the height of the plane along the z axis is determined by an intercept ($a$) plus the product of the x axis coordinate and its slope ($b$), and the product of the y axis coordinate and its slope ($c$). When we fit a model that includes two quantitative predictors, the model represents the planes it estimates using their $a$, $b$, and $c$ parameters. 
   
@@ -105,13 +108,13 @@ z =  \mathrm{a} + \mathrm{b} \cdot x + \mathrm{c} \cdot y
 \end{equation}
 $$
 
-Since the plane has two dimensions it has two slopes: A field can be uphill/downhill away from you, but also be up/downhill left to right. The slope coefficient for each quantitative predictor change the slope of the plane independently for each dimension. In fact, the slope of each predictor reflects the expected change in the dependent variable when all other predictors are *held constant*. The intercept of the model slides the planes up/down the z axis without changing their slopes along either the x or y dimensions. 
+Since the plane has two dimensions it has two slopes: A field can be uphill/downhill away from you, but also be up/downhill left to right. The slope coefficient for each quantitative predictor changes the slope of the plane independently for each dimension. In fact, the slope of each predictor reflects the expected change in the dependent variable when all other predictors are *held constant*. The intercept of the model slides the planes up/down the z axis without changing their slopes along either the x or y dimensions. 
 
 Our discussion above has been entirely about planes, and we will stick to two quantitative predictors for our models. However, your model can include any number of quantitative predictors, it just gets harder to have good intuitions about the geometry involved. If your model has $n$ quantitative predictors, your data specifies points in an $n+1$ dimensional space, where dimension $n+1$ represents the dependent variable. Residuals in such models represent the difference between the surface of the $n$ dimensional shape specified by the predictors, and the position of each point along the $n+1$ dimension. 
   
 ## Interactions between quantitative predictors
 
-Models with two quantitative predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by adding a new predictor, the **cross-product** (i.e. $x_1 \cdot x_2$) of the two variables. We can add a term representing the interaction between our two quantitative predictors to equation \@ref(eq:11-2). It's common to refer to this term as the 'interaction' between our quantitative predictors, and we will adopt this convention. Just keep in mind that we are actually referring to the product of the two variables.  
+Models with two quantitative predictors model variation in the dependent variable along planes. The 'interaction' between quantitative variables in regression models is represented by adding a new predictor, the **cross-product** (i.e. $x \cdot y$) of the two variables. We can add a term representing the interaction between our two quantitative predictors to equation \@ref(eq:11-2). It's common to refer to this term as the 'interaction' between our quantitative predictors, and we will adopt this convention. Just keep in mind that we are actually referring to the product of the two variables.  
 
 $$
 \begin{equation}
@@ -163,7 +166,7 @@ z =  \mathrm{a} + 7 \cdot x \\
 \end{equation}
 $$
 
-The inclusion of cross-product terms means that we are not modeling variation along planes anymore, but rather along **hyperbolic parabaloids**. Sometimes these sorts of surfaces are referred to as **saddle surfaces** because they contain what's known as a **saddle point**, a point where the slopes along the x and y dimension are both equal to zero. Informally, a saddle point can be thought of as the flat spot in the middle of a shape that curves along two dimensions in a manner resembling a horse saddle. We're often going to refer to hyperbolic parabaloids as *saddles* because their full name is a bit of a mouthful, and because we are mainly interested in contrasting these with planes. However, it's important to keep in mind that hyperbolic parabaloids are one among many types of saddle surface and not the *only* type of saddle surface. 
+The inclusion of cross-product terms means that we are not modeling variation along planes anymore, but rather along **hyperbolic parabaloids**. Sometimes these sorts of surfaces are referred to as **saddle surfaces** because they contain what's known as a **saddle point**, a point where the slopes along the x and y dimension are both equal to zero. Informally, a saddle point can be thought of as the flat spot in the middle of a shape that curves along two dimensions in a manner resembling a horse saddle. We're often going to refer to hyperbolic parabaloids as *saddles* because their full name is a bit of a mouthful, and because we are mainly interested in contrasting these with planes. However, it's important to keep in mind that hyperbolic parabaloids are one among many types of saddle surface. 
 
 The function for a hyperbolic parabaloid can be seen below, where the height of the surface is equal to the product of some parameter $d$ and its $x$ and $y$ coordinates. 
 
@@ -216,7 +219,7 @@ z =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) + (\mathrm{d} \cdo
 \end{equation}
 $$
 
-When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use as the cross product. For example, below we generate two samples of 100 random Gaussian variables (`x, y`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated (-0.00099) and yet their cross product (`xy`) is strongly correlated with both variables (0.683, and 0.729). This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables increases in magnitude. In other words, the value of $x \cdot (y+a)$ will *always* be greater than the value of $x \cdot y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative. 
+When you include interactions between quantitative predictors in your regression models, it is very important to center these predictors, if only for use as the cross product. To see why, we generate two samples of 100 random Gaussian variables (`x, y`) with a mean of 500 and a standard deviation of 1. These variables are almost totally uncorrelated (-0.00099) and yet their cross product (`xy`) is strongly correlated with both variables (0.683, and 0.729). This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables increases in magnitude. In other words, the value of $x \cdot (y+a)$ will *always* be greater than the value of $x \cdot y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative.  
 
 ```{r}
 set.seed(1)
@@ -227,7 +230,7 @@ xy = x*y
 cor (cbind(x,y,xy))
 ```
 
-The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_c`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and that lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models. 
+The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_c`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and the lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models. 
 
 ```{r}
 x_c = x - mean (x)
@@ -241,7 +244,7 @@ cor (cbind(x_c,y_c,xy_c))
 
 The models we fit in chapter 9 and 10 were missing an obvious and important predictor: The fundamental frequency (f0) of the speaker's voice. The fundamental frequency of a sound is the main acoustic correlate of perceived pitch. We know from previous studies that, in general, speakers with lower speaking f0s tend to be identified as taller (see chapter 13 for a discussion of this). In this section, we're going to fit a model that tries to predict apparent height from VTL, f0, and the interaction of the two. 
 
-Below we load our packages and data, and center our quantitative predictors. We also scale f0 so that it has a reasonably similar between-group difference as the VTL predictor. Specifically, the average difference in VTL between adult females and males is about 2 cm, and the difference in f0 between the groups is about 100 Hz. This means that is we divide f0 by 100 the difference between men and women is about 1 unit, comparable to the 2 unit difference between these groups in VTL. 
+Below we load our packages and data, and center our quantitative predictors. We also scale f0 so that it has a reasonably similar between-group difference as the VTL predictor. Specifically, the average difference in VTL between adult females and males is about 2 cm, and the difference in f0 between the groups is about 100 Hz. This means that if we divide f0 by 100 the difference between men and women is about 1 unit, comparable to the 2 unit difference between these groups in VTL. The reason we don't divide by 50 to make them even more similar is that dividing by 100 results in frequencies being represented in hectohertz (1 hectohertz = 100 Hertz), which is easier to interpret than 50 Hz units. 
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -262,11 +265,11 @@ exp_data$f0 = exp_data$f0 / 100
 
 We're not going to have well-defined research questions this time. Instead, we have a more 'meta' question that we will try to deal with:
 
-(Q1) What do we do with all these parameters? How do we know what to focus on and where to begin?
+(Q1) What do we do with all these parameters? How do we know what to focus on, and where to begin?
 
 ### Description of the model {#c11-description-1}
 
-We're going to begin with a model that includes all possible interactions between our predictors, and also includes listener-dependent versions of all of our 'fixed' effects predictors. Models of this sort are sometimes referred to as **maximal** models because they include all predictors, interactions, and 'random effects' supported by the data. When we say 'supported by the data', what we mean is that certain parameters cannot be estimated given the data you have, though maybe they could have been estimated in principle with other data (see section \@ref(c8-identifiability)). For example, notice that we don't include any speaker-dependent predictors in our model (other than intercepts). This is because each speaker had a single f0 and VTL, and many were only identified as either male or female, or only as either adults or children. As a result, estimating interactions between these predictors and speaker is not *supported* by our data. Our model formula is:
+We're going to begin with a model that includes all possible interactions between our predictors, and also includes listener-dependent versions of all of our 'fixed' effects parameters. Models of this sort are sometimes referred to as **maximal** models because they include the maximal (i.e. most complicated) random effects structure 'supported' by the data (see section \@ref(c8-identifiability)). This means that we include corresponding 'random' listener effects for each of our 'fixed' effects predictors. However, notice that we don't include any speaker-dependent predictors in our model (other than intercepts). This is because each speaker had a single f0 and VTL, and many were only identified as either male or female, or only as either adults or children. As a result, estimating interactions between these predictors and speaker is not *supported* by our data. Our model formula is:
 
 `height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`
 
@@ -274,8 +277,8 @@ We're going to use the same priors we used for our regression models in chapter 
 
 ```
 height ~ Intercept + vtl + f0 + A + G + 
-         A:G1 + vtl:f0 + vtl:A + vtl:G1 + f0:A + f0:G1 + 
-         vtl:f0:A + vtl:f0:G1 + vtl:A:G1 + f0:A:G1 + vtl:f0:A:G1
+         A:G1 + vtl:f0 + vtl:A + vtl:G + f0:A + f0:G + 
+         vtl:f0:A + vtl:f0:G + vtl:A:G + f0:A:G + vtl:f0:A:G
 ```
 
 We can group these parameters together based on the way they affect the surfaces they represent: Intercept parameters (`a`), VTL slope parameters (`b`), f0 parameters (`c`), and VTL:f0 interaction parameters (`d`).
@@ -287,7 +290,7 @@ c = f0        + f0:A     + f0:G     + f0:A:G
 d = vtl:f0    + vtl:f0:A + vtl:f0:G + vtl:f0:A:G
 ```
 
-Notice that there is a symmetry to the parameters for each 'dimension' in our model. Each one contains a 'main effect' term (`Intercept, vtl, f0, vtl:f0`), an interaction with apparent age (`A, vtl:A, f0:A, vtl:f0:A`), an interaction with apparent gender (`G, vtl:G, f0:G, vtl:f0:G`), and an interaction with apparent age *and* gender (`A:G, vtl:A:G, f0:A:G, vtl:f0:A:G`). This means that our models have intercepts, slopes (along two dimensions) and a saddle component (`d`), that can each vary as a function of apparent gender, age, and the interaction of the two. This is a complicated model, which is why it has so many parameters. In fact, it actually has many more parameters than this. For example, to calculate the listener dependent `a,b,c` and `d` parameters, which we can call `a_L, b_L, c_L` and `d_L`, we would need to add the following (hypothetical) parameters (implied by this `(vtl*f0*A*G|L)`) to our calculations. 
+Notice that there is a symmetry to the parameters for each 'dimension' in our model. Each one contains a 'main effect' term (`Intercept, vtl, f0, vtl:f0`), an interaction with apparent age (`A, vtl:A, f0:A, vtl:f0:A`), an interaction with apparent gender (`G, vtl:G, f0:G, vtl:f0:G`), and an interaction with apparent age *and* gender (`A:G, vtl:A:G, f0:A:G, vtl:f0:A:G`). This means that our models have intercepts, slopes (along two dimensions), and a saddle component (`d`), that can each vary as a function of apparent gender, age, and the interaction of the two. This is a complicated model, which is why it has so many parameters. In fact, it actually has many more parameters than this. For example, to calculate the listener dependent `a,b,c` and `d` parameters, which we can call `a_L, b_L, c_L` and `d_L`, we would need to add the following (hypothetical) parameters (implied by this `(vtl*f0*A*G|L)`) to our calculations. 
 
 ```
 a_L = a + Intercept:L + A:L        + G:L        + A:G:L 
@@ -304,7 +307,7 @@ Which can be rearranged to show that it is simply the sum of each corresponding 
 
 `a = (Intercept + Intercept:L) + (A + A:L) + (G + G:L) + (A:G + A:G:L)`
 
-This relatively complex model has been built up out of parts: We discussed the decomposition of intercepts into multiple factors, as in $a$ in chapter 7. We discussed the inclusion of quantitative predictors and the decomposition of variation in these, as in $b$ in chapter 9. Now, we discuss the addition of more quantitative predictors ($c$) and the interactions between these ($d$). Effectively, we have been incrementally adding complexity to our models and, from here on, increasing complexity mostly consists of sticking together larger numbers of these basic components in different ways. 
+This relatively complex model has been built up out of parts: We discussed the decomposition of intercepts into multiple factors, as in $a$ in chapter 7. We discussed the inclusion of quantitative predictors and the decomposition of variation in these, as in $b$ and $c$ in chapter 9. Now, we discuss the addition of more quantitative predictors ($c$) and the interactions between these ($d$). Effectively, we have been incrementally adding complexity to our models and, from here on, increasing complexity mostly consists of sticking together larger numbers of these basic components in different ways. 
 
 We said we weren't going to provide a formal definition of this model, but if we had, the first few lines might have looked something like this: 
 
@@ -319,9 +322,11 @@ $$
 \end{equation}
 $$
 
-And the following lines would have described $a$, $b$, $c$, and $d$ as the sum of the appropriate model parameters as we did above (for `a` and `a_L`). Below, we provide an abbreviated plain English description corresponding to this formula: `height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`. 
+And the following lines would have described $a$, $b$, $c$, and $d$ as the sum of the appropriate model parameters as we did above (for `a` and `a_L`). Below, we provide an abbreviated plain English description corresponding to this formula: 
 
-> Apparent speaker height is expected to vary according to a t distribution with some unknown nu, mean, and scale. Expected apparent height is predicted based on two quantitative variables, speaker f0 and VTL, and two categorical variables, apparent gender and apparent age. Our model includes all possible interactions between these predictors, resulting in 16 'fixed' effects predictors (see above). Our model also included listener dependent effects for all fixed effects, which were drawn from a 16-dimensional normal distribution whose standard deviations and covariance matrix were estimated from the data. Our model included speaker dependent intercepts drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. All remaining parameters were given prior distributions appropriate for their expected range of values.
+`height ~ vtl*f0*A*G + (vtl*f0*A*G|L) + (1|S)`. 
+
+> Apparent speaker height is predicted based on two quantitative variables, speaker f0 and VTL, and two categorical variables, apparent gender and apparent age. Our model includes all possible interactions between these predictors, resulting in 16 'fixed' effects predictors (see above). Our model also included listener dependent effects for all fixed effects, which were drawn from a 16-dimensional normal distribution whose standard deviations and covariance matrix were estimated from the data. Our model included speaker dependent intercepts drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. All remaining parameters were given prior distributions appropriate for their expected range of values.
 
 ### Fitting the model
 
@@ -329,8 +334,6 @@ We fit our model using the code below:
 
 ```{r, eval = FALSE}
 # Fit the model yourself
-options (contrasts = c('contr.sum','contr.sum'))
-
 priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
            brms::set_prior("student_t(3,0, 12)", class = "sd"),

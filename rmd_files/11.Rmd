@@ -412,9 +412,9 @@ In terms of intercept terms (i.e. those not interacting with quantitative predic
 
 In order to interpret our predictors in the presence of interactions, we need to consider the simple effects. For example, in order to consider the `vtl:A1` interaction we need to find the simple effect of VTL for apparent children, and then for apparent adults. This is done in the manner outlined in chapter 9 for quantitative predictors, independently for each dimension (predictor or cross-product).  We're not going to go over the interpretation of the coefficients and the reconstruction of the simple effects here, as this will be carried out in chapter 13.  
 
-Whereas figure \@ref(fig:F11-4) focused on the similarity of our `lmer` and `brm` models, figure \@ref(fig:F11-5) presents some ways that these models differ. In the top row we see a comparison of the 'random effects' standard deviation estimates provided by our two models, and the error terms (i.e., `sigma` or $\sigma$) estimated by our two models. For example, the standard deviation of the listener f0 'random effect' (`f0:L`, $\sigma_{f0 \colon L}$) represents the amount of variation between the listener-specific effects for f0 in each model. As we can see, the models provide reasonably similar standard deviation estimates for many, if not most, parameters. However, note that the `brm` model provides intervals for all parameters, while the `lmer` model only provides point estimates for these.
+Whereas figure \@ref(fig:F11-4) focused on the similarity of our `lmer` and `brm` models, figure \@ref(fig:F11-5) presents some ways that these models differ. In the top row we see a comparison of the 'random effects' standard deviation estimates, and the error terms (i.e., `sigma` or $\sigma$), estimated by our two models. For example, the standard deviation of the listener f0 'random effect' (`f0:L`, $\sigma_{f0 \colon L}$) represents the amount of variation between the listener-specific effects for f0 in each model. As we can see, the models provide reasonably similar standard deviation estimates for many, if not most, parameters. However, note that the `brm` model provides intervals for all parameters, while the `lmer` model only provides point estimates for these.
 
-```{r F11-5, fig.height = 6, fig.width = 8, fig.cap='Points and intervals represent means and 95% credible intervals for brms parameter estimates for `model_height_vtl_f0`. Crosses indicate point estimates provided in `lme_model_height_vtl_f0`. (top) Estimates of random effect standard deviations. (middle) Estimates for the listener dependent effects of apparent age. (bottom) Estimates of correlations between listener random effects.', echo = FALSE, cache = FALSE}
+```{r F11-5, fig.height = 5, fig.width = 8, fig.cap='Points and intervals represent means and 95% credible intervals for brms parameter estimates for `model_height_vtl_f0`. Crosses indicate point estimates provided in `lme_model_height_vtl_f0`. (top) Estimates of random effect standard deviations. (middle) Estimates for the listener dependent effects of apparent age. (bottom) Estimates of correlations between listener random effects.', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11.5
@@ -427,10 +427,13 @@ vars_final = bmmb::banova (model_height_vtl_f0, superpopulation =TRUE)
 vars_final = vars_final[vars_final$cluster != "fixefs",]
 
 layout (m=1:3, heights = c(.4,.3,.3))
-par (mar = c(7,4,.5,1))
+par (mar = c(5,4,.5,1))
 bmmb::brmplot (vars_final, ylim = c(0,8.5), las = 2,cex.axis=1.3,
-               col=bmmb::cols[14],yaxs="i")
+               col=bmmb::cols[14],yaxs="i", labels = "")
 points (lmer_vars, cex=3,lwd=3,col=bmmb::cols[2],pch=4)
+axis (1:nrow(vars_final), labels = rep("",nrow(vars_final)),side=1)
+text (1:nrow(vars_final),-.5,rownames(vars_final), srt=35, 
+      xpd = TRUE, adj = 1, cex=1.2)
 
 pts = lme4::ranef(lme_model_height_vtl_f0)$L[,4]
 
@@ -475,9 +478,9 @@ At its core ANOVA consists of thinking of variation in the dependent variable as
 
 This formula implies a model with a relatively large number of parameters. These parameters can be thought of as 'batches' of thematically related coefficients. For example, we can think of the following batches of parameters:
 
-  * 3 parameters representing the fixed effects for apparent speaker category `C`, `C1, C2, C3`.
+  * 3 parameters representing the fixed effects for apparent speaker category `C`: `C1, C2, C3`.
   * 15 parameters representing the listener-dependent intercepts. 
-  * 45 (15 $\times$ 3) parameters representing the listener-dependent effects for parameters `C1`, `C2`, and `C3`.  
+  * 45 (15 $\cdot$ 3) parameters representing the listener-dependent effects for parameters `C1`, `C2`, and `C3`.  
   * 139 parameters representing the speaker-dependent intercepts. 
 
 Each of these batches has a thematic or semantic link; these are not just parameters grouped at random. When we break up variation into thematically-grouped parameters, we are doing an **ANOVA-like decomposition** of variation of the dependent variable. We introduced this approach in chapter 7 without directly referring to ANOVA and have generally been using this approach to understand variation in our predictors throughout the book.  Here's what Gelman and Hill (2006) have to say about the analysis of variance in the context of multilevel models:
@@ -488,16 +491,16 @@ Batches of parameters that vary a lot from each other reflect large differences 
 
 For example, in figure \@ref(fig:F11-5) we see that the standard deviation of listener-dependent intercepts (`Intercept:L`, $\sigma_L$) is much larger than the listener-dependent interaction between VTL and apparent gender (`vtl:G1:L`, $\sigma_{VTL \colon G \colon L}$). We can see that this directly relates to the variation of each batch of 'random effects' around zero, as shown in figure \@ref(fig:F11-6). Whether or not $\sigma_{VTL \colon G \colon L}$ is *exactly* zero, we can look at figure \@ref(fig:F11-6) and see that this predictor does not predict much variation in our dependent variable. As a result of this, by inspecting the standard deviations in figure \@ref(fig:F11-5) we can see that although there are a large number of predictors, only a couple are having any meaningful effect on apparent height judgments. 
 
-```{r F11-6, fig.height = 2.5, fig.width = 8, fig.cap='Listener-dependent intercepts (Intercept:L) and vtl:G1 interactions (vtl:G1:L).', echo = FALSE, cache = FALSE}
+```{r F11-6, fig.height = 2.5, fig.width = 8, fig.cap='Listener-dependent intercepts (Intercept:L) and vtl:G1 interactions (VTL:G1:L).', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11.6
 ################################################################################
 
-par (mfrow = c(1,1), mar = c(4,4,1,1))
+par (mfrow = c(1,1), mar = c(4,4,.5,.5))
 
-bmmb::brmplot (brms::ranef (model_height_vtl_f0)$L[,,"Intercept"], col = bmmb::cols[9], 
-         line=TRUE)
+bmmb::brmplot (brms::ranef (model_height_vtl_f0)$L[,,"Intercept"], 
+               col = bmmb::cols[9], line=TRUE, xlab = "Listener")
 bmmb::brmplot (brms::ranef (model_height_vtl_f0)$L[,,"vtl:G1"], add = TRUE, 
          nudge = 0.1, labels = "", col = bmmb::cols[10],pch=17)
 
@@ -505,13 +508,15 @@ legend (11,10, legend =c("Intercept:L","VTL:G:L"),pch=16:17,horiz = TRUE,bty='n'
         col=bmmb::cols[9:10],pt.cex=1.5)
 ```
   
-Gelman and Hill (2006) distinguish two types of standard deviations for a 'random' effect with $J$ levels (p. 459) (emphasis ours):
+Gelman and Hill (2006) distinguish two types of standard deviations for a 'random' effect with J levels (p. 459) (emphasis ours):
 
 > "The **superpopulation** standard deviation, which represents the variation among the modeled probability distribution from which they were drawn, is relevant for determining the uncertainty about the value of a new group not in the original set of J." 
 
 > "The **finite-population** standard deviation of the particular J values of [some coefficient] describes variation within the existing data." 
 
 So, the *finite-population* standard deviation terms reflect the variation we observe in our actual model parameters. This concept can be applied to batches of 'random' effects estimated with adaptive partial pooling and to 'fixed' effects estimated with fixed priors. For example, if your estimated parameters are -1, 0, and 1, your finite-population estimate would be directly based on these values. In contrast, the *superpopulation* standard deviation estimates correspond to the specific $\sigma_{\beta}$ term estimated by our model for some batch $\beta$ of 'random' effects. No analogue exists for our 'fixed' effects, and so we can only get superpopulation standard deviations for batches of parameters fit with adaptive partial pooling (i.e. 'random' effects). Gelman and Hill further note that:
+
+[@@ SB - these quotes could be better]
 
 > "The superpopulation [σ] and finite-population [s] standard deviations are not two different statistical “estimators” of a common quantity; rather, they are two different quantities that can both be estimated from the multilevel model. We can get a point estimate and uncertainty intervals for both. In general, the point estimates of σ and s will be similar to each other, but s will have less uncertainty than σ. That is, the variation is more precisely estimated for the finite population than the superpopulation. This makes sense because we have more information about the units we observe than the full population from which they are sampled."  (p. 464)
 
@@ -528,7 +533,7 @@ We could potentially add a fifth step: 5) Re-fit a reduced model if some compone
   
 ### Getting the standard deviations from our models 'manually'
 
-The superpopulation standard deviation is our model's estimate of the standard deviation of a batch of parameters. We can extract the superpopulation standard deviations using the `VarCorr` function. This function returns all sorts of information about the variance and correlation parameters estimated by our model. In the second line below we specify that we only want information related to the standard deviation (`"sd"`) of our listener effects (`"L"`). We're not goint to go into detail about the information provided by this function, but you can probably figure most of it out by reading it carefully.
+The superpopulation standard deviation is our model's estimate of the standard deviation of a batch of parameters. We can extract the superpopulation standard deviations using the `VarCorr` function. This function returns all sorts of information about the variance and correlation parameters estimated by our model. In the second line below we specify that we only want information related to the standard deviation (`"sd"`) of our listener effects (`"L"`). We're not goint to go into detail about the information provided by this function, but you can probably figure most of it out by inspecting the output carefully.
 
 ```{r, cache = TRUE, collapse = TRUE, eval = FALSE}
 brms::VarCorr(model_height_vtl_f0)
@@ -542,10 +547,10 @@ We can also get information regarding our error ($\sigma$, `sigma`) using `Varco
 brms::VarCorr(model_height_vtl_f0)$residual$sd
 ```
 
-The `bmmb` package contains a function called `get_sds` that collects estimates of all standard deviations estimated by the model, including the error:
+The `bmmb` package contains a function called `get_sds` that collects estimates of all standard deviations estimated by the model, including the error. We show the first five lines of the output of this function below. 
 
 ```{r}
-bmmb::get_sds (model_height_vtl_f0)
+bmmb::get_sds (model_height_vtl_f0)[1:5,]
 ```
 
 Getting the finite-sample standard deviations is a bit trickier. First, we should note that although they are called standard deviations, they are actually calculated by finding the root-mean squared error. The **root-mean-squared** (RMS) error for each batch of coefficients is exactly what it sounds like, it's the (square) root of the mean square. In other words, as seen in equation \@ref(eq:11-9), you square a bunch of values, find the average of these, and then find the square root of this value. 
@@ -563,7 +568,7 @@ To calculate the standard deviations of different batches of parameters you need
 
 $$
 \begin{equation}
-RMS^s_L = \sqrt {\sum_{j=1}^{J} (L^s_{[j]})^2 / J}
+RMS^s_L = \sqrt {\sum_{j=1}^{J} (L^s_{[j]})^2 / \,J}
 (\#eq:11-10)
 \end{equation}
 $$
@@ -572,7 +577,7 @@ $$
 The code below shows how to calculate the finite-population standard deviations for listener based on the random effects parameter estimates. 
 
 ```{r, cache = TRUE, collapse = TRUE, eval = TRUE}
-# extract matrix representing all random effects from our model
+# extract matrix representing listener random intercepts from our model
 listener_intercepts = 
   ranef(model_height_vtl_f0, summary = FALSE)[["L"]][,,"Intercept"]
 
@@ -580,7 +585,7 @@ listener_intercepts =
 # are: (rows) samples, (columns) parameters
 str (listener_intercepts)
 
-# we find the standard deviation across each row in the matrix
+# we find the RMS error across each row in the matrix
 listener_intercepts_finite = apply (listener_intercepts,1,bmmb::rms)
 
 # we summarize the output 
@@ -592,7 +597,7 @@ listener_intercepts_finite
 
 For the fixed effects, we can use the absolute value of the parameters when these are each a single 'degree of freedom' (i.e. a single parameter). The code below shows how to get the fixed effects standard deviation estimates assuming that all parameters are unrelated. 
 
-```{r, cache = TRUE, collapse = TRUE, eval = TRUE, echo = FALSE}
+```{r, cache = TRUE, collapse = TRUE, eval = TRUE, echo = TRUE}
 # get individual parameter samples
 fixefs_finite = fixef(model_height_vtl_f0, summary = FALSE)
 
@@ -616,7 +621,7 @@ sigma_finite = posterior_summary (sigma_finite)
 row.names(sigma_finite) = 'sigma'
 ```
 
-In the examples above, we treated each fixed effect predictor, and the interaction of each of these with listener, as independent. This is actually appropriate for this model because all our predictors *are* conceptually distinct so that we don't really have batches of fixed effects. However, the process Gelman proposes is potentially more complicated that what we've done above. For example, imagine if we had included `C` as a predictor in our model and calculated the listener-dependent effects of `C`. This would result in the fixed effects `C1`, `C2`, and `C3`, 15 `C1:L` random effects, 15 `C2:L` random effects, and 15 `C3:L` random effects. The process described here would treat each of the 3 fixed effects as independent, and also treat each batch of 15 random effects as independent. In contrast, Gelman and colleagues recommend treating the 3 category-related fixed effects as a single batch, and the 45 category-related random effects as a single batch. 
+In the examples above, we treated each fixed effect predictor, and the interaction of each of these with listener, as independent. This is actually appropriate for this model because all our predictors *are* conceptually distinct so that we don't really have batches of fixed effects. However, the process Gelman proposes is potentially more complicated than what we've done above. For example, imagine if we had included `C` as a predictor in our model and calculated the listener-dependent effects of `C`. This would result in the fixed effects `C1`, `C2`, and `C3`, 15 `C1:L` random effects, 15 `C2:L` random effects, and 15 `C3:L` random effects. The process described here would treat each of the 3 fixed effects as independent, and also treat each batch of 15 random effects as independent. In contrast, Gelman and colleagues recommend treating the 3 category-related fixed effects as a single batch, and the 45 category-related random effects as a single batch. 
 
 The main reason to do it the way we've shown above is because it can be done easily for all models, and you still get very useful information from the analysis. However, it is undeniable that, for example, treating the 45 `C:L` terms in our example above as related may be desirable in some cases. If you do want to investigate the variation associated with entire clusters of multiple predictors at a time, the code provided above can be modified to do this as necessary, and you should also probably see the readings referred to at the top of section \@ref(c11-BANOVA).
 
@@ -625,9 +630,11 @@ The main reason to do it the way we've shown above is because it can be done eas
 The `bmmb` package contains a function called `banova` that can get the finite-sample or superpopulation standard deviations for you. This function will only calculate standard deviations the 'simple' way outlined in the previous section, treating each fixed effect and the random effects for each individual parameter as an independent batch. The output of the `banova` function is a single data frame that contains a summary of the standard deviations for fixed and random effects, and the error term if the model contains one. Below we use the function to get both kinds of standard deviations compared in the previous section.
 
 ```{r, cache = TRUE, include = TRUE, cache = TRUE}
-banova_height_vtl_f0_finite = banova (model_height_vtl_f0, superpopulation = FALSE)
+banova_height_vtl_f0_finite = 
+  banova (model_height_vtl_f0, superpopulation = FALSE)
 
-banova_height_vtl_f0_super = banova (model_height_vtl_f0, superpopulation = TRUE)
+banova_height_vtl_f0_super = 
+  banova (model_height_vtl_f0, superpopulation = TRUE)
 ```
 
 The output of the `banova` function can be used to make a Bayesian ANOVA plot of our model using the `banovaplot` function in the `bmmb` package. An example of a Bayesian ANOVA plot is shown in figure \@ref(fig:F11-7). These plots compare the (absolute) values of your fixed effects, the standard deviation of different batches of random effects, and you residual error ($\sigma$) if applicable. This is effectively the same information shown in the top row of figure \@ref(fig:F11-5) save for the inclusion of the 'fixed' effects in the figure. If we make a BANOVA plot right after fitting our model, we would have a pretty good idea of which of our predictors are associated with meaningful variation in our dependent variable and which don't seem to matter much.
@@ -768,9 +775,9 @@ persp(x, y, z, col = bmmb::cols[14],theta = -90,zlim = c(-6.5,6.5))
 persp(x, y, z, col = bmmb::cols[14],theta = 45,zlim = c(-6.5,6.5))
 
 z <- outer(x, y, f1)
-persp(x, y, ztop(z), col = bmmb::cols[13],theta = 0,zlim = c(0,1))
-persp(x, y, ztop(z), col = bmmb::cols[13],theta = -90,zlim = c(0,1))
-persp(x, y, ztop(z), col = bmmb::cols[13],theta = 45,zlim = c(-0,1))
+persp(x, y, inverse_logit(z), col = bmmb::cols[13],theta = 0,zlim = c(0,1))
+persp(x, y, inverse_logit(z), col = bmmb::cols[13],theta = -90,zlim = c(0,1))
+persp(x, y, inverse_logit(z), col = bmmb::cols[13],theta = 45,zlim = c(-0,1))
 
 ```
 
@@ -824,7 +831,7 @@ exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
 
-As with our height model, we'll leave more detailed research questions for chapter 13. For now we are only interested in two questions based on the methods we discussed in section \@ref(c11-BANOVA): 
+As with our height model, we'll leave more detailed research questions for chapter 13. For now we are only interested in two general questions:
 
 (Q1) Can we use what we've learned so far to fit and evaluate a logistic regression model with two quantitative predictors?
 
@@ -869,7 +876,7 @@ We can inspect the model fixed effects using `brmplot` in figure \@ref(fig:F11-1
 ```{r, include = FALSE}
 banova_gender_vtl_f0 = bmmb::banova (model_gender_vtl_f0)
 ```
-```{r F11-11, fig.height = 3, fig.width = 8, fig.cap='(left) A plot showing fixed effects estimates and 95% credible intervals for `model_gender_vtl_f0`. (right) a BANOVA plot of the same model, showing posterior means and 95% credible intervals for the finite sample standard deviation estimates.', echo = FALSE, cache = FALSE}
+```{r F11-11, fig.height = 3, fig.width = 8, fig.cap='(left) A plot showing fixed effects estimates and 95% credible intervals for `model_gender_vtl_f0`. (right) A BANOVA plot of the same model, showing posterior means and 95% credible intervals for the finite sample standard deviation estimates.', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11-11
@@ -887,7 +894,7 @@ In figure \@ref(fig:F11-11) we see a relatively complex model, with an important
 
 Imagine a horizontal plane such that z=0 for all values of x and y in figures \@ref(fig:F11-9) and \@ref(fig:F11-10). If the z (vertical) axis represents logits, this plane would represent an expected probability of 0.5, meaning it is the boundary between successes (1) and failures (0) along the z axis. Our response surface will intersect with the horizontal z=0 plane, forming a curve at this intersection. These curves represent the division of the response surface into sections with values greater than 0 (expected response 1) and sections with values less than 0 (expected response 0). Thus, the curves formed by the intersection of our response surface and the z=0 plane represent the *category boundary* along the predictor space, as defined by our model.
 
-We will begin by discussing the case where the response surface is a plane, i.e., there is no cross product term in our model. The intersection of two planes forms a straight line. Although the surfaces in the bottom row of figure \@ref(fig:F11-9) are not planes, the intersection of these surfaces with planes still form straight lines. Thus, their intersection with the plane at $p=0.5$ (i.e. the plane where logit = 0) will still form straight lines. To find the intersection of our response surfaces and the plane at z=0, we can use some basic algebra. We take the equation defining the shape of our response and set z to zero:
+We will begin by discussing the case where the response surface is a plane, i.e., there is no cross product term in our model. The intersection of two planes forms a straight line. Although the surfaces in the bottom row of figure \@ref(fig:F11-9) are not planes, the intersection of these surfaces with planes still form straight lines. Thus, their intersection with the plane at p=0.5 (i.e. the plane where logit(p) = 0) will still form straight lines. To find the intersection of our response surfaces and the plane at z=0, we can use some basic algebra. We take the equation defining the shape of our response and set z to zero:
 
 $$
 \begin{equation}
@@ -916,7 +923,7 @@ We can use the above method to calculate the category boundaries implied by a mo
 $$
 \begin{equation}
 \begin{split}
-0 =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) + (d \cdot xy) \\
+0 =  \mathrm{a} + (\mathrm{b} \cdot x) + (\mathrm{c} \cdot y) + (d \cdot x \cdot y) \\
 y =  (-\mathrm{b} \cdot x - \mathrm{a}) / (d \cdot x + c)
 \end{split}
 (\#eq:11-13)
@@ -936,7 +943,7 @@ c_all = mean (samples[,"f0"])
 d_all = mean (samples[,"vtl:f0"])
 ```
 
-We can also add up appropriate combinations of the fixed effects to calculate separate $a, b, c$ and $d$ parameters for apparent adults and for apparent children, as seen below. Note that in each case we combine the necessary parameters first and then find the average across the samples of the parameter. 
+We can also add up appropriate combinations of the fixed effects to calculate separate $a, b, c$ and $d$ parameters for apparent adults and for apparent children, as seen below. Note that in each case we combine the necessary parameters first and then find the average across the samples of the parameter. Of course, in both cases we could have used the `hypothesis` (or `short_hypothesis`) function rather than do it 'by hand'.
 
 ```{r, collapse = TRUE}
 # get a,b,c,d coefficients for adult surface
@@ -952,7 +959,7 @@ c_child = mean (samples[,"f0"] - samples[,"f0:A1"])
 d_child = mean (samples[,"vtl:f0"] - samples[,"vtl:f0:A1"])
 ```
 
-We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our hyperbolic (equation \@ref(eq:11-13)) boundaries in figure \@ref(fig:F11-12). When we 'zoom out' in the middle plot the same figure, we see that this model actually predicts male classifications in the top left corner as well as in the bottom right corner. This is a result of the fact that our hyperbolic boundaries come in pairs, resulting from the bimodal (i.e. two peaked) shape seen in the bottom row of figure \@ref(fig:F11-10).
+We can use these parameters to generate curves representing the boundaries between expected female and expected male responses. We do this for our hyperbolic (equation \@ref(eq:11-13)) boundaries in figure \@ref(fig:F11-12). When we 'zoom out' in the middle plot of the same figure, we see that this model actually predicts male classifications in the top left corner as well as in the bottom right corner. This is a result of the fact that our hyperbolic boundaries come in pairs, resulting from the bimodal (i.e. two peaked) shape seen in the bottom row of figure \@ref(fig:F11-10).
 
 ```{r F11-12, fig.width = 8, fig.height = 2.75, fig.cap = "(left) Each point represents a single speaker, labels indicate most common group classification. Curves indicate male/female boundaries for adults (green), children (orange), and overall (blue). (middle) The same as the left figure but zoomed out more. (right) Territorial maps showing expected classifications for apparent adults in different regions of the f0 by VTL stimulus space.", echo = FALSE, cache = FALSE}
 
@@ -1066,7 +1073,7 @@ knitr::include_graphics("../wrong_plots/F11-12-1.jpeg")
 
 In the right plot of figure \@ref(fig:F11-12) we present a *territorial map* of our stimulus space as defined by speaker VTL and f0, for apparent adults. This map tells us the expected classification of speakers into males and females given their voice f0 and VTL, and assuming that they are perceived as being adults (broken green lines in the left and middle plots). Unlike the territorial maps presented in the previous chapter (in figure \@ref(fig:F10-5)), this map is defined along a two-dimensional stimulus space. In addition, although we only present one map in the plot, we can make three separate maps, one for apparent children, one for apparent adults, and an overall map. 
 
-The high-frequency (top left) male region suggests that speakers with a very high f0 and a very short VTL are likely to be identified as males, even for adults. Note that we don't have many speakers in these regions and so we can only guess how listeners might have responded to voices there. However, common sense suggests that speakers with a very short VTL and a very high f0 are not very likely to be identified as adult males. Does this matter? Yes and no. Does it matter that the earth isn't flat but our maps mostly act like it is? If it's *flat enough* in the area described by our map, then maybe not. If you're trying to find the shortest flight path between two cities, it probably does. 
+The high-frequency male region in the top-left corner of the plot suggests that speakers with a very high f0 and a very short VTL are likely to be identified as males, even for adults. Note that we don't have many speakers in these regions and so we can only guess how listeners might have responded to voices there. However, common sense suggests that speakers with a very short VTL and a very high f0 are not very likely to be identified as adult males. Does this matter? Yes and no. Does it matter that the earth isn't flat but our maps mostly act like it is? If it's *flat enough* in the area described by our map, then maybe not. If you're trying to find the shortest flight path between two cities, it probably does. 
 
 This suggests we should decide what our model is for. If we only want to understand behavior in the regions where we mostly have a lot of data, then the high-frequency male region may not matter. On the other hand, if we want to understand how listeners might be using acoustic information in general, we might worry that the model predicts behavior that we think is very unlikely to be correct. In other words, we might want our model to 'make sense' even for data we don't have. 
 
@@ -1085,9 +1092,10 @@ model_gender_vtl_f0_reduced =
                  set_prior("student_t(3, 0, 3)", class = "sd"),
                  set_prior("lkj_corr_cholesky (2)", class = "cor")))
 ```
-```{r, include = FALSE, eval = FALSE}
+```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
-model_gender_vtl_f0_reduced = bmmb::get_model ('11_model_gender_vtl_f0_reduced.RDS')
+model_gender_vtl_f0_reduced = 
+  bmmb::get_model ('11_model_gender_vtl_f0_reduced.RDS')
 ```
 ```{r, include = FALSE, eval = TRUE}
 # saveRDS (model_gender_vtl_f0_reduced, '../models/11_model_gender_vtl_f0_reduced.RDS')
@@ -1224,7 +1232,7 @@ model_gender_vtl_f0_reduced =
   brms::add_criterion(model_gender_vtl_f0_reduced,"loo")
 ```
 
-The comparison suggests the model that includes the interaction does a better job of explaining our data. The differences between the two models is large-ish, but just under two standard errors in magnitude and so is not terribly reliable. 
+The comparison suggests the model that includes the interaction does a better job of explaining our data. The difference between the two models is large-ish, but just under two standard errors in magnitude and so is not terribly reliable. 
 
 ```{r, eval = TRUE}
 brms::loo_compare (model_gender_vtl_f0, model_gender_vtl_f0_reduced)
@@ -1234,9 +1242,7 @@ When adding the `loo` criterion to our models we got error messages like this:
 
 `Warning: Found 205 observations with a pareto_k > 0.7 in model 'model_gender_vtl_f0'. It is recommended to set 'moment_match = TRUE' in order to perform moment matching for problematic observations.`
 
-When we add the `loo` criterion to our model, `brms` (and *Stan*) don't actually fit a new model for every left out data point (i.e. a 'real' leave-one-out cross validation). Instead, there's a way to approximate what the model *would* look like had it actually been refit without each data point. This approximation does using something called **Pareto smoothed importance sampling** (**PSIS**). The Pareto-k ($\hat{k}$, `pareto_k`) statistic is a diagnostic for this estimation method that helps you check the assumptions underlying the leave-one-out approximation (Vehtari et al. 2017). 
-
-Essentially, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential in your model and will have a higher value of $\hat{k}$. If an observation is *too* unusual, then the estimate of $\mathrm{elpd}$ associated with that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), values greater than 0.7 are 'bad' and values greater than 1.0 are 'very bad'. 
+When we add the `loo` criterion to our model, `brms` (and *Stan*) don't actually fit a new model for every left out data point (i.e. a 'real' leave-one-out cross validation). Instead, there's a way to approximate what the model *would* look like had it actually been refit without each data point. This approximation uses something called **Pareto smoothed importance sampling** (**PSIS**). The Pareto-k ($\hat{k}$, `pareto_k`) statistic is a diagnostic for this estimation method that helps you check the assumptions underlying the leave-one-out approximation (Vehtari et al. 2017). Essentially, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential in your model and will have a higher value of $\hat{k}$. If an observation is *too* unusual, then the estimate of $\mathrm{elpd}$ associated with that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), values greater than 0.7 are 'bad' and values greater than 1.0 are 'very bad'. 
 
 Vehtari (2022) outlines three general situations that cause Pareto-k statistics to be large. To understand these it might help to review the information on model comparison previously discussed in section \@ref(c6-model-comparison), and \@ref(c6-out-sample-crossval) specifically. The number of estimated parameters in a model is the total actual number of parameters estimated, including all fixed effects, random effects, and 'distributional' parameters such as $\sigma$ and $\nu$. We may distinguish this from the *effective* number of parameters, `p_loo` when calculated using `loo`, which takes the flexibility of the model into account. If a model shows little variability in its random effects, its effective number of parameters may be smaller than its total number of estimated parameters. The three situations that can cause large Pareto-k statistics are:
 
@@ -1269,7 +1275,7 @@ pareto_k = model_gender_vtl_f0$criteria$loo$diagnostics$pareto_k
 
 We plot these in figure \@ref(fig:F11-14), and compare them to the same values for our reduced model. When plotting these, we noted that there was a pattern such that $\hat{k}$ values were highest for adult male speakers, and that the problems largely disappear when the cross product is removed.  
 
-```{r F11-14, fig.width = 8, fig.height = 3, fig.cap = "(left) Pareto k estimates for data points in `model_gender_vtl_f0`. (right) Pareto k estimates for data points in `model_gender_vtl_f0_reduced`. Point colors reflect veridical speaker category.", echo = FALSE, cache = FALSE}
+```{r F11-14, fig.width = 8, fig.height = 2.5, fig.cap = "(left) Pareto k estimates for data points in `model_gender_vtl_f0`. (right) Pareto k estimates for data points in `model_gender_vtl_f0_reduced`. Point colors reflect veridical speaker category.", echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11-14
@@ -1285,7 +1291,7 @@ abline (h = c(0.5,.7,1), col = deeppurple, lwd = 2, lty=2)
 plot (model_gender_vtl_f0_reduced$criteria$loo$diagnostics$pareto_k, ylab="", 
       ylim = c(0,1.5),col=bmmb::cols[1+point_col],pch=16, yaxt='n', xaxt='n')
 abline (h = c(0.5,.7,1), col = deeppurple, lwd = 2, lty=2)
-mtext (side = 2, "Pareto k", outer = TRUE, line= 2.5, cex = 1.3)
+mtext (side = 2, "Pareto k", outer = TRUE, line= 2.5, cex = 1.2)
 
 legend (10, 1.4, legend=(c("boy","girl","man","woman")), col = bmmb::cols[2:5],pch=16,
         horiz = TRUE, bty = 'n',x.intersp = .8)
@@ -1370,6 +1376,21 @@ We can see that the voices with the highest Pareto-k values were in a region tha
 
 To resolve this situation we could refit the full model with tighter priors, especially since our priors are actually relatively wide and could be quite a bit narrower without likely having much of an effect on results. However, it may be the case that our full model is simply too flexible given the amount of data we have. Independently of all of this, we are still concerned with the very basic problem that the high-frequency region associated with male responses (presented in figure \@ref(fig:F11-12)) defies common sense and is probably wrong. As a result of this, we're not going to try to 'fix' the more complicated model but simply abandon it, relying instead on the reduced model that does not include the VTL by f0 interaction. We should note that our reduced model *also* had a handful of high Pareto-k values, albeit only a small number (6) and with no values near 1. We don't think this necessarily means that our model is fundamentally misspecified, but rather that sometimes listeners do unpredictable things. It may be the case that a more 'robust' approach to logistic regression is justified in this case, as discussed in Kruschke (2014, chapter 21). 
 
+## Exercises
+
+The analyses in the main body of the text all involve only the unmodified 'actual' resonance level (in `exp_data`). Responses for the stimuli with the simulate 'big' resonance are reserved for exercises throughout. You can get the 'big' resonance in the `exp_ex` data frame, or all data in the `exp_data_all` data frame. 
+
+Fit and interpret one or more of the suggested models:
+
+1) Easy: Analyze the (pre-fit) model that's exactly like the ones in this chapter, except using the data in `exp_ex` (`model_height_vtl_f0_ex`, or `model_gender_vtl_f0_reduced_ex`).
+
+2) Medium: Fit a model like the ones in this chapter but include the resonance predictor, and any interactions you may be interested in.
+
+2) Hard: Fit a model like the ones in this chapter but include the duration predictor, and any interactions you may be interested in.
+
+In any case, describe the model, present and explain the results, and include some figures. 
+
+
 ## References
 
 Gelman, A. (2005). Analysis of variance—why it is more important than ever. The annals of statistics, 33(1), 1-53.
@@ -1391,24 +1412,4 @@ Vehtari, A., Gelman, A., & Gabry, J. (2017). Practical Bayesian model evaluation
 Vehtari, A. (2022). Cross-validation FAQ.Model Selection. ttps://avehtari.github.io/modelselection/CV-FAQ.html
 
 Wickens, T. D., & Keppel, G. (2004). Design and analysis: A researcher's handbook. Upper Saddle River, NJ: Pearson Prentice-Hall.
-
-
-
-
-
-## Exercises
-
-The analyses in the main body of the text all involve only the unmodified 'actual' resonance level (in `exp_data`). Responses for the stimuli with the simulate 'big' resonance are reserved for exercises throughout. You can get the 'big' resonance in the `exp_ex` data frame, or all data in the `exp_data_all` data frame. 
-
-Fit and interpret one or more of the suggested models:
-
-
-1) Easy: 
-
-2) Medium:
-
-2) Hard: 
-
-
-In any case, describe the model, present and explain the results, and include some figures.
 

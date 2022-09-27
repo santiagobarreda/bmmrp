@@ -11,7 +11,7 @@ In chapter 10 we introduced models that can predict dichotomous (2-category) cat
 
 ## Chapter pre-cap
 
-In this chapter methods for the prediction of categorical dependent variables with >2 categories are introduced. First, multinomial regression is introduced and it's relationship to logistic regression is outlined. A multinomial logistic regression model with several predictors and random effects is fit and interpreted. The use of multinomial models to classify data, model listener judgments, and make territorial maps is discussed. After that, ordinal logistic regression is introduced. A discussion of ordinal regression as a latent variable model is presented, as is the use of cumulative distributions and thresholds by ordinal models. An ordinal logistic regression model with several predictors and random effects is fit, interpreted and discussed. Finally, an example of an ordinal regression model listener-specific latent variable distributions is given.
+In this chapter methods for the prediction of categorical dependent variables with >2 categories are introduced. First, multinomial regression is introduced and it's relationship to logistic regression is outlined. A multinomial logistic regression model with several predictors and random effects is fit and interpreted. The use of multinomial models to classify data, model listener judgments, and make territorial maps is discussed. After that, ordinal logistic regression is introduced. A discussion of ordinal regression as a latent variable model is presented, as is the use of cumulative distributions and thresholds by ordinal models. An ordinal logistic regression model with several predictors and random effects is fit, interpreted, and discussed. Finally, an example of an ordinal regression model listener-specific latent variable distributions is given.
 
 ## Multinomial logistic regression
 
@@ -32,7 +32,9 @@ y_1, \dots, y_J \sim \mathrm{multinomial}(p_1, \dots, p_J, n)
 \end{equation}
 $$
 
-We can begin by thinking about the case where n=1. In this case our $y$ vector will equal 1 for one category and 0 for all other categories. Below we draw 10 instances of a four-category multinomial variable with probabilities of 0.4, 0.1, 0.2, and 0.3 for the first, second, third and fourth categories respectively. 
+We can begin by thinking about the case where n=1. In this case our $y$ vector will equal 1 for one category and 0 for all other categories. Actually, data like this could be represented using a **categorical distribution**, which is just like the multinomial distribution except the n is *always* equal to 1. The multinomial distribution is to the categorical distribution as the binomial distribution is to the Bernoulli distribution (see chapter 10). We will focus on the multinomial distribution here, however, we will provide an example of how to fit our model using a categorical distribution a bit later in the chapter. 
+
+Below we draw 10 instances of a four-category multinomial variable with probabilities of 0.4, 0.1, 0.2, and 0.3 for the first, second, third and fourth categories respectively. 
   
 ```{r}
 rmultinom (10, 1, c(.4,.1,.2,.3))
@@ -44,7 +46,7 @@ Each individual observation (column) consists of only a single one and three zer
 rowMeans (rmultinom (10000, 1, c(.4,.1,.2,.3)))
 ```
 
-Below we sample ten more multinomial variables, this time each with $n=100$. We can see that we get a distribution of values across the four outcomes for each variable that resembles the values of $p$ we defined for each outcome. Note that when we average across these observations, we get a good estimate of the $p$ parameter associated with each outcome. 
+Below we sample ten more multinomial variables, this time each with n=100. We can see that we get a distribution of values across the four outcomes for each variable that resembles the values of $p$ we defined for each outcome. Note that when we average across these observations, we get a good estimate of the $p$ parameter associated with each outcome. 
 
 ```{r}
 set.seed (1)
@@ -55,7 +57,9 @@ multinomial_variable
 rowMeans(multinomial_variable)/100
 ```
 
-Multinomial regression is just what it sounds like: A regression model for the prediction of multinomial outcomes variables. There are many ways to think about multinomial regression. We're going to present one that's consistent with the way we presented logistic regression in chapter 10 and the way we've been presenting regression models in general in this book. For a more complete treatment of the topic please see Agresti (2003), Agresti (2018), and Krsuchke (2014). Before beginning the explanation we can 'spoil' the ending:  The number of trials ($n$) and the number of possible outcomes ($J$) are aspects of your data and experimental design, and are known to you before you fit any model. Thus, multinomial logistic regression effectively consists of estimating $p_j$, or values related to it, for each category as a function of your independent variables. In other words, multinomial models let you predict how probable it is that you will see each of the outcome categories, given your independent variables and model structure. 
+Multinomial regression is just what it sounds like: A regression model for the prediction of multinomial outcome variables. There are many ways to think about multinomial regression. We're going to present one that's consistent with the way we presented logistic regression in chapter 10 and the way we've been presenting regression models in general in this book. For a more complete treatment of the topic please see Agresti (2003), Agresti (2018), and Kruschke (2014). Before beginning the explanation we can 'spoil' the ending:  The number of trials ($n$) and the number of possible outcomes ($J$) are aspects of your data and experimental design, and are known to you before you fit any model. Thus, multinomial logistic regression effectively consists of estimating $p_j$, or values related to it, for each category as a function of your independent variables. In other words, multinomial models let you predict how probable it is that you will see each of the outcome categories, given your independent variables and model structure. 
+
+### Multinomial logits and the softmax function
 
 Multinomial regression is a surprisingly 'simple' extension of the concepts underlying logistic regression. When we discussed logistic regression in chapter 10, we introduced the inverse logit function (the link function for logistic regression). In section \@ref(c10-inverse-logit), we discussed the fact that this function converts log odds to probabilities by arbitrarily setting the 'count' of failures to 1 and modeling only the expected 'count' of outcomes (i.e. $e^z$). So, we see in equation below that the probability that $y=1$ (i.e. a 'success') is equal to the ratio of the expected number of successes over the sum of the total number of outcomes.  
 
@@ -68,7 +72,7 @@ P(Y=1) = \frac{\mathrm{success}}{\mathrm{failure}+\mathrm{success}} = \frac{e^{z
 \end{equation}
 $$
 
-The equation above works when we have exactly two categories. However, it can be modified so that it can be applied to three or more categories. First, we assume that rather than exactly two possible outcomes, there are now $J$ outcomes, where $J$ is some integer larger than one. If we stick to our interpretation of the value of $e^{z}$ as an expected count for that category, then $e^{z_j}$ is the expected count for category $j$. To find the probability of observing category $j$ we find the ratio of the 'count' of $j$ over the sum of all possible outcomes (i.e., the sum of counts for all categories). This is just an extension of the sum of successes and failures when we had only two categories as in equation 12-2.
+The equation above works when we have exactly two categories. However, it can be modified so that it can be applied to three or more categories. First, we assume that rather than exactly two possible outcomes, there are now $J$ outcomes, where $J$ is some integer larger than one. If we stick to our interpretation of the value of $e^{z}$ as an expected count for that category, then $e^{z_j}$ is the expected count for category $j$. To find the probability of observing category $j$ we find the ratio of the 'count' of $j$ over the sum of all possible outcomes (i.e., the sum of counts for all categories). This is just an extension of the sum of successes and failures when we had only two categories as in equation \@ref(eq:12-2).
 
 $$
 \begin{equation}
@@ -79,7 +83,7 @@ P(Y=j) = \frac{e^{z_j}}{\sum_{j=1}^{J} e^{z_j}}
 \end{equation}
 $$
 
-The function above is called the **softmax** function, and it is basically a generalization of the inverse logit function to more than two categories. When we did dichotomous logistic regression, we modeled only the 'count' of one variable, the one for 'success'. The 'counts' for the category set to 'failure' was not modeled and was set to 1 (by setting $z=0$) for all cases. When we model multinomial data we follow the same convention and set one category as the 'reference'. To do this, we modify the equation above to pull the first category out of the summation and set its count to 1 for all situations, as in equation \@ref(eq:12-4). Notice that the summation in the denominator of the fraction now begins at two. In chapter 10 we said that you can think of the inverse logit function as relating expected successes relative to one failure. You can think of the softmax function as relating the expected number of outcomes of one category to the sum of the expected number of outcomes of all categories, where one of the counts (the reference category) has been set to one. 
+The function above is called the **softmax** function, and it is basically a generalization of the inverse logit function to more than two categories. When we did dichotomous logistic regression, we modeled only the 'count' of one variable, the one for 'success'. The 'count' for the category set to 'failure' was not modeled and was set to 1 (by setting $z=0$) for all cases. When we model multinomial data we follow the same convention and set one category as the 'reference'. To do this, we modify the equation above to pull the first category out of the summation and set its count to 1 for all situations, as in equation \@ref(eq:12-4). Notice that the summation in the denominator of the fraction now begins at two. In chapter 10 we said that you can think of the inverse logit function as relating expected successes relative to one failure. You can think of the softmax function as relating the expected number of outcomes of one category to the sum of the expected number of outcomes of all categories, where one of the counts (the reference category) has been set to one. 
 
 $$
 \begin{equation}
@@ -114,9 +118,9 @@ $$
 
 When we carried out logistic regression, the variable $z$ was referred to as a logit. Sometimes the $z_j$ values involved in multinomial regression are called **multinomial logits** to highlight their similarity to the dichotomous logit. More often, these values are referred to as the **score** for each category. The 'meaning' of the score is somewhat vaguely defined, in part because there are many ways to think about it. One way to think of the score is that it is a *latent variable* associated with each category that relates to the probability of observing that category given the values of the independent variables.
 
-**Latent variables** are variables that are inferred mathematically using some statistical model, but are not observed directly. For example, in our logistic regression model in chapter 10 we predicted the perception of femaleness. We did this by predicting variation in the logit of the probability of observing a female response as a function of speaker vocal-tract length. The logit of this probability can be thought of as a latent variable representing something like 'femininity/femaleness' in the mind of the listener. Based on the 'feeling' of voice femininity that the listener has they produce the surface variable that we do measure: A binary classification of a speaker as female/male. In this view the realization of the response variable (a female classification) is the result of a secret, *latent* variable that is not directly observed (or observable) by us, but which we assume underlies the process. 
+**Latent variables** are variables that are inferred mathematically using some statistical model, but are not observed directly. For example, in our logistic regression model in chapter 10 we predicted the perception of femaleness. We did this by predicting variation in the logit of the probability of observing a female response as a function of speaker vocal-tract length. The logit of this probability can be thought of as a latent variable representing something like 'femininity/femaleness' in the mind of the listener. Based on the 'feeling' of voice femininity that the listener has, they produce the surface variable that we do measure: A binary classification of a speaker as female/male. In this view the realization of the response variable (a female classification) is the result of a secret, *latent*, variable that is not directly observed (or observable) by us, but which we assume underlies the process. 
 
-In our four-category multinomial model we can imagine four latent variables, the score for each category. We can *think* of these as the 'feeling' the listener has regarding the 'boyness', 'girlness', 'manness', and 'womanness' of the voice. What is the 'boyness' of a voice? The difficult-to-quantify internal knowledge a listener has that the speaker is a boy, as opposed to some other sort of speaker. These latent variables are not directly measured in our experiment but we think they underlie the classification of speakers into categories. Thus, by observing the categorization of speakers, we can try to make inferences about these underlying variables.  
+In our four-category multinomial model we can imagine four latent variables, the score for each category. We can *think* of these as the 'feeling' the listener has regarding the 'boyness', 'girlness', 'manness', and 'womanness' of the voice. What is the 'boyness' of a voice? The difficult-to-quantify internal knowledge a listener has that the speaker is a boy, as opposed to some other sort of speaker. These latent variables are not directly measured in our experiment but we think they underlie the classification of speakers into categories. Thus, by observing the categorization of speakers, we can try to make inferences about these underlying variables, and the way that they relate to our predictors.  
 
 ### Comparison to logistic regression
 
@@ -135,7 +139,7 @@ z_2= -3 + x \cdot -3
 \end{equation}
 $$
 
-```{r F12-1, fig.height = 4, fig.width=8, fig.cap = "(top left) The blue line indicates the logit of the probability of observing a success, the black line represents the logit of the probability of observing a failure. (top right) Lines indicate the probabilities associated with observing the categories in the left plot. (bottom left) The blue line represents the score associated with the first cateogry, the blue line represents the score associated with the third category, the black line represents the score associated with the first (reference) category. (bottom right) Lines indicate the probabilities associated with observing the categories in the left plot.", echo = FALSE}
+```{r F12-1, fig.height = 4, fig.width=8, fig.cap = "(top left) The blue line indicates the logit of the probability of observing a success, the black line represents the logit of the probability of observing a failure. (top right) Lines indicate the probabilities associated with observing the categories in the left plot. (bottom left) The blue line represents the score associated with the first category, the blue line represents the score associated with the third category, the black line represents the score associated with the first (reference) category. (bottom right) Lines indicate the probabilities associated with observing the categories in the left plot.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.1
@@ -192,8 +196,7 @@ Rather than use the inverse logit function to convert logits to probabilities, w
 $$
 \begin{equation}
 \begin{split}
-P(Y=2) = \frac{e^{z_2}}{e^{z_1} + e^{z_2}} = \frac{e^{z_2}}{1 + e^{z_2}} 
-\\
+P(Y=2) = \frac{e^{z_2}}{e^{z_1} + e^{z_2}} = \frac{e^{z_2}}{1 + e^{z_2}} \\ \\
 P(Y=1) = \frac{e^{z_1}}{e^{z_1} + e^{z_2}} = \frac{1}{1 + e^{z_2}} 
 \end{split}
 (\#eq:12-001)
@@ -230,7 +233,7 @@ z_1= 0 + x \cdot 0
 \\
 z_2= -3 + x \cdot -3
 \\
-z_2= -3 + x \cdot 3
+z_3= -3 + x \cdot 3
 \end{split}
 (\#eq:12-002)
 \end{equation}
@@ -242,9 +245,9 @@ $$
 \begin{equation}
 \begin{split}
 P(Y=3) = \frac{e^{z_3}}{1 + e^{z_2} + e^{z_3}} 
-\\
+\\ \\
 P(Y=2) = \frac{e^{z_2}}{1 + e^{z_2} + e^{z_3}} 
-\\
+\\ \\
 P(Y=1) = \frac{1}{1 + e^{z_2} + e^{z_3}} 
 \end{split}
 (\#eq:12-003)
@@ -281,7 +284,7 @@ When there are more than two possible outcome categories, there is no guarantee 
 
 ### Data and research questions
 
-We load our packages and data below. We also add a new variable, $y$, representing our multinomial outcome. This variable represents observations of a vector of length four whose first, second, third, and fourth elements represent observed outcomes of 'boy', 'girl', 'man', and 'woman', respectively. After this we add a variable called `size` that always equals 1 because each row in our data frame represents observation of a single outcome. Finally, we process our quantitative predictors in the same way as in the previous chapters.
+We load our packages and data below. We also add a new variable, $y$, representing our multinomial outcome. This variable represents observations of a vector of length four whose first, second, third, and fourth elements represent observed outcomes of 'boy', 'girl', 'man', and 'woman', respectively. After this we add a variable called `size` that always equals 1 because each row in our data frame represents observation of a single outcome. Of course, the size information may be higher than 1 for your data if some of your rows represent trials with n higher than 1. Finally, we process our quantitative predictors in the same way as in the previous chapters.
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -320,11 +323,11 @@ We will try to use our data to answer the following research question:
 
 (Q1) Can we use speaker f0 and VTL to predict apparent speaker category?
 
-Keep in mind we're trying to predict *apparent* and not *veridical* speaker category. Our consideration of the accuracy or utility of this model will depend on how well it represents listener classifications of speakers, no matter how wrong or right these may be. Thus, a model with perfect classification of speakers into veridical categories is not the goal: If listeners make predictable mistakes we want to model to make the same 'mistakes'.
+Keep in mind we're trying to predict *apparent* and not *veridical* speaker category. Our consideration of the accuracy or utility of this model will depend on how well it represents listener classifications of speakers, no matter how wrong or right these may be. Thus, a model with perfect classification of speakers into veridical categories is not the goal: If listeners make predictable mistakes we want the model to make the same 'mistakes'.
 
 ### Description of our model
 
-Our model formula is largely similar to those we have seen before, with one minor change. Beside the dependent variable, separated by a pipe (`|`), we need to include a variable that indicates the integer number of trials for each observation. For us this will always be 1, but in many situations this can be a wider range of values. We want to predict our counts of categorizations with respect to value of speaker VTL and f0, and so the model formula we are going to use is seen below. 
+Our model formula is largely similar to those we have seen before, with one minor change. Beside the dependent variable, separated by a pipe (`|`), we need to include a variable that indicates the integer number of trials for each observation. For us this will always be 1, but in many situations this can be a wider range of values. We want to predict our counts of categorizations with respect to the value of speaker VTL and f0, and so the model formula we are going to use is seen below. 
 
 `y|trials(size) ~ vtl+f0 + (vtl+f0|S) + (1|L)`
 
@@ -352,9 +355,9 @@ y_{1[i]},y_{2[i]},y_{3[i]},y_{4[i]} \sim \mathrm{multinomial}(p_{1[i]},p_{2[i]},
 p_{j[i]} = \frac{e^{z_j}}{\sum_{j=1}^{J} e^{z_j}} \\ 
 \\
 z_{j[i]} = \mathrm{a}_j + b_{j[i]} \cdot \mathrm{vtl}_{[i]} + c_{j[i]} \cdot \mathrm{f0}_{[i]}  \\ 
-a_{j[i]} = \mathrm{Intercept}_j + L_{j[L_{[i]}]} + S_{j[S_{[i]}]} \\ 
-b_{j[i]} =  VTL_j + VTL_j \colon L_{j[L_{[i]}]} \\
-c_{j[i]} =  f0_j + f0_j \colon L_{j[L_{[i]}]} \\ 
+a_{j[i]} = \mathrm{Intercept}_j + L_{j[\mathsf{L}_{[i]}]} + S_{j[\mathsf{S}_{[i]}]} \\ 
+b_{j[i]} =  VTL_j + VTL_j \colon L_{j[\mathsf{L}_{[i]}]} \\
+c_{j[i]} =  f0_j + f0_j \colon L_{j[\mathsf{L}_{[i]}]} \\ 
 \\
 \mathrm{for} \; j = 2, \dots, 4\\ \\ 
 \textrm{Priors:} \\
@@ -372,9 +375,9 @@ $$
 
 We're going to take some time to unpack this definition, top to bottom, because it is at the same time very familiar and very different. First, note that our data-generating distribution is assumed to be the multinomial distribution. This function has a $p_j$ parameter indicating the probability of observing each of the $J$ categories, and an $n$ parameter specifying the total number of trials for that observation. The next line indicates that the next few lines apply individually for all four categories. For each category, the probability of observing that outcome ($p_j$) is found by combining the score for each category ($z_j$) using the softmax link function. 
 
-For each category, the score is equal to a trial-dependent combination of an intercept, an effect for VTL, and an effect for f0. The intercept varies according to an overall model intercept and speaker and listener-dependent variations from this. The VTL and f0 effect vary according to listener-dependent effects. After that we move on to the model priors. Unlike for the above lines, we do not specify priors for any parameters related to the reference category. This is because all of these parameters are set to 0 for this category. Again, we note that the specification of priors is very similar to the models we have discussed to this point, save for the proliferation of $j$ subscripts. 
+For each category, the score is equal to a trial-dependent combination of an intercept, an effect for VTL, and an effect for f0. The intercept varies according to an overall model intercept and speaker and listener-dependent variations from this. The VTL and f0 effects vary according to listener-dependent effects. After that we move on to the model priors. Unlike for the above lines, we do not specify priors for any parameters related to the reference category. This is because all of these parameters are set to 0 for this category. Again, we note that the specification of priors is very similar to the models we have discussed to this point, save for the proliferation of $j$ subscripts. 
 
-### Fitting and interpreting our models
+### Fitting the model
 
 There is one major difference in how we need to specify priors for multinomial models: We need to specify priors individually for each response category with modeled parameters. This is done by passing the name of the categorical variable to the `dpar` parameter. Above, we named our response variables according to the letters we have been using throughout this text. We can see this below.
 
@@ -386,27 +389,29 @@ The name passed to `dpar` will be `muCategory` where `Category` corresponds to t
 
 ```{r}
 multinomial_prior = 
-  c(brms::set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="mug"),
-    brms::set_prior("student_t(3, 0, 3)", class = "b",dpar="mug"),
-    brms::set_prior("student_t(3, 0, 3)", class = "sd",dpar="mug"),
-    brms::set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="mum"),
-    brms::set_prior("student_t(3, 0, 3)", class = "b",dpar="mum"),
-    brms::set_prior("student_t(3, 0, 3)", class = "sd",dpar="mum"),
-    brms::set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="muw"),
-    brms::set_prior("student_t(3, 0, 3)", class = "b",dpar="muw"),
-    brms::set_prior("student_t(3, 0, 3)", class = "sd",dpar="muw"),
-    brms::set_prior("lkj_corr_cholesky (2)", class = "cor"))
+  c(set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="mug"),
+    set_prior("student_t(3, 0, 3)", class = "b",dpar="mug"),
+    set_prior("student_t(3, 0, 3)", class = "sd",dpar="mug"),
+    set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="mum"),
+    set_prior("student_t(3, 0, 3)", class = "b",dpar="mum"),
+    set_prior("student_t(3, 0, 3)", class = "sd",dpar="mum"),
+    set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="muw"),
+    set_prior("student_t(3, 0, 3)", class = "b",dpar="muw"),
+    set_prior("student_t(3, 0, 3)", class = "sd",dpar="muw"),
+    set_prior("lkj_corr_cholesky (2)", class = "cor"))
 ```
 
 And here is the code to fit our model, using the `multinomial` family for the first time: 
 
 ```{r, eval = FALSE}
+# Fit the model yourself
 model_multinomial = 
   brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|L) + (1|S), 
              data=exp_data, family="multinomial", chains=4, cores=4, 
              warmup=1000, iter = 5000, thin = 4, prior = multinomial_prior)
 ```
 ```{r, eval = FALSE}
+# Or download it from the GitHub page:
 model_multinomial = bmmb::get_model ("12_model_multinomial.RDS")
 ```
 ```{r, include = FALSE}
@@ -415,10 +420,43 @@ load ("../models/12_multinomial_predictions.Rda")
 model_multinomial = readRDS ("../models/12_model_multinomial.RDS")
 ```
 
-Below we see the model fixed effects, the intercept, VTL slope, and the f0 slope for each category with estimated parameters (i.e. no reference category `b`). Each group of parameters defines a plane whose value along the $z$ dimension can be predicted based on the values of f0 and VTL. We have four planes and four values of $z_j$ for any given location in the two dimensional space defined by f0 and VTL. For each point, we can select as the most probable category the one whose value of $z_j$ is highest at the point in the space. Another way to look at this is that we select the highest plane at any given location in the space. 
+By the way, if you wanted to fit the model above using the categorical distribution, you would use the code below. Notice that there are only three changes compared to the code to fit our multinomial model avoce. First, the `family` parameter is now equal to `categorical`. Second, the `trials` specification is now omitted since each trial (i.e. n) equals 1. Finally, we can use our vector identifying the outcome category directly as our dependent variable.
+
+```{r, eval = FALSE}
+model_categorical = 
+  brms::brm (C ~ vtl+f0 + (vtl+f0|L) + (1|S), 
+             data=exp_data, family="categorical", chains=4, cores=4, 
+             warmup=1000, iter = 5000, thin = 4, prior = multinomial_prior)
+```
+
+Why would we ever use a multinomial analysis when the categorical distribution seems simpler? First, in some cases individual trials might contain multiple observations such that an individual analysis is not possible. However, a multinomial analysis can also be much faster by substantially reducing the number of individual observations that need to be taken into account when calculating likelihoods. For example, imagine we were only interested in predicting apparent category for each speaker, only to estimate the probability that a listener would identify listeners as a member of a given category. If we run a model like this:
+
+```{r, eval = FALSE}
+brms::brm (C ~ 1 + (1|L), family="categorical", data = exp_data)
+```
+
+Then our data has 2085 rows. However, if we create a table like this:
 
 ```{r}
-fixef (model_multinomial)
+table (exp_data$C, exp_data$L)
+```
+
+And use this as our data, then we can treat each column above as a single data point consisting of 139 observations. This means our data now has only 15 rows and, as a result, fitting the model below will be much (much) faster. 
+
+```{r, eval = FALSE}
+new_data = data.frame (size = 139, 
+                       L = factor(1:15))
+new_data$y = as.matrix(table (exp_data$L, exp_data$C))
+
+brms::brm (y|trials(size) ~ 1 + (1|L), family="multinomial", data = new_data)
+```
+
+### Interpreting the model
+
+Below we see the model fixed effects, the intercept, VTL slope, and the f0 slope for each category with estimated parameters (i.e. no reference category `b`). Each group of parameters defines a plane whose value along the $z$ dimension can be predicted based on the values of f0 and VTL. We have four planes and four values of $z_j$ for any given location in the two dimensional space defined by f0 and VTL. For each point, we can select as the most probable category the one whose value of $z_j$ is highest at the point in the space. Another way to look at this is that we select as the most probable outcome the category whose plane is highest at any given location in the space. 
+
+```{r}
+brms::fixef (model_multinomial)
 ```
 
 Since the dependent variable is the score for each category, the parameters above are difficult to interpret in isolation. This is because scores need to be interpreted relative to the baseline category value of 0 (for boys), or relative to one another, rather than absolutely. For example, the negative coefficient for VTL for 'girl' (`mug_vtl`) indicates the a longer VTL made a girl response less likely. We can also see that increasing f0 made a 'woman' response more likely, and a 'man' response less likely. 

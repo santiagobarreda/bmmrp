@@ -8,17 +8,13 @@ rm (list=ls())
 
 # Writing up experiments: An investigation of the perception of speaker category from speech acoustics
 
-In this chapter we will present an analysis of our experimental data based on models similar to the ones we considered in chapter 11. The chapter will be written in the general structure of an academic paper, but less formally, and will include a meta-discussion of what we are doing and why we are doing it. 
-
-Writing a paper is like directing a short (maybe slightly dull) movie. A movie is made up of hundreds or thousands of discrete "shots", stuck together to give the impression of a single, continuous, coherent story. Do you ever watch a movie and wonder, why is this scene here? What is this character's motivation? Where are characters right now and how did they get here? If so, it's possible that either the director or the editor (or both) has been careless with the way they have stuck their shots together, or the shots they've chosen to include, resulting in problems with your understanding of the story. 
+In this chapter we will present an analysis of our experimental data based on models similar to the ones we considered in chapter 11. The chapter will be written in the general structure of an academic paper, but less formally, and will include a meta-discussion of what we are doing and why we are doing it. Writing a paper is like directing a short (maybe slightly dull) movie. A movie is made up of hundreds or thousands of discrete "shots", stuck together to give the impression of a single, continuous, coherent story. Do you ever watch a movie and wonder, why is this scene here? What is this character's motivation? Where are characters right now and how did they get here? If so, it's possible that either the director or the editor (or both) has been careless with the way they have stuck their shots together, or the shots they've chosen to include, resulting in problems with your understanding of the story. 
 
 In the same way, the papers you write based on data analysis need to present the reader with dozens or hundreds of individual pieces of information, information regarding your research questions, data collection, analysis, results, interpretation, and so on. You are in charge of stitching these pieces of information into paragraphs, sections, and ultimately, into a paper. When the reader reads the paper, they should feel like they are reading a coherent story regarding your research questions and what your experiment says about them. If someone reads your paper and thinks: Why are they telling me this? Why/how did they do this? What does this parameter mean? How did they reach that conclusion? Then there may be problems in terms of the information you've presented to the reader, or in the way that the information has been presented. 
 
-We're going to present two independent models: One predicts apparent height based on acoustics, apparent age and apparent gender, and the other predicts apparent gender based on speech acoustics and apparent age. Our intention in this chapter is simply to provide examples of analyses of a quantitative variable and a dichotomous variable. Imagine a pair of researchers who ran the same experiments in two parallel dimensions where everything is the same except for these researchers decided on slightly different research questions. One of these researchers, the one predicting apparent height, treats apparent age and gender as given in order to understand height. The other researcher, the one predicting apparent gender, treats apparent age as given in order to understand apparent gender. 
+We're going to present two independent models: One predicts apparent height based on acoustics, apparent age and apparent gender, and the other predicts apparent gender based on speech acoustics and apparent age. Our intention in this chapter is simply to provide examples of analyses of a quantitative variable and a dichotomous variable. Imagine a pair of researchers who ran the same experiment in two parallel dimensions where everything is the same, except for these researchers decided on slightly different research questions. One of these researchers, the one predicting apparent height, treats apparent age and gender as given in order to understand height. The other researcher, the one predicting apparent gender, treats apparent age as given in order to understand apparent gender. We might consider a third researcher (in another dimension) who decides to consider both apparent age and apparent height simultaneously in a model with multiple dependent variables in some configuration. This sort of thing is possible with *Stan* and `brms`, however, it's not something we'll be getting to in this book. Luckily, building these models is mostly a modest extension of the things we *have* covered.
 
-We might consider a third researcher (in another dimension) who decides to consider both apparent age and apparent height simultaneously in a model with multiple dependent variables in some configuration. This sort of thing is possible with *Stan* and `brms`, however this being the last chapter and all, it's not something we'll be getting to in this book. Luckily, building these models is mostly a modest extension of the things we *have* covered.
-
-Because of the similarity in the subject areas, much of the background information in the introduction of the two 'experiments' would be repetitive. In addition, since only one experiment was carried out there was only one set of methods. As a result, a single introduction and methods section will be presented for both analyses. After that, the experimental analyses diverge substantially, and so are presented separately for each 'experiment'. However, in order to avoid jumping back and forth between topics, we present contiguous results, discussion, and conclusion sections for each of the two experiments. 
+Because of the similarity in the subject areas, much of the background information in the introduction of the two 'experiments' would be repetitive. In addition, since only one experiment was carried out there was only one set of methods. As a result, a single introduction and methods section will be presented for both 'analyses.'experiments'. After that, the experimental analyses diverge substantially, and so are presented separately for each 'experiment'. However, in order to avoid jumping back and forth between topics, we present contiguous results, discussion, and conclusion sections for each of the two experiments. 
 
 ## Introduction
 
@@ -32,7 +28,7 @@ Your vocal folds, housed inside your larynx (in your neck) vibrate when you spea
 
 The repetitive vibration of the vocal folds results in a repetitive speech sound. Repetitive sounds can feel 'musical' or 'harmonic' to humans; these are terms that are difficult to define but that most people intuitively understand. A whistle or flute is harmonic, a waterfall or the noise a fan makes is not. The repetition rate of sounds is referred to as the fundamental frequency (f0) of the sound. The f0 of a sound is the strongest determinant of perceived pitch. We say strongest because perceived pitch can also be (weakly) affected by the loudness of a sound, among other things (e.g. spectral shape), however it is still primarily dependent on f0.
 
-Pitch is the internal *sensation* associated with sounds such that they can be ranked from 'low' to 'high'. Think of pitch like spiciness, it's the way something *feels*. In general spiciness may relate to the amount of capsaicin in a food, but other factors such as the amount of sugar in the food may also affect how the food *feels* (i.e. tastes) when we eat it. You can rank foods from more to less spicy, you can rank sounds from lower to higher pitch. When you do this, in general, the resulting ranking will result in an ordering of the sounds according to f0: Sounds with higher f0s generally have higher pitches. So, when you hear someone with a 'high pitched voice', that is your auditory system (and brain) telling you, in its own way, that that person's vocal folds are vibrating at a high rate (i.e. they have a high speaking f0). 
+Pitch is the internal *sensation* associated with sounds such that they can be ranked from 'low' to 'high'. Think of pitch like spiciness, it's the way something *feels*. In general spiciness may relate to the amount of capsaicin in a food, but other factors such as the amount of sugar in the food may also affect how the food *feels* (i.e. tastes) when we eat it. You can rank foods from more to less spicy, you can rank sounds from lower to higher pitch. When you do this, in general, the ranking will result in an ordering of the sounds according to f0: Sounds with higher f0s generally have higher pitches. So, when you hear someone with a 'high pitched voice', that is your auditory system (and brain) telling you, in its own way, that that person's vocal folds are vibrating at a high rate (i.e. they have a high speaking f0). 
 
 ### Variation in fundamental frequency between speakers
 
@@ -130,29 +126,27 @@ knitr::include_graphics("../wrong_plots/F13-1-1.jpeg")
 
 ### Voice resonance and vocal-tract length
 
-Another way that speakers vary systematically in their speech acoustics is in their voice resonance. **Resonance** occurs when a sound wave bounces back and forth in an enclosed cavity so the energy can't leave the system easily, and builds up inside. Resonance forms the basis of the sounds produced by most musical instruments and (loud) animals. So, dogs, cats, and humans, but also guitars and pianos, all make sounds by comprising structures that can produce resonances. 
-
-A common way of generating a resonance is by putting acoustic energy into a tube or enclosed space. For example, an acoustic guitar uses its strings to introduce energy into the cavity in its body, which serves to substantially amplify the sound. Without this amplification, the guitar strings alone would only make a quiet and unappealing buzzing sound. In the same way, resonance is what allows us to produce very loud speech, with relatively little effort. Think of the fact that babies that aren't strong enough to hold up their own heads can scream surprisingly loudly. [@@ NHS: Incidentally, the two authors each have multiple children...] 
+Another way that speakers vary systematically in their speech acoustics is in their voice resonance. **Resonance** occurs when a sound wave bounces back and forth in an enclosed cavity so the energy can't leave the system easily, and builds up inside. Resonance forms the basis of the sounds produced by most musical instruments and (loud) animals. So, dogs, cats, and humans, but also guitars and pianos, all make sounds by comprising structures that can produce resonances. A common way of generating a resonance is by putting acoustic energy into a tube or enclosed space. For example, an acoustic guitar uses its strings to introduce energy into the cavity in its body, which serves to substantially amplify the sound. Without this amplification, the guitar strings alone would only make a quiet and unappealing buzzing sound. In the same way, resonance is what allows us to produce very loud speech, with relatively little effort. Think of the fact that babies that aren't strong enough to hold up their own heads can scream surprisingly loud, for a very long time. 
 
 For human speech communication, the enclosed structure used to create acoustic resonances is the **vocal tract**, the space between the vocal folds and the lips. The vocal tract is an empty space comprising the oral cavity (your mouth) and the pharyngeal cavity (your throat). As you speak you push air out of your lungs towards your mouth. The vocal folds are like the reed of a saxophone: They periodically open and close letting through (periodic) puffs of air. The puffs of air go from your larynx (in your neck) to your mouth and, even if your mouth is open, their energy 'bounces' back and forth between the mouth and the vocal folds. The small amounts of energy reflected between the mouth and vocal folds add up and result in what are known as acoustic resonances, build ups of acoustic energy inside of an enclosed space.
 
-**Resonators**, that is, structures like the vocal tract that can resonate, usually have one or more preferred **resonant frequencies**. A complete explanation of this is beyond the scope of this chapter, but see Johnson (2004) for more information on the topic. Here we will provide a not-entirely-right but conceptually simple explanation of the topic. The speed of sound is fixed for a given environment (temperature, pressure, gas composition, etc.). This means that the bouncing back and forth between your mouth and your larynx occurs at a fixed speed (i.e. the speed of sound). As a result, the number of times per second a sound wave can travel back and forth along the vocal tract, measured in Hertz, is determined by the length of that vocal tract. This is obvious: A longer travel time at a fixed velocity entails fewer repetitions ('laps') per unit time. 
+**Resonators**, that is, structures like the vocal tract that can resonate, usually have one or more preferred **resonant frequencies**, frequencies that they amplify the most. A complete explanation of this is beyond the scope of this chapter, but see Johnson (2004) for more information on the topic. Here we will provide a not-entirely-right but conceptually simple explanation of the topic. The speed of sound is fixed for a given environment (temperature, pressure, gas composition, etc.). This means that the bouncing back and forth between your mouth and your larynx occurs at a fixed speed (i.e. the speed of sound). As a result, the number of times per second a sound wave can travel back and forth along the vocal tract, measured in Hertz, is determined by the length of that vocal tract. This is obvious: A longer travel time at a fixed velocity entails fewer repetitions ('laps') per unit time. 
 
-As a consequences of the above relationships, longer resonators have lower **resonant frequencies**, these are the frequencies they amplify the most. All other things being equal, if resonator *x* is 20% shorter than resonator *y*, waves will take 20% less time to complete one travel back and forth. This means that resonator x will have resonant frequencies 20% higher than those of y. In general, sounds with lower resonances *sound* and *feel* bigger to listeners. The difference between a violin and a cello playing the same note, or a small child and a large adult singing the same note, is resonance. In each case, listeners can detect the sound with lower resonances and identify it as the larger object. 
+As a consequence of the above relationships, longer resonators have lower **resonant frequencies**. All other things being equal, if resonator *x* is 20% shorter than resonator *y*, waves will take 20% less time to complete one travel back and forth. This means that resonator x will have resonant frequencies 20% higher than those of y. In general, sounds with lower resonances *sound* and *feel* bigger to listeners. The difference between a violin and a cello playing the same note, or a small child and a large adult singing the same note, is resonance. In each case, listeners can detect the sound with lower resonances and identify it as the larger object. 
 
-The resonant frequency of most sounds can be estimated using analysis software such as Praat or the `phonTools` package in R (Barreda, 2015). This means that, for speech, we could potentially estimate the length of the vocal tract (vocal-tract length, VTL) that produced some speech. 
+The resonance frequencies of most sounds can be estimated using analysis software such as Praat or the `phonTools` package in R (Barreda, 2015). This means that, for speech, we could potentially estimate the length of the vocal tract (vocal-tract length, VTL) that produced some speech based on the frequencies of its resonances. 
 
 ### Estimating vocal-tracts length from speech {#c13-estimating-vtl}
 
 We may define a 'true' **anatomical VTL** measuring the distance between the vocal folds and lips of a speaker in units of distance, perhaps measured using magnetic resonance imaging or x-ray images. It's not clear how one might establish a 'true' anatomical VTL for a speaker or what the direct relevance of this for speech communication would be. For example, anatomical VTL varies across the different gestures employed by the mouth in the process of producing speech. Which of these is the 'true' anatomical VTL, or, how should the different VTL estimates be combined across speech samples? 
 
-In fact, the estimation of anatomical VTL from speech acoustics is an underdetermined problem: There are an infinite number of combination of vocal tract anatomy and gesture that can result in a given resonance pattern (Wakita 1977). How can any acoustic estimate of VTL know that a speaker isn't adopting some gesture that causes their acoustic VTL to diverge from their 'resting' anatomical VTL in meaningful ways? As a result, it is difficult, if not impossible, to reliably associate the acoustic speech signal to certain knowledge of the speaker's anatomical VTL (however that's defined). For example, imagine trying to estimate the height of a person using only their shadow. If everyone is standing up straight this might work, but given random differences in body posture this becomes a much more difficult problem.
+In fact, the estimation of anatomical VTL from speech acoustics is an underdetermined problem: There are an infinite number of combinations of vocal tract anatomy and gesture that can result in a given resonance pattern (Wakita 1977). How can any acoustic estimate of VTL know that a speaker isn't adopting some gesture that causes their acoustic VTL to diverge from their 'resting' anatomical VTL in meaningful ways? As a result, it is difficult, if not impossible, to reliably associate the acoustic speech signal to certain knowledge of the speaker's anatomical VTL (however that's defined). For example, imagine trying to estimate the height of a person using only their shadow. If everyone is standing up straight this might work, but given random differences in body posture this becomes a much more difficult problem.
 
 Instead of worrying about speakers' *anatomical* VTL, we're going to focus on their **acoustic VTL** or **effective VTL**, which we define as the VTL implied by the resonant frequencies produced during speech. When two speakers say 'the same thing', the differences in their vocal tract resonances will primarily reflect differences in their effective/acoustic VTL. Thus, if two speakers saying 'the same thing' differ by 10% in their resonant frequencies, they differ by about 10% in their (acoustic) VTL, and by some indeterminate amount in their anatomical VTL. Unless otherwise specified, when we refer to VTL we will be discussing acoustic VTL, an estimate of VTL based on estimated resonant frequencies. 
 
 ### Variation in vocal-tract length between speakers
 
-In figure \@ref(fig:F13-2) we see a comparison of age, height, and  (acoustic) VTL for males and females. We can see that VTL increases as a function of age (and height) for both men and women. In addition, we see that male and female speakers are approximately the same in height until around 13 or 14 years of age, at which point males and male averages begin to diverge in height (and VTL). However, note that male and female averages are always within two standard deviations of each other, meaning that a degree of overlap is expected.
+In figure \@ref(fig:F13-2) we see a comparison of age, height, and  (acoustic) VTL for males and females. We can see that VTL increases as a function of age (and height) for both men and women. In addition, we see that male and female speakers are approximately the same in height until around 13 or 14 years of age, at which point female and male averages begin to diverge in height (and VTL). However, note that male and female averages are always within two standard deviations of each other, meaning that a degree of overlap is expected.
 
 ```{r F13-2, echo = FALSE, fig.height = 3, fig.width = 8, echo = FALSE, fig.cap = "(left) Average height of males and females in the United States of America, organized by age (Fryar et al. (2012)). Error bars indicate two standard deviations and boxes highlight the age ranges featured in this experiment. (middle) Average acoustic vocal-tract length (VTL) of male and female speakers from 5 years of age until adulthood (Lee et al. 1999). The average adult male VTL was set to 15 cm. Error bars indicate two standard deviations. (right) The heights from the first plot plotted against the f0s from the second plot. These data were collected from different sets of people, so this comparison is simply illustrative. Ellipses enclose two standard deviations and assume no correlation between the dimensions.", eval = TRUE}
 
@@ -246,7 +240,7 @@ for (i in (1:19)[-c(1,2,3,19)]){
 
 We would like to highlight two aspects of the variation seen in figure \@ref(fig:F13-2). First, there appears to be a sex-based difference in VTL. However, there is evidence that this is a difference in height masquerading as a difference in VTL. That is, speaker height is strongly correlated (r = 0.93) to anatomical VTL (measured using MRI) across the human population (Turner et al. 2009). As a result of this relationship, the average adult female is expected to have a shorter VTL than the average adult male if they also have a shorter overall body length. Given the same height, men and women are expected to have approximately the same anatomical VTL. Thus, the average difference in VTL seen between adult males and females seems to be more about height than sex specifically.   
 
-Second, since speech output is a combination of anatomy and gesture, very similar anatomies can produce quite different sounds when used in different ways. As a result, the relationship between veridical speaker height and any VTL estimate based on acoustic measures may be an unreliable estimate of anatomical VTL. This may be seen as a weakness of acoustic VTL, however, we see it as a strength. For example, we see in the middle plot that there is a consistent different in VTL estimates for boys and girls. However, there is no corresponding difference in body size between speakers of these ages, nor is there compelling evidence of corresponding anatomical differences between these speakers (Vorperian et al. 2008). Instead, it's been suggested that the apparent difference in (acoustic) VTL between boys and girls may be behavioral (cite). In other words, little girls and little boys may be trying to sound 'masculine' or 'feminine' and adopt gestures that lead their similar anatomies to produce diverging acoustic outputs. 
+Second, since speech output is a combination of anatomy and gesture, very similar anatomies can produce quite different sounds when used in different ways. As a result, the relationship between veridical speaker height and any VTL estimate based on acoustic measures may be an unreliable estimate of anatomical VTL. This may be seen as a weakness of acoustic VTL, however, we see it as a strength. For example, we see in the middle plot of figure \@ref(fig:F13-2) that there is a consistent difference in VTL estimates for boys and girls. However, there is no corresponding difference in body size between speakers of these ages, nor is there compelling evidence of corresponding anatomical differences between these speakers (Vorperian et al. 2008). Instead, it's been suggested that the apparent difference in (acoustic) VTL between boys and girls may be behavioral (cite) [@@ SB - fix this and check for cite]. In other words, little girls and little boys may be trying to sound 'masculine' or 'feminine' and adopt gestures that lead their similar anatomies to produce diverging acoustic outputs. 
 
 Which are we more concerned about in speech communication? The speaker's anatomy, or the acoustic output of that anatomy? Our acoustic VTL estimates capture the fact that when the girls represented in the middle plot of figure \@ref(fig:F13-2) speak, on average they produce resonant frequencies that tend to be higher than those of boys of the same age. This acoustic information is the only information available to the listener when considering the speaker's indexical characteristics, and a focus on anatomical VTL would obscure this difference.
 
@@ -256,15 +250,13 @@ In this section we will review the perception of speaker age, height, and gender
 
 *Height*
 
-There is substantial previous research on the perception of speaker size/height from speech. Experiments have repeatedly found that f0 and VTL cues individually affect the perception of size. The following general statement can be made: All other things being equal, listeners will identify a speaker with a lower f0 or longer apparent VTL as being larger. 
+There is substantial previous research on the perception of speaker size/height from speech. Experiments have repeatedly found that f0 and VTL cues individually affect the perception of size. The following general statement can be made: All other things being equal, listeners will identify a speaker with a lower f0 or longer apparent VTL as being larger. As seen in figure \@ref(fig:F13-2), there is a strong association between anatomical/acoustic VTL and human height across the entire population. For this reason, listeners can generally guess the veridical height of speakers with good accuracy if the entire range of possible human height is considered. For example, given that most human speakers plausibly range from about 100-200 cm in height, a guess of 170 cm for a speaker who is 160 cm might be considered fairly close even though 10 cm is a noticeable difference in height.  
 
-As seen in figure \@ref(fig:F13-2), there is a strong association between anatomical/acoustic VTL and human height across the entire population. For this reason, listeners can generally guess the veridical height of speakers with good accuracy if the entire range of possible human height is considered. For example, given that most human speakers plausibly range from about 100-200 cm in height, a guess of 175 cm for a speaker who is 160 cm might be considered fairly close even though 15 cm is a noticeable difference in height.  
-
-However, evidence suggests that height can no longer be reliably estimated when speakers are restricted to be adults (see González 2004). Because height varies substantially less for adults than it does for humans overall, the systematic relationship between height and VTL becomes smaller relative to the amount of between-speaker variation. As a result, errors must be much smaller to be equally impressive. For example, if about 95% of adult females are between 150-177 cm in height then the same error of 15 cm (a guess of 175 for a speaker who is 160 cm) now represents 56% of the range. This guess is not so impressive.   
+However, evidence suggests that height can no longer be reliably estimated when speakers are restricted to be adults (see González 2004). Because height varies substantially less for adults than it does for humans overall, the systematic relationship between height and VTL becomes smaller relative to the amount of between-speaker variation. As a result, errors must be much smaller to be equally impressive. For example, if about 95% of adult females are between 150-177 cm in height then the same error of 10 cm (a guess of 170 for a speaker who is 160 cm) seems less impressive.
 
 *Age*
 
-The perception of age can be divided into two general situations: Before and after adulthood. As seen in figure \@ref(fig:F13-2), from the ages of 2 to 15, age and height are almost perfectly correlated, 0.995 in Fryar et al. (2012). After this age, average female heights stops increasing much and average male heights increase at a smaller rate until around 18. Based on this, we see that for many children (<18 years), identification of speaker age is effectively identification of speaker height, and vice versa. Barreda and Assmann (2018) report that age can be estimated with reasonable accuracy from speech acoustics, and Assmann et al. (cite cite) have found that both height and age can be estimated with good accuracy from speech. In both cases, speakers with longer VTLs and lower f0s were more likely to be identified as older and taller. 
+The perception of age can be divided into two general situations: Before and after adulthood. As seen in figure \@ref(fig:F13-2), from the ages of 2 to 15, age and height are almost perfectly correlated, 0.995 in Fryar et al. (2012). After this age, average female height stops increasing much and average male heights increase at a smaller rate until around 18. Based on this, we see that for many children (<18 years), identification of speaker age is effectively identification of speaker height, and vice versa. Barreda and Assmann (2018) report that age can be estimated with reasonable accuracy from speech acoustics, and Assmann et al. (cite cite) have found that both height and age can be estimated with good accuracy from speech. In both cases, speakers with longer VTLs and lower f0s were more likely to be identified as older and taller. 
 
 We will not discuss the perception of age past adulthood in any detail, as variation in speech in adulthood does not have simple growth-related explanations, and is not expected to vary as systematically with respect to average speaker f0 and VTL. As a result, any ability to distinguish speakers who are, for example, 30 from those who are 40, is necessarily a more subtle and complicated process than distinguishing a speaker who is 3 from one who is 13. 
 
@@ -295,6 +287,23 @@ For example, consider the expected dependence of estimates of speaker age, heigh
 ################################################################################
 ### Figure 13.3
 ################################################################################
+
+library (bmmb)
+data(height_data)
+data (lee_etal_data)
+
+lee_etal_data$f0_original=lee_etal_data$f0
+lee_etal_data$f0 = log(lee_etal_data$f0_original)
+
+aggdmu = aggregate (f0 ~ age+gender, FUN = mean, data = lee_etal_data)
+aggdmu[,3] = exp(aggdmu[,3])
+
+lee_etal_data$f0 = log(lee_etal_data$f0sd/lee_etal_data$f0_original)
+aggdsd = aggregate (f0 ~ age+gender, FUN = sd, data = lee_etal_data)
+aggdsd[,3] = (exp(aggdsd[,3])-1)*aggdmu[,3]
+
+aggdmuf0 = aggdmu
+aggdsdf0 = aggdsd
 
 par (mfrow = c(1,2), mar = c(4.1,.2,.5,.25), oma = c(0,4,0,0))
 
@@ -790,125 +799,131 @@ We discussed territorial maps and how to make these for models with two quantita
 ### Figure 13-10
 ################################################################################
 
-# get fixed effect parameters
-samples = brms::fixef (gender_model, summary = FALSE)
+knitr::include_graphics("../wrong_plots/F13-10-1.jpeg")
 
-# get a,b,c coefficients for overall plane
-a_all_reduced = mean (samples[,"Intercept"])
-b_all_reduced = mean (samples[,"vtl"])
-c_all_reduced = mean (samples[,"f0"])
+# jpeg ("F13-10-1.jpeg",2400,750,res=300)
+# 
+# # get fixed effect parameters
+# samples = brms::fixef (gender_model, summary = FALSE)
+# 
+# # get a,b,c coefficients for overall plane
+# a_all_reduced = mean (samples[,"Intercept"])
+# b_all_reduced = mean (samples[,"vtl"])
+# c_all_reduced = mean (samples[,"f0"])
+# 
+# # get a,b,c coefficients for adult plane
+# a_adult_reduced = mean (samples[,"Intercept"] + samples[,"A1"])
+# b_adult_reduced = mean (samples[,"vtl"] + samples[,"vtl:A1"])
+# c_adult_reduced = mean (samples[,"f0"] + samples[,"f0:A1"])
+# 
+# # get a,b,c coefficients for child plane
+# a_child_reduced = mean (samples[,"Intercept"] - samples[,"A1"])
+# b_child_reduced = mean (samples[,"vtl"] - samples[,"vtl:A1"])
+# c_child_reduced = mean (samples[,"f0"] - samples[,"f0:A1"])
+# 
+# fixef_2 = brms::fixef (gender_model)
+# 
+# # y = (-b*x - a - z) / (dx+c)
+# # fixef(model_gender_vtl_f0)
+# 
+# tmp = bmmb::exp_data
+# tmp = tmp[tmp$R=='a',]
+# 
+# tmp$vtl_original = tmp$vtl
+# mu_vtl = mean (tmp$vtl_original)
+# tmp$vtl = tmp$vtl - mean (tmp$vtl)
+# 
+# tmp$f0_original = tmp$f0 
+# mu_f0 = mean (tmp$f0_original)
+# tmp$f0 = tmp$f0 - mean(tmp$f0)
+# tmp$f0 = tmp$f0 / 100
+# 
+# aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
+#                       data = tmp, FUN = mean)
+# aggd$C = ""
+# aggd$C[aggd[,4]>= 0.5 & aggd[,5]>= 0.5] = "w"
+# aggd$C[aggd[,4]>= 0.5 & aggd[,5]<= 0.5] = "m"
+# aggd$C[aggd[,4]<= 0.5 & aggd[,5]>= 0.5] = "g"
+# aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
+# #table(aggd$C)
+# 
+# tab = table (tmp$S, tmp$C)
+# mod_cat = apply (tab, 1,which.max)
+# 
+# par (mfrow = c(1,3), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
+# 
+# plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+#       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='s',
+#       ylab="Height (inches)")
+# grid()
+# points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+#       col = bmmb::cols[c(2:5)][aggd$C])
+# 
+# legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
+#         col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
+# 
+# curve ((-b_all_reduced*x - a_all_reduced) / (c_all_reduced), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
+# curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
+# curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
+# 
+# mtext ("Centered f0 (Hz/100)", side=2, line = 2.7, cex = 0.8)
+# 
+# plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+#       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
+#       ylab="Height (inches)")
+# grid()
+# 
+# xlim = par()$usr[1:2]
+# ylim = par()$usr[3:4]
+# 
+# x = seq(-3,4,0.1)
+# y = (-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced)
+# polygon (c(-3,x,4),c(-3,y,-3),col="seagreen")
+# 
+# y = (-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced)
+# polygon (c(-3,x,1),c(3,y,3),col=2)
+# 
+# points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+#       col = 0)
+# box()
+# 
+# for ( i in seq(-20,20,2)){
+#   curve ((-b_adult_reduced*x - a_adult_reduced+i)/ (c_adult_reduced), 
+#          from = -5, to = 5, add = TRUE,lwd=1, lty=3,col=0)
+# }
+# curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), 
+#          from = -5, to = 5, add = TRUE,lwd=2, lty=1,col=1)
+# 
+# 
+# plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
+#       xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
+#       ylab="Height (inches)")
+# grid()
+# 
+# xlim = par()$usr[1:2]
+# ylim = par()$usr[3:4]
+# 
+# x = seq(-3,4,0.1)
+# y = (-b_child_reduced*x - a_child_reduced)/ (c_child_reduced)
+# polygon (c(-3,x,4),c(-3,y,-3),col="cyan3")
+# 
+# y = (-b_child_reduced*x - a_child_reduced)/ (c_child_reduced)
+# polygon (c(-3,x,1),c(3,y,3),col="darkgoldenrod1")
+# 
+# points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
+#       col = 0)
+# box()
+# 
+# for ( i in seq(-20,20,2)){
+#   curve ((-b_child_reduced*x - a_child_reduced+i)/ (c_child_reduced), 
+#          from = -5, to = 5, add = TRUE,lwd=1, lty=3,col=0)
+# }
+# curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), 
+#          from = -5, to = 5, add = TRUE,lwd=2, lty=1,col=1)
+# 
+# mtext ("Centered vocal-tract length (cm)", side = 1, outer = TRUE, line=-1,cex=0.9)
+# dev.off()
 
-# get a,b,c coefficients for adult plane
-a_adult_reduced = mean (samples[,"Intercept"] + samples[,"A1"])
-b_adult_reduced = mean (samples[,"vtl"] + samples[,"vtl:A1"])
-c_adult_reduced = mean (samples[,"f0"] + samples[,"f0:A1"])
-
-# get a,b,c coefficients for child plane
-a_child_reduced = mean (samples[,"Intercept"] - samples[,"A1"])
-b_child_reduced = mean (samples[,"vtl"] - samples[,"vtl:A1"])
-c_child_reduced = mean (samples[,"f0"] - samples[,"f0:A1"])
-
-fixef_2 = brms::fixef (gender_model)
-
-# y = (-b*x - a - z) / (dx+c)
-# fixef(model_gender_vtl_f0)
-
-tmp = bmmb::exp_data
-tmp = tmp[tmp$R=='a',]
-
-tmp$vtl_original = tmp$vtl
-mu_vtl = mean (tmp$vtl_original)
-tmp$vtl = tmp$vtl - mean (tmp$vtl)
-
-tmp$f0_original = tmp$f0 
-mu_f0 = mean (tmp$f0_original)
-tmp$f0 = tmp$f0 - mean(tmp$f0)
-tmp$f0 = tmp$f0 / 100
-
-aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v, 
-                      data = tmp, FUN = mean)
-aggd$C = ""
-aggd$C[aggd[,4]>= 0.5 & aggd[,5]>= 0.5] = "w"
-aggd$C[aggd[,4]>= 0.5 & aggd[,5]<= 0.5] = "m"
-aggd$C[aggd[,4]<= 0.5 & aggd[,5]>= 0.5] = "g"
-aggd$C[aggd[,4]<= 0.5 & aggd[,5]<= 0.5] = "b"
-#table(aggd$C)
-
-tab = table (tmp$S, tmp$C)
-mod_cat = apply (tab, 1,which.max)
-
-par (mfrow = c(1,3), mar = c(4,.25,.5,.25), oma = c(0,4,0,0))
-
-plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
-      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='s',
-      ylab="Height (inches)")
-grid()
-points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
-      col = bmmb::cols[c(2:5)][aggd$C])
-
-legend (1,300, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
-
-curve ((-b_all_reduced*x - a_all_reduced) / (c_all_reduced), from = -3, to = 3, add = TRUE,lwd=2,col=bmmb::cols[7])
-curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[10])
-curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), from = -3, to = 3, add = TRUE,lwd=2, lty=2,col=bmmb::cols[8])
-
-mtext ("Centered f0 (Hz/100)", side=2, line = 2.7, cex = 0.8)
-
-plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
-      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
-      ylab="Height (inches)")
-grid()
-
-xlim = par()$usr[1:2]
-ylim = par()$usr[3:4]
-
-x = seq(-3,4,0.1)
-y = (-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced)
-polygon (c(-3,x,4),c(-3,y,-3),col="seagreen")
-
-y = (-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced)
-polygon (c(-3,x,1),c(3,y,3),col=2)
-
-points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
-      col = 0)
-box()
-
-for ( i in seq(-20,20,2)){
-  curve ((-b_adult_reduced*x - a_adult_reduced+i)/ (c_adult_reduced), 
-         from = -5, to = 5, add = TRUE,lwd=1, lty=3,col=0)
-}
-curve ((-b_adult_reduced*x - a_adult_reduced)/ (c_adult_reduced), 
-         from = -5, to = 5, add = TRUE,lwd=2, lty=1,col=1)
-
-
-plot (aggd$vtl,aggd$f0, cex =1.2, col = bmmb::cols[c(2:5)][factor(aggd$C)], 
-      xlim=c(-2.5,3),  pch=16,lwd=2, xlab = "",yaxt='n',
-      ylab="Height (inches)")
-grid()
-
-xlim = par()$usr[1:2]
-ylim = par()$usr[3:4]
-
-x = seq(-3,4,0.1)
-y = (-b_child_reduced*x - a_child_reduced)/ (c_child_reduced)
-polygon (c(-3,x,4),c(-3,y,-3),col="cyan3")
-
-y = (-b_child_reduced*x - a_child_reduced)/ (c_child_reduced)
-polygon (c(-3,x,1),c(3,y,3),col="darkgoldenrod1")
-
-points (aggd$vtl, aggd$f0, cex =1.2, pch=16,lwd=2,
-      col = 0)
-box()
-
-for ( i in seq(-20,20,2)){
-  curve ((-b_child_reduced*x - a_child_reduced+i)/ (c_child_reduced), 
-         from = -5, to = 5, add = TRUE,lwd=1, lty=3,col=0)
-}
-curve ((-b_child_reduced*x - a_child_reduced)/ (c_child_reduced), 
-         from = -5, to = 5, add = TRUE,lwd=2, lty=1,col=1)
-
-mtext ("Centered vocal-tract length (cm)", side = 1, outer = TRUE, line=-1,cex=0.9)
 ```
 
 In figure \@ref(fig:F13-10) we can see that the category boundary becomes more parallel to the f0 axis for apparent children. This reflects the decreasing importance of this cue in the prediction of responses for apparent children. We can also see the larger slopes along f0 and VTL for apparent adults reflected in the density of the white dotted lines on the territorial map. These lines reflect the increasing/decreasing value of the planes predicting female responses in our model. For example, we know the category boundary has a value of zero logits, so the closest set of dotted lines must reflect ±2 logits, the second line reflects ±4 logits, and so on. As a result, the spacing of the lines in the child territorial map reflects a slowly changing slope and less certain predictions, while the tightly packed lines in the middle plot indicate rapid changes in predicted logit values and more certain predictions. Basically, you can get to ±4 logits (i.e. a probability of 0.98 or 0.02) by moving very little with respect to the category boundary for adults, but you need to move quite a bit to reach this level of certainty for children.

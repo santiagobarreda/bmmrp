@@ -682,8 +682,6 @@ And we're going to address our two previous research questions, and add one more
 
 ### Model formulas
 
-[@@ Noah - section is new, check it out]
-
 The model presented above (`model_both`) requires only a slight tweak to include the interaction in our data. There are two ways to include interactions in R model formulas, either:
 
 `height ~ A + G + A:G + (A + G + A:G|L) + (1|S)` 
@@ -692,7 +690,7 @@ Or:
 
 `height ~ A * G + (A * G|L) + (1|S)` 
 
-The first way includes an explicit interaction term, `A:G`. The syntax for these is `X:Z` for an interaction between effects `X` and `Z`, `W:X:Z` for a three-way interaction, and so on. The second way uses `*` between our two predictors. This tells R to include those predictors, and all the interactions between them. This can be much faster than specifying all interactions, but you lose control over which ones you include. For example this formula:
+The first way includes an explicit interaction term, `A:G`. The syntax for these is `X:Z` for an interaction between effects `X` and `Z`, `W:X:Z` for a three-way interaction, and so on. The second way uses `*` between our two predictors. This tells R to include those predictors, and all the interactions between them. This can be much faster than specifying all interactions, but you lose control over which ones you include. For example, this formula:
 
 `y ~ Z * X * W` 
 
@@ -730,7 +728,7 @@ Finally, all of this applies to both our fixed and random effects predictors as 
 
 `y ~ (Z + X) * W * V - W:V:X + ((Z + X) * W * V - W:V:X|L)`
 
-In our formulas, the `:` and `|` both basically mean *given*, and indicate that conditional effects are being estimated. The difference between these is syntactic, much like the difference in R between `[]` and `()`. A colon (`:`) is used to indicate interactions between 'fixed' effects, that is effects estimated using fixed prior distributions. The pipe (`|`) indicates that the formula to its left is being estimated for each level of the predictor to the right of the pipe, and that this estimation is being carried out using adaptive pooling. In the formula above, the use of `:` and `|` for different purposes makes `((Z + X) * W * V - W:V:X|L)` interpretable: It means that, effectively, sub-models equivalent to `(Z + X) * W * V - W:V:X` will be fit for each level of `L`.
+In our formulas, the `:` and `|` both basically mean *given*, and indicate that conditional effects are being estimated. The difference between these is syntactic, much like the difference in R between `[]` and `()`. A colon (`:`) is used to indicate interactions between 'fixed' effects, that is effects estimated using fixed prior distributions. The pipe (`|`) indicates that the formula to its left is being estimated for each level of the predictor to the right of the pipe, and that this estimation is being carried out using adaptive partial pooling. In the formula above, the use of `:` and `|` for different purposes makes `((Z + X) * W * V - W:V:X|L)` interpretable: It means that, effectively, sub-models equivalent to `(Z + X) * W * V - W:V:X` will be fit for each level of `L`.
 
 ### Description of our model
 
@@ -1030,8 +1028,6 @@ r2_interaction_no_re
 
 We would rather explain as much variation as possible using fixed as opposed to random effects. In addition, the interactions 'makes sense' given our domain knowledge. What we mean by this is that we know that the difference in veridical height between boys and girls 10-12 years old is inconsistent and may be about zero on average. So, we should not be too surprised if the effect for apparent gender on apparent height is small for apparent children. However, there is a larger and more consistent difference in average veridical height between adult males and females. As a result, we *do* expect a meaningful effect for apparent gender on the apparent heights of adults. For these reasons, it would be surprising if there were *not* an interaction, and we prefer the model with the interaction despite the middling support provided by our cross-validation model comparison. 
 
-[@@ Noah check paragraph]
-
 $R^2$ is not really going to prove anything, and shouldn't form the basis of your model selection. We believe that it is a useful method to be aware of in addition to, and not instead of, other approaches such as $\mathrm{elpd}$). The primary utility of $R^2$ is that since it reflects a proportion between 0 and 1, it is more easily interpretable for humans. For example, the difference in $\mathrm{elpd}$ between `model_both` and `model_interaction` is about 29, which is large enough to be statistically meaningful. However, how much does this difference actually matter at the level of our dependent variable? Well, the proportion of variance explained by the two models is only different by about 0.5%, suggesting that these models do not offer substantially different predictions. In contrast, we might imagine the same difference in $\mathrm{elpd}$ being associated with a 10% change in the variance explained, which will likely be a noticeable difference. In this way, $R^2$ can be a useful indicator of how much our predictions are really changing, provided in a measure that many readers will find relatively intuitive. 
 
 ## Answering our research questions {#c7-answering}
@@ -1094,15 +1090,11 @@ Another thing to think about is, how large does an effect need to be before it m
 
 In our case, we will conclude that the difference in apparent height between boys and girls may very well be 'real' and may reflect stereotypes that male speakers are generally taller than female speakers, whether or not this is actually true for speakers of this age. We might also suggest that if we want to know more about the precise value of this difference, future research might investigate this question with a larger number of speakers, listeners, or repetitions. By increasing the sample size, researchers would narrow the parameter likelihoods (discussed in section \@ref(c2-chars-of-likelihoods-2)), thereby narrowing their posterior credible intervals (given new data that's roughly the same as the data we have). 
 
-[@@ Noah - check these 2 paragraphs out]
-
-Finally, we want to directly address the fact that our discussion above regarding accepting effects as 'real' or as 'zero' may seem to be full of vagueness and equivocation. This is by design. Sometimes, researchers want to wash their hands of a difficult decision and let the model decide. However, the researcher cannot 'pass the buck' and let the model 'prove' that something is zero or non-zero. The model can certainly tell you that, given your data and model structure, something is likely to be zero or non zero. However, transferring that knowledge to the 'real world' is an epistemological or ontological claim, and *not* a statistical one. To some extent, the statistical claim underlies the claim about the real world, but it is not enough on its own. To *really* make a claim about and effect being zero or not, the researcher requires statistical evidence in addition to domain knowledge about the real world. As a result, we can give general (vague) guidelines about situations when your models suggest something is zero or non zero, but we cannot say with certainty that in such and such a situation you can always make claims about the real world based *solely* on your statistical model.
+Finally, we want to directly address the fact that our discussion above regarding accepting effects as 'real' or as 'zero' may seem to be full of vagueness and equivocation. This is by design. Sometimes, researchers want to wash their hands of a difficult decision and let the model decide. However, the researcher cannot 'pass the buck' and let the model 'prove' that something is zero or non-zero. The model can certainly tell you that, given your data and model structure, something is likely to be zero or non zero. However, transferring that knowledge to the 'real world' is an epistemological or ontological claim (or both), and *not* a statistical one. To some extent, the statistical claim underlies the claim about the real world, but it is not enough on its own. To *really* make a claim about an effect being zero or not, the researcher requires statistical evidence in addition to domain knowledge about the real world. As a result, we can give general (vague) guidelines about situations when your models suggest something is zero or non zero, but we cannot say with certainty that in such and such a situation you can always make claims about the real world based *solely* on your statistical model.
 
 For example, because of the relationship between sample size, likelihoods, and credible intervals, any arbitrarily small effect will be distinguishable from zero given a large enough sample. Imagine a situation where we have an effect of 0.1 cm that that has a 95% credible interval of [0.09, 0.11]. Our model is telling us that this effect is extremely unlikely to equal zero, and yet we are unlikely to care much about an effect this small. However, we can only know this by knowing something about human height and meaningful variation therein, and this is domain-specific knowledge that must come from the researcher interpreting the model. 
 
 ## Factors with more than two levels
-
-[@@ Noah - section is new, check it out]
 
 Before moving on, we want to provide an example of how to recover interactions between interaction terms that are not estimated by your model when you have factors with more than two levels. This is a modest extension of the principles we have discussed so far, however, it is useful to provide an explicit example. Below, we generate some toy data that includes two factors with four levels each (`A, B`), and an interaction between them (`AB`).
 
@@ -1125,13 +1117,13 @@ toy_data = data.frame (y, A, B)
 
 ```
 
-We use the fir a simple model with `brm`.
+We use this to fit a simple model with `brms`:
 
 ```{r, cache = TRUE, echo = FALSE, warning=FALSE}
 toy_model = brm (y ~ A*B, data = toy_data)
 ```
 
-And inspect the fixed effects.
+And inspect the fixed effects:
 
 ```{r}
 fixef (toy_model)
@@ -1162,11 +1154,13 @@ In order to recover the missing levels of $A$ and $B$ (under sum coding), we hav
 
 Recovering missing intercept values is no more complicated but can be a bit tedious for large numbers of missing interactions. The missing values at the end of each row are simply the negative sum of the elements present in the row, and the missing values at the end of each column are simply the negative sum of the elements present in the column.
 
+[@@ NHS: I assume this is left incomplete on purpose? i.e., there aren't negative sums subbed in for all the missing interaction terms...]
+
 ```
-[  A1:B1              ][  A2:B1  ][  A3:B1  ][ -(A1:B1+A2:B1+A3:B1) ]
-[  A1:B2              ][  A2:B2  ][  A3:B2  ][  (A4:B2)             ]
-[  A1:B3              ][  A2:B3  ][  A3:B3  ][  (A4:B3)             ]
-[ (A1:B1+A1:B2+A1:B3) ][ (A2:B4) ][ (A3:B4) ][  (A4:B4)             ]
+[  A1:B1               ][  A2:B1  ][  A3:B1  ][ -(A1:B1+A2:B1+A3:B1) ]
+[  A1:B2               ][  A2:B2  ][  A3:B2  ][  (A4:B2)             ]
+[  A1:B3               ][  A2:B3  ][  A3:B3  ][  (A4:B3)             ]
+[ -(A1:B1+A1:B2+A1:B3) ][ (A2:B4) ][ (A3:B4) ][  (A4:B4)             ]
 ```
 
 You can get the missing element in the bottom right corner above by following the same process once you have recovered the remaining elements from the final row or column. For example, the interaction in the bottom corner is the negative sum of the other three terms in the final column *and* in the final row.

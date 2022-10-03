@@ -1096,7 +1096,7 @@ For example, because of the relationship between sample size, likelihoods, and c
 
 ## Factors with more than two levels
 
-Before moving on, we want to provide an example of how to recover interactions between interaction terms that are not estimated by your model when you have factors with more than two levels. This is a modest extension of the principles we have discussed so far, however, it is useful to provide an explicit example. Below, we generate some toy data that includes two factors with four levels each (`A, B`), and an interaction between them (`AB`).
+Before moving on, we want to provide an example of how to recover interaction terms that are not estimated by your model when you have factors with more than two levels. This is a modest extension of the principles we have discussed so far, however, it is useful to provide an explicit example. Below, we generate some toy data that includes two factors with four levels each (`A, B`), and an interaction between them (`AB`).
 
 ```{r}
 A = rep (factor(1:4), each = 60)
@@ -1119,7 +1119,7 @@ toy_data = data.frame (y, A, B)
 
 We use this to fit a simple model with `brms`:
 
-```{r, cache = TRUE, echo = FALSE, warning=FALSE}
+```{r, cache = TRUE, echo = TRUE, warning=FALSE, results='hide'}
 toy_model = brm (y ~ A*B, data = toy_data)
 ```
 
@@ -1131,44 +1131,68 @@ fixef (toy_model)
 
 As expected, we see that we estimate 3 of 4 factor levels for the $A$ and $B$ factors respectively. This means that we will be missing the fourth level of each factor. Below, we present factor levels in a grid, and indicate the missing level in parentheses.
 
-```
-[ A1 ][ A2 ][ A3 ][ (A4) ]
-[ B1 ][ B2 ][ 33 ][ (B4) ]
-```
-
-As noted above, the number of interaction terms we can estimate will generally be equal to (the number of level in $A$ - 1)$\times$(the number of level in $B$ - 1). As a result, we know that we will only be estimate 4 our of the 9 total interaction terms. We have arranged these terms in a similar grid as seen above, and again placed the missing terms in parentheses. In the grid below, levels of $A$ vary across columns and levels of $B$ vary across rows. 
-
-```
-[  A1:B1  ][   A2:B1   ][   A3:B1   ][  (A4:B1)  ]
-[  A1:B2  ][   A2:B2   ][   A3:B2   ][  (A4:B2)  ]
-[  A1:B3  ][   A2:B3   ][   A3:B3   ][  (A4:B3)  ]
-[ (A1:B4) ][  (A2:B4)  ][  (A3:B4)  ][  (A4:B4)  ]
-```
+$$
+\begin{equation}
+\begin{bmatrix}
+A1 & A2 & A3 & (A4) \\
+B1 & B2 & B3 & (B4) \\
+\end{bmatrix}(\#eq:7-13)
+\end{equation}
+$$
 
 In order to recover the missing levels of $A$ and $B$ (under sum coding), we have to find the negative sum of the estimated levels. We place this value in the corresponding grid location seen below. 
 
-```
-[ A1 ][ A2 ][ A3 ][ -(A1+A2+A3) ]
-[ B1 ][ B2 ][ 33 ][ -(B1+B2+B3) ]
-```
+$$
+\begin{equation}
+\begin{bmatrix}
+A1 & A2 & A3 & -(A1+A2+A3) \\
+B1 & B2 & B3 & -(B1+B2+B3) \\
+\end{bmatrix}(\#eq:7-13)
+\end{equation}
+$$
 
-Recovering missing intercept values is no more complicated but can be a bit tedious for large numbers of missing interactions. The missing values at the end of each row are simply the negative sum of the elements present in the row, and the missing values at the end of each column are simply the negative sum of the elements present in the column.
+As noted above, the number of interaction terms we can estimate will generally be equal to (the number of level in $A$ - 1)$\times$(the number of level in $B$ - 1). As a result, we know that we will only be estimate 4 our of the 9 total interaction terms. We have arranged these terms in a similar grid as seen above, and again placed the missing terms in parentheses. In the grid below, levels of $A$ vary across columns and levels of $B$ vary across rows. 
+
+$$
+\begin{equation}
+\begin{bmatrix}
+A1 \colon B1 & A2 \colon B1 & A3 \colon B1 & (A4 \colon B1)\\
+A1 \colon B2 & A2 \colon B2 & A3 \colon B2 & (A4 \colon B2)\\
+A1 \colon B3 & A2 \colon B3 & A3 \colon B3 & (A4 \colon B3)\\
+(A1 \colon B4) & (A2 \colon B4) & (A3 \colon B4) & (A4 \colon B4)\\
+\end{bmatrix}(\#eq:7-14)
+\end{equation}
+$$
+
+Recovering missing interaction values is no more complicated but can be a bit tedious for large numbers of missing interactions. The missing values at the end of each row are simply the negative sum of the elements present in the row, and the missing values at the end of each column are simply the negative sum of the elements present in the column. We show this for only one row and one column so that the matrix will fit on the page, but the same process can be applied to all rows and columns in the matrix.
 
 [@@ NHS: I assume this is left incomplete on purpose? i.e., there aren't negative sums subbed in for all the missing interaction terms...]
 
-```
-[  A1:B1               ][  A2:B1  ][  A3:B1  ][ -(A1:B1+A2:B1+A3:B1) ]
-[  A1:B2               ][  A2:B2  ][  A3:B2  ][  (A4:B2)             ]
-[  A1:B3               ][  A2:B3  ][  A3:B3  ][  (A4:B3)             ]
-[ -(A1:B1+A1:B2+A1:B3) ][ (A2:B4) ][ (A3:B4) ][  (A4:B4)             ]
-```
+$$
+\begin{equation}
+\begin{bmatrix}
+A1 \colon B1 & A2 \colon B1 & A3 \colon B1 & -(A1 \colon B1+A2 \colon B1+A3 \colon B1) \\
+A1 \colon B2 & A2 \colon B2 & A3 \colon B2 & (A4 \colon B2)\\
+A1 \colon B3 & A2 \colon B3 & A3 \colon B3 & (A4 \colon B3)\\
+-(A1 \colon B1+A1 \colon B2+A1 \colon B3) & (A2 \colon B4) & (A3 \colon B4) & (A4 \colon B4)\\
+\end{bmatrix}(\#eq:7-14)
+\end{equation}
+$$
+
+
+
 
 You can get the missing element in the bottom right corner above by following the same process once you have recovered the remaining elements from the final row or column. For example, the interaction in the bottom corner is the negative sum of the other three terms in the final column *and* in the final row.
 
-```
-A4:B4 = -(A4:B1+A4:B2+A4:B3)
-A4:B4 = -(A1:B4+A2:B4+A3:B4)
-```
+$$
+\begin{equation}
+\begin{split}
+A4 \colon B4 = -(A4 \colon B1+A4 \colon B2+A4 \colon B3) \\
+A4 \colon B4 = -(A1 \colon B4+A2 \colon B4+A3 \colon B4) \\
+\end{split}
+(\#eq:7-14)
+\end{equation}
+$$
 
 Of course, these values can all be recovered easily using the `hypothesis` (or `short_hypothesis`) function.
 

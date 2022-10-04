@@ -1,17 +1,17 @@
 \newpage
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  dpi = 300, dev = "jpeg", collapse=FALSE
+  dpi = 300, dev = "jpeg", collapse=TRUE
 )
 ```
 
 # Logistic regression and signal detection theory models
 
-To this point we've only discussed the prediction of quantitative variables that can take on a large number of values and are measured on an interval (or ratio) scale. In this chapter we're going to talk about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. For now, we will focus on dichotomous (i.e. binary) outcomes, however, the ideas presented will be extended to the prediction of ordinal (ordered categories such as 1st, 2nd, 3rd), and multinomial (unordered categories such as English, French and Spanish) data in chapter 12. In the second half of the chapter, we will discuss how logistic regression models can be used to investigate the discrimination of categories, and response bias, using signal detection theory. 
+To this point we've only discussed the prediction of quantitative variables that can take on a large number of values and are measured on an interval (or ratio) scale. In this chapter we being talking about the prediction of categorical variables, variables that take on a (usually small) number of discrete values. For now, we will focus on dichotomous (i.e. binary) outcomes, however, the ideas presented will be extended to the prediction of ordinal (ordered categories such as 1st, 2nd, 3rd), and multinomial (unordered categories such as English, French and Spanish) data in chapter 12. In the second half of the chapter, we will discuss how logistic regression models can be used to investigate the discrimination of categories, and response bias, using signal detection theory. 
 
 ## Chapter pre-cap
 
-In this chapter we introduce linear models for the prediction of dichotomous variables, that is, variables that can take on one of two possible discrete values. First, we introduce dichotomous data and the Bernoulli and binomial distributions. After that, link functions and the generalized linear model are presented. We present logistic regression, discuss logits and their characteristics, and introduce the inverse logit function, the link function for logistic regression. Following this, we fit a multilevel logistic regression model with a single quantitative predictor, and use this model to understand the predictions made by our model across the stimulus space, resulting in territorial maps. Finally, we introduce the use of logistic regression to fit a signal detection theory model,  estimating response bias and sensitivity using a multilevel model. 
+This chapter introduces linear models for the prediction of dichotomous variables, that is, variables that can take on one of two possible discrete values. First, we introduce dichotomous data and the Bernoulli and binomial distributions. After that, link functions and the generalized linear model are discussed. We present logistic regression, discuss logits and their characteristics, and introduce the inverse logit function, the link function for logistic regression. Following this, we fit a multilevel logistic regression model with a single quantitative predictor, and use this model to understand the predictions made by our model across the stimulus space, resulting in territorial maps. Finally, we introduce the use of logistic regression to fit a signal detection theory model,  estimating response bias and sensitivity using a multilevel model. 
 
 ## Dichotomous variables and data {#c10-dichotomous}
 
@@ -39,7 +39,6 @@ We can see an example of a linear relationship in the top left plot of figure \@
 library (bmmb)
 data (exp_data)
 options (contrasts = c('contr.sum','contr.sum'))
-data (cols)
 
 tab = table (exp_data$S, exp_data$C_v)
 mod_cat = apply (tab, 1,which.max)
@@ -51,44 +50,42 @@ aggd = aggregate (cbind ( height, A=="a", G=="f", vtl,f0, vtl) ~ S + C_v,
                       data = exp_data, FUN = mean)
 
 par (mfrow = c(2,2), mar = c(2,4,1,1.5), oma = c(3,1,0,0))
-
-plot (aggd$vtl, aggd$height, cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
+plot (aggd$vtl, aggd$height, cex =2, col = bmmb::cols[c(2:5)][factor(aggd$C_v)], 
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(130,185),xlab = "",
       ylab="Apparent height (inches)",cex.lab=1.2,cex.axis=1.2)
 grid()
 abline (lm(aggd$height~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, aggd$height, cex =2, pch=16,lwd=2,
-      col = cols[c(4,6)][aggd$group])
+      col = bmmb::cols[c(4,6)][aggd$group])
 
 legend (.8,165, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
         col = cols[2:5], bty='n',pch=16,pt.cex=2)
-
-plot (exp_data$vtl, exp_data$G=='f', cex =2, col = cols[c(2:5)][factor(aggd$C_v)], yaxt='n',
+plot (exp_data$vtl, exp_data$G=='f', cex =2, col = bmmb::cols[c(2:5)][factor(aggd$C_v)], yaxt='n',
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-.1,1.1),xlab = "",
       ylab="G == 'f'",cex.lab=1.2,cex.axis=1.2)
 grid()
 abline (lm(aggd[,5]~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, aggd[,5], cex =2, pch=16,lwd=2,
-      col = cols[c(4,6)][aggd$group])
+      col = bmmb::cols[c(4,6)][aggd$group])
 abline (h=.5)
 axis (side=2, at=0:1)
 
-plot (aggd$vtl, aggd[,5], cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
+plot (aggd$vtl, aggd[,5], cex =2, col = bmmb::cols[c(2:5)][factor(aggd$C_v)], 
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-.1,1.1),xlab = "",
       ylab="P(G  = 'f')",cex.lab=1.2,cex.axis=1.2)
 grid()
 abline (lm(aggd[,5]~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, aggd[,5], cex =2, pch=16,lwd=2,
-      col = cols[c(4,6)][aggd$group])
+      col = bmmb::cols[c(4,6)][aggd$group])
 abline (h=.5)
 
-plot (aggd$vtl, logit(aggd[,5]), cex =2, col = cols[c(2:5)][factor(aggd$C_v)], 
+plot (aggd$vtl, logit(aggd[,5]), cex =2, col = bmmb::cols[c(2:5)][factor(aggd$C_v)], 
       xlim=c(-3,3),  pch=16,lwd=2,ylim = c(-6.1,6.1),xlab = "",
       ylab="Logit (P(G  = 'f'))",cex.lab=1.2,cex.axis=1.2)
 grid()
 abline (lm(logit(aggd[,5])~aggd$vtl)$coefficients, lwd=2)
 points (aggd$vtl, logit(aggd[,5]), cex =2, pch=16,lwd=2,
-      col = cols[c(4,6)][aggd$group])
+      col = bmmb::cols[c(4,6)][aggd$group])
 abline (h=0)
 
 mtext (side=1,text="Centered VTL (cm)", outer = TRUE, line = 1.5, cex=0.9)
@@ -102,7 +99,7 @@ When your variable has only two categorical outcomes (within the context of your
 
 The distribution of dichotomous female (1) and male (0) responses with respect to speaker VTL is presented in the top right plot of figure \@ref(fig:F10-1). Plotting ones and zeros against speaker VTL is not very informative, in addition, using a line to directly predict dichotomous data leads to strange outcomes. For example, our line predicts all sorts of values between 0 and 1 that our variable can never actually have. It also suggests a continuous, gradual change in the value of our dependent variable with respect to VTL, which is also impossible. 
 
-We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal 0. When we do this, we obtain the probability ($p$) of observing a female response for each speaker. Why does this work? Imagine you are playing basketball and keep track of 1000 free throws over several practices. Imagine you sink 753 of these shots, and let's assume that this represents your actual ability fairly well. You consider these 1000 shots observations of the variable "successful free throw" which equals 1 when you make it and 0 when you don't. If you add up all your made shots (753) and divide by the total number of observations (1000), you can conclude that there is a 0.753 (753/1000) probability of you sinking a free throw (i.e. ($p=0.753$)). 
+We can make the situation a bit better by finding the average value of our dichotomous variable for each speaker, where female responses equal 1 and male responses equal 0 (bottom left plot in figure \@ref(fig:F10-1)). When we do this, we obtain the probability ($p$) of observing a female response for each speaker. For example, imagine you are playing basketball and keep track of 1000 free throws over several practices. Imagine you sink 753 of these shots, and let's assume that this represents your actual ability fairly well. You consider these 1000 shots observations of the variable "successful free throw" which equals 1 when you make it and 0 when you don't. If you add up all your made shots (753) and divide by the total number of observations (1000), you can conclude that there is a 0.753 (753/1000) probability of you sinking a free throw (i.e. ($p=0.753$)). 
 
 Since the $p$ parameter is the 'average' made shot, this seems similar to the $\mu$ parameter in a normal distribution. However, the $p$ parameter can't be used with a normal distribution to generate dichotomous data. A normal distribution generates continuous variation symmetrically around its mean. Instead, we need a distribution that takes a parameter like $p$ and generates a variable with only two possible values. The two distributions most commonly used to model dichotomous variables are the *Bernoulli* distribution and the *binomial* distribution.
 
@@ -138,12 +135,12 @@ Below we generate random binomial variables using the `rbinom` (random binomial)
 rbinom (1,10,.5)
 
 # ten individual trials, probability of 0.5
-rbinom (10,1,.5)
+bmmb::rbernoulli (10,.5)
 ```
 
 So, when we have a dichotomous dependent variable and are interested in predicting individual trials, we use a Bernoulli distribution and our data model is $y \sim \mathrm{Bernoulli} (p)$. When our dependent variable consists of groups of Bernoulli trials treated as a single unit we can use a binomial distribution. If this is the case our data model looks like this $y \sim \mathrm{Binomial} (p, n)$, and keep in mind $n$ is *data* (i.e. is provided by the researcher) and not an parameter that is estimated by the model. 
 
-Before moving on we want to note that unlike the normal distribution, the Bernoulli and binomial distributions do not generate individual data points near their expected value $p$. Instead, they generate sequences of 1s and 0s whose sample estimate of $p$ is expected to be close to its underlying value *hypothetically* given a large enough sample. For example, below we generate sequences of a dichotomous variable with a true $p$ of 0.5. In each case, the estimate of $p$ gets closer to the true value as the length of the sample gets longer, but never exactly equal the true parameter value of 0.5. 
+Before moving on we want to note that unlike the normal distribution, the Bernoulli and binomial distributions do not generate individual data points near their expected value $p$. Instead, they generate sequences of 1s and 0s whose sample estimate of $p$ is expected to be close to its underlying value *hypothetically* given a large enough sample. For example, below we generate sequences of a dichotomous variable with a true $p$ of 0.5. In each case, the estimate of $p$ gets closer to the true value as the length of the sample gets longer, but it is never exactly equal to the true parameter value of 0.5. 
 
 ```{r, include = FALSE}
 set.seed (7)
@@ -180,7 +177,7 @@ p_{[i]} = f(\theta_{[i]}) \\
 \end{equation}
 $$
 
-The presentation in \@ref(eq:10-3) separates our model into a random component, a link function, and a systematic component. Each of these components play a crucial role in our ability to build regression models that predict dichotomous variables. The random component is the distribution underlying the data-level error in our dependent variable. This component helps us account for the fact that our observations are not perfectly predictable given our independent variables, and that they can only equal 0 or 1. The systematic component allows us to make predictions about variability in the dependent variable using combinations of our predictors. The link function lets us use lines to model variation in parameters even when these may not vary in an unbounded manner (i.e. from $-\infty$ to $+\infty$). 
+The presentation in \@ref(eq:10-3) separates our model into a random component, a link function, and a systematic component. Each of these components play a crucial role in our ability to build regression models that predict dichotomous variables. The random component is the distribution underlying the data-level error in our dependent variable. This component helps us account for the fact that our observations are not perfectly predictable given our independent variables, and that they can only equal 0 or 1. The systematic component allows us to make predictions about variability in the dependent variable using combinations of our predictors. The link function lets us use lines to model variation in parameters even when these may not vary in an unbounded manner.
 
 This division of regression models into three discrete components is referred to as the **generalized linear model**. The generalized linear model allows the user to change the random component and/or link function as appropriate to model a wide range of data. It's called the 'generalized' linear model because it represents the extrapolation of principles related to the prediction of quantitative variables coming from a normal distribution to the general case. For more information on the generalized linear model see Kruschke (2014) for a Bayesian introduction, or McCullagh and Nelder (2019) for a more advanced, and classic, treatment.
 
@@ -188,7 +185,7 @@ This division of regression models into three discrete components is referred to
 
 **Logistic regression** is an approach to regression for predicting dichotomous dependent variables. Since it is extremely common, we're going to focus on modeling Bernoulli data (i.e. individual dichotomous variables) in this chapter. However, most of the information presented here directly applies to binomial regression, and binomial regression is simple to carry out using `brms`.
 
-Logistic regression assumes a Bernoulli distribution for the random component, and the *inverse logit* function ($\mathrm{logit}^{-1}$, discussed below) as its link function. The systematic components still consists of linear combinations of our independent variables, i.e., adding them up after multiplying by their respective model coefficients, as it has in previous chapters. A general description of logistic regression with a single quantitative predictor is given in \@ref(eq:10-4). 
+Logistic regression assumes a Bernoulli distribution for the random component, and the *inverse logit* function ($\mathrm{logit}^{-1}$, discussed below) as its link function. The systematic component still consists of linear combinations of our independent variables, i.e., adding them up after multiplying by their respective model coefficients, as it has in previous chapters. A general description of logistic regression with a single quantitative predictor is given in \@ref(eq:10-4). 
 
 $$
 \begin{equation}
@@ -358,7 +355,7 @@ There's no particular reason to do this, apart from the fact that it illustrates
 
 ### Building intuitions about logits and the inverse logit function
 
-The logit and inverse logit functions are **non linear** functions. In the simplest sense this means that the relationships they form between x and y variables, when plotted, do not form straight lines. In our case, this means that when we compare logits and their associated probabilities we will not see a straight line. The sigmoid curve in the left plot of figure \@ref(fig:F10-3) reveals a changing relationship between logits and probabilities: The slope is very shallow for large negative logit values but increases in value as the curve approaches 0. The slope then begins to decrease again as the logit values become large again. This behavior allows the sigmoid curve in the figure to extend from positive infinity to negative infinity without ever crossing 1 and 0: As logit values become arbitrarily large in magnitude, the slope of the sigmoid curve becomes arbitrarily small in magnitude to the point where it is effectively parallel to the x axis on both ends of the curve. 
+The logit and inverse logit functions are **non linear** functions. In the simplest sense this means that the relationships they form between x and y variables, when plotted, do not form straight lines. In our case, this means that when we compare logits and their associated probabilities we will not see a straight line. The sigmoid curve in the left plot of figure \@ref(fig:F10-3) reveals a changing relationship between logits and probabilities: The slope is very shallow for large negative logit values but increases in value as the curve approaches 0. The slope then begins to decrease in value as the logits become large again. This behavior allows the sigmoid curve in the figure to extend from positive infinity to negative infinity without ever crossing 1 and 0: As logit values become arbitrarily large in magnitude, the slope of the sigmoid curve becomes arbitrarily small in magnitude to the point where it is effectively parallel to the x axis on both ends of the curve. 
 
 ```{r F10-3, fig.width = 8, fig.height = 2.75, fig.cap = "(left) A sigmoid curve expressing the probability associated with each logit value along the x axis. Horizontal lines are placed every 0.1 from 0.1 to 0.9 probability. (right) A line relating some predictor to logits. Horizontal lines are placed every 0.1 from 0.1 to 0.9 probability.", echo = FALSE}
 
@@ -404,7 +401,7 @@ Here are some useful things to keep in mind when interpreting logits, in no part
   
   * Logits far beyond 3 might not have much practical significance. A logit of 4 is a probability of 0.982 and a logit of 6 is 0.997. For many purposes, probabilities of 0.95, 0.98, and 0.99 are nearly interchangeable. Also, it is very difficult to distinguish 95%, 98%, and 99% in practice since you will be observing very few cases of 0.
   
-  * Effects can be considered important or not based on how far they get you along -3 to 3 (or -4 to 4). Basically, anything in the +1 range is very likely to matter, while effects smaller than 0.1 or so are likely having only small effects on outcomes.
+  * Effects can be considered important or not based on how far they get you along -3 to 3 (or -4 to 4). Basically, anything in the +1 range is very likely to matter, while effects smaller than 0.1 or so are likely having only a small influence on outcomes.
   
 Here is one final thing to keep in mind about logits: You **must** combine your model parameters as logits **before** transforming them into probabilities. This is due to the fact that the inverse logit function is non-linear, and will be discussed in more detail in section \@ref(c10-fitting-1). 
 
@@ -452,7 +449,7 @@ In order to answer the questions posed above, our model needs to represent the l
 
 `Female ~ vtl*A + (vtl*A|L) + (1|S)`
 
-The formula above tells our model to predict perceived femaleness using speaker VTL (centered as in the previous chapter), information about whether the speaker was identified as a child or an adult, and age-dependent use of VTL. Since we include the interaction between apparent age and speaker VTL, we are effectively estimating two lines relating speaker VTL with apparent gender: One for apparent adults and another for apparent children. Our formula also includes by-listener effects for all predictors and by-speaker intercepts. This model would be relatively 'simple' at this point if it were dealing with normally distributed data. The prior specification we're going to use looks like this:
+The formula above tells our model to predict perceived femaleness using speaker VTL (centered as in the previous chapter), information about whether the speaker was identified as a child or an adult, and age-dependent use of VTL. Since we include the interaction between apparent age and speaker VTL, we are effectively estimating two lines relating speaker VTL and apparent gender: One for apparent adults and another for apparent children. Our formula also includes by-listener effects for all predictors and by-speaker intercepts. This model would be relatively 'simple' at this point if it were dealing with normally distributed data. The prior specification we're going to use looks like this:
 
 ```{r}
 prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -482,10 +479,10 @@ b_{[i]} =  VTL + A \colon VTL + VTL \colon L_{[\mathsf{L}_{[i]}]} + A \colon VTL
 \textrm{Priors:} \\
 S_{[\bullet]} \sim \mathrm{Normal}(0,\sigma_{S}) \\ 
 \begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ VTL \colon L_{[\bullet]} \\ A \colon VTL \colon L_{[\bullet]} \\ \end{bmatrix}	
-\sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\
+\sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma} \right) \\ \\
 \mathrm{Intercept} \sim t(3, 0, 3) \\
 A, VTL, A \colon VTL \sim t(3, 0, 3) \\
-\sigma_{L}, \sigma_{A \colon L}, \sigma_{VTL \colon L} , \sigma_{A  \colon VTL \colon L}  \sim t(3, 0, 3) \\ R \sim \mathrm{LKJCorr} (2)
+\sigma_{S}, \sigma_{L}, \sigma_{A \colon L}, \sigma_{VTL \colon L} , \sigma_{A  \colon VTL \colon L}  \sim t(3, 0, 3) \\ R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:10-13)
 \end{equation}
@@ -493,7 +490,7 @@ $$
 
 The main differences compared to our previous models are the lack of terms related to $\sigma$, the inclusion of a link function, and the reliance on a Bernoulli rather than the normal or t distributions at the data level. In plain English, this model could be read like: 
 
-> We're treating our femaleness judgments (1 or 0 for female or male) as coming from a Bernoulli distribution with a probability ($p$) that varies from trial to trial. The *logit of the probability* ($z$) varies along lines. The lines are specified by intercepts and slopes that vary from trial to trial, and there is a single continuous predictor (speaker VTL). The intercept of these lines vary based on an overall intercept, an effect for apparent age ($A$), listener-specific effects for apparent age ($A \colon L$), listener-specific deviations ($L$), and speaker-specific deviations (S). The slope of these lines vary based on an overall slope ($VTL$, the main effect), deviations based on apparent age ($VTL \colon A$), listener-specific deviations ($VTL \colon L$), and listener-specific interactions between apparent age and VTL ($A \colon VTL \colon L$)). The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, A, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
+> We're treating our femaleness judgments (1 or 0 for female or male) as coming from a Bernoulli distribution with a probability ($p$) that varies from trial to trial. The *logit of the probability* ($z$) varies along lines. The lines are specified by intercepts ($a$) and slopes ($b$) that vary from trial to trial, and there is a single continuous predictor (speaker VTL). The intercept of these lines varies based on an overall intercept, an effect for apparent age ($A$), listener-specific effects for apparent age ($A \colon L$), listener-specific deviations ($L$), and speaker-specific deviations (S). The slope of these lines varies based on an overall slope ($VTL$, the main effect), deviations based on apparent age ($VTL \colon A$), listener-specific deviations ($VTL \colon L$), and listener-specific interactions between apparent age and VTL ($A \colon VTL \colon L$)). The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of zero and a covariance matrix estimated from the data. All other effects (e.g., the Intercept, VTL, A, etc.) were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
 
 ### Fitting the model {#c10-fitting-0}
 
@@ -520,10 +517,11 @@ model_gender_vtl = readRDS ('../models/10_model_gender_vtl.RDS')
 ```
 
 However, we're going to (retroactively) pause before continuing in order to update our discussion of prior predictive checks. In section \@ref(c8-prior-prediction) we discussed these in the context of quantitative variables. In these cases, our predictions take on a range of values and can be summarized effectively using histograms and plots showing the density of the distribution. In contrast, our dichotomous variables only take on values of 1 and 0, and so histograms and densities of these no longer provide as much useful information. 
-Instead of considering the distribution of values of the dependent variable directly, we can consider prior predictions as logits, allowing us to use densities or histograms just as we did for quantitative variables. We can look at the location of these predictions to see how expected outcomes vary across conditions or overall. A concentration around 0 means that predictions are balanced across successes and failures, whereas positive or negative predictions indicate one or the other category is more likely. We can also look at the variation of predictions about their average, and in particular, in the magnitude of the logits being predicted. Predicted logits with very large magnitudes indicate near certainty in the outcome, whereas predictions concentrated near zero indicate that either category is equally likely. We can use the code below to run our prior predictive check and then use the `p_check` function to get and plot our prior predictions (not shown here). 
+Instead of considering the distribution of values of the dependent variable directly, we can consider prior predictions as logits, allowing us to use densities or histograms just as we did for quantitative variables. 
+
+We can look at the location of the logit predictions to see how expected outcomes vary across conditions or overall. A concentration around 0 means that predictions are balanced across successes and failures, whereas positive or negative predictions indicate one or the other category is more likely. We can also look at the variation of predictions about their average, and in particular, in the magnitude of the logits being predicted. Predicted logits with very large magnitudes indicate near certainty in the outcome, whereas predictions concentrated near zero indicate that either category is equally likely. We can use the code below to run our prior predictive check and then use the `p_check` function to get and plot our prior predictions (not shown here). 
 
 ```{r, eval = FALSE}
-# Fit the model yourself
 priors = c(brms::set_prior("student_t(3, 0, 1)", class = "Intercept"),
            brms::set_prior("student_t(3, 0, 1)", class = "b"),
            brms::set_prior("student_t(3, 0, 1)", class = "sd"),
@@ -592,7 +590,7 @@ cffs = gender_vtl_hypothesis[,1]
 par (mfrow = c(1,2), mar = c(3,4,1,1))
 
 plot (aggd$vtl, logit(aggd[,5]), cex =2, ylim = c(-5,5),xlab="",
-      ylab = "Logit (P(F==1))", col = cols[c(2:5)][mod_cat],pch=16,
+      ylab = "Logit (P(F==1))", col = bmmb::cols[c(2:5)][mod_cat],pch=16,
       lwd=2, xlim =range (exp_data$vtl))
 grid()
 abline (h=0,lty=3)
@@ -604,23 +602,23 @@ curve ( (cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE,
         col = bmmb::cols[14], lwd=4, lty=1)
 
 legend (0.8,4.5, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = cols[2:5], bty='n',pch=16,pt.cex=1.5)
+        col = bmmb::cols[2:5], bty='n',pch=16,pt.cex=1.5)
 
 plot (aggd$vtl, (aggd[,5]), cex =2, ylim = c(0,1),xlab="",
-      ylab = "P(F==1)", col = cols[c(2:5)][mod_cat],
+      ylab = "P(F==1)", col = bmmb::cols[c(2:5)][mod_cat],
       pch=16,lwd=2, xlim =range (exp_data$vtl))
 grid()
 abline (h=.50,lty=3)
 
-curve ( inverse_logit(cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = 1, lwd=4)
-curve ( inverse_logit(cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = bmmb::cols[10], lwd=4, lty=1)
-curve ( inverse_logit(cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), add = TRUE, 
-        col = bmmb::cols[14], lwd=4, lty=1)
+curve ( inverse_logit(cffs[1] + cffs[4]*x), xlim =range (exp_data$vtl), 
+        add = TRUE, col = 1, lwd=4)
+curve ( inverse_logit(cffs[3] + cffs[6]*x), xlim =range (exp_data$vtl), 
+        add = TRUE, col = bmmb::cols[10], lwd=4, lty=1)
+curve ( inverse_logit(cffs[2] + cffs[5]*x), xlim =range (exp_data$vtl), 
+        add = TRUE, col = bmmb::cols[14], lwd=4, lty=1)
 
 legend (-2,-1, legend = c("Boys","Girls","Men","Women"),lwd=2,lty=0,
-        col = cols[3:6], bty='n',pch=1,pt.cex=1.5)
+        col = bmmb::cols[3:6], bty='n',pch=1,pt.cex=1.5)
 
 mtext (side=1, text = "Centered VTL (cm)", outer = TRUE, cex = 1, line=-1)
 
@@ -650,9 +648,7 @@ inverse_logit (0.86)
 inverse_logit (2.65)
 ```
 
-The intercept reflects the logit of the probability of a female response, overall, when VTL was 0. This intercept can be interpreted in isolation since it is not a difference or a parameter indicating a rate of change. As a result, the probability of 0.7 (`inverse_logit (0.86)`) *can* be interpreted in isolation. But what does 0.934 represent? Nothing useful, actually. 
-
-The `A1` parameter reflects the difference in logits (2.65) between perceiving a female speaker at 0 VTL overall compared to when listeners indicated hearing an adult. However, since this is a *difference* it needs to be combined with a baseline number in order to be interpreted. For example if I say "that group was 3 seconds faster", you need to know "faster than what?" in order to know the speed of the group. So, in order to get the log odds (and probability) of observing a female response given some apparent age, we need to combine the `Intercept` and `A1` parameters, and then turn this into a probability using the inverse logit function. Since the inverse logit transform is not additive, we will not get the same output if we combine these parameters and then transform versus transform and then combine. See \@ref(eq:10-15) and compare to \@ref(eq:10-14).
+The intercept reflects the logit of the probability of a female response, overall, when VTL was 0. This intercept is not a difference or a parameter indicating a rate of change. As a result, the probability of 0.7 (`inverse_logit (0.86)`) *can* be interpreted in isolation. But what does 0.934 represent? Nothing useful, actually. The `A1` parameter reflects the difference in logits (2.65) between perceiving a female speaker at 0 VTL overall compared to when listeners indicated hearing an adult. However, since this is a *difference* it needs to be combined with a baseline number in order to be interpreted. For example if I say "that group was 3 seconds faster", you need to know "faster than what?" in order to know the speed of the group. So, in order to get the log odds (and probability) of observing a female response given some apparent age, we need to combine the `Intercept` and `A1` parameters, and then turn this into a probability using the inverse logit function. Since the inverse logit transform is not additive, we will not get the same output if we combine these parameters and then transform versus transform and then combine. See \@ref(eq:10-15) and compare to \@ref(eq:10-14).
 
 $$
 \begin{equation}
@@ -662,7 +658,7 @@ $$
 \end{equation}
 $$
 
-Since they are not equal, only one can be correct. Our model combines parameters as logits, and therefore the appropriate way to consider our parameters is by also combining them as logits. So, in order to turn the `A1` effect into a probability it first needs to be combined with the intercept as a logit, and *then* converted using the inverse logit function. As seen below, converting to a probability and then combining can lead to strange outcomes: 1.64 is not even a valid probability. When we combine first and then convert, we see that the result is a reasonable probability that matches what we see in figure \@ref(fig:F10-4) (i.e. 0.97 is a plausible value for the adult line at x=0). 
+Since they are not equal, only one can be correct. Our model combines parameters as logits, and therefore the appropriate way to consider our parameters is by also combining them as logits. So, in order to turn the `A1` effect into a probability it first needs to be combined with the intercept as a logit, and *then* converted using the inverse logit function. As seen below, converting to a probability and then combining can lead to strange outcomes: 1.64 is not even a valid probability. When we combine first and then convert, we see that the result is a reasonable probability that matches what we see in the right plot of figure \@ref(fig:F10-4) (i.e. 0.97 is a plausible value for the adult line at x=0). 
 
 
 ```{r, collapse = TRUE}
@@ -675,7 +671,7 @@ inverse_logit (0.86 + 2.65)
 
 The same reasoning applies to the interpretation of slopes in logistic regression models. Our slope tells us that for every unit change in VTL we expect a 3.6 logit increase/decrease in our expected values. We cannot convert this to probabilities and then multiply this by VTL to predict probabilities. For example, the difference from 0 to 3.6 logits results in a change from 0.5 to 0.97 in probability. We may be inclined to say that our VTL slope suggests an increase of 0.47 in probabilities (0.97-0.5) for every unit change in VTL. Obviously, this will not work since it suggests a difference in probability of 1.41 for a VTL difference of 3 cm. As a result, slopes in logistic models can only be interpreted as reflecting consistent changes in the *logit* of a probability, and not in the probability itself. 
 
-Think of it this way. You can move along lines in the logit space (the left plot in above), and you can use the inverse logit to calculate the probability associated with any given value along this line. However, the slope of the curve relating our predictor to probabilities (the right plot in above) does *not have a constant slope*. You can't find the slope of this curve for one fixed position and just move along it in a straight line. Obviously, if you did this you would immediately diverge from the curve in the right plot in figure above because that line does not have a constant slope. So, when you want to interpret slopes, just remember that your model only thinks of these as lines in the logit space, not in the probability space. 
+Think of it this way. You can move along lines in the logit space (the left plot in figure \@ref(fig:F10-4)), and you can use the inverse logit to calculate the probability associated with any given value along this line. However, the slope of the curve relating our predictor to probabilities (the right plot in above) does *not have a constant slope*. You can't find the slope of this curve for one fixed position and just move along it in a straight line. Obviously, if you did this you would immediately diverge from the curve in the right plot in figure \@ref(fig:F10-4) because that line does not have a constant slope. So, when you want to interpret slopes, just remember that your model only thinks of these as lines in the logit space, not in the probability space. 
 
 ### Using logistic models to understand classification {#c10-classification}
 
@@ -1098,7 +1094,7 @@ d_{[i]} =  F_v + F_v \colon A_v + F_v \colon L_{[\mathsf{L}_{[i]}]} + F_v \colon
 \textrm{Priors:} \\
 S_{[\bullet]} \sim \mathrm{Normal}(0,\sigma_{S}) \\ 
 \begin{bmatrix} L_{[\bullet]} \\ A_v \colon L_{[\bullet]} \\ F_v \colon L_{[\bullet]} \\ A \colon F_v \colon L_{[\bullet]} \\ \end{bmatrix}	
-\sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\
+\sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma} \right) \\ \\
 Intercept \sim t(3, 0, 3) \\
 A, VTL, A \colon VTL \sim t(3, 0, 3) \\
 \sigma_{L}, \sigma_{A_v \colon L}, \sigma_{F_v \colon L} , \sigma_{A_v  \colon F_v \colon L}  \sim t(3, 0, 3) \\ 

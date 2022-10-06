@@ -128,7 +128,7 @@ Since we are including adult male speakers in our data we should also reconsider
 $$
 \begin{equation}
 \begin{split}
-height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
+height_{[i]} \sim \mathrm{t}(\nu, \mu_{[i]},\sigma) \\ 
 \mu_{[i]} = \mathrm{Intercept} + C_{[\mathsf{C}_{[i]}]}  + L_{[\mathsf{L}_{[i]}]} + C_{[\mathsf{C}_{[i]}]} \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\
@@ -137,7 +137,7 @@ S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\
 \mathrm{Intercept} \sim \mathrm{N}(156,12) \\
 C_{[\bullet]} \sim \mathrm{N}(0,12) \\
 \sigma_L,\sigma_{C_{[1]} \colon L},\sigma_{C_{[2]} \colon L},\sigma_{C_{[3]} \colon L}, \sigma_S \sim \mathrm{N}(0,12) \\
-\nu \sim gamma(2, 0.1) \\ 
+\nu \sim \mathrm{gamma}(2, 0.1) \\ 
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:7-1)
@@ -341,7 +341,7 @@ The above can be thought of as a 'decomposition' of the variance in your model b
 $$
 \begin{equation}
 \begin{split}
-height_{[i]} \sim \mathrm{t}(\mu_{[i]},\sigma, \nu) \\ 
+height_{[i]} \sim \mathrm{t}(\nu, \mu_{[i]},\sigma) \\ 
 \mu_{[i]} = \mathrm{Intercept} + A + G + L_{[\mathsf{L}_{[i]}]} + A \colon L_{[\mathsf{L}_{[i]}]} + G \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
 S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\
@@ -350,7 +350,7 @@ S_{[\bullet]} \sim \mathrm{N}(0,\sigma_S) \\
 A, G \sim \mathrm{N}(0,12) \\
 \sigma_L, \sigma_{A \colon L}, \sigma_{G \colon L}, \sigma_S \sim \mathrm{N}(0,12) \\
 \sigma \sim \mathrm{N}(0,12) \\
-\nu \sim gamma(2, 0.1) \\ 
+\nu \sim \mathrm{gamma}(2, 0.1) \\ 
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:7-4)
@@ -741,14 +741,14 @@ height_{[i]} \sim \mathrm{t} (\nu, \mu_{[i]},\sigma) \\
 \mu_{[i]} = \mathrm{Intercept} + A + G + A \colon G + \\
 L_{[\mathsf{L}_{[i]}]} + A \colon L_{[\mathsf{L}_{[i]}]} + G \colon L_{[\mathsf{L}_{[i]}]} + A \colon G \colon L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ \\ 
 \mathrm{Priors:} \\ 
-S_{[\bullet]} \sim t(3,0,\sigma_S) \\
-\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \Sigma \right) \\ \\
+S_{[\bullet]} \sim \mathrm{t}(3,0,\sigma_S) \\
+\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ G \colon L_{[\bullet]} \\ A \colon G \colon L_{[\bullet]} \end{bmatrix} \sim \mathrm{MVNormal} \left( \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma} \right) \\ \\
 \\
-\mathrm{Intercept} \sim t(3,156,12) \\
-A, G, A \colon G \sim t(3,0,12) \\
-\sigma_L, \sigma_{A \colon L}, \sigma_{G \colon L}, \sigma_{A \colon G \colon L}, \sigma_S \sim t(3,0,12) \\
-\sigma \sim t(3,0,12) \\
-\nu \sim gamma(2, 0.1) \\ 
+\mathrm{Intercept} \sim \mathrm{t}(3,156,12) \\
+A, G, A \colon G \sim \mathrm{t}(3,0,12) \\
+\sigma_L, \sigma_{A \colon L}, \sigma_{G \colon L}, \sigma_{A \colon G \colon L}, \sigma_S \sim \mathrm{t}(3,0,12) \\
+\sigma \sim \mathrm{t}(3,0,12) \\
+\nu \sim \mathrm{gamma}(2, 0.1) \\ 
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:7-8)
@@ -1133,10 +1133,15 @@ As expected, we see that we estimate 3 of 4 factor levels for the $A$ and $B$ fa
 
 $$
 \begin{equation}
+\begin{split}
 \begin{bmatrix}
 A1 & A2 & A3 & (A4) \\
+\end{bmatrix} \\\\
+\begin{bmatrix}
 B1 & B2 & B3 & (B4) \\
-\end{bmatrix}(\#eq:7-13)
+\end{bmatrix}
+\end{split}
+(\#eq:7-13)
 \end{equation}
 $$
 
@@ -1144,10 +1149,15 @@ In order to recover the missing levels of $A$ and $B$ (under sum coding), we hav
 
 $$
 \begin{equation}
+\begin{split}
 \begin{bmatrix}
 A1 & A2 & A3 & -(A1+A2+A3) \\
+\end{bmatrix} \\\\
+\begin{bmatrix}
 B1 & B2 & B3 & -(B1+B2+B3) \\
-\end{bmatrix}(\#eq:7-13)
+\end{bmatrix}
+\end{split}
+(\#eq:7-13)
 \end{equation}
 $$
 
@@ -1165,8 +1175,6 @@ A1 \colon B3 & A2 \colon B3 & A3 \colon B3 & (A4 \colon B3)\\
 $$
 
 Recovering missing interaction values is no more complicated but can be a bit tedious for large numbers of missing interactions. The missing values at the end of each row are simply the negative sum of the elements present in the row, and the missing values at the end of each column are simply the negative sum of the elements present in the column. We show this for only one row and one column so that the matrix will fit on the page, but the same process can be applied to all rows and columns in the matrix.
-
-[@@ NHS: I assume this is left incomplete on purpose? i.e., there aren't negative sums subbed in for all the missing interaction terms...]
 
 $$
 \begin{equation}

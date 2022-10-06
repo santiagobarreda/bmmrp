@@ -103,14 +103,14 @@ We can make the situation a bit better by finding the average value of our dicho
 
 Since the $p$ parameter is the 'average' made shot, this seems similar to the $\mu$ parameter in a normal distribution. However, the $p$ parameter can't be used with a normal distribution to generate dichotomous data. A normal distribution generates continuous variation symmetrically around its mean. Instead, we need a distribution that takes a parameter like $p$ and generates a variable with only two possible values. The two distributions most commonly used to model dichotomous variables are the *Bernoulli* distribution and the *binomial* distribution.
 
-The **Bernoulli distribution** generates individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). The $p$ parameter also represents the *expected value* of the Bernoulli distribution. Imagine you have ten observations from a Bernoulli variable and you observe 6 ones and 4 zeros. This suggests a probability of observing a success, $p$, of 0.6 (6/10). The expected value ($\mathbb{E}$) of a discrete variable is the sum of the values it can take times the probability of each value. For a Bernoulli variable this is relatively simple to calculate as it involves the addition of only two values. In \@ref(eq:10-2), we see that to find the expected value of a Bernoulli variable we multiply the probability of a success ($p$) times one, the probability of a failure ($1-p$) times zero, and add the two. Since the probability of failures is multiplied by zero, the expected value of the Bernoulli variable is simply equal to $p$. 
+The **Bernoulli distribution** generates individual dichotomous outcomes. This distribution has only one parameter: The probability of a success ($p$). The $p$ parameter also represents the *expected value* of the Bernoulli distribution. Imagine you have ten observations from a Bernoulli variable and you observe 6 ones and 4 zeros. This suggests a probability of observing a success, $p$, of 0.6 (6/10). The expected value ($\mathbb{E}$) of a discrete variable is the sum of the values it can take times the probability of each value. For a Bernoulli variable this is relatively simple to calculate as it involves the addition of only two values. In \@ref(eq:10-2), we see that to find the expected value of a Bernoulli variable $y$, we multiply the probability of a success ($p$) times one, the probability of a failure ($1-p$) times zero, and add the two. Since the probability of failures is multiplied by zero, the expected value of the Bernoulli variable is simply equal to $p$. 
 
 $$
 \begin{equation}
 \begin{split}
-\mathbb{E}(y_{[i]}) = \sum_{i=1}^{2} y_{[i]} P(y_{[i]}) \\
-\mathbb{E}(y_{[i]}) = (1 \cdot p)+(0 \cdot (1-p)) \\
-(1 \cdot 0.6)+(0 \cdot 0.4)=0.6 \\
+\mathbb{E}(y) = \sum_{i=1}^{2} y_{[i]} P(y_{[i]}) \\
+\mathbb{E}(y) = (1 \cdot p)+(0 \cdot (1-p)) \\
+\mathbb{E}(y) = p
 \end{split}
 (\#eq:10-2)
 \end{equation}
@@ -337,7 +337,7 @@ The second and third lines in \@ref(eq:10-4) represent the model link function a
 
 $$
 \begin{equation}
-p = \mathrm{logit}^{-1}(Intercept + \beta \cdot x_{[i]}) =  \frac{e^{(Intercept + \beta \cdot x_{[i]})}}{1 + e^{(Intercept + \beta \cdot x_{[i]})}}
+p = \mathrm{logit}^{-1}(\mathrm{Intercept} + \beta \cdot x_{[i]}) =  \frac{e^{(\mathrm{Intercept} + \beta \cdot x_{[i]})}}{1 + e^{(\mathrm{Intercept} + \beta \cdot x_{[i]})}}
 (\#eq:10-13)
 \end{equation}
 $$
@@ -346,7 +346,7 @@ We can then take the inverse logit function and put it directly inside the Berno
 
 $$
 \begin{equation}
-F \sim \mathrm{Bernoulli} \left (\frac{e^{(Intercept + \beta \cdot x_{[i]})}}{1 + e^{(Intercept + \beta \cdot x_{[i]})}} \right ) 
+F \sim \mathrm{Bernoulli} \left (\frac{e^{(\mathrm{Intercept} + \beta \cdot x_{[i]})}}{1 + e^{(\mathrm{Intercept} + \beta \cdot x_{[i]})}} \right ) 
 (\#eq:10-14)
 \end{equation}
 $$
@@ -475,14 +475,14 @@ $$
 p_{[i]} = \mathrm{logit}^{-1} (z_{[i]}) \\
 z_{[i]} = a_{[i]} + b_{[i]} \cdot \mathrm{vtl}_{[i]}  \\ 
 a_{[i]} = \mathrm{Intercept} + A + A \colon L_{[\mathsf{L}_{[i]}]} + L_{[\mathsf{L}_{[i]}]} + S_{[\mathsf{S}_{[i]}]} \\ 
-b_{[i]} =  VTL + A \colon VTL + VTL \colon L_{[\mathsf{L}_{[i]}]} + A \colon VTL \colon L_{[\mathsf{L}_{[i]}]}  \\ \\
+b_{[i]} =  VTL + VTL \colon A + VTL \colon L_{[\mathsf{L}_{[i]}]} + VTL \colon A \colon L_{[\mathsf{L}_{[i]}]}  \\ \\
 \textrm{Priors:} \\
 S_{[\bullet]} \sim \mathrm{Normal}(0,\sigma_{S}) \\ 
-\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ VTL \colon L_{[\bullet]} \\ A \colon VTL \colon L_{[\bullet]} \\ \end{bmatrix}	
+\begin{bmatrix} L_{[\bullet]} \\ A \colon L_{[\bullet]} \\ VTL \colon L_{[\bullet]} \\ VTL \colon A \colon L_{[\bullet]} \\ \end{bmatrix}	
 \sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma} \right) \\ \\
-\mathrm{Intercept} \sim t(3, 0, 3) \\
-A, VTL, A \colon VTL \sim t(3, 0, 3) \\
-\sigma_{S}, \sigma_{L}, \sigma_{A \colon L}, \sigma_{VTL \colon L} , \sigma_{A  \colon VTL \colon L}  \sim t(3, 0, 3) \\ R \sim \mathrm{LKJCorr} (2)
+\mathrm{Intercept} \sim \mathrm{t}(3, 0, 3) \\
+A, VTL, VTL \colon A \sim \mathrm{t}(3, 0, 3) \\
+\sigma_{S}, \sigma_{L}, \sigma_{A \colon L}, \sigma_{VTL \colon L} , \sigma_{VTL  \colon A \colon L}  \sim \mathrm{t}(3, 0, 3) \\ R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:10-13)
 \end{equation}
@@ -1099,9 +1099,9 @@ d_{[i]} =  F_v + F_v \colon A_v + F_v \colon L_{[\mathsf{L}_{[i]}]} + F_v \colon
 S_{[\bullet]} \sim \mathrm{Normal}(0,\sigma_{S}) \\ 
 \begin{bmatrix} L_{[\bullet]} \\ A_v \colon L_{[\bullet]} \\ F_v \colon L_{[\bullet]} \\ A \colon F_v \colon L_{[\bullet]} \\ \end{bmatrix}	
 \sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma} \right) \\ \\
-Intercept \sim t(3, 0, 3) \\
-A, VTL, A \colon VTL \sim t(3, 0, 3) \\
-\sigma_{L}, \sigma_{A_v \colon L}, \sigma_{F_v \colon L} , \sigma_{A_v  \colon F_v \colon L}, \sigma_{S} \sim t(3, 0, 3) \\ 
+Intercept \sim \mathrm{t}(3, 0, 3) \\
+A, VTL, A \colon VTL \sim \mathrm{t}(3, 0, 3) \\
+\sigma_{L}, \sigma_{A_v \colon L}, \sigma_{F_v \colon L} , \sigma_{A_v  \colon F_v \colon L}, \sigma_{S} \sim \mathrm{t}(3, 0, 3) \\ 
 R \sim \mathrm{LKJCorr} (2)
 \end{split}
 (\#eq:10-22)
@@ -1263,7 +1263,7 @@ Fit and interpret one of the suggested models:
 
 1) Easy: Analyze the (pre-fit) model that's exactly like the logistic regression model in this chapter, except using the data in `exp_ex` (`model_gender_vtl_ex`).
 
-2) Easy: Analyze the (pre-fit) model that's exactly like the logistic regression model in this chapter, except using the data in `exp_ex` (`model_gender_vtl_ex`).
+2) Easy: Analyze the (pre-fit) model that's exactly like the signal detection model in this chapter, except using the data in `exp_ex` (`model_gender_dt_ex`).
 
 3) Medium: Fit a model like the ones in this chapter, but using other predictors or a different structure in some way. For example, f0 or duration can be used as predictor, or the four speaker categories can be used rather than apparent age and gender. 
 

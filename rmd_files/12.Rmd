@@ -625,7 +625,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=3)
 
 All six boundary lines are presented in the left plot of figure \@ref(fig:F12-3). One problem with considering the figure in this way is that many of the boundaries are not very relevant. For example, the boundary between girl and man will hardly matter for classification because the 'woman' and 'boy' categories fall almost entirely between the 'girl' and 'man' categories. As a result, listeners will rarely be deciding between a 'man' or 'girl' response when 'boy' and 'woman' are available. 
 
-The right plot of figure \@ref(fig:F12-3) presents only those boundaries that are *relevant*, resulting in a territorial map of our categories along f0 and VTL (see section \@ref(c10-classification)). This can be stated more formally as: The figure contains only those boundaries that represents scores equal to or greater than the maximal score, for that location, from among the response categories. For example, in the left plot we see that the boy-woman boundary bisects the area where 'man' is a modal response (bottom-right in the left plot). This line segment does not feature in the right plot because it has a lower value than the 'man' plane in this area. One way to imagine how territorial maps relate to our planes is to imagine that our planes were opaque but were immaterial such that they can intersect and not block each other. If we were to look 'down' the z axis onto these planes, we would see something very much like the right plot of figure \@ref(fig:F12-3); we would see only those plane sections, and only those intersections, that were 'above' any other plane.
+The right plot of figure \@ref(fig:F12-3) presents only those boundaries that are *relevant*, resulting in a *territorial map* of our categories along f0 and VTL (see section \@ref(c10-classification)). This can be stated more formally as: The figure contains only those boundaries that represents scores equal to or greater than the maximal score for that location, from among the response categories. For example, in the left plot we see that the boy-woman boundary bisects the area where 'man' is a modal response (bottom-right in the left plot). This line segment does not feature in the right plot because it has a lower value than the 'man' plane in this area. One way to imagine how territorial maps relate to our planes is to imagine that our planes were opaque but were immaterial such that they can intersect and not block each other. If we were to look 'down' the z axis onto these planes, we would see something very much like the right plot of figure \@ref(fig:F12-3); we would see only those plane sections, and only those intersections, that were 'above' any other plane.
 
 ```{r F12-3, fig.height = 3, fig.width=8, fig.cap = "(left) Points represent modal classifications for individual speakers. Lines represent the six category boundaries presented in figure \\@ref(fig:F12-2). (right) Territorial map comparing locations associated with the clasification of speakers into boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
@@ -679,7 +679,37 @@ legend (-2.5,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
         pch=16,pt.cex=1.0,bty='n', cex=1.0)
 ```
 
-[@@ SB - talk about making these maps here]
+We can find the boundaries of each of the 'territories' in the territorial map *analytically* by finding each boundary, the intersections of all boundaries, and record only the line segments whose scores where greater than or equal to all of the category planes. Each of these steps is generally straightforward but we know of no algorithm to implement this process easily for any number of response categories. The `make_map` function in the `bmmb` package can be used to generate territorial maps for any number of response categories in a two-dimensional stimulus space. However, rather than find the territorial map analytically, `make_map` estimates its characteristics *numerically*, that is, based on a bunch of guesses and not based on exact solutions. 
+
+The `make_map` function takes in a matrix representing the coefficients for each of the response categories. In the code below we get estimates for our fixed effects and combine these into a matrix. Each column represents the coefficients for a single response category, and intercepts, x axis coefficients and y axis coefficients vary across rows. The rows and columns of a matrix below have been named to make this organization clearer, and you should compare the values below to our model fixed effects (e.g., `fixef (model_multinomial)`).
+
+```{r, eval = FALSE}
+parameters = unname (fixef (model_multinomial)[,1])
+parameters = unname (fixef (model_multinomial)[,1])
+
+parameters = cbind(c(0,0,0),
+                   parameters[c(1,4,5)], 
+                   parameters[c(2,6,7)],
+                   parameters[c(3,8,9)])
+
+colnames(parameters)=c("b","g","m","w")
+rownames(parameters)=c("Intercept","vtl_slope","f0_slope")
+
+parameters
+```
+
+This matrix can be passed to the `make_map` function, which uses it to calculate the territorial map. It operates in the following manner. First, it generates a 1000 by 1000 points grid spanning the desired x and y axis range. The density of points can be set with the `density` parameter and the x and y axis range can be set manually or by passing points with the same ranges to the function with the `points` parameter. After this, the function uses the parameters given to calculate the score for each category, for every point in the grid, and collects the winning category for each location. After this, the convex hull encompassing the points for each category is found, and the polygon representing the convex hull for each category is returned in a list by the function. 
+
+```{r, eval = FALSE}
+territorial_map = 
+  make_map (parameters, points = cbind(exp_data$vtl,exp_data$f0))
+```
+
+The output of `make_map` can be passed to the `plot_map` function to plot the resulting territorial maps easily. We used this process to create the territorial maps of the figures in this chapter. 
+
+```{r, eval = FALSE}
+plot_map (territorial_map, colors = bmmb::cols[2:5],xlab="vtl",ylab="f0")
+```
 
 We noticed something very strange when we made the territorial map in figure \@ref(fig:F12-3): The 'boy' territory contains a large number of woman responses. In addition, the boy-woman boundary seems strangely high along f0. If that is really the boundary between boys and women in the VTL by f0 space, then a large number of adult female speakers fall into territory where 'boy' responses are expected. If this is the case then how/why is the model classifying all those women correctly? The answer to this question may lie in figure \@ref(fig:F12-4). 
 

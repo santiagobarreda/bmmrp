@@ -275,14 +275,14 @@ brmplot (rbind(fixef_1[4,],fixef_2[4,],fixef_3[4,]), ylim = c(-6,1),
 
 ### More specific priors 
 
-The final model above was named `conservative` because its priors may have been *too* small. As noted above we actually expect an effect for age of about 10 cm based on variation in veridical height between children and adults, and about 3 cm for the gender effect. When we set our priors using the `class` parameter in the `prior` function, we can reduce the time our models take to fit, but we lose the ability to fine-tune priors for specific parameters. For example, we might want a model with a prior with a standard deviation of 10 cm for the age effect, and a prior standard deviation of 3 cm for the gender effect. We can use the `prior_summary` function in `brms` to see what priors we can set for our model. The output of this function is formatted in the same way as that of the `get_priors` function, discussed in sections \@ref(c3-specifying-priors) and \@ref(c4-fitting-1). 
+The final model above was named `conservative` because its priors may have been *too* small. As noted above we actually expect an effect for age of about 10 cm based on variation in veridical height between children and adults, and about 3 cm for the gender effect. When we set our priors using the `class` parameter in the `prior` function, we can reduce the time our models take to fit, but we lose the ability to fine-tune priors for specific parameters. For example, we might want a model with a prior with a standard deviation of 10 cm for the age effect, and a prior standard deviation of 3 cm for the gender effect. We can use the `prior_summary` function in `brms` to see what priors we can set for our model. The output of this function is formatted in the same way as that of the `get_priors` function, discussed in sections \@ref(c3-specifying-priors) and \@ref(c4-fitting-1). Actually, we're going to use a clone of `get_priors` in the `bmmb` package just because the one in `brms` doesn't like it when you omit columns from the output when printing. 
 
 ```{r, eval = TRUE}
 # we omit empty columns to let the output fit on the page 
-brms::prior_summary(model_mildly_informative)[,-c(5:9)]
+bmmb::prior_summary(model_mildly_informative)[,-c(5:9)]
 ```
 
-We can copy the values of the `class`, `coeff`, and `group` columns in the output above to set more specific prior probabilities for the different parameters in our model. Below, We set some arbitrarily selected priors just to show an example of how these can be set for more specific groups of parameters.
+By the way, you can get the same information from your models by running the command `model_mildly_informative$prior`. We can copy the values of the `class`, `coeff`, and `group` columns in the output above to set more specific prior probabilities for the different parameters in our model. Below, We set some arbitrarily selected priors just to show an example of how these can be set for more specific groups of parameters.
 
 ```{r, eval = FALSE}
 # we omit the 'brms::' part so that the lines below will fit on the page
@@ -300,14 +300,31 @@ priors =
 options (contrasts = c('contr.sum','contr.sum'))
 prior_informative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
-             data = exp_data, chains = 1, cores = 1, 
+             sample_prior = "only", data = exp_data, chains = 1, cores = 1, 
              warmup = 1000, iter = 5000, thin = 1, prior = priors)
 ```
 
 If we inspect the priors for this model and compare this to the previous one, we can see that now there is between-parameter variation in our priors.
 
 ```{r, eval = FALSE}
-brms::prior_summary(prior_informative)[,-c(5:9)]
+bmmb::prior_summary(prior_informative)[,-c(5:8)]
+##                    prior     class      coef group  source
+## 1      student_t(3,0, 6)         b                    user
+## 2     student_t(3,0, 10)         b        A1          user
+## 3     student_t(3,0, 10)         b     A1:G1       default
+## 4      student_t(3,0, 3)         b        G1          user
+## 5    student_t(3,156, 6) Intercept                    user
+## 6  lkj_corr_cholesky (2)         L                    user
+## 7  lkj_corr_cholesky (2)         L               L default
+## 8     student_t(3,0, 10)        sd                    user
+## 9     student_t(3,0, 10)        sd               L default
+## 10     student_t(3,0, 5)        sd        A1     L    user
+## 11     student_t(3,0, 5)        sd     A1:G1     L default
+## 12   student_t(3,0, 1.5)        sd        G1     L    user
+## 13   student_t(3,0, 1.5)        sd Intercept     L default
+## 14   student_t(3,0, 1.5)        sd               S default
+## 15   student_t(3,0, 1.5)        sd Intercept     S default
+## 16     student_t(3,0, 6)     sigma                    user
 ```
 
 ## Heteroskedasticity and distributional (or mixture) models

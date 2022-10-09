@@ -15,12 +15,14 @@ https://orcid.org/0000-0003-2515-384X
 
 Abstract:
 
+In this chapter methods for the prediction of categorical dependent variables with >2 categories are introduced. First, multinomial regression is introduced and it's relationship to logistic regression is outlined. A multinomial logistic regression model with several predictors and random effects is fit and interpreted. The use of multinomial models to classify data, model listener judgments, and make territorial maps is discussed. After that, ordinal logistic regression is introduced. A discussion of ordinal regression as a latent variable model is presented, as is the use of cumulative distributions and thresholds by ordinal models. An ordinal logistic regression model with several predictors and random effects is fit, interpreted, and discussed. Finally, an example of an ordinal regression model with listener-specific latent variable distributions is presented.
+
 
 In chapter 10 we introduced models that can predict dichotomous (2-category) categorical variables using logistic regression. Here, we extend the concepts introduced in that chapter to the modeling of dependent variables with any number of categories. First, we discuss multinomial regression models that can be used to predict categorical variables without an inherent ordering. For example, we could use a multinomial model to predict the perception of vowel sounds from speech acoustics, to predict the lexical category of a word (verb, noun, adjective, ...), or to predict a speaker's native language. After this, we introduce ordinal models appropriate for the prediction of categorical variables with some inherent ordering (e.g., first, second, and third).  
 
 ## Chapter pre-cap
 
-In this chapter methods for the prediction of categorical dependent variables with >2 categories are introduced. First, multinomial regression is introduced and it's relationship to logistic regression is outlined. A multinomial logistic regression model with several predictors and random effects is fit and interpreted. The use of multinomial models to classify data, model listener judgments, and make territorial maps is discussed. After that, ordinal logistic regression is introduced. A discussion of ordinal regression as a latent variable model is presented, as is the use of cumulative distributions and thresholds by ordinal models. An ordinal logistic regression model with several predictors and random effects is fit, interpreted, and discussed. Finally, an example of an ordinal regression model listener-specific latent variable distributions is given.
+In this chapter methods for the prediction of categorical dependent variables with >2 categories are introduced. First, multinomial regression is introduced and it's relationship to logistic regression is outlined. A multinomial logistic regression model with several predictors and random effects is fit and interpreted. The use of multinomial models to classify data, model listener judgments, and make territorial maps is discussed. After that, ordinal logistic regression is introduced. A discussion of ordinal regression as a latent variable model is presented, as is the use of cumulative distributions and thresholds by ordinal models. An ordinal logistic regression model with several predictors and random effects is fit, interpreted, and discussed. Finally, an example of an ordinal regression model with listener-specific latent variable distributions is presented.
 
 ## Multinomial logistic regression
 
@@ -29,7 +31,7 @@ In this chapter methods for the prediction of categorical dependent variables wi
 The multinomial distribution is a generalization of the binomial distribution (see section \@ref(c10-dichotomous)) to any number of discrete categories. This distribution will allow us to model the categorization of speakers into boys, girls, men, and women simultaneously rather than modeling this as two binary categorizations (male vs. female and adult vs. child). The multinomial distribution has three parameters:
   
   1) $n$: The number of trials, a positive integer.
-  2) $J$: The number of possible outcomes categories, a positive integer.
+  2) $J$: The number of possible outcome categories, a positive integer.
   3) $p_1, \dots, p_J$: A vector of probabilities of observing each of the $J$ outcomes where $\sum p_j = 1$.
   
 The multinomial distribution (equation \@ref(eq:12-1)) takes the above parameters and generates a vector of counts ($y_1, \dots, y_J$) representing the number of observations for each category. For every observation of a multinomial variable, the sum of the outcome probabilities ($p_1, \dots, p_J$) must equal 1 and the sum of the outcomes ($y_1, \dots, y_J$) must equal n, the total number of trials.
@@ -43,7 +45,7 @@ $$
 
 We can begin by thinking about the case where n=1. In this case our $y$ vector will equal 1 for one category and 0 for all other categories. Actually, data like this could be represented using a **categorical distribution**, which is just like the multinomial distribution except the n is *always* equal to 1. The multinomial distribution is to the categorical distribution as the binomial distribution is to the Bernoulli distribution (see chapter 10). We will focus on the multinomial distribution here, however, we will provide an example of how to fit our model using a categorical distribution a bit later in the chapter. 
 
-Below we draw 10 instances of a four-category multinomial variable with probabilities of 0.4, 0.1, 0.2, and 0.3 for the first, second, third and fourth categories respectively. 
+Below we draw 10 instances of a four-category multinomial variable with probabilities of 0.4, 0.1, 0.2, and 0.3 for the first, second, third and fourth categories respectively. In each case, the variable we sample has n=1.
   
 ```{r}
 rmultinom (10, 1, c(.4,.1,.2,.3))
@@ -70,12 +72,12 @@ Multinomial regression is just what it sounds like: A regression model for the p
 
 ### Multinomial logits and the softmax function
 
-Multinomial regression is a surprisingly 'simple' extension of the concepts underlying logistic regression. When we discussed logistic regression in chapter 10, we introduced the inverse logit function (the link function for logistic regression). In section \@ref(c10-inverse-logit), we discussed the fact that this function converts log odds to probabilities by arbitrarily setting the 'count' of failures to 1 and modeling only the expected 'count' of outcomes (i.e. $e^z$). So, we see in equation below that the probability that $y=1$ (i.e. a 'success') is equal to the ratio of the expected number of successes over the sum of the total number of outcomes.  
+Multinomial regression is a surprisingly 'simple' extension of the concepts underlying logistic regression. When we discussed logistic regression in chapter 10, we introduced the inverse logit function (the link function for logistic regression). In section \@ref(c10-inverse-logit), we discussed the fact that this function converts log odds to probabilities by arbitrarily setting the 'count' of failures to 1 and modeling only the expected 'count' of outcomes (i.e. $e^z$). We see in equation \@ref(eq:12-2) that the probability that $y=1$ (i.e. a 'success') is equal to the ratio of the expected number of successes over the sum of the total number of outcomes.  
 
 $$
 \begin{equation}
 \begin{split}
-P(Y=1) = \frac{\mathrm{success}}{\mathrm{failure}+\mathrm{success}} = \frac{e^{z}}{1+e^{z}}
+P(y=1) = \frac{\mathrm{success}}{\mathrm{failure}+\mathrm{success}} = \frac{e^{z}}{1+e^{z}}
 \end{split}
 (\#eq:12-2)
 \end{equation}
@@ -92,7 +94,7 @@ P(Y=j) = \frac{e^{z_j}}{\sum_{j=1}^{J} e^{z_j}}
 \end{equation}
 $$
 
-The function above is called the **softmax** function, and it is basically a generalization of the inverse logit function to more than two categories. When we did dichotomous logistic regression, we modeled only the 'count' of one variable, the one for 'success'. The 'count' for the category set to 'failure' was not modeled and was set to 1 (by setting $z=0$) for all cases. When we model multinomial data we follow the same convention and set one category as the 'reference'. To do this, we modify the equation above to pull the first category out of the summation and set its count to 1 for all situations, as in equation \@ref(eq:12-4). Notice that the summation in the denominator of the fraction now begins at two. In chapter 10 we said that you can think of the inverse logit function as relating expected successes relative to one failure. You can think of the softmax function as relating the expected number of outcomes of one category to the sum of the expected number of outcomes of all categories, where one of the counts (the reference category) has been set to one. 
+The function above is called the **softmax** function, and it is basically a generalization of the inverse logit function to more than two categories. When we did dichotomous logistic regression, we modeled only the 'count' of one variable, the one for 'success'. The 'count' for the category set to 'failure' was not modeled and was set to 1 (by setting $z=0$, and $e^{0}=1$) for all cases. When we model multinomial data we follow the same convention and set one category as the 'reference'. To do this, we modify the equation above to pull the first category out of the summation and set its count to 1 for all situations, as in equation \@ref(eq:12-4). Notice that the summation in the denominator of the fraction now begins at two. In chapter 10 we said that you can think of the inverse logit function as relating expected successes relative to one failure. You can think of the softmax function as relating the expected number of outcomes of one category to the sum of the expected number of outcomes of all categories, where one of the counts (the reference category) has been set to one. 
 
 $$
 \begin{equation}
@@ -135,7 +137,7 @@ In our four-category multinomial model we can imagine four latent variables, the
 
 At this point we've laid out the basics of multinomial regression, however, our presentation has been very quick and fairly abstract. To make our example more concrete we're going to talk about a small toy example using a single predictor and three categories, and show that a multinomial model with a single quantitative predictor is a modest extension of a logistic regression model with a single quantitative predictor. 
 
-Let's assume that we're interested in the prediction of a variable $Y$ with two outcome categories, 1 and 2. We arbitrarily set 2 to 'success' and make it equal to 1 in the vector representing the variable. Supposed we are interested in predicting the probability of observing a success, i.e. $Y=2$, using a single quantitative predictor $x$. We model the logit of the probability of observing a success using a line with a given intercept and slope for the quantitative predictor. We set the value of failures to 0 logits for all cases, which is equivalent to representing the failure category with a horizontal line whose intercept is zero. So, our logistic model can be thought of as consisting of the two prediction equations in \@ref(eq:12-00), presented in the top left plot of figure \@ref(fig:F12-1). 
+Let's assume that we're interested in the prediction of a variable $Y$ with two outcome categories, 1 and 2. We arbitrarily set 2 to 'success' and make it equal to 1 in the vector representing the dependent variable. Supposed we are interested in predicting the probability of observing a success, i.e. $Y=2$, using a single quantitative predictor $x$. We model the logit of the probability of observing a success using a line with a given intercept and slope for the quantitative predictor. We set the value of failures to 0 logits for all cases, which is equivalent to representing the failure category with a horizontal line whose intercept is zero. So, our logistic model can be thought of as consisting of the two prediction equations in \@ref(eq:12-00), presented in the top left plot of figure \@ref(fig:F12-1). 
 
 $$
 \begin{equation}
@@ -180,7 +182,7 @@ grid()
 lines (x,z1,col=1,lwd=3)
 
 plot (x, ps2[,2], type = 'l',col=4, ylim = c(0,1),xlim=c(-3,3),xaxt='n',
-      ylab = "P(y=C)",lwd=3,cex.lab=1.3,xaxs='i')
+      ylab = "P(Y=C)",lwd=3,cex.lab=1.3,xaxs='i')
 grid()
 lines (x,ps2[,1],col=1, lty=2,lwd=3)
 
@@ -192,7 +194,7 @@ lines (x,z3,col=2,lwd=3)
 mtext (side=1, "Predictor", line=2.7,lwd=3)
 
 plot (x, ps[,2], type = 'l',col=4, ylim = c(0,1),xlim=c(-3,3),
-      ylab = "P(y=C)",lwd=3,cex.lab=1.3,xaxs='i')
+      ylab = "P(Y=C)",lwd=3,cex.lab=1.3,xaxs='i')
 grid()
 lines (x,ps[,1],col=1,lwd=3)
 lines (x,ps[,3], col=2,lwd=3)
@@ -200,7 +202,7 @@ mtext (side=1, "Predictor", line =2.7)
 
 ```
 
-Rather than use the inverse logit function to convert logits to probabilities, we will use the softmax function (introduced above), since we know that these are equivalent when there are two categories. Below, we see that when we set the 'count' for failures to 1, i.e. set $z_1=0$ so that $e^{z_1}=1$, the softmax function really does 'become' the inverse logit function when calculating the probability of a success ($P(Y=2)$). Below that we also use this approach to calculate the probability of a failure ($P(Y=1)$). Of course, this is not usually done because $P(Y=2) = 1-P(Y=2)$, however, we do this explicitly here for illustrative purposes.
+Rather than use the inverse logit function to convert logits to probabilities, we will use the softmax function (introduced above), since we know that these are equivalent when there are two categories. Below, we see that when we set the 'count' for failures to 1, i.e. set $z_1=0$ so that $e^{z_1}=1$, the softmax function really does 'become' the inverse logit function when calculating the probability of a success ($P(Y=2)$). We also use this approach to calculate the probability of a failure ($P(Y=1)$). Of course, this is not usually done because $P(Y=2) = 1-P(Y=2)$, however, we do this explicitly here for illustrative purposes.
 
 $$
 \begin{equation}
@@ -287,13 +289,13 @@ lines (probabilities[,2], type = 'l')
 lines (probabilities[,3], type = 'l')
 ```
 
-There is one important difference between logistic and multinomial regression related to classification, or expected outcomes, based on probabilities and scores. When there are only two categories, a logit greater than 0 implies a probability greater than 0.5 of success. In previous chapters, we used this characteristics to talk about expected outcomes in specific parts of the stimulus space. Basically, in any part of the stimulus space where a positive logit is predicted, you expect to observe a 'success' (1). In any part of the stimulus space where a negative logit is predicted you expect to observe a 'failure' (0). Since the logit of failures is always fixed at exactly zero, another way to look at this is that the category with the greatest predicted logit value is expected. 
+There is one important difference between logistic and multinomial regression related to classification, or expected outcomes, based on probabilities and scores. When there are only two categories, a logit greater than 0 implies a probability greater than 0.5 of success. In previous chapters, we used this characteristic to talk about expected outcomes in specific parts of the stimulus space. Basically, in any part of the stimulus space where a positive logit is predicted, you expect to observe a 'success' (1). In any part of the stimulus space where a negative logit is predicted you expect to observe a 'failure' (0). Since the logit of failures is always fixed at exactly zero, another way to look at this is that the category with the greatest predicted logit value is expected. 
 
 When there are more than two possible outcome categories, there is no guarantee that a positive score for a given outcome means that category is expected. However, it is still the case that the category with the greatest score in a given condition is the predicted outcome for that condition. Another thing to keep in mind is that, unlike in logistic regression, the most probable outcome may not be very probable in a multinomial model. For example, if there are five outcome categories the most probable predicted outcome could have a probability of only 0.24 if the other categories had probabilities of 0.19. Thus, we see that in multinomial regression the most probable outcome doesn't have to be very probable, it just needs to be more probable than the alternatives.    
 
 ### Data and research questions
 
-We load our packages and data below. We also add a new variable, $y$, representing our multinomial outcome. This variable represents observations of a vector of length four whose first, second, third, and fourth elements represent observed outcomes of 'boy', 'girl', 'man', and 'woman', respectively. After this we add a variable called `size` that always equals 1 because each row in our data frame represents observation of a single outcome. Of course, the size information may be higher than 1 for your data if some of your rows represent trials with n higher than 1. Finally, we process our quantitative predictors in the same way as in the previous chapters.
+We load our packages and data below. We also add a new variable, $y$, representing our multinomial outcome. This variable represents observations of a vector of length four whose first, second, third, and fourth elements represent observed outcomes of 'boy', 'girl', 'man', and 'woman', respectively. After this we add a variable called `size` that always equals 1 because each row in our data frame represents the observation of a single outcome. Of course, the size information may be higher than 1 for your data if some of your rows represent trials where n>1. Finally, we process our quantitative predictors in the same way as in the previous chapters.
 
 ```{r, warning=FALSE, message=FALSE}
 library (brms)
@@ -318,7 +320,7 @@ exp_data$f0 = exp_data$f0 - mean(exp_data$f0)
 exp_data$f0 = exp_data$f0 / 100
 ```
 
-Below, we print out the first six instances of our dependent variable and compare this to the first six values of the `C` (apparent category) variable in our data frame. We can see that the dependent variable indicates which category was selected for a given trial using a 1 in the appropriate column and a 0 in the others. 
+Below, we print out the first six instances of our dependent variable and compare this to the first six values of the `C` (apparent category) variable in our data frame. Each row in the matrix below represents a single observation of our multinomial variable. We can see that the dependent variable indicates which category was selected for a given trial using a 1 in the appropriate column and a 0 in the others. 
 
 ```{r}
 # first 6 elements of dependent variable
@@ -359,9 +361,9 @@ This means that our multinomial model will involve four times as many coefficien
 $$
 \begin{equation}
 \begin{split}
-y_{1[i]},y_{2[i]},y_{3[i]},y_{4[i]} \sim \mathrm{multinomial}(p_{1[i]},p_{2[i]},p_{3[i]},p_{4[i]}, n_{[i]}) \\ \\
+y_{1[i]},y_{2[i]},y_{3[i]},y_{4[i]} \sim \mathrm{multinomial}(p_{1[i]},p_{2[i]},p_{3[i]},p_{4[i]}, size_{[i]}) \\ \\
 \mathrm{for} \; j = 1, \dots, 4\\ \\ 
-p_{j[i]} = \frac{e^{z_j}}{\sum_{j=1}^{J} e^{z_j}} \\ 
+p_{j[i]} = \frac{e^{z_{j[i]}}}{\sum_{j=1}^{J} e^{z_{j[i]}}} \\ 
 \\
 z_{j[i]} = \mathrm{a}_j + b_{j[i]} \cdot \mathrm{vtl}_{[i]} + c_{j[i]} \cdot \mathrm{f0}_{[i]}  \\ 
 a_{j[i]} = \mathrm{Intercept}_j + L_{j[\mathsf{L}_{[i]}]} + S_{j[\mathsf{S}_{[i]}]} \\ 
@@ -382,9 +384,9 @@ VTL_j, F0_j \sim \mathrm{t}(3, 0, 3) \\
 \end{equation}
 $$
 
-We're going to take some time to unpack this definition, top to bottom, because it is at the same time very familiar and very different. First, note that our data-generating distribution is assumed to be the multinomial distribution. This function has a $p_j$ parameter indicating the probability of observing each of the $J$ categories, and an $n$ parameter specifying the total number of trials for that observation. The next line indicates that the next few lines apply individually for all four categories. For each category, the probability of observing that outcome ($p_j$) is found by combining the score for each category ($z_j$) using the softmax link function. 
+Here's a plain English description of our model:
 
-For each category, the score is equal to a trial-dependent combination of an intercept, an effect for VTL, and an effect for f0. The intercept varies according to an overall model intercept and speaker and listener-dependent variations from this. The VTL and f0 effects vary according to listener-dependent effects. After that we move on to the model priors. Unlike for the above lines, we do not specify priors for any parameters related to the reference category. This is because all of these parameters are set to 0 for this category. Again, we note that the specification of priors is very similar to the models we have discussed to this point, save for the proliferation of $j$ subscripts. 
+>Our vector of counts ($y_{1[i]},y_{2[i]},y_{3[i]},y_{4[i]}$) is assumed to come from a multinomial distribution with unknown parameters $p_{1[i]},p_{2[i]},p_{3[i]},p_{4[i]}$, and an n equal to 1 (size) for all trials. For each of our j response categories, the probability of observing that outcome on a trial i, $p_{j[i]}$, is found by combining the score for each category for that trial ($z_{j[i]}$) using the softmax link function. The score for a trial is equal to a trial-dependent combination of an intercept, an effect for VTL, and an effect for f0. The intercept for category j for trial i ($a_{j[i]}$) varies according to an overall model intercept for that category ($\mathrm{Intercept}_{j}$) and speaker ($S_{j[\mathsf{S}_{[i]}]}$) and listener-dependent ($L_{j[\mathsf{L}_{[i]}]}$) variations from this. The VTL slope for category j for trial i ($b_{j[i]}$) varies according to an overall VTL slope for that category ($VTL_{j}$) and listener-dependent ($VTL \colon L_{j[\mathsf{L}_{[i]}]}$) variations from this. The f0 slope for category j for trial i ($c_{j[i]}$) varies according to an overall f0 slope for that category ($F0_{j}$) and listener-dependent ($F0 \colon L_{j[\mathsf{L}_{[i]}]}$) variations from this. We only specify priors for response categories 2 to four since all parameters are set to zero for the first (reference) category. The following applies individually for response categories 2, 3, and 4 (i.e., girls, men, and women). The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_{S_j}$) estimated from the data. The three listener effects were drawn from a three-dimensional normal distribution with standard deviations ($\sigma_{L_j}, \sigma_{VTL_j \colon L_j}, \sigma_{F0_j \colon L_j}$) and a correlation matrix ($R_j$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values.
 
 ### Fitting the model
 
@@ -441,36 +443,43 @@ model_categorical =
 Why would we ever use a multinomial analysis when the categorical distribution seems simpler? First, in some cases individual trials might contain multiple observations such that an individual analysis is not possible. However, a multinomial analysis can also be much faster by substantially reducing the number of individual observations that need to be taken into account when calculating likelihoods. For example, imagine we were only interested in predicting the probability that a listener would report each speaker category. If we run a model like this:
 
 ```{r, eval = FALSE}
-brms::brm (C ~ 1 + (1|L), family="categorical", data = exp_data)
+brms::brm (C ~ 1+(1|L), family="categorical", data = exp_data)
 ```
 
-Then our data has 2085 rows. However, if we create a table like this:
+Then our data has 2085 rows because we have 139 rows for each of 15 listeners. However, if we create a table like this:
 
 ```{r}
 table (exp_data$C, exp_data$L)
 ```
 
-And use this as our data, then we can treat each column above as a single data point consisting of 139 observations. This means our data now has only 15 rows and, as a result, fitting the model below will be much (much) faster. 
+And use this as our data, then we can treat each column above as a single observation from a multinomial distribution with an n equal to 139. When treated this way, our data has only 15 rows and, as a result, fitting the model below will be much (much) faster. 
 
 ```{r, eval = FALSE}
-new_data = data.frame (size = 139, 
-                       L = factor(1:15))
+new_data = data.frame (size = 139, L = factor(1:15))
 new_data$y = as.matrix(table (exp_data$L, exp_data$C))
 
-brms::brm (y|trials(size) ~ 1 + (1|L), family="multinomial", data = new_data)
+brms::brm (y|trials(size) ~ 1+(1|L), family="multinomial", data = new_data)
 ```
 
-This is not an option for us, since we want to predict categorizations based on the specific combination of listener and speaker, and we only have one such observation in our data. However, it is worth considering if a categorical or multinomial analysis might best suit your situation. 
+This is not an option for us since we want to predict categorizations based on the specific combination of listener and speaker, and we only have one observation for each unique combination in our data. However, it is worth considering if a categorical or multinomial analysis might best suit your specific situation. 
 
 ### Interpreting the model
 
-Below we see the model fixed effects, the intercept, VTL slope, and the f0 slope for each category with estimated parameters (i.e. no reference category `b`). Each group of parameters defines a plane whose value along the $z$ dimension can be predicted based on the values of f0 and VTL. We have four planes and four values of $z_j$ for any given location in the two dimensional space defined by f0 and VTL. For each point, we can select as the most probable category the one whose value of $z_j$ is highest at the point in the space. Another way to look at this is that we select as the most probable outcome the category whose plane is highest at any given location in the space. 
+Below we see the model fixed effects, the intercept, VTL slope, and the f0 slope for each category with estimated parameters (i.e. no reference category `b`). The set of parameters for each category defines a category-specific plane whose value along the $z$ dimension can be predicted based on the values of f0 and VTL. We have four planes and four values of $z_j$ for any given location in the two dimensional space defined by f0 and VTL. For each point, we can select as the most probable category the one whose value of $z_j$ is highest at the point in the space. Another way to look at this is that we select as the most probable outcome the category whose plane is highest at any given location in the space. 
 
 ```{r}
 brms::fixef (model_multinomial)
 ```
 
-Since the predicted value, the *linear predictor*, is the score for each category, the parameters above are difficult to interpret in isolation. This is because scores need to be interpreted relative to the baseline category value of 0 (for boys), or relative to one another, rather than absolutely. For example, the negative coefficient for VTL for 'girl' (`mug_vtl`) indicates that a longer VTL made a girl response less likely. We can also see that increasing f0 made a 'woman' response more likely (`muw_f0`), and a 'man' response less likely (`mum_f0`). However, it's important to remember that these effects are all relative to the effects for the boy category, and not 'absolute'. For example, the 'boy' slope for VTL is 0, meaning it is 1.64 higher than the 'girl' slope for the same predictor (which is -1.64). We could say this means that longer VTLs suggest a 'boy' response is more likely with respect to a 'girl' response. However, a slope of 0 is smaller than the VTL slope for 'men' of 3.13. So, a longer VTL means that a 'boy' response is *less* likely with respect to a 'man' response. As with all of the parameters in our model, these comparisons can be made more formally with the `hypothesis` (or `short_hypothesis`) function.
+Since the predicted value, the *linear predictor*, is the score for each category, the parameters above are difficult to interpret in isolation. This is because scores need to be interpreted relative to the baseline category value of 0 (for boys), or relative to one another, rather than absolutely. For example, the negative coefficient for VTL for 'girl' (`mug_vtl`) indicates that a longer VTL made a girl response less likely. We can also see that increasing f0 made a 'woman' response more likely (`muw_f0`), and a 'man' response less likely (`mum_f0`). However, it's important to remember that these effects are all relative to the effects for the boy category, and not 'absolute'. For example, the 'boy' slope for VTL is 0, meaning it is 1.64 higher than the 'girl' slope for the same predictor (which is -1.64). We could say this means that longer VTLs suggest a 'boy' response is more likely with respect to a 'girl' response. However, a slope of 0 is smaller than the VTL slope for 'man' of 3.13. So, a longer VTL means that a 'boy' response is *less* likely with respect to a 'man' response. As with all of the parameters in our model, these comparisons can be made more formally with the `hypothesis` (or `short_hypothesis`) function as seen below.
+
+```{r}
+# difference in VTL slopes between:
+short_hypothesis (model_multinomial, 
+                  c("mug_vtl - mum_vtl = 0",    # girls and men
+                    "mug_vtl -  0 = 0",         # girls and boys  
+                    "mum_vtl - 0 = 0"))         # men and boys
+```
 
 We might wonder how well our model can predict listener judgements. We can do this by finding the predicted probability for each category predicted by our model, as seen below. Note that we use the `fitted` rather than `predict` function. This is because we are interested in the expected values predicted by our model. In contrast, `predict` would give us *posterior predictions* of the actual dependent variable which would incorporate our modeled noise.
 
@@ -484,7 +493,7 @@ The result of this is a three dimensional matrix. The first two dimensions repre
 head(multi_pred_re[,,1])
 ```
 
-Below we see them for the second category (girl):
+Below we see the same information for the second category (girl):
 
 ```{r}
 head(multi_pred_re[,,2])
@@ -562,7 +571,7 @@ y = \frac {-\mathrm{a} + \mathrm{d}}{\mathrm{c} - \mathrm{f}} + \frac{-\mathrm{b
 \end{equation}
 $$
 
-The equation above is actually much simpler than it looks. Since the parameters ($a,b,c,d,e,f$) are just constants, the intercept ($-a+d/c-f$) and slope (($-b+e/c-f$)) simplify to scalars. As mentioned above, we get 6 such line equations, one for the boundary between all possible pairs of each of the four planes. Figure \@ref(fig:F12-2) presents each of these six boundaries compared to the modal classification for each speaker. 
+The equation above is actually much simpler than it looks. Since the parameters ($a,b,c,d,e,f$) are just constants, the intercept ($-a+d/c-f$) and slope ($-b+e/c-f$) simplify to scalars. As mentioned above, we get 6 such line equations, one for the boundary between all possible pairs of each of the four planes. Figure \@ref(fig:F12-2) presents each of these six boundaries compared to the modal classification for each speaker. 
 
 ```{r F12-2, fig.height = 4, fig.width=8, fig.cap = "Each plot compares a single estimated category boundary between two groups at a time for boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
@@ -634,7 +643,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=3)
 
 All six boundary lines are presented in the left plot of figure \@ref(fig:F12-3). One problem with considering the figure in this way is that many of the boundaries are not very relevant. For example, the boundary between girl and man will hardly matter for classification because the 'woman' and 'boy' categories fall almost entirely between the 'girl' and 'man' categories. As a result, listeners will rarely be deciding between a 'man' or 'girl' response when 'boy' and 'woman' are available. 
 
-The right plot of figure \@ref(fig:F12-3) presents only those boundaries that are *relevant*, resulting in a *territorial map* of our categories along f0 and VTL (see section \@ref(c10-classification)). This can be stated more formally as: The figure contains only those boundaries that represents scores equal to or greater than the maximal score for that location, from among the response categories. For example, in the left plot we see that the boy-woman boundary bisects the area where 'man' is a modal response (bottom-right in the left plot). This line segment does not feature in the right plot because it has a lower value than the 'man' plane in this area. One way to imagine how territorial maps relate to our planes is to imagine that our planes were opaque but were immaterial such that they can intersect and not block each other. If we were to look 'down' the z axis onto these planes, we would see something very much like the right plot of figure \@ref(fig:F12-3); we would see only those plane sections, and only those intersections, that were 'above' any other plane.
+The right plot of figure \@ref(fig:F12-3) presents only those boundaries that are *relevant*, resulting in a *territorial map* of our categories along f0 and VTL (see section \@ref(c10-classification)). This can be stated more formally as: The figure contains only those boundaries that represents scores equal to or greater than the maximal score for that location, from among the response categories. For example, in the left plot we see that the boy-woman boundary bisects the area where 'man' is a modal response (bottom-right in the left plot). This line segment does not feature in the right plot because it has a lower value than the 'man' plane in this area. One way to imagine how territorial maps relate to our planes is to imagine that our planes were opaque but were immaterial such that they can intersect and continue past each other. If we were to look 'down' the z axis onto these planes, we would see something very much like the right plot of figure \@ref(fig:F12-3); we would see only those plane sections, and only those intersections, that were 'above' any other plane.
 
 ```{r F12-3, fig.height = 3, fig.width=8, fig.cap = "(left) Points represent modal classifications for individual speakers. Lines represent the six category boundaries presented in figure \\@ref(fig:F12-2). (right) Territorial map comparing locations associated with the clasification of speakers into boys (b), girls (g), men (m), and women (w).", echo = FALSE}
 
@@ -688,36 +697,33 @@ legend (-2.5,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
         pch=16,pt.cex=1.0,bty='n', cex=1.0)
 ```
 
-We can find the boundaries of each of the 'territories' in the territorial map *analytically* by finding each boundary, the intersections of all boundaries, and record only the line segments whose scores where greater than or equal to all of the category planes. Each of these steps is generally straightforward but we know of no algorithm to implement this process easily for any number of response categories. The `make_map` function in the `bmmb` package can be used to generate territorial maps for any number of response categories in a two-dimensional stimulus space. However, rather than find the territorial map analytically, `make_map` estimates its characteristics *numerically*, that is, based on a bunch of guesses and not based on exact solutions. 
+We can find the boundaries of each of the 'territories' in the territorial map *analytically* by finding each boundary, the intersections of all boundaries, and record only the line segments whose scores where greater than or equal to all of the category planes. Each of these steps is generally straightforward but we know of no algorithm to implement this process easily for any number of response categories. The `make_map` function in the `bmmb` package can be used to generate territorial maps for any number of response categories in a two-dimensional stimulus space. However, rather than find the territorial map analytically, `make_map` estimates its characteristics *numerically*, that is, based on a bunch of guesses and not exact solutions. 
 
-The `make_map` function takes in a matrix representing the coefficients for each of the response categories. In the code below we get estimates for our fixed effects and combine these into a matrix. Each column represents the coefficients for a single response category, and intercepts, x axis coefficients and y axis coefficients vary across rows. The rows and columns of a matrix below have been named to make this organization clearer, and you should compare the values below to our model fixed effects (e.g., `fixef (model_multinomial)`).
+The `make_map` function takes in a matrix representing the coefficients for each of the response categories. In the code below we get estimates for our fixed effects and combine these into a matrix, including a column of zeros to represent the 'boy' coefficients. Each column represents the coefficients for a single response category, and intercepts, x axis coefficients and y axis coefficients vary across rows. The rows and columns of the matrix below have been named to make this organization clearer, and you should compare the values below to our model fixed effects shown above (e.g., `fixef (model_multinomial)`).
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 parameters = unname (fixef (model_multinomial)[,1])
-parameters = unname (fixef (model_multinomial)[,1])
 
-parameters = cbind(c(0,0,0),
-                   parameters[c(1,4,5)], 
-                   parameters[c(2,6,7)],
-                   parameters[c(3,8,9)])
-
-colnames(parameters)=c("b","g","m","w")
+parameters = cbind(b = c(0, 0, 0),
+                   g = parameters[c(1,4,5)], 
+                   m = parameters[c(2,6,7)],
+                   w = parameters[c(3,8,9)])
 rownames(parameters)=c("Intercept","vtl_slope","f0_slope")
 
 parameters
 ```
 
-This matrix can be passed to the `make_map` function, which uses it to calculate the territorial map. It operates in the following manner. First, it generates a 1000 by 1000 points grid spanning the desired x and y axis range. The density of points can be set with the `density` parameter and the x and y axis range can be set manually or by passing points with the same ranges to the function with the `points` parameter. After this, the function uses the parameters given to calculate the score for each category, for every point in the grid, and collects the winning category for each location. After this, the convex hull encompassing the points for each category is found, and the polygon representing the convex hull for each category is returned in a list by the function. 
+This matrix can be passed to the `make_map` function, which uses it to calculate the territorial map. It operates in the following manner. First, it generates a 1000 by 1000 point grid spanning the desired x and y axis range. The density of points can be set with the `density` parameter and the x and y axis range can be set manually or by passing points with the same ranges to the function with the `points` parameter. After this, the function uses the parameters given to calculate the score for each category, for every point in the grid, and collects the winning category for each location. After this, the convex hull encompassing the points for each category is found, and the polygon representing the convex hull for each category is returned in a list by the function. This approach is not *exact*, and so is not appropriate for making big claims about your results. However, it can be made arbitrarily accurate by increasing the density of the points, and this approach is sufficient for creating plots to convey the results of your analyses.
 
 ```{r, eval = FALSE}
 territorial_map = 
-  make_map (parameters, points = cbind(exp_data$vtl,exp_data$f0))
+  bmmb::make_map (parameters, points = cbind(exp_data$vtl,exp_data$f0))
 ```
 
 The output of `make_map` can be passed to the `plot_map` function to plot the resulting territorial maps easily. We used this process to create the territorial maps of the figures in this chapter. 
 
 ```{r, eval = FALSE}
-plot_map (territorial_map, colors = bmmb::cols[2:5],xlab="vtl",ylab="f0")
+bmmb::plot_map (territorial_map, colors = bmmb::cols[2:5],xlab="",ylab="")
 ```
 
 We noticed something very strange when we made the territorial map in figure \@ref(fig:F12-3): The 'boy' territory contains a large number of woman responses. In addition, the boy-woman boundary seems strangely high along f0. If that is really the boundary between boys and women in the VTL by f0 space, then a large number of adult female speakers fall into territory where 'boy' responses are expected. If this is the case then how/why is the model classifying all those women correctly? The answer to this question may lie in figure \@ref(fig:F12-4). 
@@ -845,14 +851,14 @@ The picture without random effects is a bit grim. Overall correct prediction is 
 
 ### Refitting the model without speaker random effects
 
-The results of our previous model suggest that the inclusion of speaker random effects may lead to some unintended, and undesirable, consequences. The predictions made by our initial model are only good as long as we include the speaker random effects. However, these do not let us understand the prediction of new speakers based solely on speaker f0 and VTL. Further, the territorial map we generate using the model are a bit unreliable because of their reliance on the speaker random effects included in the model. We will try fitting the model without speaker effects to see if we get a territorial map that is a better match for our listener judgments. We use the same priors we used before, and fit the same model save for the absence of speaker effects in our formula: 
+The results of our previous model suggest that the inclusion of speaker random effects may lead to some unintended, and undesirable, consequences. The predictions made by our initial model are only good as long as we include the speaker random effects. However, these do not let us understand the prediction of new speakers based solely on speaker f0 and VTL. Further, the territorial map we generate using the model is a bit unreliable because of the influence of the speaker random effects included in the model. We will try fitting the model without speaker effects to see if we get a territorial map that is a better match for our listener judgments. We use the same priors we used before, and fit the same model save for the absence of speaker effects in our formula: 
 
 ```{r, eval = FALSE}
 # Fit the model yourself
 model_multinomial_noS = 
   brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|L), data=exp_data, 
-             family=multinomial(), chains=4, cores=4, warmup=1000, iter = 5000, 
-             thin = 4, prior = multinomial_prior)
+             family=multinomial(), chains=4, cores=4, warmup=1000, 
+             iter = 5000, thin = 4, prior = multinomial_prior)
 ```
 ```{r, eval = FALSE}
 # Or download it from the GitHub page:
@@ -983,7 +989,7 @@ mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
 ```
 
-One concern with omitting the speaker effects is that our model doesn't 'know' that we only had 139 speakers in our experiment. This can have the effect of artificially decreasing our confidence intervals, as we saw in figure  \@ref(fig:F6-5). Figure \@ref(fig:F12-8) compares the fixed effects between our two models, suggesting that the omission of the speaker effects has not had a large effect on most parameters or their credible intervals. The two largest differences are for the woman category: The intercept went from slightly negative to slightly positive, and the effect for f0 went from zero to positive. 
+One concern with omitting the speaker effects is that our model doesn't 'know' that we only had 139 speakers in our experiment. This can have the effect of artificially decreasing our credible intervals, as we saw in figure  \@ref(fig:F6-5). Figure \@ref(fig:F12-8) compares the fixed effects between our two models, suggesting that the omission of the speaker effects has not had a large impact on most parameters or their credible intervals. The two largest differences are for the woman category: The intercept went from slightly negative to slightly positive, and the effect for f0 went from zero to positive. 
 
 ```{r F12-8, fig.height = 3, fig.width=8, fig.cap = "A comparison of the fixed effects means and 95% credible intervals provided by the two multinomial models we are considering.", echo = FALSE}
 ################################################################################
@@ -992,7 +998,7 @@ One concern with omitting the speaker effects is that our model doesn't 'know' t
 
 par (mar = c(4,8,1,1))
 brmplot (fixef(model_multinomial)[c(1,4,5,2,6,7,3,8,9),], las = 2,
-         horizontal = FALSE,col = 0, xlim = c(-5,6))
+         horizontal = FALSE,col = 0, xlim = c(-5,6), xlab = "Coefficients")
 abline (h = seq(1,10),lty=3,col="grey")
 brmplot (fixef(model_multinomial)[c(1,4,5,2,6,7,3,8,9),], add = TRUE,
          nudge = -0.2, labels = "", horizontal = FALSE, pch=16,
@@ -1019,7 +1025,7 @@ predicted_noS = apply (multi_pred_re_noS[,1,],1,which.max)
 predicted_category_noS = c("b","g","m","w")[predicted_noS]
 ```
 
-We calculate correct classifications overall and by category. Performance is not as good as the model with speaker effect when random effects are included (82%) but not as bad as for the same model when random effects are not included (59%). In addition, we see very good classification of all categories except for 'boy'. 
+We calculate correct classifications overall and by category. Performance is not as good as the model with speaker effects when random effects are included (82%) but not as bad as for the same model when random effects are not included (59%). In addition, we see very good classification of all categories except for 'boy'. 
 
 ```{r}
 # overall correct
@@ -1058,13 +1064,11 @@ The speaker random effects are not particularly useful for understanding the cat
 
 Ordinal logistic regression involves the prediction of ordered categories. Although in some senses ordinal regression is 'simpler' than multinomial regression, we decided to present it after multinomial regression. This is because, as discussed above,  multinomial regression is mostly just a multivariate generalization of logistic regression (discussed in detail in chapter 10). In contrast, ordinal regression, although related to logistic regression, is in many ways conceptually its own thing. We will present one way of thinking about ordinal logistic regression however, as usual, there are other ways to think of it. For more information about ordinal regression, please see Agresti (2003), Agresti (2018), and Kruschke (2014) (the same citations we provided for multinomial models, actually).
 
-A simple example of an ordinal variable is first, second, and third place in a race. These values are categorical and not on an interval or ratio scale. For example fourth place is not 'double' anything with respect to second place, and the distance between first and second doesn't necessarily represent the same difference as the difference between second and third. However, there is clearly an inherent ordering in the categories such that first < second < third < fourth < and so on. 
-
-A common experimental example of ordered categorical data arises from survey data that asks listeners to respond to questions using a small number of discrete, categorical choices. For example, respondents might be asked to evaluate whether they 1) strongly agree, 2) somewhat agree, 3) are neutral, 4) somewhat disagree, or 5) strongly disagree with some proposition. This is often referred to as a **Likert scale** and the data resulting from this is often referred to as **Likert scale data**. 
+A simple example of an ordinal variable is first, second, and third place in a race. These values are categorical and not on an interval or ratio scale. For example fourth place is not 'double' anything with respect to second place, and the distance between first and second doesn't necessarily represent the same difference as the difference between second and third. However, there is clearly an inherent ordering in the categories such that first < second < third < fourth < and so on. A common experimental example of ordered categorical data arises from survey data that asks listeners to respond to questions using a small number of discrete, categorical choices. For example, respondents might be asked to evaluate whether they 1) strongly agree, 2) somewhat agree, 3) are neutral, 4) somewhat disagree, or 5) strongly disagree with some proposition. This is often referred to as a **Likert scale** and the data resulting from this is often referred to as **Likert scale data**. 
 
 Likert scale data was originally meant to have response scales ranging from agreement to disagreement (as above). However, the concept of Likert scale data can be generalized to a very broad range of possible questions. For example, rather than height in centimeters, we might have asked listeners "use this 10 point scale to indicate how tall this person sounds". This could be made into a more 'traditional' Likert scale by asking it in the form "this person sounds very tall" and asking people to agree or disagree on a 10 point scale. Rather than ask for binary gender judgments, we might have asked "Use this 7 point scale to judge the perceived femininity/masculinity of the speaker" (or the more traditional "this person sounds very feminine" and asking people to agree or disagree on a 7 point scale).
 
-Although Likert scale data is sometimes treated as quantitative, there are some characteristics of this data that make an ordinal analysis a better fit. First, it is not necessarily the case that the 'distance' between adjacent responses is equal across all categories. We can say with absolute certainty that the difference between 150 and 151 cm is equal to the difference between 151 and 152 cm. However, is the difference between strongly agree and somewhat agree the same as the difference between somewhat agree and neutral? This is difficult if not impossible to 'prove'. Further, the small number of outcome categories may result in subjects reserving extreme categories for extraordinary cases. What if a subject somewhat strongly agrees? There is no such option, and this subject may instead indicate they somewhat agree lest something they *really* strongly agree with comes along later. 
+Although Likert scale data is sometimes treated as quantitative, there are some characteristics of this data that make an ordinal analysis a better fit. First, it is not necessarily the case that the 'distance' between adjacent responses is equal across all categories. We can say with absolute certainty that the difference between 150 and 151 cm is equal to the difference between 151 and 152 cm. However, is the difference between strongly agree and somewhat agree the same as the difference between somewhat agree and neutral? This is difficult if not impossible to determine. Further, the small number of outcome categories may result in subjects reserving extreme categories for extraordinary cases. What if a subject somewhat strongly agrees? There is no such option, and this subject may instead indicate they somewhat agree lest something they *really* strongly agree with comes along later. 
 
 Here's what we said in chapter 1 about when to treat a variable as quantitative:
 
@@ -1078,9 +1082,7 @@ Here's what we said in chapter 1 about when to treat a variable as quantitative:
 
 If survey participants were given a survey with 5 discrete numerical categories and were told that this represented some continuous value 'agreement', then we could perhaps argue that that 5-point Likert scale data abides by the first two considerations above. However, our data runs afoul of the bottom two considerations: There are only a small number of discrete outcomes, with nothing 'in between', and many of the observed values are likely to be near the boundaries and are likely to be constrained by these. 
 
-We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. Below, we see a boxplot of apparent height judgments organized by apparent speaker category, with boys and girls collapsed into one category, 'child'. Note that apparent children are judged to be shortest, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. In addition, there is not very much overlap in apparent heights between categories. 
-
-Based on the above, we could potentially think of our apparent speaker categories as reflecting classifications of speakers into small (boys, girls), medium (women), and large (men). We might imagine that if we *had* asked listeners to identify speakers as small, medium, or large, listeners would have labelled most apparent children as small, most apparent women as medium, and most apparent men as large.
+We don't actually have any ordinal variables in our experiment, but we still wanted to provide an example of an ordinal analysis. To do this, we're going to make a fake ordinal variable that we think is actually relatively plausible. In figure \@ref(fig:F12-9), we see a boxplot of apparent height judgments organized by apparent speaker category, with boys and girls collapsed into one category, 'child'. Note that apparent children are judged to be shortest, apparent women are judged to be a little taller than that, and apparent men are judged to be a little taller than women. In addition, there is not very much overlap in apparent heights between categories. Based on the above, we could potentially think of our apparent speaker categories as reflecting classifications of speakers into small (boys, girls), medium (women), and large (men). We might imagine that if we *had* asked listeners to identify speakers as small, medium, or large, listeners would have labelled most apparent children as small, most apparent women as medium, and most apparent men as large.
 
 ```{r F12-9, fig.height = 3, fig.width=8, fig.cap = "(left) Distribution of apparent height judgments for apparent children, women, and men. (right) A hypothetical linear relationship between apparent height and speaker vocal-tract length. The apparent height axis is divided into three size groups: Small, medium, and large. Points indicate three possible apparent height judgments, leading to three different size-group classifications.", echo = FALSE}
 
@@ -1157,7 +1159,7 @@ The latent variable was presented as apparent height, however, the latent variab
 
 The right side of figure \@ref(fig:F12-10) is labelled "bigness" to correspond to our hypothetical latent variable. This variable is just apparent height divided by 50, but the point is that the values of this axis are entirely arbitrary. Notice that the change in axis units has absolutely no effect on the way our conceptual model works. If the latent variable units are 50 times smaller than some other variable, that just means the slope of the line relating x to y is 50 times smaller and the boundaries between categories are 50 times closer. The same logic applies to the relationship between our latent dependent variable and our predictors. 
 
-```{r F12-10, fig.height = 3, fig.width=8, fig.cap = "Our three possible size group classifications from figure 12.9 are presented again, this time with error distributions around predicted values. The right size of the plot shows an alternate y axis, the made up latent variable 'bigness'.", echo = FALSE}
+```{r F12-10, fig.height = 3, fig.width=8, fig.cap = "Our three possible size group classifications from figure 12.9 are presented again, this time with error distributions around predicted values. The right side of the plot shows an alternate y axis, the made up latent variable 'bigness'.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.10
@@ -1176,7 +1178,7 @@ par (mfrow = c(1,1), mar = c(4,4,.1,4), oma = c(.5,.5,.51,.51))
 #layout (mat = t(c(1,2)), widths = c(.6,.4))
 
 plot (x,y, yaxt='s',type = 'l', xlim = c(120,190),ylim = c(105,215),
-      xlab = "Apparent Height (cm)",xaxt='n',ylab="Apparent Height (cm)")
+      xlab = "Vocal-tract length (cm)",xaxt='n',ylab="Apparent Height (cm)")
 rect (100,90,200,mean(tmp[1:2,2]), col = bmmb::cols[1],border=bmmb::cols[1])
 rect (100,mean(tmp[1:2,2]),200,mean(tmp[2:3,2]), col = bmmb::cols[11],border=bmmb::cols[11])
 rect (100,mean(tmp[2:3,2]),200,400, col = bmmb::cols[10],border=bmmb::cols[10])
@@ -1215,9 +1217,7 @@ Our 'model' so far would do a reasonable job of predicting classification but co
 
 We show a similar situation in figure \@ref(fig:F12-10), with a probability distribution sliding along a line. However, in the case of ordinal regression the values that this distribution generates are not the observed values of the ordinal dependent variable, but rather random values of the *latent* variable (e.g. 'bigness'). The observed ordinal variable is then based on the value of the latent variable with respect to the boundaries in the space (the horizontal lines in the figure). In this chapter we will use a *logistic* distribution as the error distribution (more detail on this in the next section), hence the name, ordinal *logistic* regression. We will do this because it is commonly used and has some useful characteristics, but a basically equivalent model can be constructed using a normal distribution to represent randomness in the latent variable. 
 
-Ordinal regression estimates the location of boundaries between categories along the latent variable. It also tries to predict the expected value of the latent variable for each observation, based on the combination of the dependent variables. For example, in figure \@ref(fig:F12-10) the boundaries are at 31 and 34 bigness, and you have an expected bigness of around 32 for a vocal-tract length of 14.1. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general (32), but these things are fuzzy and necessarily noisy. So actually, there is a distribution of expected perceived/apparent 'bigness' given our predictors. 
-
-Given the actual value of the latent variable for a trial (including the random component), the ordinal response is based on the value of the latent variable with respect to the estimated category boundaries. So, for a fixed expected value of 32, sometimes the distribution might 'generate' a bigness value of 28, resulting in a response of small. For another observation with the same expected value, the value of the latent variable may be 36, meaning the speaker will be identified as large.
+Ordinal regression estimates the location of boundaries between categories along the latent variable. It also tries to predict the expected value of the latent variable for each observation, based on the combination of the dependent variables. For example, in figure \@ref(fig:F12-10) the boundaries are at 31 and 34 bigness, and you have an expected bigness of around 32 for a vocal-tract length of 14.1. We can think of it this way: Given a VTL of 14.1 we know how big people will sound in general (32), but these things are fuzzy and necessarily noisy. So actually, there is a distribution of expected perceived/apparent 'bigness' given our predictors. Given the actual value of the latent variable for a trial (including the random component), the ordinal response is based on the value of the latent variable with respect to the estimated category boundaries. So, for a fixed expected value of 32, sometimes the distribution might 'generate' a bigness value of 28, resulting in a response of small. For another observation with the same expected value, the value of the latent variable may be 36, meaning the speaker will be identified as large.
 
 ### Cumulative distribution functions {#c12-cumulative-density}
 
@@ -1307,7 +1307,7 @@ plogis (2,0,1)-plogis (-1,0,1)
 
 In figure \@ref(fig:F12-12), the boundaries and distributions from figure \@ref(fig:F12-10) have been rotated clockwise 90 degrees so that our latent variable (the arbitrarily named 'bigness') varies along the x axis. The distributions presented in the figure have means of 28, 32, 36, and scales of 1. The probabilities in each subsection of each plot represent the predicted probability of observing size group responses of 1, 2, and 3 for each distribution. These probabilities were calculated based on the area under the curve of the distributions falling between different intervals of the latent variable space. 
 
-```{r F12-12, fig.height = 3.5, fig.width=8, fig.cap = "Error distributions from figure \\@ref(fig:F12-10), presented in more detail. Vertical lines indicate the expected value for each distribution. Numbers indicate area under the curve of the density function inside of each category's section of the 'bigness' dimension. These values correspond to the expected probability of observing each of the size group responses for each expected value of the latent variable.", echo = FALSE}
+```{r F12-12, fig.height = 3.5, fig.width=8, fig.cap = "Error distributions from figure \\@ref(fig:F12-10), presented in more detail. Vertical lines indicate the expected value for each distribution. Numbers indicate the area under the curve of the density function inside of each category's section of the 'bigness' dimension. These values correspond to the expected probability of observing each of the size group responses for each expected value of the latent variable.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.12
@@ -1352,7 +1352,7 @@ plot (x+3.2,y*2, yaxt='s',type = 'n', xlim = c(22,42),ylim = c(0.02,.8),
 rect (1,0,31,1, col = bmmb::cols[1],border=bmmb::cols[1])
 rect (31,0,34,1, col = bmmb::cols[11],border=bmmb::cols[11])
 rect (34,0,50,1, col = bmmb::cols[10],border=bmmb::cols[10])
-axis (side=1, at = seq(24,40,4),cex=1.2)
+axis (side=1, at = seq(24,40,4),cex.axis=1.2)
 lines (x+6,y*2.5, type = 'l', lwd=2)
 abline (v = c(31,34),lwd=5,col=bmmb::cols[15])
 abline (v = 36, lty=3)
@@ -1377,7 +1377,7 @@ plogis (34,32,1) - plogis (31,32,1)
 1 - plogis (34,32,1)
 ```
 
-This conceptualization of our model leads to both **hard classification** and **soft classification**. An ordinal regression model will predict, for every observation, an expected value of the dependent variable based on the values of the predictors. This value can then be used to find response probabilities for each category. A *hard* classification classifies each observation into a predicted category, 1, 2, or 3, based on the value of the highest predicted probability across the categories. A *soft* classification  provides the probability that an observations is classified into one or more categories. For example, in the middle plot of figure \@ref(fig:F12-12), it may be useful to say that the most probable classification is of a 'medium' speaker. However, it may be just as, or more, useful to indicate that the probability of this response was only 0.61, making the observation of a small response (P=0.26) not unlikely.
+This conceptualization of our model leads to both **hard classification** and **soft classification**. An ordinal regression model will predict, for every observation, an expected value of the dependent variable based on the values of the predictors. This value can then be used to find response probabilities for each category. A *hard* classification classifies each observation into a predicted category, 1, 2, or 3, based on the value of the highest predicted probability across the categories. A *soft* classification  provides the probability that an observation is classified into one or more categories. For example, in the middle plot of figure \@ref(fig:F12-12), it may be useful to say that the most probable classification is of a 'medium' speaker. However, it may be just as, or more, useful to indicate that the probability of this response was only 0.61, making the observation of a small response (P=0.26) not unlikely.
 
 ### Data and research questions
 
@@ -1416,7 +1416,7 @@ To fit a model predicting apparent size group from speaker f0 and VTL, we can us
 
 `SG ~ vtl+f0 + (vtl+f0|L) + (1|S)`
 
-This model formula is very much like ones we've used several times in earlier chapters. The formula says "predict size group using a plane based on voice f0 and VTL, allow for listener-specific planes, and speaker-specific adjustments to the height of the plane". However, the relationship it represents between our predictors and our dependent variables is substantially different to what we've seen before. Let's begin with the relationship between the independent variables and the expected value of the latent variable (i.e., mean of our logistic distribution), presented in equation below:
+This model formula is very much like ones we've used several times in earlier chapters. The formula says "predict size group using a plane based on voice f0 and VTL, allow for listener-specific planes, and speaker-specific adjustments to the height of the plane". However, the relationship it represents between our predictors and our dependent variables is substantially different to what we've seen before. Let's begin with the relationship between the independent variables and the expected value of the latent variable (i.e., the mean of our logistic distribution), presented in equation below:
 
 $$
 \begin{equation}
@@ -1486,17 +1486,15 @@ $$
 
 And here is a plain English, verbal description of our model:
 
-> We are modelling an ordinal variable, size group ($SG$), with possible outcomes of small (1), medium (2), and large (3). The value expected for any given trial is based on the value of a latent variable ($z$) in relation to two thresholds ($\theta_{[1]},\theta_{[2]}$), which were estimated from the data. Our latent variable is modeled as coming from a logistic distribution with a scale of 1 and a mean that varies from trial to trial. The mean of these distributions varies based on the combination of 'main' (e.g., $VTL$) and listener-dependent (e.g. $VTL \colon L$) effects for vocal tract length and f0, and a listener-dependent intercept. 
-
-> The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of zero and a covariance matrix estimated from the data. All other effects were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
+> We are modelling an ordinal variable, size group ($SG$), with possible outcomes of small (1), medium (2), and large (3). The value expected for any given trial is based on the value of a latent variable ($z$) in relation to two thresholds ($\theta_{[1]},\theta_{[2]}$), which were estimated from the data. Our latent variable is modeled as coming from a logistic distribution with a scale of 1 and a mean that varies from trial to trial. The mean of these distributions varies based on the combination of 'main' (e.g., $VTL$) and listener-dependent (e.g. $VTL \colon L$) effects for vocal tract length and f0, and a listener-dependent intercept. The speaker intercept ($S$) terms were drawn from a normal distribution with a mean of zero and a standard deviation estimated from the data. The listener random effects were drawn from a multivariate normal distribution with means of zero and a correlation matrix (R) estimated from the data. All other effects were treated as 'fixed' and drawn from prior distributions appropriate for their expected range of values. 
 
 Notice that the model in \@ref(eq:12-14) does not contain a term representing the overall model intercept. This is because the important thing for our model is the distance between the expected value of the latent variable and the thresholds, and not the value of the latent variable itself. For example, imagine an 'intercept-only' model (chapter 4) that had intercept = 3 and thresholds of 1 and 5. The behavior of this model would be exactly analogous to a model with an intercept of 13 and thresholds of 11 and 15. In fact, there are an infinite number of models that maintain this structure, one for each possible value of the intercept. Under these conditions finding the 'best' model is an impossible task (i.e. the model is not *identifiable*, see section \@ref(c8-identifiability)). To resolve this issue, the overall intercept in these models is usually set to zero and not modeled, and instead only the $J-1$ thresholds are modeled (for $J$ categories). 
 
-Although ordinal models do not usually model the overall intercept, they *can* model listener-dependent (and speaker-dependent) intercepts, and our model in equation does contain these. Since the boundaries are shared by all groups, using group-dependent intercepts can be thought of as sliding the thresholds up and down the number line by different amounts for each level of a grouping factor (e.g. listener), or as moving the predicted values by the same amount. This sort of adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above. 
+Although ordinal models do not usually estimate the overall intercept, they *can* estimate listener-dependent (and speaker-dependent) intercepts, and our model in equation does contain these. Since the boundaries are shared by all groups, using group-dependent intercepts can be thought of as sliding the thresholds up and down the number line by different amounts for each level of a grouping factor (e.g. listener), or as moving the predicted values by the same amount. This sort of adjustment *can* have a meaningful effect on predictions, unlike changes in the overall model intercept outlined above. 
 
 ### Fitting and interpreting the model
 
-To fit an ordinal logistic model, you set `family=cumulative` when fitting your model. The logistic distribution is the default distribution for these sorts of models, but other distributions such as the normal distribution can be used. 
+To fit an ordinal logistic model, you set `family=cumulative` when fitting your model. The logistic distribution is the default error distribution for these sorts of models, but other distributions such as the normal distribution can be used. 
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -1574,14 +1572,14 @@ In this case our prediction results in a three dimensional matrix where response
 head (predictions_latent[,,1])
 ```
 
-If we consider only the first element of the second dimension (columns), we can get the expected value for each observing for each category, for the first six observations.
+If we consider only the first element of the second dimension (columns), we can get the expected value for each category, for the first six observations.
 
 ```{r}
 # see first six for each category
 head (predictions_latent[,1,])
 ```
 
-We can use the expected value for the latent variable calculated manually above (`mu`), combined with the model thresholds, to calculate the expected probability that the observation will belong to each category. 
+We can use the expected value for the latent variable calculated manually above (`mu`), combined with the model thresholds, to calculate the expected probability that the observation will belong to each category (rounded to 5 decimal places). 
 
 ```{r, eval = FALSE}
 predictions_manual = 
@@ -1603,7 +1601,7 @@ head (predictions_manual)
 predictions_manual = readRDS ('../data/predictions_manual.RDS')
 ```
 
-Again, we can see that this approach results in the same values as those calculated with the `fitted` function. 
+Again, we can see that this approach results in basically the same values as those calculated with the `fitted` function. 
 
 ```{r, eval = TRUE}
 cor (predictions_latent[,1,1],predictions_manual[,1])
@@ -1613,7 +1611,7 @@ cor (predictions_latent[,1,2],predictions_manual[,2])
 cor (predictions_latent[,1,3],predictions_manual[,3])
 ```
 
-Below we find the maximum value across each row of our predictions, representing the *hard*, categorical prediction for each observation.  
+Below we find the maximum value across each row of our predictions in `predictions_manual`, representing the *hard*, categorical prediction for each observation.  
 
 ```{r}
 SG_hat = apply (predictions_latent[,1,],1,which.max)
@@ -1657,6 +1655,7 @@ model_ordinal_disc =
              control = list(adapt_delta = 0.99))
 ```
 ```{r, eval = FALSE}
+# Or download it from the GitHub page:
 model_ordinal_disc = bmmb::get_model ("12_model_ordinal_disc.RDS")
 ```
 ```{r, include = FALSE}
@@ -1670,19 +1669,20 @@ We can see that our model summary now includes a fixed effect for the `disc_Inte
 bmmb::short_summary (model_ordinal_disc)
 ```
 
-We can get the listener-dependent disc terms using the `short_hypothesis` function. Since these values are the logarithm of the discrimination, we need to exponentiate and then invert the parameter estimate to get the scale. We do this inside the hypothesis function so that we summarize after manipulating (rather than exponentiating and inverting our summary).
+We can get the listener-dependent disc terms using the `short_hypothesis` function. Since these values are the logarithm of the discrimination, we need to exponentiate and then invert the parameter estimate to get the scale. We can do this inside the hypothesis function so that we summarize after manipulating (rather than exponentiating and inverting our summary).
 
 ```{r}
 listener_scale = 
   short_hypothesis (model_ordinal_disc, 
                     "1/exp(disc_Intercept)=0", group="L",scope="coef")
+
 # omit hypothesis column so this fits in the book
 head(listener_scale)[,-5]
 ```
 
 Below we compare the distributions implied by these `disc` parameters for a value of 0 for the latent variable. We can see that these distributions imply substantially different behaviors across listeners, given the same predicted value for the latent variable.
 
-```{r  F12-13, fig.height = 4, fig.width=8, fig.cap = "Listener-specific distributions of the latent variable given an expected value of zero. Numbers indicate expected probability of observing each size group for this expected value, for each listener. Plot y axis ranges are determined relative to the height of each density and are not all equal.", echo = FALSE}
+```{r  F12-13, fig.height = 4, fig.width=8, fig.cap = "Listener-specific distributions of the latent variable given an expected value of zero. Numbers indicate the expected probability of observing each size group for this expected value, for each listener. Plot y axis ranges are determined relative to the height of each density and are not all equal.", echo = FALSE}
 
 ################################################################################
 ### Figure 12.13

@@ -94,7 +94,7 @@ We can use the `predict` function to get the prior predictions made by our model
 pp_uninformative = predict (prior_uninformative, summary = FALSE)
 ```
 
-When we get 'unsummarized' predictions we get a prediction for each set of sampled parameters in our model. These predictions vary across samples by row and across data points by column. So, to get predictions for a single posterior sample we need to observe a single row of this matrix. This could be done using a single histogram, as below:
+When we get 'unsummarized' predictions we get a prediction for each set of sampled parameters in our model. These predictions vary across samples by row and across data points by column. So, to get predictions for a single posterior sample we need to observe a single row of this matrix. This could be done using a histogram, as below:
 
 ```{r, eval = FALSE}
 hist (pp_uninformative[1,])
@@ -275,7 +275,7 @@ brmplot (rbind(fixef_1[4,],fixef_2[4,],fixef_3[4,]), ylim = c(-6,1),
 
 ### More specific priors 
 
-The final model above was named `conservative` because its priors may have been *too* small. As noted above we actually expect an effect for age of about 10 cm based on variation in veridical height between children and adults, and about 3 cm for the gender effect. When we set our priors using the `class` parameter in the `prior` function, we can reduce the time our models take to fit, but we lose the ability to fine-tune priors for specific parameters. For example, we might want a model with a prior with a standard deviation of 10 cm for the age effect, and a prior standard deviation of 3 cm for the gender effect. We can use the `prior_summary` function in `brms` to see what priors we can set for our model. The output of this function is analogous to that for the `get_priors` function, discussed in sections \@ref(c3-specifying-priors) and \@ref(c4-fitting-1). 
+The final model above was named `conservative` because its priors may have been *too* small. As noted above we actually expect an effect for age of about 10 cm based on variation in veridical height between children and adults, and about 3 cm for the gender effect. When we set our priors using the `class` parameter in the `prior` function, we can reduce the time our models take to fit, but we lose the ability to fine-tune priors for specific parameters. For example, we might want a model with a prior with a standard deviation of 10 cm for the age effect, and a prior standard deviation of 3 cm for the gender effect. We can use the `prior_summary` function in `brms` to see what priors we can set for our model. The output of this function is formatted in the same way as that of the `get_priors` function, discussed in sections \@ref(c3-specifying-priors) and \@ref(c4-fitting-1). 
 
 ```{r, eval = TRUE}
 # we omit empty columns to let the output fit on the page 
@@ -292,15 +292,15 @@ priors =
     set_prior("student_t(3,0, 10)", class = "b", coef = "A1"),
     set_prior("student_t(3,0, 3)", class = "b", coef = "G1"),
     set_prior("student_t(3,0, 10)", class = "sd"),
-    set_prior("student_t(3,0, 5)", class = "sd", coef = "A1", group = "L"),
-    set_prior("student_t(3,0, 1.5)", class = "sd", coef = "G1", group = "L"),
+    set_prior("student_t(3,0, 5)", class = "sd", coef = "A1", group="L"),
+    set_prior("student_t(3,0, 1.5)", class = "sd", coef = "G1", group="L"),
     set_prior("lkj_corr_cholesky (2)", class = "cor"), 
     set_prior("student_t(3,0, 6)", class = "sigma"))
 
 options (contrasts = c('contr.sum','contr.sum'))
 prior_informative =  
   brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
-             sample_prior="only", data = exp_data, chains = 1, cores = 1, 
+             data = exp_data, chains = 1, cores = 1, 
              warmup = 1000, iter = 5000, thin = 1, prior = priors)
 ```
 
@@ -312,7 +312,7 @@ brms::prior_summary(prior_informative)[,-c(5:9)]
 
 ## Heteroskedasticity and distributional (or mixture) models
 
-Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption can are **homoscedastic**. Historically, the homogeneity of error variance has been assumed in models because it makes them simpler to work with and understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different subsets of data. These sorts of models are sometimes called **mixture models** because they can be thought of as a mixture of different distributions or **distributional models** because they allow us to model variation in all of the parameters of the data distribution (e.g. $\sigma$ in addition to $\mu$). 
+Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption are **homoscedastic**. Historically, the homogeneity of error variance has been assumed in models because it makes them simpler to work with and understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different subsets of data. These sorts of models are sometimes called **mixture models** because they can be thought of as a mixture of different distributions or **distributional models** because they allow us to model variation in all of the parameters of the data distribution (e.g. $\sigma$ in addition to $\mu$). 
 
 Consider the residuals for the random effects model we just fit to our data, which we can get from the model using the `residuals` function:
 

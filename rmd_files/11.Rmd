@@ -239,7 +239,7 @@ xy = x*y
 cor (cbind(x,y,xy))
 ```
 
-The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_c`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them. Given this and the lack of a compelling reason to not center in most cases, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models. 
+The above correlation arises because our values are far from, and do not cross, zero much. We can help minimize this sort of correlation if we center `x` and `y`. When we do this, the centered values (`x_c, y_c`) will vary around zero: They will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product (`xy_c`) will only have a large magnitude when both variables have values above or below their mean at the same time. The result, as can be seen below, is that centering can dramatically reduce the correlation between quantitative predictors and the interaction between them, which can help your models fit better. Given this, in the absence of a compelling reason to not center your quantitative predictors, you should consider centering these predictors routinely whenever you plan to include interactions between these in your models. 
 
 ```{r}
 x_c = x - mean (x)
@@ -343,7 +343,7 @@ We fit our model using the code below:
 
 ```{r, eval = FALSE}
 # Fit the model yourself
-priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
+priors = c(brms::set_prior("student_t(3,0, 12)", class = "Intercept"),
            brms::set_prior("student_t(3,0, 12)", class = "b"),
            brms::set_prior("student_t(3,0, 12)", class = "sd"),
            brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
@@ -360,7 +360,7 @@ model_height_vtl_f0 =
 model_height_vtl_f0 = bmmb::get_model ('11_model_height_vtl_f0.RDS')
 ```
 ```{r, include = FALSE, eval = TRUE}
-# saveRDS (model_height_vtl_f0, '../models/11_model_height_vtl_f0_noint.RDS')
+# saveRDS (model_height_vtl_f0, '../models/11_model_height_vtl_f0_nocent.RDS')
 model_height_vtl_f0 = readRDS ('../models/11_model_height_vtl_f0.RDS')
 ```
 

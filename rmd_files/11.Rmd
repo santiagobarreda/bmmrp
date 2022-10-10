@@ -230,9 +230,7 @@ $$
 
 ### Centering quantitative predictors when including interactions
 
-[@@ Noah check]
-
-When you include interactions between quantitative predictors in your regression models, it may be useful to center these predictors because this can improve your model convergence statistics and also improve the interpretability of the model. Convergence statistics can be improved because centering predictors before multiplying them can reduce the correlation between the predictors and the cross product in many cases. This happens because the cross product of two values that are both positive or both negative will always be greater when one of the variables increases in magnitude. In other words, the value of $x \cdot (y+a)$ will *always* be greater than the value of $x \cdot y$ for some positive value of $a$, as long as $x$ and $y$ are both positive or negative. For example, consider the very simple case shown below:
+When you include interactions between quantitative predictors in your regression models, it may be useful to center these predictors because this can improve your model convergence statistics, and can also improve the interpretability of the model. Convergence statistics can be improved by centering because this can reduce the correlation between the predictors and their cross product in many cases. To see why, consider the very simple example shown below:
 
 ```{r}
 x1 = c(1,2,3)
@@ -243,7 +241,9 @@ x1x2
 cor (cbind(x1,x2,x1x2))
 ```
 
-The cross product of `x1` and `x2`, `x1x2` is always going to be larger if either `x1` or `x2` is larger because their values do not cross zero. We can help minimize this sort of correlation if we center `x1` and `x2`. When we do this the centered values will be positive when they are above the sample mean and negative when they are below it. Under these conditions their cross product will be positive when both variables are above or below their mean, and negative when one is above and one is below. Below, we re-do the example above with 'centered' data, assuming that the mean had been 2. We can see that the cross product does not change monotonically with either predictor anymore, and that the correlation between the cross product and the predictors is now zero (though the correlation between the predictors themselves is still one).
+The cross product of `x1` and `x2`, `x1x2`, increases in value together with both predictors, meaning it enters into a **monotonic** relationship with the predictors (they increase and decrase together). This results in the strong correlation between the cross product and the predictors seen above. We can help minimize this sort of correlation if we center `x1` and `x2`. When we do this, the centered values will be positive when they are above the sample mean and negative when they are below it. Under these conditions, their cross product will be positive when both variables are above or below their mean, and negative when one is above and the other is below. This breaks the monotonic relationship between the cross product and the predictors, i.e., the cross product does not always increase when one of the predictors increases.
+
+We re-do the example above with 'centered' data, assuming that the mean had been 2. We can see that the correlation between the cross product and the predictors is now zero, though the correlation between the predictors themselves is still one.
 
 ```{r}
 x1 = c(-1,0,1) 
@@ -254,7 +254,7 @@ x1x2
 cor (cbind(x1,x2,x1x2))
 ```
 
-We include a less controlled example of this below. We generate two samples of 100 random Gaussian variables (`x1, x2`) with a mean of 500 and a standard deviation of 1. These variables are not strongly uncorrelated (-0.06), and yet their cross product (`x1x2`) is strongly correlated with both variables (0.67, and 0.70).
+We include a less controlled example of this below. We generate two samples of 100 random Gaussian variables (`x1, x2`) with a mean of 500 and a standard deviation of 1. These variables are not strongly correlated (-0.06), and yet their cross product (`x1x2`) is strongly correlated with both variables (0.67, and 0.70).
 
 ```{r, include=FALSE}
 set.seed(10)
@@ -268,19 +268,19 @@ x1x2 = x1*x2
 cor (cbind(x1,x2,x1x2))
 ```
 
-Below we again re-do the code above, this time after centering `x1` and `x2`. We can see that centering can dramatically reduce the correlation between the quantitative predictors and the interaction between them. 
+We re-do the code above, this time after centering `x1` and `x2`. We can see that centering can dramatically reduce the correlation between the quantitative predictors and the interaction between them. 
 
 ```{r}
-x_c = x - mean (x)
-y_c = y - mean (y)
-xy_c = x_c * y_c
+x1_c = x1 - mean (x1)
+x2_c = x2 - mean (x2)
+x1x2_c = x1_c * x2_c
 
-cor (cbind(x_c,y_c,xy_c))
+cor (cbind(x1_c,x2_c,x1x2_c))
 ```
 
-In terms of the interpretability of your coefficients, recall that in the presence of an interaction, the 'main effect' slope along a dimension is only the actual slope *when all other predictors involved in the interaction are equal to zero*. For example, consider a model with quantitative predictors x1 and x2, and the interaction between them. As shown in \@ref(eq:11-4), the effective slope for x1 in the presence of an interaction between x1 and x2 varies as a function of the value of x2. However, when x2 is equal to zero its influence on the slope of x is erased, and the slope of x reported by your model applies. If you don't center, x2 = 0 may not occur in your data, and it may not be a meaningful value (as for VTL). After centering, x2 = 0 represents the mean value of the predictor, making the slope for x1 reported by your model more likely to occur somewhere in an interesting range of values. 
+In terms of the interpretability of your coefficients, it's very important to keep in mind that in the presence of an interaction, the 'main effect' slope along a dimension is only the actual slope *when all other predictors involved in the interaction are equal to zero*. For example, consider a model including quantitative predictors $x_1$ and $x_2$, and the interaction between them. As shown in \@ref(eq:11-3), the effective slope for $x_1$ in the presence of an interaction between $x_1$ and $x_2$ varies as a function of the value of $x_2$. However, when $x_2$ is equal to zero its influence on the slope of $x_1$ is erased, and the slope of $x_1$ reported by your model applies. If you don't center, $x_2$ = 0 may not occur in your data, meaning that the slope reported by your model is not actually expected to occur for your data. In contrast, if you center your predictors the slope for $x_1$ reported by your model represents the slope along this dimension when $x_2$ is at its mean.
 
-Because of these advantages, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models, in the absence of a compelling reason not to. Actually, as discussed in section \@ref(c9-centering), you may find it useful to center quantitative predictors even if you are *not* including interactions between them.
+Because of these advantages, you should consider centering quantitative predictors routinely whenever you plan to include interactions between these in your models, in the absence of a compelling reason not to (e.g., that 0 is a meaningful value for your predictors). Actually, as discussed in section \@ref(c9-centering), you may find it useful to center quantitative predictors even if you are *not* including interactions between them.
 
 ### Data and research questions
 

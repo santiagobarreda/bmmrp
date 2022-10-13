@@ -332,7 +332,7 @@ bmmb::prior_summary(prior_informative)[,-c(5:8)]
 
 Most 'typical' regression models assume that the error variance is the same for all observations, all conditions, all listeners, etc. The property of having a homogeneous variance is called **homoscedasticity**, and models that make this assumption are **homoscedastic**. Historically, the homogeneity of error variance has been assumed in models because it makes them simpler to work with and understand, and not because it is 'true' for all (or any) data. With Bayesian models it is straightforward to relax and test this assumption, and to build models that exhibit **heteroscedasticity**, differences in the error variance across different subsets of data. These sorts of models are sometimes called **mixture models** because they can be thought of as a mixture of different distributions or **distributional models** because they allow us to model variation in all of the parameters of the data distribution (e.g. $\sigma$ in addition to $\mu$). 
 
-Consider the residuals for the random effects model we just fit to our data, which we can get from the model using the `residuals` function:
+Consider the residuals for the random effects model we fit in chapter 7, which we can get from the model using the `residuals` function:
 
 ```{r, include = TRUE, eval = FALSE}
 # download model
@@ -385,26 +385,26 @@ axis (side = 1, at = seq(1.5,29.5,2), labels = 1:15,cex.axis = 1.3)
 mtext (side=2, line = 0.3,outer = TRUE, "Residuals (in centimeters)")
 ```
 
-To this point our models have all looked something like \@ref(eq:8-1), with the generic predictors $x_n$. In these models $\mu$ got a subscript because it varied from trial to trial and was being predicted, but $\sigma$ has never received a subscript because it hasn't varied in our models.  
+To this point our models have all looked something like \@ref(eq:8-1), with the generic predictors $x_p$. In these models $\mu$ got a subscript because it varied from trial to trial and was being predicted, but $\sigma$ has never received a subscript because it hasn't varied in our models.  
 
 $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma) \\ 
-\mu_{[i]} = \mathrm{x}_1 + \mathrm{x}_2+ \dots + \mathrm{x}_n \\ 
+\mu_{[i]} = \mathrm{x}_1 + \mathrm{x}_2+ \dots + \mathrm{x}_p \\ 
 \end{split}
 (\#eq:8-1)
 \end{equation}
 $$
 
-Instead, we can fit models that help us understand systematic variation in both the mean *and* the $\sigma$ parameters in our model. We can imagine this by adding a subscript to $\sigma$ and predicting its value from trial to trial using predictors, as seen in \@ref(eq:8-2). We've given these predictors little $\sigma$ subscripts just to distinguish them conceptually from those predicting $\mu$, but they could be the same predictors used to understand $\mu$ or a different set of predictors. 
+Instead, we can fit models that help us understand systematic variation in both the mean *and* the $\sigma$ parameters in our data. We can imagine this by adding a subscript to $\sigma$ and predicting its value from trial to trial using variables, as seen in \@ref(eq:8-2). We've given these predictor variables little $\sigma$ subscripts just to distinguish them conceptually from those predicting $\mu$, but they could be the same variables used to understand $\mu$ or a different set. 
 
 $$
 \begin{equation}
 \begin{split}
 height_{[i]} \sim \mathrm{N}(\mu_{[i]},\sigma_{[i]}) \\ 
-\mu_{[i]} = \mathrm{x}_1 + \mathrm{x}_2+ \dots + \mathrm{x}_n \\ 
-\sigma_{[i]} = \mathrm{x}_{\sigma1} + \mathrm{x}_{\sigma2} + \dots + \mathrm{x}_{\sigma n} \\ \\ 
+\mu_{[i]} = \mathrm{x}_1 + \mathrm{x}_2+ \dots + \mathrm{x}_p \\ 
+\sigma_{[i]} = \mathrm{x}_{\sigma1} + \mathrm{x}_{\sigma2} + \dots + \mathrm{x}_{\sigma p} \\ \\ 
 \end{split}
 (\#eq:8-2)
 \end{equation}
@@ -416,14 +416,15 @@ We'll begin with a 'simple' heteroscedastic model that allows for variation in $
 
 ### Description of our model
 
-The `brms` package makes it exceptionally easy to fit heteroscedastic models by letting you write formulas for the error just as you do for the mean. For example, the model formula for the last model we fit in chapter 7 (`model_interaction`) was:
+The `brms` package makes it easy to fit heteroscedastic models by letting you write formulas for the error just as you do for the mean. For example, the model formula for the last model we fit in chapter 7 (`model_interaction`) was:
 
+`height ~ A + G + A:G + (A + G + A:G|L) + (1|S)`
 
 This told `brms` "model apparent height as a function of an intercept, an effect for apparent age, an effect for apparent gender, the interaction of the two, listener-specific adjustments to all predictors, and speaker-specific intercepts". Implicitly, we know that all of this models variation in the $\mu$ parameter of a normal distribution with a fixed $\sigma$. We want our model to consider the possibility that the value of $\sigma$ may vary based on whether the speaker is judged to be an adult or a child. We can do this by including a separate formula for our error (called `sigma` by `brms`) using the following formula:
 
 `sigma ~ A`
 
-This formula tells `brms` "model the standard deviation of the error as varying around an overall intercept and deviations of this based on `A`, a predictor in indicating apparent age". We can 'stick' our two model formulas together using the `bf` (Bayes formula) function as shown below:
+This formula tells `brms` "model the standard deviation of the error as varying around an overall intercept and deviations of this based on `A`, a predictor indicating apparent age". We can 'stick' our two model formulas together using the `bf` (`brmsformula`) function as shown below:
 
 ```{r, eval = FALSE}
 model_formula = brms::bf(height ~ A + (A|L) + (1|S),
@@ -432,7 +433,7 @@ model_formula = brms::bf(height ~ A + (A|L) + (1|S),
 
 The problem with modeling the standard deviation parameter directly is that negative values are impossible, so that standard deviations are bounded by zero. To deal with this, `brms` models `log(sigma)`, the logarithm of the error standard deviation, rather than `sigma` directly. Logarithms help model standard deviations because they map all numbers from 0 to 1 to values between negative infinity and 0. This allows one to model very small values of $\sigma$ while at the same time never worrying about estimating a negative standard deviation (for more on logarithms see section \@ref(c2-logarithms)). 
 
-Since we're modeling log-transformed sigmas, we now specify the priors for sigma in logarithmic values. Previously, our prior for sigma was a t-distribution with a standard deviation of 12. This meant that the majority of the mass of the distribution was going to be between 0 and 24 cm (two standard deviations from the mean). Now, we set the distribution to 1.5, meaning that we expect most predictors related to $\sigma$ to be between $\exp(-3)=0.05$ and $\exp(3)=20.1$. The full model specification is provided below (omitting the 'constructions' of the $\mathrm{\Sigma}$ term): 
+Since we're modeling log-transformed sigmas, we now specify the priors for sigma in logarithmic values. Previously, our prior for sigma was a t-distribution with a standard deviation of 12. This meant that the majority of the mass of the distribution was going to be between 0 and 24 cm (two standard deviations from the mean). Now, we set the distribution to 1.5, meaning that we expect most predictors related to $\sigma$ to be between $\exp(-3)=0.05$ and $\exp(3)=20.1$. The full model specification is provided below (omitting the 'construction' of the $\mathrm{\Sigma}$ term): 
 
 $$
 \begin{equation}
@@ -460,7 +461,7 @@ A plain English description of this model is:
 
 > We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value for any given trial ($\mu$) is modeled as the sum of an intercept, an effect for apparent speaker age ($A$), gender ($G$), and their interaction ($A \colon G$), a listener effect ($L$), a listener dependent effect for apparent age ($A \colon L$), apparent gender ($G \colon L$), their interaction ($A \colon G \colon L$), and a speaker effect ($S$). The expected value of the logarithm of the error standard deviation ($\sigma$) is modeled as the sum of an intercept ($Intercept_{\sigma}$) and an effect for apparent age ($A_\sigma$) that are specific to the error. The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_S$) estimated from the data. The four listener effects were drawn from a multivariate normal distribution with individual standard deviations ($\sigma_L,\sigma_{A \colon L},\sigma_{G \colon L},\sigma_{A \colon G \colon L}$) and a correlation matrix ($R$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values, including the terms related to the error ($Intercept_{\sigma}$, and $A_\sigma$). 
 
-This model is quite large, but it only contains four new (or modified) lines compared to the model presented in \@ref(eq:7-8). These lines are presented in \@ref(eq:8-4), and effectively represent a simple two-group model for our $\sigma$ parameter, that has been added to our model pre3dicting $\mu$. Our model now uses a trial-specific error term for trial $i$ ($\sigma_{[i]}$), whereas it previously always used a constant standard deviation. Further, we are now modeling this trial-specific $\sigma$ parameter using an intercept specific to our sigma term ($\mathrm{Intercept_{\sigma}}$), and a deviation from this base on apparent age ($A_{\sigma}$). 
+This model is quite large, but it only contains four new (or modified) lines compared to the model presented in \@ref(eq:7-8). These lines are presented in \@ref(eq:8-4), and effectively represent a simple two-group model for our $\sigma$ parameter, that has been added to our model predicting $\mu$. Our model now uses a trial-specific error term for trial $i$ ($\sigma_{[i]}$), whereas it previously always used a constant standard deviation. Further, we are now modeling this trial-specific $\sigma$ parameter using an intercept specific to our sigma term ($\mathrm{Intercept_{\sigma}}$), and a deviation from this base on apparent age ($A_{\sigma}$). 
 
 $$
 \begin{equation}
@@ -507,7 +508,7 @@ brms::set_prior("normal(0, 1.5)", class = "Intercept", dpar = "sigma")
 brms::set_prior("normal(0, 1.5)", class = "b", dpar = "sigma")
 ```
 
-Notice that we set these priors using the classes we have already discussed, `Intercept` and `b` respectively. However, now we set `dpar` (distributional parameter) to `sigma` to tell `brm` that these priors are specifically for parameters related to the model error term, and not to variation in predicted values (i.e. $\nu$). Below we fit the model sampling only from our priors:
+Notice that we set these priors using the classes we have already discussed, `Intercept` and `b` respectively. However, now we set `dpar` (distributional parameter) to `sigma` to tell `brm` that these priors are specifically for parameters related to the model error term, and not to variation in predicted values (i.e. $\mu$). Below we fit the model sampling only from our priors:
 
 ```{r, eval = FALSE}
 # Fit the model yourself
@@ -610,7 +611,7 @@ brmplot (fixef(model_interaction)[2:4,], col = cols, add = TRUE,
 legend (1.7,10, legend = c("Heteroscedastic","Homoscedastic"), pch = c(16,17), bty='n')
 ```
 
-We might wonder two things about this new model. First, has it had any effect on our fixed-effect parameters? Second, is the additional model complexity justified? We can compare this heteroskedastic model to the equivalent homoskedastic model we fit in chapter 7 (`model_interaction`, loaded above). We can assess the first question visually using the `brmplot` function as seen in the right plot of figure \@ref(fig:F8-4). It doesn't seem like the change has had much impact on our parameter estimates, or the intervals around them. We can make a more formal comparison using cross validation (discussed in section \@ref(c6-out-sample-crossval)). We add the `loo` (leave one out) criterion to each model and make a comparison.     
+We might wonder two things about this new model. First, is there any difference in our fixed-effect parameters? Second, is the additional model complexity justified? We can compare this heteroskedastic model to the equivalent homoskedastic model we fit in chapter 7 (`model_interaction`, loaded above). We can assess the first question visually using the `brmplot` function as seen in the right plot of figure \@ref(fig:F8-4). It doesn't seem like the change has had much impact on our parameter estimates, or the intervals around them. We can make a more formal comparison using cross validation (discussed in section \@ref(c6-out-sample-crossval)). We add the `loo` (leave one out) criterion to each model and make a comparison.     
 
 ```{r, collapse = TRUE, cache = TRUE}
 model_interaction = add_criterion(model_interaction,"loo")
@@ -631,7 +632,7 @@ Our previous model had the following formula for the `sigma` term:
 
 `sigma ~ A`
 
-This told `brms` "model `sigma` as a function of an intercept and an effect for apparent age". We can add to our formula by specifying a 'random effects' term for listeners, and a 'random slope' for age (i.e. an interaction between apparent age and listener), both estimated using adaptive pooling.
+This told `brms` "model `sigma` as a function of an intercept and an effect for apparent age". We can add to our formula by specifying a 'random effect' term for listeners, and a 'random slope' for age (i.e. an interaction between apparent age and listener), both estimated using adaptive pooling.
 
 `sigma ~ A + (A|L)`
 
@@ -642,7 +643,7 @@ model_formula = brms::bf(height ~ A*G + (A*G|L) + (1|S),
                          sigma ~ A + (A|L))
 ```
 
-If we were to fit the model using the formula above, our model would include independent multivariate normal distributions for the listener effects related to the mean, and those related to the error term. So, we would have a four-dimensional normal distribution relating to the expected mean ($\mu$), representing the listener intercept, the listener-dependent effects for apparent age and gender, and the listener-dependent interaction between the two. We would then have a separate two-dimensional normal distribution representing the listener-dependent intercepts and effects for apparent age relating the error term ($\sigma$). This may be desirable in some situations, however, it may also be useful to estimate all of these listener-dependent coefficients from a single six-dimensional multivariate normal.
+If we were to fit the model using the formula above, our model would include independent multivariate normal distributions for the listener effects related to the mean, and those related to the error term. So, we would have a four-dimensional normal distribution relating to the expected mean ($\mu$), representing the listener intercept, the listener-dependent effects for apparent age and gender, and the listener-dependent interaction between the two. We would then have a separate two-dimensional normal distribution representing the listener-dependent intercepts and effects for apparent age relating to the error term ($\sigma$). This may be desirable in some situations, however, it may also be useful to estimate all of these listener-dependent coefficients from a single six-dimensional multivariate normal.
 
 Right now, our model formula consists of two separate sub-formulas, each of which contains a term representing listeners (`L`). If we want our model to know that the `L` term predicting the mean is related to the `L` term predicting our error, then we can do this by adding the same label in each corresponding random effects term in parentheses, in between two pipes. Below, we use the label `|x|` to tell `brms` to estimate all six listener-dependent parameters jointly. The label can be almost any string, it just needs to be the same thing for every batch of random effects terms that you want to estimate together.  
 
@@ -658,7 +659,7 @@ model_formula = brms::bf(height ~ A*G + (A*G|x|L) + (1|y|S),
                          sigma ~ A + (A|x|L) + (1|y|S))
 ```
 
-We're not actually going to fit a model like that, as we don't think we have enough observations per speaker (15) to justify the estimation of speaker-dependent errors given the complexity of our model. However, we wanted to provide an example of how this would be done. The full model specification is provided below (omitting the 'constructions' of the $\mathrm{\Sigma}$ term): 
+We're not actually going to fit a model like that, as we don't think we have enough observations per speaker (15) to justify the estimation of speaker-dependent errors given the complexity of our model. However, we wanted to provide an example of how this would be done. The full model specification is provided below: 
 
 $$
 \begin{equation}
@@ -941,7 +942,9 @@ $$
 \end{equation}
 $$
 
-Basically, if the vectors ($x_1, x_2, \dots, x_p$) are linearly independent, the values of the $a$ variables above need to all be zero for the equation to be true. When we introduced linear dependence we gave the example that you can't include height in meters and height in centimeters as predictors. Now we can say that it is because these are *linearly dependent*, and they can be combined to add up to zero. For example, we can add a new predictor to our data, apparent height specified in meters rather than centimeters. 
+Basically, if the vectors ($x_1, x_2, \dots, x_p$) are linearly independent, the values of the $a$ variables above need to all be zero for the equation to be true. Including linearly dependent predictors in our models can cause serious problems. For example, imagine we wanted to predict apparent height based on speaker vocal-tract length (VTL) measured in centimeters (cm) and in meters (m). We only introduce the use of quantitative predictors (such as VTL) in the next chapter, but we can still show how including both of these predictors will cause problems for your model.
+
+We can add a new predictor to our data, speaker VTL specified in meters rather than centimeters. 
 
 ```{r}
 exp_data$vtl_m = exp_data$vtl / 100
@@ -953,7 +956,7 @@ Since this new variable equals 100 times our original VTL predictor, its clear t
 exp_data$vtl + exp_data$vtl_m * -100
 ```
 
-In other words, $height_{cm} - (-100 \cdot height_{meters})  = 0$ meaning that $height_{cm}$ and $height_{meters}$ are *linearly dependent*. We only introduce the use of quantitative predictors (such as VTL) in the next chapter, but we can still show how inclusion of both of these predictors will cause problems for your model.
+In other words, $\mathrm{vtl}_{cm} - (-100 \cdot \mathrm{vtl}_{m})  = 0$, meaning that $\mathrm{vtl}_{cm}$ and $\mathrm{vtl}_{m}$ are *linearly dependent*. We can fit a model including both of these predictors, as shown below. 
 
 ```{r, eval = FALSE}
 model_bad_1 =  
@@ -963,7 +966,7 @@ model_bad_1 =
                  brms::set_prior("normal(0, 15)", class = "sigma")))
 ```
 
-Our model will not be able to find a satisfactory solution, and you will see a large list of warnings when trying to fit it. If you check out the model print statement you will see strange things in the population-level effects:
+However, our model will not be able to find a satisfactory solution, and you will see a large list of warnings when trying to fit it. If you check out the model print statement you will see strange things in the population-level effects:
 
 ```{r, eval = FALSE}
 ## Population-Level Effects: 
@@ -973,7 +976,7 @@ Our model will not be able to find a satisfactory solution, and you will see a l
 ## vtl          -5.28   2468.01   -3430.88   5321.56 2.12        5       13
 ```
 
-Above we see comically small effective sample sizes (ESS) indicating that we have basically no information about our parameters, and large Rhat values indicating that our chains have not converged. We also see an astronomically large standard error for our `vtl_m` predictor, especially given knowledge that human speaker height tends to range from 100 cm to 200 cm at most. Also, what does it mean that VTL in meters and VTL in centimeters differ in sign? How can one be positively related and the other be negatively related to apparent height. Obviously, there are serious problems with these parameter estimates. The problem is that for any value of the `vtl` coefficient, there is a corresponding value for the `vtl_m` coefficient that will produce exactly the same expected/fitted values for our data.
+Above we see comically small effective sample sizes (ESS) indicating that we have basically no information about our parameters, and large Rhat values indicating that our chains have not converged. We also see an astronomically large standard error for our `vtl_m` predictor, especially given knowledge that human speaker height tends to range from 100 cm to 200 cm at most. Also, what does it mean that the predictors for VTL in meters and VTL in centimeters differ in sign? How can one be positively related and the other be negatively related to apparent height. Obviously, there are serious problems with these parameter estimates. 
 
 Linear dependence is binary, a set of vectors is linearly dependent or it is not. However, we can also talk about the degree to which vectors are linearly *related*, with linear dependence being one extreme. We measure linear relatedness using correlation coefficients (section \@ref(c6-correlations)) where correlations of 1 or -1 indicate linear dependence. Our model above failed because our two predictors are linearly dependent, they have a correlation of 1. 
 

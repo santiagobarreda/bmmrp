@@ -50,5 +50,7 @@ model_priors =
              prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
                        brms::set_prior("normal(0, 15)", class = "sigma")))
 
+model_priors = brms::add_criterion(model_priors, "loo")
+
 # saveRDS (model_priors, '3_model_priors_ex.RDS')
 

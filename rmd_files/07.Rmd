@@ -97,7 +97,7 @@ In the last two chapters we discussed the inclusion of a single factor with two 
 
 Where `C` is the apparent speaker category indicated by the listener for each trial, a factor with four levels (see above). Since we include `C` on the left-hand-side of the pipe of `L`, we know that we are estimating the category by listener interaction using adaptive partial pooling. At this point we have to make a decision regarding how we represent our models in more formal notation, and striking a balance between readability and models that are directly analogous to the output in R. 
 
-Each level of the category predictor that we are estimating needs to be represented by a model parameter. Since we are using sum coding for all our factors (see section \@ref(c5-sum-coding)), our model will estimate three of the four group effects, omitting the alphabetically last level (in this case woman). As a result, the formula above is analogous to:
+Each level of the category predictor that we are estimating needs to be represented by a model parameter. Since we are using sum coding for all our factors (see section \@ref(c5-sum-coding)), our model will estimate three of the four group effects, omitting the alphabetically last level (in this case 'woman'). As a result, the formula above is analogous to:
  
 `height ~ C1 + C2 + C3 + (C1 + C2 + C3|L) + (1|S)`
 
@@ -129,7 +129,7 @@ $$
 \end{equation}
 $$
 
-Since $C4$ is equal to $-(C1+C2+C3)$ (under sum coding), adding the negative of $C1$, $C2$, and $C3$ to the prediction is equivalent to adding the value of $C4$. As a result, the fourth row of our tiny matrix represents an observation from the fourth group, and encodes the effect for $C4$, even without directly estimating this value. As a result, even though our model only directly estimates three parameters for our $C$ predictor, we could think of our model as tacitly representing four parameters for $C$: $C1$, $C2$, $C3$, and $-(C1+C2+C3)$. 
+Since $C4$ is equal to $-(C1+C2+C3)$ (under sum coding), adding the negative of $C1$, $C2$, and $C3$ to the prediction is equivalent to adding the value of $C4$. As a result, the fourth row of our tiny matrix represents an observation from the fourth group, and encodes the effect for $C4$, even without directly estimating this value. As a result, even though our model only directly estimates three parameters for our $C$ predictor, we could think of our model as tacitly representing four parameters for this factor: $C1$, $C2$, $C3$, and $-(C1+C2+C3)$. 
 
 Even though the inclusion of $C$ in our model requires the addition of three separate parameters, we're going to represent these with a single term like $C_{[\mathsf{C}_{[i]}]}$ in our formal model descriptions. This term selects the value of $C$ for trial $i$ based on the value of the `C` (apparent category) predictor, which is consistent with the way we've been representing our listener and speaker-dependent intercepts. However, there appears to be a problem. The subscript of the term is a predictor which has four levels (`C`, or $\mathsf{C}$). When the `C` predictor is equal to it's fourth level (`C = w`), the model seems to want to select the fourth $C$ predictor, i.e. $C_{[4]}$. However, our $C$ predictor vector does not contain four elements because the fourth level of the `C` predictor is not estimated (i.e. there is no $x_4$ predictor in \@ref(eq:7-0)). So, when this occurs we can just imagine that our model reconstructs the missing parameter using the ones that *are* estimated, and then uses this value for $C4$. 
 
@@ -156,7 +156,7 @@ $$
 
 Structurally, this model is extremely similar to the one described in \@ref(eq:6-7) last chapter with $C_{[\mathsf{C}_{[i]}]}$ replacing $A$ and $C_{[\mathsf{C}_{[i]}]} \colon L_{[\mathsf{L}_{[i]}]}$ replacing $A \colon L_{[\mathsf{L}_{[i]}]}$. Note that since we are estimating three parameters for `C`, our listener-dependent 'random effects' come from a four-dimensional normal distribution which considers the relationships between the intercepts and category effects for individual listeners. Here is a plain English description of the model in \@ref(eq:7-1):
 
-> We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value for any given trial ($\mu$) is modeled as the sum of an intercept, an effect for apparent speaker category ($C$), a listener effect ($L$), a listener dependent effect for apparent category ($C \colon L$), and a speaker effect ($S$). The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_S$) estimated from the data. The four listener effects were drawn from a multivariate normal distribution with individual standard deviations ($\sigma_L,\sigma_{C_{[1]} \colon L},\sigma_{C_{[2]} \colon L},\sigma_{C_{[3]} \colon L}$) and a correlation matrix ($R$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values.
+> We are modeling apparent height as coming from a t distribution with unknown nu ($\nu$), mean ($\mu$), and scale ($\sigma$) parameters. The expected value for any given trial ($\mu$) is modeled as the sum of an intercept, an effect for apparent speaker category ($C$), a listener effect ($L$), listener dependent effects for apparent category (e.g. $C_{[1]} \colon L$), and a speaker effect ($S$). The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_S$) estimated from the data. The four listener effects were drawn from a multivariate normal distribution with individual standard deviations ($\sigma_L,\sigma_{C_{[1]} \colon L},\sigma_{C_{[2]} \colon L},\sigma_{C_{[3]} \colon L}$) and a correlation matrix ($R$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values.
 
 ### Fitting and interpreting the model
 
@@ -191,7 +191,7 @@ We'll focus on the fixed effects, seen below:
 brms::fixef(model_four_groups)
 ```
 
-It's always a good idea to make sure your model coefficients make sense given your data. Doing things like this will help minimize mistakes and make sure that you really understand your model. We can see that the intercept corresponds to the average of the group means, and our `C` coefficients correspond reasonably, but don't exactly match, the centered group means. 
+It's always a good idea to make sure your model coefficients make sense given your data. Doing things like this will help minimize mistakes and make sure that you really understand your model. We can see that the intercept corresponds to the average of the group means, and our `C` coefficients correspond reasonably to, but don't exactly match, the centered group means. 
 
 ```{r, collapse = TRUE}
 # group means
@@ -244,7 +244,7 @@ Conceptually, finding the difference between the intercept and a group mean is n
 
 ## Investigating multiple factors simultaneously
 
-Our model above had a single factor with four groups/levels. Another way to look at it is that the model predicted variation along a single **dimension**, that is a single piece of information that can be used to distinguish our groups. However, we can usually categorize people (or observations) along multiple dimensions simultaneously - there is more structure in the data than a single, simple dimension captures. So, a speaker may be an adult *and* female or adult *and* male, child *and* female or child *and* male, and not just adult or child, male or female. This is because adultness and gender are independent characteristics (dimensions) and the value of one does not determine the value of the other. In our height experiment we effectively asked listeners to make two binary classifications: Is the listener an adult or a child? Is the listener female or male? This means we can think of our four groups as varying along two dimensions, each represented by a different factor. However, although we know this, our previous model didn't: It thinks we just have four groups that have no logical internal distinctions. 
+Our model above had a single factor with four groups/levels. Another way to look at it is that the model predicted variation along a single **dimension**, that is a single piece of information that can be used to distinguish our groups. However, we can usually categorize people (or observations) along multiple dimensions simultaneously - there is more structure in the data than a single dimension captures. So, a speaker may be an adult *and* female or adult *and* male, child *and* female or child *and* male, and not just adult or child, male or female. This is because adultness and gender are separate characteristics (dimensions) and the value of one does not determine the value of the other. In our height experiment we effectively asked listeners to make two binary classifications: Is the listener an adult or a child? Is the listener female or male? This means we can think of our four groups as varying along two dimensions, each represented by a different factor. However, although we know this, our previous model didn't: It thinks we just have four groups that have no logical internal distinctions. 
 
 To include multiple predictors in our model and inspect the effect of all combinations of factor levels on our dependent variable, we must *cross* our predictors. This means that we observe each level of one factor at every level of the other factor (and vice versa). For our data this means that we observe both male and female children, and male and female adults. Crossing factors results in $n_A \cdot n_B$ individual groups for two factors ($A$ and $B$) with $n_A$ and $n_B$ number of levels each. Since we have two factors with two levels each, crossing apparent age and gender results in four unique groups: Boys (male child), girls (female child), men (male adult), and women (female adult). Designs where all the factors are crossed are sometimes called **factorial** or **orthogonal** designs. 
   
@@ -320,7 +320,7 @@ In our previous model, we acted like we just had four different groups with no i
 
 `brm (height ~ G + (G|L) + (1|S)` 
 
-For several reasons (some of which we'll see very soon), it's preferable to fit a single model with both predictors at once, rather than fitting separate models for each one. Our R model formula will now look like this, reflecting the influence of both predictors simultaneously:
+For several reasons (some of which we'll see very soon), it's preferable to fit a single model with both predictors at once, rather than fitting separate models for each one. Our model formula will now look like this, reflecting the influence of both predictors simultaneously:
 
 `height ~ A + G + (A + G|L) + (1|S)`
 
@@ -1106,7 +1106,7 @@ For example, because of the relationship between sample size, likelihoods, and c
 
 ## Factors with more than two levels
 
-Before moving on, we want to provide an example of how to recover interaction terms that are not estimated by your model when you have factors with more than two levels. This is a modest extension of the principles we have discussed so far, however, it is useful to provide an explicit example. Below, we generate some toy data that includes two factors with four levels each (`A, B`), and an interaction between them (`AB`).
+Before moving on, we want to provide an example of how to recover interaction terms that are not estimated by your model when you have factors with more than two levels. This is a modest extension of the principles we have discussed so far, however, it's useful to provide an explicit example. Below, we generate some toy data that includes two factors with four levels each (`A, B`), and an interaction between them (`AB`).
 
 ```{r}
 A = rep (factor(1:4), each = 60)
@@ -1171,7 +1171,7 @@ B1 & B2 & B3 & -(B1+B2+B3) \\
 \end{equation}
 $$
 
-As noted above, the number of interaction terms we can estimate will generally be equal to (the number of level in $A$ - 1)$\times$(the number of level in $B$ - 1). As a result, we know that we will only be estimate 4 our of the 9 total interaction terms. We have arranged these terms in a similar grid as seen above, and again placed the missing terms in parentheses. In the grid below, levels of $A$ vary across columns and levels of $B$ vary across rows. 
+As noted above, the number of interaction terms we can estimate will generally be equal to (the number of levels in $A$ - 1)$\times$(the number of levels in $B$ - 1). As a result, we know that we will only be able to estimate 9 out of the 16 total interaction terms. We have arranged these terms in a similar grid as seen above, and again placed the missing terms in parentheses. In the grid below, levels of $A$ vary across columns and levels of $B$ vary across rows. 
 
 $$
 \begin{equation}

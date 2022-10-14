@@ -1,7 +1,7 @@
 \newpage
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  dpi = 600, dev = "jpeg", collapse=TRUE
+  dpi = 600, dev = "jpeg", collapse=TRUE, options(digits=4) 
 )
 ```
 
@@ -30,7 +30,7 @@ Depending on the field of study, experiments often produce **repeated measures d
 
 For example, in our experiment we are interested in the average apparent height of different speakers, or categories of speakers. Imagine we had an experiment with 10,000 total observations. Would it matter how these were distributed? What if we had 5,000 observations for each of two different speakers? In this case we would have a lot of information about the apparent height of these speakers but not much information about speakers in general. What if we had 10 observations for each of 1000 different speakers? In this case we would have much more information about the apparent height of speakers in general, given the same number of overall observations. However, we have a lot less information about any individual speaker in the sample. So, we see two situations with the same total number of observations but a substantially different internal structure. 
 
-In general, the reason repeated-measures data can cause problems when not modeled appropriately is because the observations within each experimental unit are not independent: Multiple measurements from the same person are probably going to be similar to each other. This can give us a warped perspective regarding the degree and nature of the variability in a set of observations when repeated measures data is not modeled appropriately. For example, the final model we used to analyze our data in the last chapter looked like this:
+In general, the reason repeated measures data can cause problems when not modeled appropriately is because the observations within each experimental unit are not independent: Multiple measurements from the same person are probably going to be similar to each other. This can give us a warped perspective regarding the degree and nature of the variability in a set of observations when repeated measures data is not modeled appropriately. For example, the final model we used to analyze our data in the last chapter looked like this:
 
 $$
 \begin{equation}
@@ -107,7 +107,7 @@ The failure to acknowledge the fact that listeners provided non-independent resp
 
 ### Multilevel models and 'levels' of variation {#c4-levels}
 
-We can think of the repeated measures data presented in figure \@ref(fig:F4-1) as having multiple 'levels' of variation. These levels are often referred to as *upper* and *lower* but this is entirely metaphorical/conceptual. Another way to think of them is as within-group variation (lower) and between-group variation (upper). We will describe these 'levels' of variation with respect to our repeated-measures data involving the apparent heights of adult males presented in figure \@ref(fig:F4-1).
+We can think of the repeated measures data presented in figure \@ref(fig:F4-1) as having multiple 'levels' of variation. These levels are often referred to as *upper* and *lower* but this is entirely metaphorical/conceptual. Another way to think of them is as within-group variation (lower) and between-group variation (upper). We will describe these 'levels' of variation with respect to our repeated measures data involving the apparent heights of adult males presented in figure \@ref(fig:F4-1).
 
 * The 'lower' level: The data-level distribution of individual observations given a certain listener. This is the distribution of data points inside of each of the little boxes in the right plot in figure \@ref(fig:F4-1). If not for this variation, the boxes in the plot would all be clustered about their respective listener means. So, the lower level of variation gives the listener boxes their widths, and causes one response provided by a listener to differ randomly from another response from the same listener. For the sake of simplicity, our models usually assume that the standard deviation is equal to $\sigma$ for all of the listener-dependent distributions, though our models can relax this assumption (see chapter 8). 
 
@@ -205,7 +205,7 @@ Gelman and colleagues (Gelman and Hill 2006; Gelman et al. 2013) distinguish thr
 
 Last chapter we carried out a **complete pooling** analysis of our data, presented in \@ref(eq:4-1). That is, we threw everything into one big pile and analyzed it as if it came from one undifferentiated group (as in the unilevel model in figure \@ref(fig:F4-2)). There are several problems with this approach when applied to our experimental data. First, the complete pooling approach does not allow us to make any statements about variation between listeners since it does not estimate values of $L$. In fact, this model assumes that $\sigma_L$ is equal to zero (or does not exist). As noted earlier, if listeners do not differ from each other in any way, then $\sigma_L$ will be equal to zero and the two models in figure \@ref(fig:F4-2) will converge on each other. However, if $\sigma_L$ is *not* zero, then this approach will miss out on important information. 
 
-There is perhaps a more serious problem with the complete pooling approach for repeated measures data. The complete pooling model assumes that all deviations from the mean are due to random error. Recall that regression models assume that all random variation around expected values (i.e. the residuals) are independent. Since independence is assumed, likelihoods are calculated the 'easy' way by multiplying individual marginal probabilities (see sections \@ref(c2-joint) and \@ref(c2-chars-of-likelihoods)). However, as we can see in figure \@ref(fig:F4-1), each listener had a slightly different average judged height. This means that the residuals associated with each individual listener are not independent and may be related. For example, we expect almost all of listener 12's residuals to be positive (i.e. larger than average) since nearly all of this listener's responses were above the overall average $\mu$. The violation of the assumption of independent residuals means that if we're using a complete-pooling approach for our repeated-measures data we are calculating likelihoods the 'wrong' way. Basically, our data has 675 rows but not 675 totally-independent observations, but our model doesn't know this. As a result, the information provided by our model may not be reliable.
+There is perhaps a more serious problem with the complete pooling approach for repeated measures data. The complete pooling model assumes that all deviations from the mean are due to random error. Recall that regression models assume that all random variation around expected values (i.e. the residuals) are independent. Since independence is assumed, likelihoods are calculated the 'easy' way by multiplying individual marginal probabilities (see sections \@ref(c2-joint) and \@ref(c2-chars-of-likelihoods)). However, as we can see in figure \@ref(fig:F4-1), each listener had a slightly different average judged height. This means that the residuals associated with each individual listener are not independent and may be related. For example, we expect almost all of listener 12's residuals to be positive (i.e. larger than average) since nearly all of this listener's responses were above the overall average $\mu$. The violation of the assumption of independent residuals means that if we're using a complete-pooling approach for our repeated measures data we are calculating likelihoods the 'wrong' way. Basically, our data has 675 rows but not 675 totally-independent observations, but our model doesn't know this. As a result, the information provided by our model may not be reliable.
 
 We've previously mentioned that our models are not exactly 'right' or 'true', so why does it matter all of the sudden that the complete pooling model is 'wrong'? Recall that in section \@ref(c2-chars-of-likelihoods) we mentioned that the likelihood function gets narrower as a function of the sample size n. This applies only to n *independent* observations, but not necessarily to *dependent* observations. As a result, when we treat dependent observations as independent our likelihood may end up being narrower than is warranted. This gives us a false sense of security about how precise our parameter estimates are. Basically, spherical models of billiards balls are wrong but useful, while cubic models of the balls are wrong and less useful. Treating residuals both within and across listeners as independent is kind of like using a cubic model of a billiard ball.
 
@@ -314,7 +314,7 @@ Our posterior estimates of $L_{[\bullet]}$ may differ from our no pooling estima
 
 ## Estimating a multilevel model with `brms` {#c4-estimating1}
 
-We're going to fit a model to the same data we investigated in Chapter 3, however, we're going to use a multilevel model that reflects the repeated-measures nature of the data. 
+We're going to fit a model to the same data we investigated in Chapter 3, however, we're going to use a multilevel model that reflects the repeated measures nature of the data. 
 
 ### Data and Research questions {#c4-data-and-qs-1}
 
@@ -355,7 +355,7 @@ To specify a multilevel model, you need to write a slightly more complicated mod
 
 `height ~ 1`
 
-Which meant 'predict height using only an overall intercept'. To indicate that your model contains an 'upper' level where you have repeated-measures clusters of data coming from different sources, you have to put another model formula *inside* your main model formula. The formula corresponding to the model shown in \@ref(eq:4-5) looks like this:
+Which meant 'predict height using only an overall intercept'. To indicate that your model contains an 'upper' level where you have repeated measures clusters of data coming from different sources, you have to put another model formula *inside* your main model formula. The formula corresponding to the model shown in \@ref(eq:4-5) looks like this:
 
 `height ~ 1 + ( 1 | L)`
 
@@ -492,7 +492,7 @@ The overall mean height in our data (173.8) corresponds quite well to our model 
 
 ## 'Random' Effects {#c4-random-effects}
 
-If you have some familiarity with statistical modeling or the analysis of experimental or repeated-measures data, you may have heard of **random-effects models** or **mixed-effects models**. People often distinguish the predictors in their models between those that are 'fixed' and those that are 'random'. So, a researcher might describe their model as including 'random effects' for so and so and 'fixed effects' for some other predictor. In fact, a very common way of describing our model above would be that we used a 'mixed-effect model with random intercepts by listener'. What makes a predictor fixed or random and what is the practical effect of this in our models? It turns out that although they are commonly used, the terms 'fixed' and 'random' effects do not have a single agreed-upon definition. Gelman (2005) highlights five different definitions of the terms given in the literature:
+If you have some familiarity with statistical modeling or the analysis of experimental or repeated measures data, you may have heard of **random-effects models** or **mixed-effects models**. People often distinguish the predictors in their models between those that are 'fixed' and those that are 'random'. So, a researcher might describe their model as including 'random effects' for so and so and 'fixed effects' for some other predictor. In fact, a very common way of describing our model above would be that we used a 'mixed-effect model with random intercepts by listener'. What makes a predictor fixed or random and what is the practical effect of this in our models? It turns out that although they are commonly used, the terms 'fixed' and 'random' effects do not have a single agreed-upon definition. Gelman (2005) highlights five different definitions of the terms given in the literature:
 
 (1) Fixed effects are constant across individuals/groups, while random effects can vary across them. 
 
@@ -550,8 +550,14 @@ head ( round (listener_intercepts[,1:6], 2))
 
 If we were to find the average of the samples within each column, the result would be the posterior mean estimate for each of our individual listener effects. 
 
+```{r,include=FALSE}
+options(digits=2)
+```
 ```{r}
-colMeans (listener_intercepts)[1:15]
+colMeans (listener_intercepts)[1:10]
+```
+```{r,include=FALSE}
+options(digits=4)
 ```
 
 We can repeat the process above but without specifying `summary=FALSE`. When you do this, rather than the individual samples you get summaries of the posterior distribution of each parameter. We will still get a list of three-dimensional matrices. However, this time factor levels vary across the first dimension (rows), information about each factor level varies across columns, and parameters vary across the third dimension. We again take the list element corresponding listeners (`L`) and take only the third dimension corresponding to our Intercept. 

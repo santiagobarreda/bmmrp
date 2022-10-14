@@ -214,7 +214,7 @@ bmmb::short_hypothesis (model_four_groups, c("-(C1+C2+C3) = 0"))
 Clearly, there are differences in apparent height across groups. If someone asked you "please describe the differences to me", you might begin by saying something like "there doesn't seem to be too much difference in apparent height between apparent boys and girls", or "apparent men are identified as taller than apparent women". In each case, these statements reduce a multi-group model to focus on a single difference between groups at a time. We can use `short_hypothesis` to help us compare different combinations of our fixed effects. Using the code below we test for a difference in group means between the first and second groups (boys and girls), and between the third and fourth groups (men and women).  
 
 ```{r, collapse = TRUE}
-# parameters = centered means
+# find differences between groups
 comparisons = bmmb::short_hypothesis (model_four_groups, 
                                       c("C1 = C2", "C3 = -(C1+C2+C3)"))
 ```
@@ -417,6 +417,7 @@ Next we find the average apparent height for each level of adultness, find the d
 ```{r, collapse = TRUE}
 # Age effect
 diff (tapply (exp_data$height, exp_data$A, mean) ) / -2
+
 # Gender effect
 diff (tapply (exp_data$height, exp_data$G, mean) ) / -2
 ```
@@ -1222,7 +1223,7 @@ In traditionalists corner, we're going to compare the output of `brms` to some m
 
 This is going to be a short one. One shortcoming when it comes to using `lmer` to fit models including factors with many levels is that there is no easy way to compare group effects solely based on the information contained in the model. For example, we can fit the model below which encodes the difference between each group mean and the overall mean.
 
-```{r, collapse = TRUE, cache = TRUE}
+```{r, collapse = TRUE, cache = TRUE, warning = FALSE, error = FALSE}
 lmer_four_groups = lme4::lmer (height ~ C + (C|L) + (1|S), data = exp_data)
 summary (lmer_four_groups)$coefficients
 ```

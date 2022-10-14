@@ -59,9 +59,9 @@ In figure \@ref(fig:F7-2) we see that the distribution of apparent height with r
 
 par (mfrow = c(1,2), mar = c(4,4,1,1))
 boxplot (height ~ C, data = exp_data, col = bmmb::cols[2:5],ylim=c(100,200), 
-         xlab = "Apparent Category", ylab = "Height (cm)")
+         xlab = "Apparent Category", ylab = "Apparent Height (cm)")
 boxplot (height ~ C_v, data = exp_data, col = bmmb::cols[2:5],ylim=c(100,200),  
-         xlab = "Veridical Category", ylab = "Height (cm)")
+         xlab = "Veridical Category", ylab = "Apparent Height (cm)")
 ```
 
 This is not terribly surprising since as we can see below, listeners identified speaker category correctly in 75% of cases. In addition, errors were most common for boys and girls, speakers that are expected to be approximately the same size. 
@@ -221,13 +221,13 @@ comparisons = bmmb::short_hypothesis (model_four_groups,
 
 We can use `brmplot` from the `bmmb` package to easily make plots showing means and credible intervals for our fixed effects, including the recovered coefficient. We also plot the two comparisons we made using the `hypothesis` function above, presented in figure \@ref(fig:F7-3).
 
-```{r F7-3, fig.height = 3, fig.width=8, fig.cap = "(left) Means and 95% credible intervals for boy (b), girl (g), man (m), and woman (w) effects for our four group model. (right) Means and 95% credible intervals for differences between boys and girls, and men and women.", echo = FALSE}
+```{r F7-3, fig.height = 2.75, fig.width=8, fig.cap = "(left) Means and 95% credible intervals for boy (b), girl (g), man (m), and woman (w) effects for our four group model. (right) Means and 95% credible intervals for differences between boys and girls, and men and women.", echo = FALSE}
 
 ################################################################################
 ### Figure 7.3
 ################################################################################
 
-par (mfrow = c(1,2), mar = c(4,4,1,1))
+par (mfrow = c(1,2), mar = c(2.5,2,1,1), oma = c(0,2,0,0))
 
 all_groups = bmmb::short_hypothesis (model_four_groups, 
                                       c("C1 = 0","C2 = 0","C3 = 0", "-(C1+C2+C3)=0"))
@@ -236,6 +236,8 @@ brmplot (all_groups, col=bmmb::cols[2:5],ylim=c(-16,19),
          labels = c("b","g","m","w"))
 points (means - mean(means), pch=4,lwd=2, col=bmmb::cols[2:5],cex=3)
 brmplot (comparisons, col=bmmb::cols[13:12],labels = c("b-g","m-w"))
+
+mtext (side = 2, outer = TRUE, "Centimeters",adj = .6, cex=1.2, line = 0.8)
 ```
 
 The distributions in the left plot of the figure tell us about probable values for our category parameters: Given our data and model structure, there is a 95% probability that the parameter value falls within this interval. Our category effects reflect the expected difference between our model intercept, the overall grand mean, and each category mean. So, the intervals on the left of figure \@ref(fig:F7-3) tell us that there is a 95% probability (given our data and model structure) that the actual difference between the grand mean and each group mean falls within that range. What do the distributions in the right plot in figure \@ref(fig:F7-2) tell us? They represent the posterior distribution of the *difference* between category means directly, without involving the intercept. 
@@ -1060,10 +1062,12 @@ pairwise_diffs = cbind(C[,1]-C[,2],C[,1]-C[,3],C[,1]-C[,4],
 
 pairwise_diffs_summary = posterior_summary(pairwise_diffs)
 
-par (mfrow = c(1,2), mar = c(4,4,1,1))
+par (mfrow = c(1,2), mar = c(4,2,1,1), oma = c(0,2,0,0))
 layout (mat = t(c(1,2)), widths= c(.4,.6))
 brmplot (fixef(model_interaction)[-1,])
 brmplot (pairwise_diffs_summary,labels = c("b-g","b-w","b-m","g-w","g-m","w-m"))
+mtext (side = 2, outer = TRUE, "Centimeters",adj = .6, cex=1.2, line = 0.8)
+
 ```
 
 The fixed effects all have 95% credible intervals that do not overlap with zero. Historically, this sort of result has been thought of as indicating that the effect is 'real', as in not equal to zero. In contrast, when the 95% (or some other) credible interval of an effect overlaps with zero, researchers will often conclude that this effect is not 'real', i.e. that it is exactly equal to zero. Gelman et al. (2012) note that effects are rarely exactly equal to zero, and that an inability to conclusively distinguish the value of an effect from zero is not the same thing as thinking that the most probable value of an effect is exactly zero. 

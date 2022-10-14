@@ -355,37 +355,58 @@ However, in a multinomial regression we have one plane for each response categor
 
 `y_4 ~ vtl+f0 + (vtl+f0|S) + (1|L)`
 
-This means that our multinomial model will involve four times as many coefficients as an equivalent Gaussian model, and $J$ times as many for $J$ outcome categories. Of course, we noted above that the coefficients of the reference category are set to zero and not estimated. This means that the formula above results in the estimation of three planes, resulting in three sets of analogous parameters. Our full model specification is given below:
+This means that our multinomial model will involve four times as many coefficients as an equivalent Gaussian model, and $J$ times as many for $J$ outcome categories. Of course, we noted above that the coefficients of the reference category are set to zero and not estimated. This means that the formula above results in the estimation of three planes, resulting in three sets of analogous parameters. Our full model specification is pretty large, so we split it into two parts. First, the part specifying our predictions and combinations of predictors:
 
 $$
 \begin{equation}
 \begin{split}
 y_{1[i]},y_{2[i]},y_{3[i]},y_{4[i]} \sim \mathrm{multinomial}(p_{1[i]},p_{2[i]},p_{3[i]},p_{4[i]}, size_{[i]}) \\ \\
-\mathrm{for} \; j = 1, \dots, 4\\ \\ 
+\mathrm{for} \; j = 1, \dots, 4\\ \\
 p_{j[i]} = \frac{e^{z_{j[i]}}}{\sum_{j=1}^{J} e^{z_{j[i]}}} \\ 
 \\
 z_{j[i]} = \mathrm{a}_j + b_{j[i]} \cdot \mathrm{vtl}_{[i]} + c_{j[i]} \cdot \mathrm{f0}_{[i]}  \\ 
 a_{j[i]} = \mathrm{Intercept}_j + L_{j[\mathsf{L}_{[i]}]} + S_{j[\mathsf{S}_{[i]}]} \\ 
 b_{j[i]} =  VTL_j + VTL_j \colon L_{j[\mathsf{L}_{[i]}]} \\
 c_{j[i]} =  F0_j + F0_j \colon L_{j[\mathsf{L}_{[i]}]} \\ 
-\\
-\mathrm{for} \; j = 2, \dots, 4\\ \\ 
-\textrm{Priors:} \\
-S_{j[\bullet]} \sim \mathrm{Normal}(0,\sigma_{S_j}) 
-\\ 
-\begin{bmatrix} L_{j[\bullet]} \\ VTL_j \colon L_{j[\bullet]} \\ F0_j \colon L_{j[\bullet]} \end{bmatrix}	
-\sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma_j} \right) \\ \\
-\mathrm{Intercept}_j \sim \mathrm{t}(3, 0, 3) \\
-VTL_j, F0_j \sim \mathrm{t}(3, 0, 3) \\
-\sigma_{L_j}, \sigma_{VTL_j \colon L_j}, \sigma_{F0_j \colon L_j}, \sigma_{S_j} \sim \mathrm{t}(3, 0, 3) \\ R_j \sim \mathrm{LKJCorr} (2)
 \end{split}
-(\#eq:12-7)
+(\#eq:12-7a)
 \end{equation}
 $$
 
-Here's a plain English description of our model:
+And a plain English description of this part:
 
->Our vector of counts ($y_{1[i]},y_{2[i]},y_{3[i]},y_{4[i]}$) is assumed to come from a multinomial distribution with unknown parameters $p_{1[i]},p_{2[i]},p_{3[i]},p_{4[i]}$, and an n equal to 1 (size) for all trials. For each of our j response categories, the probability of observing that outcome on a trial i, $p_{j[i]}$, is found by combining the score for each category for that trial ($z_{j[i]}$) using the softmax link function. The score for a trial is equal to a trial-dependent combination of an intercept, an effect for VTL, and an effect for f0. The intercept for category j for trial i ($a_{j[i]}$) varies according to an overall model intercept for that category ($\mathrm{Intercept}_{j}$) and speaker ($S_{j[\mathsf{S}_{[i]}]}$) and listener-dependent ($L_{j[\mathsf{L}_{[i]}]}$) variations from this. The VTL slope for category j for trial i ($b_{j[i]}$) varies according to an overall VTL slope for that category ($VTL_{j}$) and listener-dependent ($VTL \colon L_{j[\mathsf{L}_{[i]}]}$) variations from this. The f0 slope for category j for trial i ($c_{j[i]}$) varies according to an overall f0 slope for that category ($F0_{j}$) and listener-dependent ($F0 \colon L_{j[\mathsf{L}_{[i]}]}$) variations from this. We only specify priors for response categories 2 to four since all parameters are set to zero for the first (reference) category. The following applies individually for response categories 2, 3, and 4 (i.e., girls, men, and women). The speaker effects were drawn from a univariate normal distribution with a standard deviation ($\sigma_{S_j}$) estimated from the data. The three listener effects were drawn from a three-dimensional normal distribution with standard deviations ($\sigma_{L_j}, \sigma_{VTL_j \colon L_j}, \sigma_{F0_j \colon L_j}$) and a correlation matrix ($R_j$) that was estimated from the data. The remainder of the 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values.
+>Our vector of counts ($y_{1[i]},y_{2[i]},y_{3[i]},y_{4[i]}$) is assumed to come from a multinomial distribution with unknown parameters $p_{1[i]},p_{2[i]},p_{3[i]},p_{4[i]}$, and an n equal to 1 (size) for all trials. For each of our j response categories, the probability of observing that outcome on a trial i, $p_{j[i]}$, is found by combining the score for each category for that trial ($z_{j[i]}$) using the softmax link function. The score for a trial is equal to a trial-dependent combination of an intercept, an effect for VTL, and an effect for f0. The intercept for category j for trial i ($a_{j[i]}$) varies according to an overall model intercept for that category ($\mathrm{Intercept}_{j}$) and speaker ($S_{j[\mathsf{S}_{[i]}]}$) and listener-dependent ($L_{j[\mathsf{L}_{[i]}]}$) variations from this. The VTL slope for category j for trial i ($b_{j[i]}$) varies according to an overall VTL slope for that category ($VTL_{j}$) and listener-dependent ($VTL \colon L_{j[\mathsf{L}_{[i]}]}$) variations from this. The f0 slope for category j for trial i ($c_{j[i]}$) varies according to an overall f0 slope for that category ($F0_{j}$) and listener-dependent ($F0 \colon L_{j[\mathsf{L}_{[i]}]}$) variations from this.
+
+In \@ref(eq:12-7b) we specify the rest of our model (the priors):
+
+$$
+\begin{equation}
+\begin{split}
+\mathrm{for} \; j = 2, \dots, 4\\ 
+\mathrm{Intercept}_j \sim \mathrm{t}(3, 0, 3) \\
+VTL_j, F0_j \sim \mathrm{t}(3, 0, 3) \\
+\sigma_{L_j}, \sigma_{VTL_j \colon L_j}, \sigma_{F0_j \colon L_j}, \sigma_{S_j} \sim \mathrm{t}(3, 0, 3) \\ 
+\\
+\begin{bmatrix} S_{2[\bullet]} \\ S_{3[\bullet]} \\ S_{4[\bullet]} \end{bmatrix}	
+\sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ \end{bmatrix}, \mathrm{\Sigma_S} \right) \\
+\\ 
+\begin{bmatrix} 
+L_{2[\bullet]} \\ VTL_2 \colon L_{2[\bullet]} \\F0_2 \colon L_{2[\bullet]} \\
+L_{3[\bullet]} \\ VTL_3 \colon L_{3[\bullet]} \\F0_3 \colon L_{3[\bullet]} \\
+L_{4[\bullet]} \\ VTL_4 \colon L_{4[\bullet]} \\F0_4 \colon L_{4[\bullet]} \\
+\end{bmatrix}	
+\sim \mathrm{MVNormal} \left(\, \begin{bmatrix} 0\\ 0 \\ 0 \\ 0\\ 0 \\ 0 \\
+0\\ 0 \\ 0 \\\end{bmatrix}, \mathrm{\Sigma_L} \right) \\
+R_S \sim \mathrm{LKJCorr} (2) \\
+R_L \sim \mathrm{LKJCorr} (2) 
+\end{split}
+(\#eq:12-7b)
+\end{equation}
+$$
+
+And provide a plan English description of this second part: 
+
+> We specify priors for response categories 2 to four since all parameters are set to zero for the first (reference) category. The 'fixed' effects and correlations were given prior distributions appropriate for their expected range of values. The three speaker dependent terms for each listener (one for each modeled outcome category) were drawn from a three dimensional normal distribution with standard deviations ($\sigma_{S_2}, \sigma_{S_2}, \sigma_{S_3}$) and a correlation matrix ($R_S$) that was estimated from the data. The nine listener effects were drawn from a nine-dimensional normal distribution with standard deviations ($\sigma_{L_2}, \sigma_{VTL_2 \colon L_2}, \sigma_{F0_3 \colon L_3}, \, \dots$) and a correlation matrix ($R_L$) that was estimated from the data. 
 
 ### Fitting the model
 
@@ -416,7 +437,7 @@ And here is the code to fit our model, using the `multinomial` family for the fi
 ```{r, eval = FALSE}
 # Fit the model yourself
 model_multinomial = 
-  brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|L) + (1|S), 
+  brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|x|L) + (1|y|S), 
              data=exp_data, family="multinomial", chains=4, cores=4, 
              warmup=1000, iter = 5000, thin = 4, prior = multinomial_prior)
 ```
@@ -425,8 +446,10 @@ model_multinomial =
 model_multinomial = bmmb::get_model ("12_model_multinomial.RDS")
 ```
 ```{r, include = FALSE}
+#save (multi_pred,multi_pred_re, multi_pred_noS,multi_pred_re_noS,
+#      file="../models/12_multinomial_predictions.Rda") 
 load ("../models/12_multinomial_predictions.Rda")
-#  saveRDS (model_multinomial, "../../models/12_model_multinomial.RDS")
+#  saveRDS (model_multinomial, "../../models/12_model_multinomial_2.RDS")
 model_multinomial = readRDS ("../models/12_model_multinomial.RDS")
 ```
 
@@ -470,7 +493,7 @@ Below we see the model fixed effects, the intercept, VTL slope, and the f0 slope
 brms::fixef (model_multinomial)
 ```
 
-Since the predicted value, the *linear predictor*, is the score for each category, the parameters above are difficult to interpret in isolation. This is because scores need to be interpreted relative to the baseline category value of 0 (for boys), or relative to one another, rather than absolutely. For example, the negative coefficient for VTL for 'girl' (`mug_vtl`) indicates that a longer VTL made a girl response less likely. We can also see that increasing f0 made a 'woman' response more likely (`muw_f0`), and a 'man' response less likely (`mum_f0`). However, it's important to remember that these effects are all relative to the effects for the boy category, and not 'absolute'. For example, the 'boy' slope for VTL is 0, meaning it is 1.64 higher than the 'girl' slope for the same predictor (which is -1.64). We could say this means that longer VTLs suggest a 'boy' response is more likely with respect to a 'girl' response. However, a slope of 0 is smaller than the VTL slope for 'man' of 3.13. So, a longer VTL means that a 'boy' response is *less* likely with respect to a 'man' response. As with all of the parameters in our model, these comparisons can be made more formally with the `hypothesis` (or `short_hypothesis`) function as seen below.
+Since the predicted value, the *linear predictor*, is the score for each category, the parameters above are difficult to interpret in isolation. This is because scores need to be interpreted relative to the baseline category value of 0 (for boys), or relative to one another, rather than absolutely. For example, the negative coefficient for VTL for 'girl' (`mug_vtl`) indicates that a longer VTL made a girl response less likely. We can also see that increasing f0 made a 'woman' response more likely (`muw_f0`), and a 'man' response less likely (`mum_f0`). However, it's important to remember that these effects are all relative to the effects for the boy category, and not 'absolute'. For example, the 'boy' slope for VTL is 0, meaning it is 2.09 higher than the 'girl' slope for the same predictor (which is -2.09). We could say this means that longer VTLs suggest a 'boy' response is more likely with respect to a 'girl' response. However, a slope of 0 is smaller than the VTL slope for 'man' of 3.08. So, a longer VTL means that a 'boy' response is *less* likely with respect to a 'man' response. As with all of the parameters in our model, these comparisons can be made more formally with the `hypothesis` (or `short_hypothesis`) function as seen below.
 
 ```{r}
 # difference in VTL slopes between:
@@ -504,7 +527,7 @@ We can also just select the second dimension from each matrix, resulting in a tw
 head(multi_pred_re[,1,])
 ```
 
-Since these are probabilities, the sum of each row equals one because only these four outcomes exist. For example, the first row above tells us that, according to our model, the first observation has a 0.28 probability of being identified as a boy, 0.65 probability of being identified as a girl, 0.001 probability of being identified as a man, and a 0.07 probability of being identified as a woman. We can use the code below to find the 'winning' category for each observation, that is, the category with the highest posterior probability in each row. We use the resulting column numbers to get category labels. 
+Since these are probabilities, the sum of each row equals one because only these four outcomes exist. For example, the first row above tells us that, according to our model, the first observation has a 0.29 probability of being identified as a boy, 0.62 probability of being identified as a girl, 0.002 probability of being identified as a man, and a 0.09 probability of being identified as a woman. We can use the code below to find the 'winning' category for each observation, that is, the category with the highest posterior probability in each row. We use the resulting column numbers to get category labels. 
 
 ```{r}
 # find highest posterior probability from each category
@@ -516,7 +539,7 @@ predicted_category = c("b","g","m","w")[predicted]
 head (predicted_category)
 ```
 
-Below, we cross-tabulate predicted and observed classifications. Observed speaker classifications vary across rows, and model predictions of these classifications vary across columns. This is a *confusion matrix*, introduced in chapter 5. Correct classifications fall on the main diagonal and all other values indicate mistakes. For example, we see that there were 259 correct classifications of boys as boys, and 87 incorrect predictions of boys as girls. A majority of observations fall along the main diagonal indicating that the model was relatively good at predicting listener behavior.
+Below, we cross-tabulate predicted and observed classifications. Observed speaker classifications vary across rows, and model predictions of these classifications vary across columns. This is a *confusion matrix*, introduced in chapter 5. Correct classifications fall on the main diagonal and all other values indicate mistakes. For example, we see that there were 269 correct classifications of boys as boys, and 78 incorrect predictions of boys as girls. A majority of observations fall along the main diagonal indicating that the model was relatively good at predicting listener behavior.
 
 ```{r}
 table (observed_category = exp_data$C, predicted_category)
@@ -692,8 +715,8 @@ points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmm
 mtext (side=1, "Centered vocal tract length (cm)", outer = TRUE, line=2.5)
 mtext (side=2, "Centered f0 / 100 (Hz)", outer = TRUE, line=2.5)
 
-legend (-2.5,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
-        pch=16,pt.cex=1.0,bty='n', cex=1.0)
+legend (-0.5,1.3, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.25,bty='n', cex=1.0, horiz = TRUE)
 ```
 
 We can find the boundaries of each of the 'territories' in the territorial map *analytically* by finding each boundary, the intersections of all boundaries, and record only the line segments whose scores where greater than or equal to all of the category planes. Each of these steps is generally straightforward but we know of no algorithm to implement this process easily for any number of response categories. The `make_map` function in the `bmmb` package can be used to generate territorial maps for any number of response categories in a two-dimensional stimulus space. However, rather than find the territorial map analytically, `make_map` estimates its characteristics *numerically*, that is, based on a bunch of guesses and not exact solutions. 
@@ -768,8 +791,8 @@ mtext (side=3, text = "Listener Judgments", line = 0.5)
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
 points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmmb::cols[2:5][mod_cat], cex = 2)
 
-legend (-2.5,-0.15, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
-        pch=16,pt.cex=1.5,bty='n', cex=1.05)
+legend (-0.9,1.3, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.5,bty='n', cex=1.3, horiz = TRUE)
 
 plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25), 
      xlim = c(-2.5,3), pch = 16, col = bmmb::cols[2:5][mod_cat2],ylab="",yaxt="n")
@@ -846,7 +869,7 @@ tab = xtabs (~ exp_data$C + predicted_category_no_re)
 diag(tab) / rowSums(tab)
 ```
 
-The picture without random effects is a bit grim. Overall correct prediction is not too bad (relative to chance at 25%), however, some of the individual categories are predicted very poorly. As expected based on the territorial maps in \@ref(fig:F12-4), the accurate prediction of 'woman' classifications is particularly bad with only 22% of 'woman' responses being accurately predicted as such. 
+The picture without random effects is a bit grim. Overall correct prediction is not too bad (relative to chance at 25%), however, some of the individual categories are predicted very poorly. As expected based on the territorial maps in \@ref(fig:F12-4), the accurate prediction of 'woman' classifications is particularly bad with only 21% of 'woman' responses being accurately predicted as such. 
 
 ### Refitting the model without speaker random effects
 
@@ -855,7 +878,7 @@ The results of our previous model suggest that the inclusion of speaker random e
 ```{r, eval = FALSE}
 # Fit the model yourself
 model_multinomial_noS = 
-  brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|L), data=exp_data, 
+  brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|x|L), data=exp_data, 
              family=multinomial(), chains=4, cores=4, warmup=1000, 
              iter = 5000, thin = 4, prior = multinomial_prior)
 ```
@@ -970,9 +993,8 @@ plot(model_multinomial$data$vtl,model_multinomial$data$f0, ylim = c(-1.25,1.25),
 
 mtext (side=3, text = "model_multinomial", line = 0.5)
 
-
-legend (-2.5,-0.1, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
-        pch=16,pt.cex=1.25,bty='n', cex=1.0)
+legend (-0.5,1.3, legend=c("b","g","m","w"),col=bmmb::cols[2:5],
+        pch=16,pt.cex=1.25,bty='n', cex=1.0, horiz = TRUE)
 
 plot_map (maps, colors = adjustcolor (bmmb::cols[2:5], alpha.f=.2), new=FALSE)
 points(model_multinomial$data$vtl,model_multinomial$data$f0, pch = 16, col = bmmb::cols[2:5][mod_cat], cex = 2)
@@ -1006,7 +1028,7 @@ brmplot (fixef(model_multinomial_noS)[c(1,4,5,2,6,7,3,8,9),], add = TRUE,
          nudge = 0.2, labels = "", horizontal = FALSE, pch=17,
          col = rep(bmmb::cols[3:5],each=3))
 
-legend (2.5,9,legend =c("With Speaker","No Speaker"),bty='n',
+legend (3,9.5,legend =c("With Speaker","No Speaker"),bty='n',
         pch=16:17,pt.cex=1.3)
 ```
 

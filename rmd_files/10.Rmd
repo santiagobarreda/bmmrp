@@ -516,7 +516,7 @@ priors = c(brms::set_prior("student_t(3, 0, 3)", class = "Intercept"),
 
 model_gender_vtl =
   brm (Female ~ vtl*A + (vtl*A|L) + (1|S), data=exp_data, chains=4, cores=4, 
-       family="bernoulli", warmup=1000, iter = 5000, thin = 4,prior = priors)
+       family="bernoulli", warmup=1000, iter= 5000, thin = 4,prior=priors)
 ```
 ```{r, include = TRUE, eval = FALSE}
 # Or download it from the GitHub page:
@@ -543,9 +543,7 @@ model_gender_vtl_priors =
        cores=4, family="bernoulli", warmup=1000, iter = 5000, thin = 4,
        prior = priors, sample_prior = "only")
 
-qq = p_check (model_gender_vtl_priors)
-
-hist (bmmb::inverse_logit(qq[,1]))
+bmmb::p_check (model_gender_vtl_priors)
 ```
 
 Our prior predictions indicate some logits with very high values (>40), with the bulk of variation seemingly between -20 and 20 logits. This indicates that in some cases, speakers would be identified as female with a probability of 0.000000002 (since $\mathrm{logit}^{-1}(-20)=0.000000002$), or about once every 500 million trials. This might seem crazy but it might not be. For example, consider someone with a very deep voice and a deep resonance like James Earl Jones (a.k.a Mufasa in the *Lion King* and Darth Vader in *Star Wars*). You ask: What's the probability that this voice would be identified as an adult female by a random listener, knowing nothing about the speaker other than a single example of their voice? In some cases, you might reasonably think that this might *never* happen, other than perhaps due to accidental responses. But what if you *had* to put a number on never? Well in that case logits as large as 20, or a one in half billion chance, may not seem so crazy. 
@@ -682,7 +680,7 @@ inverse_logit (0.86 + 2.65)
 
 The same reasoning applies to the interpretation of slopes in logistic regression models. Our slope tells us that for every unit change in VTL we expect a 3.6 logit increase/decrease in our expected values. We cannot convert this to probabilities and then multiply this by VTL to predict probabilities. For example, the difference from 0 to 3.6 logits results in a change from 0.5 to 0.97 in probability. We may be inclined to say that our VTL slope suggests an increase of 0.47 in probabilities (0.97-0.5) for every unit change in VTL. Obviously, this will not work since it suggests a difference in probability of 1.41 for a VTL difference of 3 cm. As a result, slopes in logistic models can only be interpreted as reflecting consistent changes in the *logit* of a probability, and not in the probability itself. 
 
-Think of it this way. You can move along lines in the logit space (the left plot in figure \@ref(fig:F10-4)), and you can use the inverse logit to calculate the probability associated with any given value along this line. However, the slope of the curve relating our predictor to probabilities (the right plot in above) does *not have a constant slope*. You can't find the slope of this curve for one fixed position and just move along it in a straight line. Obviously, if you did this you would immediately diverge from the curve in the right plot in figure \@ref(fig:F10-4) because that line does not have a constant slope. So, when you want to interpret slopes, just remember that your model only thinks of these as lines in the logit space, not in the probability space. 
+Think of it this way. You can move along lines in the logit space (the left plot in figure \@ref(fig:F10-4)), and you can use the inverse logit to calculate the probability associated with any given value along this line. However, the slope of the curve relating our predictor to probabilities (the right plot in figure \@ref(fig:F10-4)) does *not have a constant slope*. You can't find the slope of this curve for one fixed position and just move along it in a straight line. Obviously, if you did this you would immediately diverge from the curve in the right plot in figure \@ref(fig:F10-4) because that line does not have a constant slope. So, when you want to interpret slopes, just remember that your model only thinks of these as lines in the logit space, not in the probability space. 
 
 ### Using logistic models to understand classification {#c10-classification}
 

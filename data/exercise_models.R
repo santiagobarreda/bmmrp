@@ -38,8 +38,11 @@ exp_ex$SG = SG
 
 
 
-
+###################################################################
+###################################################################
 ### Chapter 3
+###################################################################
+
 men = exp_ex[exp_ex$C_v=='m',]
 
 model_priors_ex =  
@@ -53,7 +56,11 @@ model_priors_ex = brms::add_criterion(model_priors_ex, "loo")
 # saveRDS (model_priors_ex, '3_model_priors_ex.RDS')
 
 
+###################################################################
+###################################################################
 ### Chapter 4
+###################################################################
+
 men = exp_ex[exp_ex$C_v=='m',]
 
 model_multilevel_L_S_ex =  brms::brm (
@@ -69,7 +76,10 @@ model_multilevel_L_S_ex = brms::add_criterion(model_multilevel_L_S_ex, "loo")
 
 
 
+###################################################################
+###################################################################
 ### Chapter 5
+###################################################################
 
 options (contrasts = c('contr.sum','contr.sum'))
 notmen = exp_ex[exp_ex$C_v!='m' & exp_ex$C!='m',]
@@ -89,7 +99,11 @@ model_sum_coding_t_ex = brms::add_criterion(model_sum_coding_t_ex, "loo")
 
 
 
+###################################################################
+###################################################################
 ### Chapter 6
+###################################################################
+
 options (contrasts = c('contr.sum','contr.sum'))
 notmen = exp_ex[exp_ex$C_v!='m' & exp_ex$C!='m',]
 
@@ -110,7 +124,11 @@ model_re_t_ex = brms::add_criterion(model_re_t_ex, "loo")
 # saveRDS (model_re_t_ex, '../models/6_model_re_t_ex.RDS')
 
 
+###################################################################
+###################################################################
 ### Chapter 7
+###################################################################
+
 options (contrasts = c('contr.sum','contr.sum'))
 
 priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
@@ -131,7 +149,11 @@ model_interaction_ex = brms::add_criterion(model_interaction_ex, "loo")
 
 
 
+###################################################################
+###################################################################
 ### Chapter 8
+###################################################################
+
 options (contrasts = c('contr.sum','contr.sum'))
 
 model_formula = brms::bf(height ~ A*G + (A*G|x|L) + (1|S),
@@ -156,7 +178,12 @@ model_A_L_sigma_ex = brms::add_criterion(model_A_L_sigma_ex, "loo")
 # saveRDS (model_A_L_sigma_ex, '../models/8_model_A_L_sigma_ex.RDS')
 
 
+###################################################################
+###################################################################
 ### Chapter 9
+###################################################################
+
+
 options (contrasts = c('contr.sum','contr.sum'))
 
 priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
@@ -169,7 +196,7 @@ priors = c(brms::set_prior("student_t(3,160, 12)", class = "Intercept"),
 model_random_slopes_complex_ex =  
   brms::brm (height ~ vtl*A*G + (vtl*A*G|L) + (1|S), data = exp_ex, 
              chains = 4, cores = 4, warmup = 1000, iter = 5000, thin = 4, 
-             prior = priors, family = "student", control = list(adapt_delta = 0.95))
+             prior = priors, family = "student")#, control = list(adapt_delta = 0.95))
 
 model_random_slopes_complex_ex = brms::add_criterion(model_random_slopes_complex_ex, "loo")
 
@@ -177,9 +204,11 @@ model_random_slopes_complex_ex = brms::add_criterion(model_random_slopes_complex
 
 
 
-
-
+###################################################################
+###################################################################
 ### Chapter 10
+###################################################################
+
 options (contrasts = c('contr.sum','contr.sum'))
 
 priors = c(brms::set_prior("student_t(3, 0, 3)", class = "Intercept"),
@@ -193,7 +222,7 @@ model_gender_vtl_ex =
 
 model_gender_vtl_ex = brms::add_criterion(model_gender_vtl_ex, "loo")
 
-# saveRDS (model_gender_vtl, '../models/10_model_gender_vtl.RDS')
+# saveRDS (model_gender_vtl_ex, '../models/10_model_gender_vtl_ex.RDS')
 
 
 model_gender_dt_ex =
@@ -212,7 +241,12 @@ model_gender_dt_ex = brms::add_criterion(model_gender_dt_ex, "loo")
 
 
 
+###################################################################
+###################################################################
 ### Chapter 11
+###################################################################
+
+
 options (contrasts = c('contr.sum','contr.sum'))
 
 priors = c(brms::set_prior("student_t(3,0, 12)", class = "Intercept"),
@@ -248,7 +282,49 @@ model_gender_vtl_f0_reduced_ex = brms::add_criterion(model_gender_vtl_f0_reduced
 
 
 
-
+###################################################################
+###################################################################
 ### Chapter 12
+###################################################################
+
+
 options (contrasts = c('contr.sum','contr.sum'))
+
+multinomial_prior = 
+  c(set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="mug"),
+    set_prior("student_t(3, 0, 3)", class = "b",dpar="mug"),
+    set_prior("student_t(3, 0, 3)", class = "sd",dpar="mug"),
+    set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="mum"),
+    set_prior("student_t(3, 0, 3)", class = "b",dpar="mum"),
+    set_prior("student_t(3, 0, 3)", class = "sd",dpar="mum"),
+    set_prior("student_t(3, 0, 3)", class = "Intercept",dpar="muw"),
+    set_prior("student_t(3, 0, 3)", class = "b",dpar="muw"),
+    set_prior("student_t(3, 0, 3)", class = "sd",dpar="muw"),
+    set_prior("lkj_corr_cholesky (2)", class = "cor"))
+
+model_multinomial_ex = 
+  brms::brm (y|trials(size) ~ vtl+f0 + (vtl+f0|x|L) + (1|y|S), 
+             data=exp_ex, family="multinomial", chains=4, cores=4, 
+             warmup=1000, iter = 5000, thin = 4, prior = multinomial_prior)
+
+model_multinomial_ex = brms::add_criterion(model_multinomial_ex, "loo")
+
+#  saveRDS (model_multinomial_ex, "../../models/12_model_multinomial_ex.RDS")
+
+
+
+model_ordinal_ex = 
+  brms::brm (SG ~ vtl+f0 + (vtl+f0|L) + (1|S), data=exp_ex, 
+             family="cumulative", chains=4, cores=4, warmup=1000, 
+             iter = 5000, thin = 4,
+             prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),
+                       set_prior("student_t(3, 0, 3)", class = "b"),
+                       set_prior("student_t(3, 0, 3)", class = "sd"),
+                       set_prior("lkj_corr_cholesky (2)", class = "cor")))
+
+model_ordinal_ex = brms::add_criterion(model_ordinal_ex, "loo")
+
+#  saveRDS (model_ordinal_ex, "../models/12_model_ordinal_ex.RDS")
+
+
 

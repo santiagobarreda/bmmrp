@@ -67,3 +67,65 @@ model_multilevel_L_S_ex = brms::add_criterion(model_multilevel_L_S_ex, "loo")
 
 # saveRDS (model_multilevel_L_S_ex, '../models/4_model_multilevel_L_S_ex.RDS')
 
+
+
+### Chapter 5
+
+options (contrasts = c('contr.sum','contr.sum'))
+notmen = exp_ex[exp_ex$C_v!='m' & exp_ex$C!='m',]
+
+model_sum_coding_t_ex =  brms::brm (
+  height ~ A + (1|L) + (1|S), data = notmen, chains = 4, 
+  cores = 4, warmup = 1000, iter = 3500, thin = 2, family="student",
+  prior = c(brms::set_prior("student_t(3, 156, 12)", class = "Intercept"),
+            brms::set_prior("student_t(3, 0, 12)", class = "b"),
+            brms::set_prior("student_t(3, 0, 12)", class = "sd"),
+            brms::set_prior("gamma(2, 0.1)", class = "nu"),
+            brms::set_prior("student_t(3, 0, 12)", class = "sigma")))
+
+model_sum_coding_t_ex = brms::add_criterion(model_sum_coding_t_ex, "loo")
+
+# saveRDS (model_sum_coding_t_ex, '../models/5_model_sum_coding_t_ex.RDS')
+
+
+
+### Chapter 6
+
+options (contrasts = c('contr.sum','contr.sum'))
+notmen = exp_ex[exp_ex$C_v!='m' & exp_ex$C!='m',]
+
+priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
+           brms::set_prior("student_t(3,0, 12)", class = "b"),
+           brms::set_prior("student_t(3,0, 12)", class = "sd"),
+           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+           brms::set_prior("gamma(2, 0.1)", class = "nu"),
+           brms::set_prior("student_t(3,0, 12)", class = "sigma"))
+
+model_re_t_ex =  
+  brms::brm (height ~ A + (A|L) + (1|S), data = notmen, chains = 4, 
+             cores = 4, warmup = 1000, iter = 5000, thin = 4, 
+             prior = priors, family = "student")
+
+model_re_t_ex = brms::add_criterion(model_re_t_ex, "loo")
+
+# saveRDS (model_re_t_ex, '../models/6_model_re_t_ex.RDS')
+
+
+### Chapter 7
+
+priors = c(brms::set_prior("student_t(3,156, 12)", class = "Intercept"),
+           brms::set_prior("student_t(3,0, 12)", class = "b"),
+           brms::set_prior("student_t(3,0, 12)", class = "sd"),
+           brms::set_prior("lkj_corr_cholesky (2)", class = "cor"), 
+           brms::set_prior("gamma(2, 0.1)", class = "nu"),
+           brms::set_prior("student_t(3,0, 12)", class = "sigma"))
+
+model_interaction_ex =  
+  brms::brm (height ~ A + G + A:G + (A + G + A:G|L) + (1|S), 
+             data = exp_ex, chains = 4, cores = 4, warmup = 1000, 
+             iter = 5000, thin = 4, prior = priors, family = "student")
+
+model_interaction_ex = brms::add_criterion(model_interaction_ex, "loo")
+
+# saveRDS (model_interaction_ex, '../models/7_model_interaction_ex.RDS')
+

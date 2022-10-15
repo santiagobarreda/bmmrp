@@ -40,17 +40,30 @@ exp_ex$SG = SG
 
 
 ### Chapter 3
-
-exp_ex
 men = exp_ex[exp_ex$C_v=='m',]
 
-model_priors =  
+model_priors_ex =  
   brms::brm (height ~ 1, data = men, chains = 4, cores = 4,
              warmup = 1000, iter = 3500, thin = 2,
              prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
                        brms::set_prior("normal(0, 15)", class = "sigma")))
 
-model_priors = brms::add_criterion(model_priors, "loo")
+model_priors_ex = brms::add_criterion(model_priors_ex, "loo")
 
-# saveRDS (model_priors, '3_model_priors_ex.RDS')
+# saveRDS (model_priors_ex, '3_model_priors_ex.RDS')
+
+
+### Chapter 4
+men = exp_ex[exp_ex$C_v=='m',]
+
+model_multilevel_L_S_ex =  brms::brm (
+  height ~ 1 + (1|L) + (1|S), data = men, chains = 4, cores = 4,
+  warmup = 1000, iter = 3500, thin = 2,
+  prior = c(brms::set_prior("normal(176, 15)", class = "Intercept"),
+            brms::set_prior("normal(0, 15)", class = "sd"),
+            brms::set_prior("normal(0, 15)", class = "sigma")))
+
+model_multilevel_L_S_ex = brms::add_criterion(model_multilevel_L_S_ex, "loo")
+
+# saveRDS (model_multilevel_L_S_ex, '../models/4_model_multilevel_L_S_ex.RDS')
 

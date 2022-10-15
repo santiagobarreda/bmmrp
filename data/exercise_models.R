@@ -270,7 +270,7 @@ model_height_vtl_f0_ex = brms::add_criterion(model_height_vtl_f0_ex, "loo")
 
 
 model_gender_vtl_f0_reduced_ex =
-  brm (Female ~ (vtl+f0)*A + ((vtl+f0)*A|L) + (1|S), data=exp_data, 
+  brm (Female ~ (vtl+f0)*A + ((vtl+f0)*A|L) + (1|S), data=exp_ex, 
        chains=4, cores=4, family="bernoulli", 
        warmup=1000, iter = 5000, thin = 4,  
        prior = c(set_prior("student_t(3, 0, 3)", class = "Intercept"),

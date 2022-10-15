@@ -337,9 +337,9 @@ Keep in mind we're trying to predict *apparent* and not *veridical* speaker cate
 
 ### Description of our model
 
-Our model formula is largely similar to those we have seen before, with one minor change. Beside the dependent variable, separated by a pipe (`|`), we need to include a variable that indicates the integer number of trials for each observation. For us this will always be 1, but in many situations this can be a wider range of values. We want to predict our counts of categorizations with respect to the value of speaker VTL and f0, and so the model formula we are going to use is seen below. 
+Our model formula is largely similar to those we have seen before, with two minor changes. Beside the dependent variable, separated by a pipe (`|`), we need to include a variable that indicates the integer number of trials for each observation. For us this will always be 1, but in many situations this can be a wider range of values. We want to predict our counts of categorizations with respect to the value of speaker VTL and f0, and so the model formula we are going to use is seen below. 
 
-`y|trials(size) ~ vtl+f0 + (vtl+f0|S) + (1|L)`
+`y|trials(size) ~ vtl+f0 + (vtl+f0|x|L) + (1|y|S)`
 
 Since we're predicting category membership with two quantitative predictors, we know that the surfaces our model defines are planes. In the models we've fit to this point, we had a single dependent variable and a single plane for a single condition. So, our model formulas previously were something like:
 
@@ -347,15 +347,17 @@ Since we're predicting category membership with two quantitative predictors, we 
 
 However, in a multinomial regression we have one plane for each response category, so our formula above could really be thought of as:
 
-`y_1 ~ vtl+f0 + (vtl+f0|S) + (1|L)`
+`y_1 ~ vtl+f0 + (vtl+f0|x|L) + (1|y|S)`
 
-`y_2 ~ vtl+f0 + (vtl+f0|S) + (1|L)`
+`y_2 ~ vtl+f0 + (vtl+f0|x|L) + (1|y|S)`
 
-`y_3 ~ vtl+f0 + (vtl+f0|S) + (1|L)`
+`y_3 ~ vtl+f0 + (vtl+f0|x|L) + (1|y|S)`
 
-`y_4 ~ vtl+f0 + (vtl+f0|S) + (1|L)`
+`y_4 ~ vtl+f0 + (vtl+f0|x|L) + (1|y|S)`
 
-This means that our multinomial model will involve four times as many coefficients as an equivalent Gaussian model, and $J$ times as many for $J$ outcome categories. Of course, we noted above that the coefficients of the reference category are set to zero and not estimated. This means that the formula above results in the estimation of three planes, resulting in three sets of analogous parameters. Our full model specification is pretty large, so we split it into two parts. First, the part specifying our predictions and combinations of predictors:
+As noted in section \@ref(c8-description-2), the `|x|` notation tells our model that the `L` predictors are related across the prediction equations for each outcome category. In doing this, we estimate the listener effects as coming from a single nine-dimensional normal distribution rather than three separate three dimensional normal variables. Similarly, by adding `|y|` before our `S` predictor we model the speaker effects for each outcome category as coming from a single three-dimensional normal distribution rather than three unidimensional ones, and also model the correlations between the dimensions.
+
+Since our multinomial model predicts a response surface for each outcome category, our multinomial model will involve four times as many coefficients as an equivalent Gaussian model. Of course, we noted above that the coefficients of the reference category are set to zero and not estimated. This means that, in general, a multinomial model predicting a variable with $J$ possible outcomes results in $J-1$ times as many parameters as an equivalent model predicting a quantitative variable. Our full model specification is pretty large, so we split it into two parts. First, the part specifying our predictions and combinations of predictors:
 
 $$
 \begin{equation}

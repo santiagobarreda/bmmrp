@@ -9,6 +9,9 @@ data (exp_ex)
 # create our dependent variables
 exp_ex$Female = ifelse(exp_ex$G == 'f', 1, 0)
 
+# create veridical gender predictor 
+exp_ex$F_v = ifelse (exp_ex$G_v=="f", 1,-1)
+
 # new dependent variable
 exp_ex$y = cbind(b = as.numeric(exp_ex$C=='b'),
                    g = as.numeric(exp_ex$C=='g'),

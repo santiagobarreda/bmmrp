@@ -312,7 +312,7 @@ model_multinomial_ex =
 
 model_multinomial_ex = brms::add_criterion(model_multinomial_ex, "loo")
 
-#  saveRDS (model_multinomial_ex, "../../models/12_model_multinomial_ex.RDS")
+#  saveRDS (model_multinomial_ex, "../models/12_model_multinomial_ex.RDS")
 
 
 

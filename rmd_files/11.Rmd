@@ -77,38 +77,54 @@ We can also think about how apparent height, VTL, and f0 vary together. Every po
 
 It may be easier to see what we mean in figure \@ref(fig:F11-2), which attempts to present our points in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds (more or less) to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds (more or less) to the middle plot in figure \@ref(fig:F11-1). When we have two quantitative predictors, our models predict values along **planes** rather than lines. If we want to predict apparent height based on speaker f0 and VTL, we are basically asking: Can we predict the height of a point in our 3-dimensional space (i.e., location on the vertical z axis) based on its x and y-axis location? 
 
-```{r F11-2, fig.height = 4, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but the cube has been rotated 90 degrees counter-clockwise.', echo = FALSE, cache = FALSE}
+[@@ Uodate language about figure]
+
+```{r F11-2, fig.height = 5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but the cube has been rotated 90 degrees counter-clockwise.', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11.2
 ################################################################################
 
-knitr::include_graphics("../wrong_plots/Figure 11.2.jpg")
+#knitr::include_graphics("../wrong_plots/Figure 11.2.jpg")
 
-# jpeg ("../wrong_plots/Figure 11.2.jpg",4800,2400,res=600)
-# agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data, FUN=mean)
-# colnames(agg_data) = c("f0","VTL","C_v","Height")
-# 
-# 
-# par (mfrow = c(1,2), mar = c(0,1,0,2), oma = c(0,0,0,0))
-# 
-# tmp = agg_data[,c(2,1,4)]
-# s3d = scatterplot3d::scatterplot3d (tmp, color = bmmb::cols[2:5][factor(agg_data[,3])],
-#                      pch=16, angle = 55,type = "p",ylim=c(90,310), cex.symbols=rev(ptcex)*.9)
-# my.lm <- lm(Height ~ f0+VTL, data = agg_data)
-# #s3d$plane3d(my.lm, col = 1)
-# 
-# s3d = scatterplot3d::scatterplot3d (agg_data[,-3],pch=16, angle = 155,
-#                                     color = bmmb::cols[2:5][factor(agg_data[,3])],
-#                                     type = "p",xlim=c(90,310),
-#                                     cex.symbols=rev(ptcex)*.9)
-# my.lm <- lm(Height ~ f0+VTL, data = agg_data)
-# s3d$plane3d(my.lm, col = 1,lty=3, draw_polygon=TRUE,
-#             polygon_args = list(col = rgb(0, 0, 0, 0.2)))
-# dev.off()
+jpeg ("../wrong_plots/Figure 11.2.jpg",4800,2700,res=600)
+
+agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data, FUN=mean)
+colnames(agg_data) = c("f0","VTL","C_v","height")
+
+agg_data = aggregate (height~f0+vtl+C_v, data = bmmb::exp_data, FUN=mean)
+agg_data = agg_data[nrow(agg_data):1,]
+
+ptcex = agg_data[,4] - min(agg_data[,4])
+ptcex = 1 + (ptcex / max(ptcex))*1.5
+
+par (mfrow = c(1,2), mar = c(0,1,0,2), oma = c(0,0,0,0))
+
+tmp = agg_data[,c(2,1,4)]
+s3d = scatterplot3d::scatterplot3d (tmp, color = bmmb::cols[2:5][factor(agg_data[,3])],
+                     pch=16, angle = 55,type = "p",ylim=c(90,310),
+                     cex.symbols=rev(ptcex)*.9, zlab="Apparent height (cm)",
+                     xlab="Vocal-tract length (cm)",
+                     ylab="f0 (Hz)")
+
+my.lm <- lm(height ~ vtl+f0, data = agg_data)
+s3d$plane3d(my.lm, col = 1,lty=3, draw_polygon=TRUE,
+            polygon_args = list(col = rgb(0, 0, 0, 0.2)))
+
+s3d = scatterplot3d::scatterplot3d (agg_data[,c(1,2,4)],pch=16, angle = 55,
+                                    color = bmmb::cols[2:5][factor(agg_data[,3])],
+                                    type = "p",xlim=c(90,310),
+                                    cex.symbols=rev(ptcex)*.9,
+                                    zlab="Apparent height (cm)",
+                                    ylab="Vocal-tract length (cm)",
+                                    xlab="f0 (Hz)")
+my.lm <- lm(height ~ f0+vtl, data = agg_data)
+s3d$plane3d(my.lm, col = 1,lty=3, draw_polygon=TRUE,
+            polygon_args = list(col = rgb(0, 0, 0, 0.1)))
+dev.off()
 ```
 
-For example, any given point in the room you are sitting in right now can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the residuals) still applies. In the right plot of figure \@ref(fig:F11-2), we see the plane that results in the smallest residuals for our points, i.e. the smallest distances between the surface of the plane and the points along the apparent height axis.   
+For example, any given point in the room you are sitting in right now can be specified using three variables that determine its location along the width, depth, and height of the room. Imagine the points in figure \@ref(fig:F11-2) were floating in the room with you, arranged just as in the figure. You are given a large flat board (a *plane*) and asked to find the 'best' orientation for the board. When we fit lines, we preferred those that tended to minimize the residuals, the y-axis distance of the points to the line. The same principle holds when we fit models with two (or more) quantitative predictors. In general, planes are 'better' when they minimize the distance from each point to the surface of the plane along the axis representing the dependent variable. Though it's a bit more complicated than this for multilevel models, this general principle (i.e. the minimization of the residuals) still applies. In figure \@ref(fig:F11-2), we see the plane that results in the smallest residuals for our points, i.e. the smallest distances between the surface of the plane and the points along the apparent height axis.   
 
 In equation \@ref(eq:11-1) we see that the height of the plane along the z axis is determined by an intercept ($a$) plus the product of the x axis coordinate and its slope ($b$), and the product of the y axis coordinate and its slope ($c$). When we fit a model that includes two quantitative predictors, the model represents the planes it estimates using their $a$, $b$, and $c$ parameters. 
   

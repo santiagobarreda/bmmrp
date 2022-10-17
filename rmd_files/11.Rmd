@@ -77,7 +77,7 @@ We can also think about how apparent height, VTL, and f0 vary together. Every po
 
 It may be easier to see what we mean in figure \@ref(fig:F11-2), which attempts to present our points in three dimensions. The left plot of figure \@ref(fig:F11-2) corresponds (more or less) to the left plot in figure \@ref(fig:F11-1), while the right plot of figure \@ref(fig:F11-2) corresponds (more or less) to the middle plot in figure \@ref(fig:F11-1). When we have two quantitative predictors, our models predict values along **planes** rather than lines. If we want to predict apparent height based on speaker f0 and VTL, we are basically asking: Can we predict the height of a point in our 3-dimensional space (i.e., location on the vertical z axis) based on its x and y-axis location? 
 
-```{r F11-2, fig.height = 5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but the cube has been rotated 90 degrees counter-clockwise.', echo = FALSE, cache = FALSE}
+```{r F11-2, fig.height = 5, fig.width = 8, fig.cap='(left) A three-dimensional plot of the variables presented in figure \\@ref(fig:F11-1). (right) The same as the left plot but with a different orientation of the variables.', echo = FALSE, cache = FALSE}
 
 ################################################################################
 ### Figure 11.2
@@ -257,7 +257,7 @@ x1x2
 cor (cbind(x1,x2,x1x2))
 ```
 
-The cross product of `x1` and `x2`, `x1x2`, increases in value together with both predictors, meaning it enters into a **monotonic** relationship with the predictors (they increase and decrase together). This results in the strong correlation between the cross product and the predictors seen above. We can help minimize this sort of correlation if we center `x1` and `x2`. When we do this, the centered values will be positive when they are above the sample mean and negative when they are below it. Under these conditions, their cross product will be positive when both variables are above or below their mean, and negative when one is above and the other is below. This breaks the monotonic relationship between the cross product and the predictors, i.e., the cross product does not always increase when one of the predictors increases.
+The cross product of `x1` and `x2`, `x1x2`, increases in value together with both predictors, meaning it enters into a **monotonic** relationship with the predictors (they increase and decrease together). This results in the strong correlation between the cross product and the predictors seen above. We can help minimize this sort of correlation if we center `x1` and `x2`. When we do this, the centered values will be positive when they are above the sample mean and negative when they are below it. Under these conditions, their cross product will be positive when both variables are above or below their mean, and negative when one is above and the other is below. This breaks the monotonic relationship between the cross product and the predictors, i.e., the cross product does not always increase when one of the predictors increases.
 
 We re-do the example above with 'centered' data, assuming that the mean had been 2. We can see that the correlation between the cross product and the predictors is now zero, though the correlation between the predictors themselves is still one.
 
@@ -1293,7 +1293,11 @@ brms::loo_compare (model_gender_vtl_f0, model_gender_vtl_f0_reduced)
 
 When adding the `loo` criterion to our models we got error messages like this:
 
-`Warning: Found 205 observations with a pareto_k > 0.7 in model 'model_gender_vtl_f0'. It is recommended to set 'moment_match = TRUE' in order to perform moment matching for problematic observations.`
+```{r, eval = FALSE}
+## Warning: Found 205 observations with a pareto_k > 0.7 in model 
+## 'model_gender_vtl_f0'. It is recommended to set 'moment_match = TRUE' 
+## in order to perform moment matching for problematic observations.`
+```
 
 When we add the `loo` criterion to our model, `brms` (and *Stan*) don't actually fit a new model for every left out data point (i.e. a 'real' leave-one-out cross validation). Instead, there's a way to approximate what the model *would* look like had it actually been refit without each data point. This approximation uses something called **Pareto smoothed importance sampling** (**PSIS**). The Pareto-k ($\hat{k}$, `pareto_k`) statistic is a diagnostic for this estimation method that helps you check the assumptions underlying the leave-one-out approximation (Vehtari et al. 2017). Essentially, the $\hat{k}$ statistic is a measure of how unusual a given observation is. A very unusual observation is highly influential in your model and will have a higher value of $\hat{k}$. If an observation is *too* unusual, then the estimate of $\mathrm{elpd}$ associated with that observation may not be reliable. The general rule of thumb is that values of $\hat{k}$ that are less than 0.5 are 'good', values between 0.5 and 0.7 are 'ok' (not so great but not bad either), values greater than 0.7 are 'bad' and values greater than 1.0 are 'very bad'. 
 
